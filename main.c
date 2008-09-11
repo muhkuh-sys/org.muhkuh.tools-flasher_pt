@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include "flasher_version.h"
 #include "netx_consoleapp.h"
 #include "rdyrun.h"
 
@@ -57,11 +58,19 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
   /*  switch off sys led */
   setRdyRunLed(RDYRUN_LED_OFF);
 
-  /*  say hi */
-        uprintf("\f. *** Flasher start ***\n");
-  uprintf(". Data pointer:    0x$8\n", (unsigned long)ptTestParam);
-  uprintf(". Init parameter:  0x$8\n", (unsigned long)ptTestParam->pvInitParams);
-  uprintf("\n");
+        /*  say hi */
+        uprintf("\f\n\n\n\nFlasher v");
+        uprintf(FLASHER_VERSION_ALL);
+        uprintf("\n\n");
+        uprintf("Copyright (C) 2008 C.Thelen (cthelen@hilscher.com) and M.Trensch.\n");
+        uprintf("There is NO warranty.  You may redistribute this software\n");
+        uprintf("under the terms of the GNU Library General Public License.\n");
+        uprintf("For more information about these matters, see the files named COPYING.\n");
+
+        uprintf("\n");
+        uprintf(". Data pointer:    0x$8\n", (unsigned long)ptTestParam);
+        uprintf(". Init parameter:  0x$8\n", (unsigned long)ptTestParam->pvInitParams);
+        uprintf("\n");
 
   /*  get application parameters */
   ptAppParams = (ptFlasherInputParameter)ptTestParam->pvInitParams;

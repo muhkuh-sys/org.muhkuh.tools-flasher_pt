@@ -26,6 +26,7 @@ include(flasher.version)
 `#define FLASHER_VERSION_MAJ '__VERSION_MAJ__
 `#define FLASHER_VERSION_MIN '__VERSION_MIN__
 `#define FLASHER_VERSION_SUB '__VERSION_SUB__
+`#define FLASHER_VERSION_ALL "'__VERSION_ALL__`"'
 `'
 `#endif	// __FLASHER_VERSION_H__'
 `'
