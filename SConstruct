@@ -8,12 +8,14 @@ flasher_defines_netx50  = ['__NETX50']
 flasher_defines_debug   = ['DEBUG']
 
 flasher_includes_netx500 = Split("""
+                                 ./
                                  ./netx500
                                  """)
 
 flasher_includes_netx50 = Split("""
+                                ./
                                 ./netx50
-                                """)                            
+                                """)
 
 
 # ----------------------------------------------------------------
@@ -48,7 +50,8 @@ flasher_common_s = Split("""
 # ---------------- Sources for netx500 ---------------------------
 # ----------------------------------------------------------------
 
-flasher_netx500_c = Split("""                                   
+flasher_netx500_c = Split("""
+                          ./netx500/flasher_header.c
                           ./netx500/hal_spi.c
                           ./netx500/netx_io_areas.c
                           """)
@@ -57,7 +60,8 @@ flasher_netx500_c = Split("""
 # ---------------- Sources for netx50 ----------------------------
 # ----------------------------------------------------------------
 
-flasher_netx50_c  = Split("""                                   
+flasher_netx50_c  = Split("""
+                          ./netx50/flasher_header.c
                           ./netx50/hal_spi.c
                           ./netx50/netx_io_areas.c
                           """)

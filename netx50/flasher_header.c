@@ -19,7 +19,10 @@
  ***************************************************************************/
 
 
+#include "flasher_header.h"
+
 #include "flasher_version.h"
+
 
 const tFlasherVersion flasher_version __attribute__ ((section (".version_info")));
 
@@ -29,17 +32,15 @@ const tFlasherVersion flasher_version =
 	.abMagic = { FLASHER_MAGIC0, FLASHER_MAGIC1, FLASHER_MAGIC2, FLASHER_MAGIC3 },
 	.aulChiptyp =
 	{
-		FLASHER_CHIPTYP0_NETX500 |
-		FLASHER_CHIPTYP0_NETX100,
+		FLASHER_CHIPTYP0_NETX50,
 
 		0
 	},
 	.aulIf =
 	{
-		FLASHER_IF0_NETX500_PFSRAM |
-		FLASHER_IF0_NETX500_PFEXT |
-		FLASHER_IF0_NETX500_SPI |
-		FLASHER_IF0_NETX500_I2C,
+		FLASHER_IF0_NETX50_PFSRAM |
+		FLASHER_IF0_NETX50_PFEXT |
+		FLASHER_IF0_NETX50_SPI,
 
 		0,
 
@@ -47,7 +48,9 @@ const tFlasherVersion flasher_version =
 
 		0
 	},
-	.abVersion = "__VERSION__"
+	.ulVersionMaj = FLASHER_VERSION_MAJ,
+	.ulVersionMin = FLASHER_VERSION_MIN,
+	.ulVersionSub = FLASHER_VERSION_SUB
 };
 
 /*-----------------------------------*/

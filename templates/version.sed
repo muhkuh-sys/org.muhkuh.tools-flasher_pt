@@ -1,1 +1,0 @@
-s/__VERSION__/include(__VERSIONFILE__)/g
