@@ -42,15 +42,15 @@ typedef enum
 typedef enum
 {
 	FLASHER_IF0_NETX500_PFSRAM	= 0x00000001,
-	FLASHER_IF0_NETX500_PFEXT	  = 0x00000002,
-	FLASHER_IF0_NETX500_SPI		  = 0x00000004,
-	FLASHER_IF0_NETX500_I2C		  = 0x00000008,
-	FLASHER_IF0_NETX500_MMC		  = 0x00000010,
-	FLASHER_IF0_NETX50_PFSRAM	  = 0x00000020,
-	FLASHER_IF0_NETX50_PFEXT	  = 0x00000040,
-	FLASHER_IF0_NETX50_SPI		  = 0x00000080,
-	FLASHER_IF0_NETX50_I2C		  = 0x00000100,
-	FLASHER_IF0_NETX50_MMC		  = 0x00000200
+	FLASHER_IF0_NETX500_PFEXT	= 0x00000002,
+	FLASHER_IF0_NETX500_SPI		= 0x00000004,
+	FLASHER_IF0_NETX500_I2C		= 0x00000008,
+	FLASHER_IF0_NETX500_MMC		= 0x00000010,
+	FLASHER_IF0_NETX50_PFSRAM	= 0x00000020,
+	FLASHER_IF0_NETX50_PFEXT	= 0x00000040,
+	FLASHER_IF0_NETX50_SPI		= 0x00000080,
+	FLASHER_IF0_NETX50_I2C		= 0x00000100,
+	FLASHER_IF0_NETX50_MMC		= 0x00000200
 } eFLASHER_IF0;
 
 /*-----------------------------------*/
@@ -60,7 +60,9 @@ typedef struct
 	const char    abMagic[4];
 	unsigned long aulChiptyp[2];
 	unsigned long aulIf[4];
-	const char    abVersion[];
+	unsigned long ulVersionMaj;
+	unsigned long ulVersionMin;
+	unsigned long ulVersionSub;
 } tFlasherVersion;
 
 /*-----------------------------------*/
