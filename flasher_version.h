@@ -18,8 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef __FLASHER_VERSION_H__
-#define __FLASHER_VERSION_H__
+#ifndef __FLASHER_HEADER_H__
+#define __FLASHER_HEADER_H__
 
 /*-----------------------------------*/
 
@@ -67,5 +67,5 @@ typedef struct
 
 /*-----------------------------------*/
 
-#endif	/* __FLASHER_VERSION_H__ */
+#endif	/* __FLASHER_HEADER_H__ */
 
