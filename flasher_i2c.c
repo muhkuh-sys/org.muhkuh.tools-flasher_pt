@@ -43,11 +43,11 @@ void i2c_pollAck      (unsigned int uiAckCnt);
 
 NETX_CONSOLEAPP_RESULT_T i2c_flash(const unsigned char *pbData, unsigned long ulDataByteLen)
 {
-  NETX_CONSOLEAPP_RESULT_T tResult;
-  const unsigned char *pbDataCnt;
-  const unsigned char *pbDataEnd;
-  unsigned long       ulFlashStartAdr;
-  unsigned long       ulFlashAdrCnt;
+  NETX_CONSOLEAPP_RESULT_T  tResult;
+  const unsigned char       *pbDataCnt;
+  const unsigned char       *pbDataEnd;
+  unsigned long             ulFlashStartAdr;
+  unsigned long             ulFlashAdrCnt;
 
 
   ulFlashStartAdr = 0;
@@ -56,7 +56,8 @@ NETX_CONSOLEAPP_RESULT_T i2c_flash(const unsigned char *pbData, unsigned long ul
   pbDataEnd     = pbDataCnt + ulDataByteLen;
   ulFlashAdrCnt = ulFlashStartAdr;
 
-  while( pbDataCnt<pbDataEnd ) {
+  while( pbDataCnt<pbDataEnd ) 
+  {
     /*  programm the byte */
     i2c_sendAddress(ulFlashAdrCnt, 0);
     i2c_writeData(pbDataCnt, 1);
@@ -70,12 +71,14 @@ NETX_CONSOLEAPP_RESULT_T i2c_flash(const unsigned char *pbData, unsigned long ul
 
   /*  verify data */
   tResult = i2c_verify_with_progress(ulFlashStartAdr, ulDataByteLen, pbData);
-        if( tResult!=NETX_CONSOLEAPP_RESULT_OK ) {
-                return tResult;
-        }
+  
+  if( tResult!=NETX_CONSOLEAPP_RESULT_OK ) 
+  {
+     return tResult;
+  }
 
-        /*  all ok */
-        return NETX_CONSOLEAPP_RESULT_OK;
+  /*  all ok */
+  return NETX_CONSOLEAPP_RESULT_OK;
 }
 
 
@@ -125,12 +128,14 @@ NETX_CONSOLEAPP_RESULT_T i2c_read(unsigned char *pbData, unsigned long ulDataByt
 
   /*  read data */
   tResult = i2c_read_with_progress(ulFlashStartAdr, ulDataByteLen, pbData);
-        if( tResult!=NETX_CONSOLEAPP_RESULT_OK ) {
-                return tResult;
-        }
+  
+  if( tResult!=NETX_CONSOLEAPP_RESULT_OK ) 
+  {
+     return tResult;
+  }
 
-        /*  all ok */
-        return NETX_CONSOLEAPP_RESULT_OK;
+  /*  all ok */
+  return NETX_CONSOLEAPP_RESULT_OK;
 }
 
 
@@ -144,12 +149,14 @@ NETX_CONSOLEAPP_RESULT_T i2c_verify(const unsigned char *pbData, unsigned long u
 
   /*  verify data */
   tResult = i2c_verify_with_progress(ulFlashStartAdr, ulDataByteLen, pbData);
-        if( tResult!=NETX_CONSOLEAPP_RESULT_OK ) {
-                return tResult;
-        }
+  
+  if( tResult!=NETX_CONSOLEAPP_RESULT_OK ) 
+  {
+     return tResult;
+  }
 
-        /*  all ok */
-        return NETX_CONSOLEAPP_RESULT_OK;
+  /*  all ok */
+  return NETX_CONSOLEAPP_RESULT_OK;
 }
 
 
@@ -169,26 +176,30 @@ NETX_CONSOLEAPP_RESULT_T i2c_verify_with_progress(unsigned long ulFlashStartAdr,
   ulE   = ulC + ulDataByteLen;
   pucDC = pucDataStartAdr;
 
-  while( ulC<ulE ) {
-    /*  get the next segment, limit it to 'ulMaxSegSize' */
-    ulSegSize = ulE - ulC;
-    if( ulSegSize>ulMaxSegSize ) {
-    ulSegSize = ulMaxSegSize;
-    }
+  while( ulC<ulE ) 
+  {
+     /*  get the next segment, limit it to 'ulMaxSegSize' */
+     ulSegSize = ulE - ulC;
+     
+     if( ulSegSize>ulMaxSegSize ) 
+     {
+       ulSegSize = ulMaxSegSize;
+     }
 
-    /*  read the segment */
-    i2c_sendAddress(ulC, 0);
-    i2c_readResponse(pucReadBuffer, ulSegSize);
+      /*  read the segment */
+      i2c_sendAddress(ulC, 0);
+      i2c_readResponse(pucReadBuffer, ulSegSize);
 
-    /*  compare... */
-    if( memcmp(pucReadBuffer, pucDC, ulSegSize)!=0 ) {
-            return NETX_CONSOLEAPP_RESULT_ERROR;
-    }
+      /*  compare... */
+      if( memcmp(pucReadBuffer, pucDC, ulSegSize)!=0 ) 
+      {
+        return NETX_CONSOLEAPP_RESULT_ERROR;
+      }
 
-    /*  next segment */
-    ulC += ulSegSize;
-    pucDC += ulSegSize;
-    }
+      /*  next segment */
+      ulC += ulSegSize;
+      pucDC += ulSegSize;
+  }
 
     /*  compare ok! */
     return NETX_CONSOLEAPP_RESULT_OK;
@@ -209,10 +220,12 @@ NETX_CONSOLEAPP_RESULT_T i2c_read_with_progress(unsigned long ulFlashStartAdr, u
   ulE = ulC + ulDataByteLen;
   pucDC = pucDataStartAdr;
 
-  while( ulC<ulE ) {
+  while( ulC<ulE ) 
+  {
           /*  get the next segment, limit it to 'ulMaxSegSize' */
           ulSegSize = ulE - ulC;
-          if( ulSegSize>ulMaxSegSize ) {
+          if( ulSegSize>ulMaxSegSize ) 
+          {
                   ulSegSize = ulMaxSegSize;
           }
 
@@ -223,7 +236,7 @@ NETX_CONSOLEAPP_RESULT_T i2c_read_with_progress(unsigned long ulFlashStartAdr, u
           /*  next segment */
           ulC += ulSegSize;
           pucDC += ulSegSize;
-              }
+   }
 
         /*  compare ok! */
         return NETX_CONSOLEAPP_RESULT_OK;
@@ -273,7 +286,8 @@ void i2c_sendAddress(unsigned int uiParams, int iStopFlag)
   ulVal |= MSK_i2c_data_CMD3;
   
   /*  append stop condition? */
-  if( iStopFlag!=0 ) {
+  if( iStopFlag!=0 ) 
+  {
           ulVal |= MSK_i2c_data_CMD0;
   }
   
@@ -293,33 +307,38 @@ void i2c_readResponse(unsigned char *pucBuffer, unsigned int uiLength)
 
 
         uiCnt = 0;
-        while( uiCnt<uiLength ) {
-                /*  read byte */
-                ulVal  = MSK_i2c_data_CMD1;
-                
-                /*  execute command */
-                ulVal |= MSK_i2c_data_CMD3;
+        while( uiCnt<uiLength ) 
+        {
+           /*  read byte */
+           ulVal  = MSK_i2c_data_CMD1;
+           
+           /*  execute command */
+           ulVal |= MSK_i2c_data_CMD3;
 
-    /*  is this the first byte? */
-    if( uiCnt==0 ) {
-      /*  yes -> prepend start data */
-      ulVal |= MSK_i2c_data_CMD2;
-    }
-                /*  is this the last byte? */
-                if( (uiCnt+1)==uiLength ) {
-                        /*  yes -> append stop condition */
-                        ulVal |= MSK_i2c_data_CMD0;
-                }
-                ptNetXI2CArea->ulData = ulVal;
+          /*  is this the first byte? */
+          if( uiCnt==0 ) 
+          {
+             /*  yes -> prepend start data */
+             ulVal |= MSK_i2c_data_CMD2;
+          }
+          
+          /*  is this the last byte? */
+          if( (uiCnt+1)==uiLength ) 
+          {
+             /*  yes -> append stop condition */
+             ulVal |= MSK_i2c_data_CMD0;
+          }
+          
+          ptNetXI2CArea->ulData = ulVal;
 
-                /*  wait exec */
-                while( (ptNetXI2CArea->ulData&MSK_i2c_data_CMD3)!=0 ) {}
+          /*  wait exec */
+          while( (ptNetXI2CArea->ulData&MSK_i2c_data_CMD3)!=0 ) {}
 
-                /*  get byte */
-                pucBuffer[uiCnt] = (unsigned char)(ptNetXI2CArea->ulData&MSK_i2c_data_DATA);
+          /*  get byte */
+          pucBuffer[uiCnt] = (unsigned char)(ptNetXI2CArea->ulData&MSK_i2c_data_DATA);
 
-                /*  next byte */
-                ++uiCnt;
+          /*  next byte */
+          ++uiCnt;
         }
 #endif
 }
@@ -333,25 +352,28 @@ void i2c_writeData(const unsigned char *pucBuffer, unsigned int uiLength)
 
 
         uiCnt = 0;
-        while( uiCnt<uiLength ) {
-                /*  set data byte */
-                ulVal  = pucBuffer[uiCnt];
-                
-                /*  execute command */
-                ulVal |= MSK_i2c_data_CMD3;
+        while( uiCnt<uiLength ) 
+        {
+           /*  set data byte */
+           ulVal  = pucBuffer[uiCnt];
+           
+           /*  execute command */
+           ulVal |= MSK_i2c_data_CMD3;
 
-                /*  is this the last byte? */
-                if( (uiCnt+1)==uiLength ) {
-                        /*  yes -> append stop condition */
-                        ulVal |= MSK_i2c_data_CMD0;
-                }
-                ptNetXI2CArea->ulData = ulVal;
+           /*  is this the last byte? */
+           if( (uiCnt+1)==uiLength ) 
+           {
+                   /*  yes -> append stop condition */
+                   ulVal |= MSK_i2c_data_CMD0;
+           }
+           
+           ptNetXI2CArea->ulData = ulVal;
 
-                /*  wait exec */
-                while( (ptNetXI2CArea->ulData&MSK_i2c_data_CMD3)!=0 ) {}
+           /*  wait exec */
+           while( (ptNetXI2CArea->ulData&MSK_i2c_data_CMD3)!=0 ) {}
 
-                /*  next byte */
-                ++uiCnt;
+           /*  next byte */
+           ++uiCnt;
         }
 #endif
 }
