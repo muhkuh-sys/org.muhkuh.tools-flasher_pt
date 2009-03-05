@@ -26,38 +26,6 @@
 
 const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
 {
-        /* Atmel AT25F1024A */
-        {
-                                 .acName = "AT25F1024A\0",                              /* name                       */
-                                 .ulSize = 131072,                                      /* size                       */
-                                .ulClock = 20000,                                       /* minClock                   */
-                             .ulPageSize = 256,                                         /* pageSize                   */
-                          .ulSectorPages = 128,                                         /* sectorSize                 */
-                               .tAdrMode = SPIFLASH_ADR_LINEAR,                         /* address mode               */
-                            .bReadOpcode = 0x03,                                        /* readOpcode                 */
-                     .bReadOpcodeDCBytes = 0,                                           /* readOpcodeDCBytes          */
-                     .bWriteEnableOpcode = 0x06,                                        /* writeEnableOpcode          */
-                       .bErasePageOpcode = 0x00,                                        /* erase page                 */
-                     .bEraseSectorOpcode = 0x52,                                        /* eraseSectorOpcode          */
-                      .uiEraseChipCmdLen = 1,                                           /* erase chip command length  */
-                         .abEraseChipCmd = {0x62},                                      /* erase chip command         */
-                        .bPageProgOpcode = 0x02,                                        /* pageProgOpcode             */
-                            .bBufferFill = 0x00,                                        /* buffer fill opcode         */
-                     .bBufferWriteOpcode = 0x00,                                        /* buffer write opcode        */
-                .bEraseAndPageProgOpcode = 0x00,                                        /* eraseAndPageProgOpcode     */
-                      .bReadStatusOpcode = 0x05,                                        /* readStatusOpcode           */
-                       .bStatusReadyMask = 0x01,                                        /* statusReadyMask            */
-                      .bStatusReadyValue = 0x00,                                        /* statusReadyValue           */
-                      .uiInitCmd0_length = 1,                                           /* initCmd0_length            */
-                             .abInitCmd0 = { 0x06 },                                    /* initCmd0                   */
-                      .uiInitCmd1_length = 2,                                           /* initCmd1_length            */
-                             .abInitCmd1 = { 0x01, 0x02 },                              /* initCmd1                   */
-                             .uiIdLength = 3,                                           /* id_length                  */
-                               .abIdSend = {0x15, 0x00, 0x00},                          /* id_send                    */
-                               .abIdMask = {0x00, 0xff, 0xff},                          /* id_mask                    */
-                              .abIdMagic = {0x00, 0x1f, 0x60}                           /* id_magic                   */
-        },
-
         /* Atmel AT26DF161A */
         {
                                  .acName = "AT26DF161A\0",                              /* name                       */
@@ -154,102 +122,6 @@ const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
                               .abIdMagic = {0x00, 0x1f, 0x47, 0x00, 0x00}               /* id_magic                   */
         },
 
-        /* Atmel AT45DB011B */
-        {
-                                 .acName = "AT45DB011B\0",                              /* name                       */
-                                 .ulSize = 135168,                                      /* size                       */
-                                .ulClock = 20000,                                       /* minClock                   */
-                             .ulPageSize = 264,                                         /* pageSize                   */
-                          .ulSectorPages = 8,                                           /* sectorSize                 */
-                               .tAdrMode = SPIFLASH_ADR_PAGESIZE_BITSHIFT,              /* address mode               */
-                            .bReadOpcode = 0xe8,                                        /* readOpcode                 */
-                     .bReadOpcodeDCBytes = 4,                                           /* readOpcodeDCBytes          */
-                     .bWriteEnableOpcode = 0x00,                                        /* writeEnableOpcode          */
-                       .bErasePageOpcode = 0x81,                                        /* erase page                 */
-                     .bEraseSectorOpcode = 0x50,                                        /* eraseSectorOpcode          */
-                      .uiEraseChipCmdLen = 0,                                           /* erase chip command length  */
-                         .abEraseChipCmd = {0},                                         /* erase chip command         */
-                        .bPageProgOpcode = 0x00,                                        /* pageProgOpcode             */
-                            .bBufferFill = 0x84,                                        /* buffer fill opcode         */
-                     .bBufferWriteOpcode = 0x88,                                        /* buffer write opcode        */
-                .bEraseAndPageProgOpcode = 0x82,                                        /* eraseAndPageProgOpcode     */
-                      .bReadStatusOpcode = 0xd7,                                        /* readStatusOpcode           */
-                       .bStatusReadyMask = 0xbc,                                        /* statusReadyMask            */
-                      .bStatusReadyValue = 0x8c,                                        /* statusReadyValue           */
-                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
-                             .abInitCmd0 = {0},                                         /* initCmd0                   */
-                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
-                             .abInitCmd1 = {0},                                         /* initCmd1                   */
-                             .uiIdLength = 2,                                           /* id_length                  */
-                               .abIdSend = {0xd7, 0x00},                                /* id_send                    */
-                               .abIdMask = {0x00, 0x3c},                                /* id_mask                    */
-                              .abIdMagic = {0x00, 0x0c}                                 /* id_magic                   */
-        },
-
-        /* Atmel AT45DB021B */
-        {
-                                 .acName = "AT45DB021B\0",                              /* name                       */
-                                 .ulSize = 270336,                                      /* size                       */
-                                .ulClock = 20000,                                       /* minClock                   */
-                             .ulPageSize = 264,                                         /* pageSize                   */
-                          .ulSectorPages = 8,                                           /* sectorSize                 */
-                               .tAdrMode = SPIFLASH_ADR_PAGESIZE_BITSHIFT,              /* address mode               */
-                            .bReadOpcode = 0xe8,                                        /* readOpcode                 */
-                     .bReadOpcodeDCBytes = 4,                                           /* readOpcodeDCBytes          */
-                     .bWriteEnableOpcode = 0x00,                                        /* writeEnableOpcode          */
-                       .bErasePageOpcode = 0x81,                                        /* erase page                 */
-                     .bEraseSectorOpcode = 0x50,                                        /* eraseSectorOpcode          */
-                      .uiEraseChipCmdLen = 0,                                           /* erase chip command length  */
-                         .abEraseChipCmd = {0},                                         /* erase chip command         */
-                        .bPageProgOpcode = 0x00,                                        /* pageProgOpcode             */
-                            .bBufferFill = 0x84,                                        /* buffer fill opcode         */
-                     .bBufferWriteOpcode = 0x88,                                        /* buffer write opcode        */
-                .bEraseAndPageProgOpcode = 0x82,                                        /* eraseAndPageProgOpcode     */
-                      .bReadStatusOpcode = 0xd7,                                        /* readStatusOpcode           */
-                       .bStatusReadyMask = 0xbc,                                        /* statusReadyMask            */
-                      .bStatusReadyValue = 0x94,                                        /* statusReadyValue           */
-                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
-                             .abInitCmd0 = {0},                                         /* initCmd0                   */
-                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
-                             .abInitCmd1 = {0},                                         /* initCmd1                   */
-                             .uiIdLength = 2,                                           /* id_length                  */
-                               .abIdSend = {0xd7, 0x00},                                /* id_send                    */
-                               .abIdMask = {0x00, 0x3c},                                /* id_mask                    */
-                              .abIdMagic = {0x00, 0x14}                                 /* id_magic                   */
-        },
-
-        /* Atmel AT45DB041B */
-        {
-                                 .acName = "AT45DB041B\0",                              /* name                       */
-                                 .ulSize = 540672,                                      /* size                       */
-                                .ulClock = 15000,                                       /* minClock                   */
-                             .ulPageSize = 264,                                         /* pageSize                   */
-                          .ulSectorPages = 8,                                           /* sectorSize                 */
-                               .tAdrMode = SPIFLASH_ADR_PAGESIZE_BITSHIFT,              /* address mode               */
-                            .bReadOpcode = 0xe8,                                        /* readOpcode                 */
-                     .bReadOpcodeDCBytes = 4,                                           /* readOpcodeDCBytes          */
-                     .bWriteEnableOpcode = 0x00,                                        /* writeEnableOpcode          */
-                       .bErasePageOpcode = 0x81,                                        /* erase page                 */
-                     .bEraseSectorOpcode = 0x50,                                        /* eraseSectorOpcode          */
-                      .uiEraseChipCmdLen = 0,                                           /* erase chip command length  */
-                         .abEraseChipCmd = {0},                                         /* erase chip command         */
-                        .bPageProgOpcode = 0x00,                                        /* pageProgOpcode             */
-                            .bBufferFill = 0x84,                                        /* buffer fill opcode         */
-                     .bBufferWriteOpcode = 0x88,                                        /* buffer write opcode        */
-                .bEraseAndPageProgOpcode = 0x82,                                        /* eraseAndPageProgOpcode     */
-                      .bReadStatusOpcode = 0xd7,                                        /* readStatusOpcode           */
-                       .bStatusReadyMask = 0xbc,                                        /* statusReadyMask            */
-                      .bStatusReadyValue = 0x9c,                                        /* statusReadyValue           */
-                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
-                             .abInitCmd0 = {0},                                         /* initCmd0                   */
-                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
-                             .abInitCmd1 = {0},                                         /* initCmd1                   */
-                             .uiIdLength = 2,                                           /* id_length                  */
-                               .abIdSend = {0xd7, 0x00},                                /* id_send                    */
-                               .abIdMask = {0x00, 0x3c},                                /* id_mask                    */
-                              .abIdMagic = {0x00, 0x1c}                                 /* id_magic                   */
-        },
-
         /* Atmel AT45DB081D */
         {
                                  .acName = "AT45DB081D\0",                              /* name                       */
@@ -282,38 +154,6 @@ const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
                               .abIdMagic = {0x00, 0x1f, 0x25, 0x00, 0x00}               /* id_magic                   */
         },
 
-        /* Atmel AT45DB081B */
-        {
-                                 .acName = "AT45DB081B\0",                              /* name                       */
-                                 .ulSize = 1081344,                                     /* size                       */
-                                .ulClock = 15000,                                       /* minClock                   */
-                             .ulPageSize = 264,                                         /* pageSize                   */
-                          .ulSectorPages = 8,                                           /* sectorSize                 */
-                               .tAdrMode = SPIFLASH_ADR_PAGESIZE_BITSHIFT,              /* address mode               */
-                            .bReadOpcode = 0xe8,                                        /* readOpcode                 */
-                     .bReadOpcodeDCBytes = 4,                                           /* readOpcodeDCBytes          */
-                     .bWriteEnableOpcode = 0x00,                                        /* writeEnableOpcode          */
-                       .bErasePageOpcode = 0x81,                                        /* erase page                 */
-                     .bEraseSectorOpcode = 0x50,                                        /* eraseSectorOpcode          */
-                      .uiEraseChipCmdLen = 0,                                           /* erase chip command length  */
-                         .abEraseChipCmd = {0},                                         /* erase chip command         */
-                        .bPageProgOpcode = 0x00,                                        /* pageProgOpcode             */
-                            .bBufferFill = 0x84,                                        /* buffer fill opcode         */
-                     .bBufferWriteOpcode = 0x88,                                        /* buffer write opcode        */
-                .bEraseAndPageProgOpcode = 0x82,                                        /* eraseAndPageProgOpcode     */
-                      .bReadStatusOpcode = 0xd7,                                        /* readStatusOpcode           */
-                       .bStatusReadyMask = 0xbc,                                        /* statusReadyMask            */
-                      .bStatusReadyValue = 0xa4,                                        /* statusReadyValue           */
-                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
-                             .abInitCmd0 = {0},                                         /* initCmd0                   */
-                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
-                             .abInitCmd1 = {0},                                         /* initCmd1                   */
-                             .uiIdLength = 2,                                           /* id_length                  */
-                               .abIdSend = {0xd7, 0x00},                                /* id_send                    */
-                               .abIdMask = {0x00, 0x3c},                                /* id_mask                    */
-                              .abIdMagic = {0x00, 0x24}                                 /* id_magic                   */
-        },
-
         /* Atmel AT45DB161D */
         {
                                  .acName = "AT45DB161D\0",                              /* name                       */
@@ -344,38 +184,6 @@ const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
                                .abIdSend = {0x9f, 0x00, 0x00, 0x00, 0x00},              /* id_send                    */
                                .abIdMask = {0x00, 0xff, 0xff, 0xff, 0xff},              /* id_mask                    */
                               .abIdMagic = {0x00, 0x1f, 0x26, 0x00, 0x00}               /* id_magic                   */
-        },
-
-        /* Atmel AT45DB161B */
-        {
-                                 .acName = "AT45DB161B\0",                              /* name                       */
-                                 .ulSize = 2162688,                                     /* size                       */
-                                .ulClock = 15000,                                       /* minClock                   */
-                             .ulPageSize = 528,                                         /* pageSize                   */
-                          .ulSectorPages = 8,                                           /* sectorSize                 */
-                               .tAdrMode = SPIFLASH_ADR_PAGESIZE_BITSHIFT,              /* address mode               */
-                            .bReadOpcode = 0xe8,                                        /* readOpcode                 */
-                     .bReadOpcodeDCBytes = 4,                                           /* readOpcodeDCBytes          */
-                     .bWriteEnableOpcode = 0x00,                                        /* writeEnableOpcode          */
-                       .bErasePageOpcode = 0x81,                                        /* erase page                 */
-                     .bEraseSectorOpcode = 0x50,                                        /* eraseSectorOpcode          */
-                      .uiEraseChipCmdLen = 0,                                           /* erase chip command length  */
-                         .abEraseChipCmd = {0},                                         /* erase chip command         */
-                        .bPageProgOpcode = 0x00,                                        /* pageProgOpcode             */
-                            .bBufferFill = 0x84,                                        /* buffer fill opcode         */
-                     .bBufferWriteOpcode = 0x88,                                        /* buffer write opcode        */
-                .bEraseAndPageProgOpcode = 0x82,                                        /* eraseAndPageProgOpcode     */
-                      .bReadStatusOpcode = 0xd7,                                        /* readStatusOpcode           */
-                       .bStatusReadyMask = 0xbc,                                        /* statusReadyMask            */
-                      .bStatusReadyValue = 0xac,                                        /* statusReadyValue           */
-                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
-                             .abInitCmd0 = {0},                                         /* initCmd0                   */
-                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
-                             .abInitCmd1 = {0},                                         /* initCmd1                   */
-                             .uiIdLength = 2,                                           /* id_length                  */
-                               .abIdSend = {0xd7, 0x00},                                /* id_send                    */
-                               .abIdMask = {0x00, 0x3c},                                /* id_mask                    */
-                              .abIdMagic = {0x00, 0x2c}                                 /* id_magic                   */
         },
 
         /* Atmel AT45DB321C configuration */
@@ -442,39 +250,6 @@ const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
                                .abIdSend = {0x9f, 0x00, 0x00, 0x00, 0x00},              /* id_send                    */
                                .abIdMask = {0x00, 0xff, 0xff, 0xff, 0xff},              /* id_mask                    */
                               .abIdMagic = {0x00, 0x1f, 0x27, 0x01, 0x00}               /* id_magic                   */
-        },
-
-        /* Atmel AT45DB321B */
-        /* NOTE: this must be after the AT45DB321C and D typ, or both will match here */
-        {
-                                 .acName = "AT45DB321B\0",                              /* name                       */
-                                 .ulSize = 4325376,                                     /* size                       */
-                                .ulClock = 20000,                                       /* minClock                   */
-                             .ulPageSize = 528,                                         /* pageSize                   */
-                          .ulSectorPages = 8,                                           /* sectorSize                 */
-                               .tAdrMode = SPIFLASH_ADR_PAGESIZE_BITSHIFT,              /* address mode               */
-                            .bReadOpcode = 0xe8,                                        /* readOpcode                 */
-                     .bReadOpcodeDCBytes = 4,                                           /* readOpcodeDCBytes          */
-                     .bWriteEnableOpcode = 0x00,                                        /* writeEnableOpcode          */
-                       .bErasePageOpcode = 0x81,                                        /* erase page                 */
-                     .bEraseSectorOpcode = 0x50,                                        /* eraseSectorOpcode          */
-                      .uiEraseChipCmdLen = 0,                                           /* erase chip command length  */
-                         .abEraseChipCmd = {0},                                         /* erase chip command         */
-                        .bPageProgOpcode = 0x00,                                        /* pageProgOpcode             */
-                            .bBufferFill = 0x84,                                        /* buffer fill opcode         */
-                     .bBufferWriteOpcode = 0x88,                                        /* buffer write opcode        */
-                .bEraseAndPageProgOpcode = 0x82,                                        /* eraseAndPageProgOpcode     */
-                      .bReadStatusOpcode = 0xd7,                                        /* readStatusOpcode           */
-                       .bStatusReadyMask = 0xbc,                                        /* statusReadyMask            */
-                      .bStatusReadyValue = 0xb4,                                        /* statusReadyValue           */
-                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
-                             .abInitCmd0 = {0},                                         /* initCmd0                   */
-                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
-                             .abInitCmd1 = {0},                                         /* initCmd1                   */
-                             .uiIdLength = 3,                                           /* id_length                  */
-                               .abIdSend = {0xd7, 0x00},                                /* id_send                    */
-                               .abIdMask = {0x00, 0x3c},                                /* id_mask                    */
-                              .abIdMagic = {0x00, 0x34}                                 /* id_magic                   */
         },
 
         /* Atmel AT45DB642D */
@@ -1311,6 +1086,231 @@ const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
                                .abIdSend = {0x9f, 0x00, 0x00, 0x00},                    /* id_send                    */
                                .abIdMask = {0x00, 0xff, 0xff, 0xff},                    /* id_mask                    */
                               .abIdMagic = {0x00, 0xef, 0x40, 0x16}                     /* id_magic                   */
+        },
+
+        /* Atmel AT25F1024A */
+        {
+                                 .acName = "AT25F1024A\0",                              /* name                       */
+                                 .ulSize = 131072,                                      /* size                       */
+                                .ulClock = 20000,                                       /* minClock                   */
+                             .ulPageSize = 256,                                         /* pageSize                   */
+                          .ulSectorPages = 128,                                         /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_LINEAR,                         /* address mode               */
+                            .bReadOpcode = 0x03,                                        /* readOpcode                 */
+                     .bReadOpcodeDCBytes = 0,                                           /* readOpcodeDCBytes          */
+                     .bWriteEnableOpcode = 0x06,                                        /* writeEnableOpcode          */
+                       .bErasePageOpcode = 0x00,                                        /* erase page                 */
+                     .bEraseSectorOpcode = 0x52,                                        /* eraseSectorOpcode          */
+                      .uiEraseChipCmdLen = 1,                                           /* erase chip command length  */
+                         .abEraseChipCmd = {0x62},                                      /* erase chip command         */
+                        .bPageProgOpcode = 0x02,                                        /* pageProgOpcode             */
+                            .bBufferFill = 0x00,                                        /* buffer fill opcode         */
+                     .bBufferWriteOpcode = 0x00,                                        /* buffer write opcode        */
+                .bEraseAndPageProgOpcode = 0x00,                                        /* eraseAndPageProgOpcode     */
+                      .bReadStatusOpcode = 0x05,                                        /* readStatusOpcode           */
+                       .bStatusReadyMask = 0x01,                                        /* statusReadyMask            */
+                      .bStatusReadyValue = 0x00,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 1,                                           /* initCmd0_length            */
+                             .abInitCmd0 = { 0x06 },                                    /* initCmd0                   */
+                      .uiInitCmd1_length = 2,                                           /* initCmd1_length            */
+                             .abInitCmd1 = { 0x01, 0x02 },                              /* initCmd1                   */
+                             .uiIdLength = 3,                                           /* id_length                  */
+                               .abIdSend = {0x15, 0x00, 0x00},                          /* id_send                    */
+                               .abIdMask = {0x00, 0xff, 0xff},                          /* id_mask                    */
+                              .abIdMagic = {0x00, 0x1f, 0x60}                           /* id_magic                   */
+        },
+
+        /* Atmel AT45DB011B */
+        {
+                                 .acName = "AT45DB011B\0",                              /* name                       */
+                                 .ulSize = 135168,                                      /* size                       */
+                                .ulClock = 20000,                                       /* minClock                   */
+                             .ulPageSize = 264,                                         /* pageSize                   */
+                          .ulSectorPages = 8,                                           /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_PAGESIZE_BITSHIFT,              /* address mode               */
+                            .bReadOpcode = 0xe8,                                        /* readOpcode                 */
+                     .bReadOpcodeDCBytes = 4,                                           /* readOpcodeDCBytes          */
+                     .bWriteEnableOpcode = 0x00,                                        /* writeEnableOpcode          */
+                       .bErasePageOpcode = 0x81,                                        /* erase page                 */
+                     .bEraseSectorOpcode = 0x50,                                        /* eraseSectorOpcode          */
+                      .uiEraseChipCmdLen = 0,                                           /* erase chip command length  */
+                         .abEraseChipCmd = {0},                                         /* erase chip command         */
+                        .bPageProgOpcode = 0x00,                                        /* pageProgOpcode             */
+                            .bBufferFill = 0x84,                                        /* buffer fill opcode         */
+                     .bBufferWriteOpcode = 0x88,                                        /* buffer write opcode        */
+                .bEraseAndPageProgOpcode = 0x82,                                        /* eraseAndPageProgOpcode     */
+                      .bReadStatusOpcode = 0xd7,                                        /* readStatusOpcode           */
+                       .bStatusReadyMask = 0xbc,                                        /* statusReadyMask            */
+                      .bStatusReadyValue = 0x8c,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
+                             .abInitCmd0 = {0},                                         /* initCmd0                   */
+                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
+                             .abInitCmd1 = {0},                                         /* initCmd1                   */
+                             .uiIdLength = 2,                                           /* id_length                  */
+                               .abIdSend = {0xd7, 0x00},                                /* id_send                    */
+                               .abIdMask = {0x00, 0x3c},                                /* id_mask                    */
+                              .abIdMagic = {0x00, 0x0c}                                 /* id_magic                   */
+        },
+
+        /* Atmel AT45DB021B */
+        {
+                                 .acName = "AT45DB021B\0",                              /* name                       */
+                                 .ulSize = 270336,                                      /* size                       */
+                                .ulClock = 20000,                                       /* minClock                   */
+                             .ulPageSize = 264,                                         /* pageSize                   */
+                          .ulSectorPages = 8,                                           /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_PAGESIZE_BITSHIFT,              /* address mode               */
+                            .bReadOpcode = 0xe8,                                        /* readOpcode                 */
+                     .bReadOpcodeDCBytes = 4,                                           /* readOpcodeDCBytes          */
+                     .bWriteEnableOpcode = 0x00,                                        /* writeEnableOpcode          */
+                       .bErasePageOpcode = 0x81,                                        /* erase page                 */
+                     .bEraseSectorOpcode = 0x50,                                        /* eraseSectorOpcode          */
+                      .uiEraseChipCmdLen = 0,                                           /* erase chip command length  */
+                         .abEraseChipCmd = {0},                                         /* erase chip command         */
+                        .bPageProgOpcode = 0x00,                                        /* pageProgOpcode             */
+                            .bBufferFill = 0x84,                                        /* buffer fill opcode         */
+                     .bBufferWriteOpcode = 0x88,                                        /* buffer write opcode        */
+                .bEraseAndPageProgOpcode = 0x82,                                        /* eraseAndPageProgOpcode     */
+                      .bReadStatusOpcode = 0xd7,                                        /* readStatusOpcode           */
+                       .bStatusReadyMask = 0xbc,                                        /* statusReadyMask            */
+                      .bStatusReadyValue = 0x94,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
+                             .abInitCmd0 = {0},                                         /* initCmd0                   */
+                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
+                             .abInitCmd1 = {0},                                         /* initCmd1                   */
+                             .uiIdLength = 2,                                           /* id_length                  */
+                               .abIdSend = {0xd7, 0x00},                                /* id_send                    */
+                               .abIdMask = {0x00, 0x3c},                                /* id_mask                    */
+                              .abIdMagic = {0x00, 0x14}                                 /* id_magic                   */
+        },
+
+        /* Atmel AT45DB041B */
+        {
+                                 .acName = "AT45DB041B\0",                              /* name                       */
+                                 .ulSize = 540672,                                      /* size                       */
+                                .ulClock = 15000,                                       /* minClock                   */
+                             .ulPageSize = 264,                                         /* pageSize                   */
+                          .ulSectorPages = 8,                                           /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_PAGESIZE_BITSHIFT,              /* address mode               */
+                            .bReadOpcode = 0xe8,                                        /* readOpcode                 */
+                     .bReadOpcodeDCBytes = 4,                                           /* readOpcodeDCBytes          */
+                     .bWriteEnableOpcode = 0x00,                                        /* writeEnableOpcode          */
+                       .bErasePageOpcode = 0x81,                                        /* erase page                 */
+                     .bEraseSectorOpcode = 0x50,                                        /* eraseSectorOpcode          */
+                      .uiEraseChipCmdLen = 0,                                           /* erase chip command length  */
+                         .abEraseChipCmd = {0},                                         /* erase chip command         */
+                        .bPageProgOpcode = 0x00,                                        /* pageProgOpcode             */
+                            .bBufferFill = 0x84,                                        /* buffer fill opcode         */
+                     .bBufferWriteOpcode = 0x88,                                        /* buffer write opcode        */
+                .bEraseAndPageProgOpcode = 0x82,                                        /* eraseAndPageProgOpcode     */
+                      .bReadStatusOpcode = 0xd7,                                        /* readStatusOpcode           */
+                       .bStatusReadyMask = 0xbc,                                        /* statusReadyMask            */
+                      .bStatusReadyValue = 0x9c,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
+                             .abInitCmd0 = {0},                                         /* initCmd0                   */
+                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
+                             .abInitCmd1 = {0},                                         /* initCmd1                   */
+                             .uiIdLength = 2,                                           /* id_length                  */
+                               .abIdSend = {0xd7, 0x00},                                /* id_send                    */
+                               .abIdMask = {0x00, 0x3c},                                /* id_mask                    */
+                              .abIdMagic = {0x00, 0x1c}                                 /* id_magic                   */
+        },
+
+        /* Atmel AT45DB081B */
+        {
+                                 .acName = "AT45DB081B\0",                              /* name                       */
+                                 .ulSize = 1081344,                                     /* size                       */
+                                .ulClock = 15000,                                       /* minClock                   */
+                             .ulPageSize = 264,                                         /* pageSize                   */
+                          .ulSectorPages = 8,                                           /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_PAGESIZE_BITSHIFT,              /* address mode               */
+                            .bReadOpcode = 0xe8,                                        /* readOpcode                 */
+                     .bReadOpcodeDCBytes = 4,                                           /* readOpcodeDCBytes          */
+                     .bWriteEnableOpcode = 0x00,                                        /* writeEnableOpcode          */
+                       .bErasePageOpcode = 0x81,                                        /* erase page                 */
+                     .bEraseSectorOpcode = 0x50,                                        /* eraseSectorOpcode          */
+                      .uiEraseChipCmdLen = 0,                                           /* erase chip command length  */
+                         .abEraseChipCmd = {0},                                         /* erase chip command         */
+                        .bPageProgOpcode = 0x00,                                        /* pageProgOpcode             */
+                            .bBufferFill = 0x84,                                        /* buffer fill opcode         */
+                     .bBufferWriteOpcode = 0x88,                                        /* buffer write opcode        */
+                .bEraseAndPageProgOpcode = 0x82,                                        /* eraseAndPageProgOpcode     */
+                      .bReadStatusOpcode = 0xd7,                                        /* readStatusOpcode           */
+                       .bStatusReadyMask = 0xbc,                                        /* statusReadyMask            */
+                      .bStatusReadyValue = 0xa4,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
+                             .abInitCmd0 = {0},                                         /* initCmd0                   */
+                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
+                             .abInitCmd1 = {0},                                         /* initCmd1                   */
+                             .uiIdLength = 2,                                           /* id_length                  */
+                               .abIdSend = {0xd7, 0x00},                                /* id_send                    */
+                               .abIdMask = {0x00, 0x3c},                                /* id_mask                    */
+                              .abIdMagic = {0x00, 0x24}                                 /* id_magic                   */
+        },
+
+        /* Atmel AT45DB161B */
+        {
+                                 .acName = "AT45DB161B\0",                              /* name                       */
+                                 .ulSize = 2162688,                                     /* size                       */
+                                .ulClock = 15000,                                       /* minClock                   */
+                             .ulPageSize = 528,                                         /* pageSize                   */
+                          .ulSectorPages = 8,                                           /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_PAGESIZE_BITSHIFT,              /* address mode               */
+                            .bReadOpcode = 0xe8,                                        /* readOpcode                 */
+                     .bReadOpcodeDCBytes = 4,                                           /* readOpcodeDCBytes          */
+                     .bWriteEnableOpcode = 0x00,                                        /* writeEnableOpcode          */
+                       .bErasePageOpcode = 0x81,                                        /* erase page                 */
+                     .bEraseSectorOpcode = 0x50,                                        /* eraseSectorOpcode          */
+                      .uiEraseChipCmdLen = 0,                                           /* erase chip command length  */
+                         .abEraseChipCmd = {0},                                         /* erase chip command         */
+                        .bPageProgOpcode = 0x00,                                        /* pageProgOpcode             */
+                            .bBufferFill = 0x84,                                        /* buffer fill opcode         */
+                     .bBufferWriteOpcode = 0x88,                                        /* buffer write opcode        */
+                .bEraseAndPageProgOpcode = 0x82,                                        /* eraseAndPageProgOpcode     */
+                      .bReadStatusOpcode = 0xd7,                                        /* readStatusOpcode           */
+                       .bStatusReadyMask = 0xbc,                                        /* statusReadyMask            */
+                      .bStatusReadyValue = 0xac,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
+                             .abInitCmd0 = {0},                                         /* initCmd0                   */
+                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
+                             .abInitCmd1 = {0},                                         /* initCmd1                   */
+                             .uiIdLength = 2,                                           /* id_length                  */
+                               .abIdSend = {0xd7, 0x00},                                /* id_send                    */
+                               .abIdMask = {0x00, 0x3c},                                /* id_mask                    */
+                              .abIdMagic = {0x00, 0x2c}                                 /* id_magic                   */
+        },
+
+        /* Atmel AT45DB321B */
+        /* NOTE: this must be after the AT45DB321C and D typ, or both will match here */
+        {
+                                 .acName = "AT45DB321B\0",                              /* name                       */
+                                 .ulSize = 4325376,                                     /* size                       */
+                                .ulClock = 20000,                                       /* minClock                   */
+                             .ulPageSize = 528,                                         /* pageSize                   */
+                          .ulSectorPages = 8,                                           /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_PAGESIZE_BITSHIFT,              /* address mode               */
+                            .bReadOpcode = 0xe8,                                        /* readOpcode                 */
+                     .bReadOpcodeDCBytes = 4,                                           /* readOpcodeDCBytes          */
+                     .bWriteEnableOpcode = 0x00,                                        /* writeEnableOpcode          */
+                       .bErasePageOpcode = 0x81,                                        /* erase page                 */
+                     .bEraseSectorOpcode = 0x50,                                        /* eraseSectorOpcode          */
+                      .uiEraseChipCmdLen = 0,                                           /* erase chip command length  */
+                         .abEraseChipCmd = {0},                                         /* erase chip command         */
+                        .bPageProgOpcode = 0x00,                                        /* pageProgOpcode             */
+                            .bBufferFill = 0x84,                                        /* buffer fill opcode         */
+                     .bBufferWriteOpcode = 0x88,                                        /* buffer write opcode        */
+                .bEraseAndPageProgOpcode = 0x82,                                        /* eraseAndPageProgOpcode     */
+                      .bReadStatusOpcode = 0xd7,                                        /* readStatusOpcode           */
+                       .bStatusReadyMask = 0xbc,                                        /* statusReadyMask            */
+                      .bStatusReadyValue = 0xb4,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
+                             .abInitCmd0 = {0},                                         /* initCmd0                   */
+                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
+                             .abInitCmd1 = {0},                                         /* initCmd1                   */
+                             .uiIdLength = 3,                                           /* id_length                  */
+                               .abIdSend = {0xd7, 0x00},                                /* id_send                    */
+                               .abIdMask = {0x00, 0x3c},                                /* id_mask                    */
+                              .abIdMagic = {0x00, 0x34}                                 /* id_magic                   */
         },
 };
 
