@@ -35,6 +35,8 @@ NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress (const SPI_FLASH_T *ptFlashDev,
 
 /*-----------------------------------*/
 
+#define SPI_SLAVE_ID 1
+
 #define SPI_BUFFER_SIZE 8192
 unsigned char pucSpiBuffer[SPI_BUFFER_SIZE];
 
@@ -53,7 +55,7 @@ NETX_CONSOLEAPP_RESULT_T spi_flash(const unsigned char *pbData, unsigned long ul
 
 	/* try to detect flash */
 	uprintf(". Detecting SPI flash...\n");
-	tFlashDev.uiSlaveId = 1;
+	tFlashDev.uiSlaveId = SPI_SLAVE_ID;
 	iResult = Drv_SpiInitializeFlash(&tFlashDev);
 	if( iResult==0 )
 	{
@@ -112,7 +114,7 @@ NETX_CONSOLEAPP_RESULT_T spi_erase(unsigned long ulDataByteLen)
 
 	/* try to detect flash */
 	uprintf(". Detecting SPI flash...\n");
-	tFlashDev.uiSlaveId = 1;
+	tFlashDev.uiSlaveId = SPI_SLAVE_ID;
 	iResult = Drv_SpiInitializeFlash(&tFlashDev);
 	if( iResult==0 )
 	{
@@ -174,7 +176,7 @@ NETX_CONSOLEAPP_RESULT_T spi_read(unsigned char *pbData, unsigned long ulDataByt
 
 	/* try to detect flash */
 	uprintf(". Detecting SPI flash...\n");
-	tFlashDev.uiSlaveId = 1;
+	tFlashDev.uiSlaveId = SPI_SLAVE_ID;
 	iResult = Drv_SpiInitializeFlash(&tFlashDev);
 	if( iResult==0 )
 	{
@@ -228,7 +230,7 @@ NETX_CONSOLEAPP_RESULT_T spi_verify(const unsigned char *pbData, unsigned long u
 
 	/* try to detect flash */
 	uprintf(". Detecting SPI flash...\n");
-	tFlashDev.uiSlaveId = 1;
+	tFlashDev.uiSlaveId = SPI_SLAVE_ID;
 	iResult = Drv_SpiInitializeFlash(&tFlashDev);
 	if( iResult==0 )
 	{
