@@ -76,12 +76,12 @@ if sys.platform.startswith("win"):
     else:
       _hitexpath = arm_env['ENV']['PATH_GNU_ARM']
       print "Found Hitex Arm Compiler in \"" +  _hitexpath + "\""
-      arm_env['ENV']['PATH'] = _hitexpath  + "bin" + ";" + arm_env['ENV']['PATH_GNU_ARM']
+      arm_env['ENV']['PATH'] = _hitexpath  + "/bin" + ";" + arm_env['ENV']['PATH_GNU_ARM']
       
-      _library_includes_netx500 = [_hitexpath + 'arm-hitex-elf/lib/interwork/arm926ej-s',
-                                 _hitexpath + 'lib/gcc/arm-hitex-elf/4.0.3/interwork/arm926ej-s']
-      _library_includes_netx50  = [_hitexpath + 'arm-hitex-elf/lib/interwork/arm926ej-s',
-                                   _hitexpath + 'lib/gcc/arm-hitex-elf/4.0.3/interwork/arm926ej-s']
+      _library_includes_netx500 = [_hitexpath + '/arm-hitex-elf/lib/interwork/arm926ej-s',
+                                 _hitexpath + '/lib/gcc/arm-hitex-elf/4.0.3/interwork/arm926ej-s']
+      _library_includes_netx50  = [_hitexpath + '/arm-hitex-elf/lib/interwork/arm926ej-s',
+                                   _hitexpath + '/lib/gcc/arm-hitex-elf/4.0.3/interwork/arm926ej-s']
   
 elif sys.platform.startswith("linux"):
   arm_env = Environment(
