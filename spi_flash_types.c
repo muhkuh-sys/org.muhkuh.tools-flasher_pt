@@ -1120,6 +1120,102 @@ const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
                               .abIdMagic = {0x00, 0x1c, 0x20, 0x16}                     /* id_magic                   */
         },
 
+        /* Macronix MX25L1605D */
+        {
+                                 .acName = "MX25L1605D\0",                              /* name                       */
+                                 .ulSize = 2097152,                                     /* size                       */
+                                .ulClock = 66000,                                       /* minClock                   */
+                             .ulPageSize = 256,                                         /* pageSize                   */
+                          .ulSectorPages = 16,                                          /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_LINEAR,                         /* address mode               */
+                            .bReadOpcode = 0x03,                                        /* readOpcode                 */
+                     .bReadOpcodeDCBytes = 0,                                           /* readOpcodeDCBytes          */
+                     .bWriteEnableOpcode = 0x06,                                        /* writeEnableOpcode          */
+                       .bErasePageOpcode = 0x00,                                        /* erase page                 */
+                     .bEraseSectorOpcode = 0x20,                                        /* eraseSectorOpcode          */
+                      .uiEraseChipCmdLen = 1,                                           /* erase chip command length  */
+                         .abEraseChipCmd = {0xc7},                                      /* erase chip command         */
+                        .bPageProgOpcode = 0x02,                                        /* pageProgOpcode             */
+                            .bBufferFill = 0x00,                                        /* buffer fill opcode         */
+                     .bBufferWriteOpcode = 0x00,                                        /* buffer write opcode        */
+                .bEraseAndPageProgOpcode = 0x00,                                        /* eraseAndPageProgOpcode     */
+                      .bReadStatusOpcode = 0x05,                                        /* readStatusOpcode           */
+                       .bStatusReadyMask = 0x01,                                        /* statusReadyMask            */
+                      .bStatusReadyValue = 0x00,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
+                             .abInitCmd0 = {0},                                         /* initCmd0                   */
+                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
+                             .abInitCmd1 = {0},                                         /* initCmd1                   */
+                             .uiIdLength = 4,                                           /* id_length                  */
+                               .abIdSend = {0x9f, 0x00, 0x00, 0x00},                    /* id_send                    */
+                               .abIdMask = {0x00, 0xff, 0xff, 0xff},                    /* id_mask                    */
+                              .abIdMagic = {0x00, 0xc2, 0x20, 0x15}                     /* id_magic                   */
+        },
+
+        /* Macronix MX25L3205D */
+        {
+                                 .acName = "MX25L3205D\0",                              /* name                       */
+                                 .ulSize = 4194304,                                     /* size                       */
+                                .ulClock = 66000,                                       /* minClock                   */
+                             .ulPageSize = 256,                                         /* pageSize                   */
+                          .ulSectorPages = 16,                                          /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_LINEAR,                         /* address mode               */
+                            .bReadOpcode = 0x03,                                        /* readOpcode                 */
+                     .bReadOpcodeDCBytes = 0,                                           /* readOpcodeDCBytes          */
+                     .bWriteEnableOpcode = 0x06,                                        /* writeEnableOpcode          */
+                       .bErasePageOpcode = 0x00,                                        /* erase page                 */
+                     .bEraseSectorOpcode = 0x20,                                        /* eraseSectorOpcode          */
+                      .uiEraseChipCmdLen = 1,                                           /* erase chip command length  */
+                         .abEraseChipCmd = {0xc7},                                      /* erase chip command         */
+                        .bPageProgOpcode = 0x02,                                        /* pageProgOpcode             */
+                            .bBufferFill = 0x00,                                        /* buffer fill opcode         */
+                     .bBufferWriteOpcode = 0x00,                                        /* buffer write opcode        */
+                .bEraseAndPageProgOpcode = 0x00,                                        /* eraseAndPageProgOpcode     */
+                      .bReadStatusOpcode = 0x05,                                        /* readStatusOpcode           */
+                       .bStatusReadyMask = 0x01,                                        /* statusReadyMask            */
+                      .bStatusReadyValue = 0x00,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
+                             .abInitCmd0 = {0},                                         /* initCmd0                   */
+                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
+                             .abInitCmd1 = {0},                                         /* initCmd1                   */
+                             .uiIdLength = 4,                                           /* id_length                  */
+                               .abIdSend = {0x9f, 0x00, 0x00, 0x00},                    /* id_send                    */
+                               .abIdMask = {0x00, 0xff, 0xff, 0xff},                    /* id_mask                    */
+                              .abIdMagic = {0x00, 0xc2, 0x20, 0x16}                     /* id_magic                   */
+        },
+
+        /* Macronix MX25L6405D */
+        {
+                                 .acName = "MX25L6405D\0",                              /* name                       */
+                                 .ulSize = 8388608,                                     /* size                       */
+                                .ulClock = 66000,                                       /* minClock                   */
+                             .ulPageSize = 256,                                         /* pageSize                   */
+                          .ulSectorPages = 16,                                          /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_LINEAR,                         /* address mode               */
+                            .bReadOpcode = 0x03,                                        /* readOpcode                 */
+                     .bReadOpcodeDCBytes = 0,                                           /* readOpcodeDCBytes          */
+                     .bWriteEnableOpcode = 0x06,                                        /* writeEnableOpcode          */
+                       .bErasePageOpcode = 0x00,                                        /* erase page                 */
+                     .bEraseSectorOpcode = 0x20,                                        /* eraseSectorOpcode          */
+                      .uiEraseChipCmdLen = 1,                                           /* erase chip command length  */
+                         .abEraseChipCmd = {0xc7},                                      /* erase chip command         */
+                        .bPageProgOpcode = 0x02,                                        /* pageProgOpcode             */
+                            .bBufferFill = 0x00,                                        /* buffer fill opcode         */
+                     .bBufferWriteOpcode = 0x00,                                        /* buffer write opcode        */
+                .bEraseAndPageProgOpcode = 0x00,                                        /* eraseAndPageProgOpcode     */
+                      .bReadStatusOpcode = 0x05,                                        /* readStatusOpcode           */
+                       .bStatusReadyMask = 0x01,                                        /* statusReadyMask            */
+                      .bStatusReadyValue = 0x00,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
+                             .abInitCmd0 = {0},                                         /* initCmd0                   */
+                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
+                             .abInitCmd1 = {0},                                         /* initCmd1                   */
+                             .uiIdLength = 4,                                           /* id_length                  */
+                               .abIdSend = {0x9f, 0x00, 0x00, 0x00},                    /* id_send                    */
+                               .abIdMask = {0x00, 0xff, 0xff, 0xff},                    /* id_mask                    */
+                              .abIdMagic = {0x00, 0xc2, 0x20, 0x17}                     /* id_magic                   */
+        },
+
         /* Atmel AT25F1024A */
         {
                                  .acName = "AT25F1024A\0",                              /* name                       */
