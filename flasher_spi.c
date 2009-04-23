@@ -35,7 +35,11 @@ NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress (const SPI_FLASH_T *ptFlashDev,
 
 /*-----------------------------------*/
 
+/* this is the standard id for SPI flashes */
 #define SPI_SLAVE_ID 1
+
+/* this is the MMC id, it is used for the SPI test adapter */
+/* #define SPI_SLAVE_ID 2 */
 
 #define SPI_BUFFER_SIZE 8192
 unsigned char pucSpiBuffer[SPI_BUFFER_SIZE];
