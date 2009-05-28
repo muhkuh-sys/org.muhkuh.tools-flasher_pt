@@ -18,12 +18,16 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-        .section .init_code, "ax"
-        .arm  
+	.section .init_code, "ax"
+	.arm
 
-        .extern start
+	.extern init
+	.global start
 
-	b	start
+    .func start
+start:
+	b	init
+    .endfunc
 
 	.end
 

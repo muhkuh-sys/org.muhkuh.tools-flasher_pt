@@ -25,13 +25,13 @@
         .extern top_of_ownstack
 
         .global NetxConsoleParameter_Init
-        .global start
+        .global init
 
 @--------------------------------------
 
-  .func start
+  .func init
 
-start:
+init:
         @ save registers on debug console stack
         STMFD   sp!, {r0, r1, r2, lr}
 
