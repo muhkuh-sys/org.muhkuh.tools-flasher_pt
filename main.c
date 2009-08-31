@@ -49,14 +49,14 @@ NETX_CONSOLEAPP_RESULT_T opMode_verify(ptFlasherInputParameter ptAppParams);
 
 NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTestParam)
 {
-  NETX_CONSOLEAPP_RESULT_T tTestResult;
-  ptFlasherInputParameter ptAppParams;
-  unsigned long ulParamVersion;
-  tOperationMode tOpMode;
+        NETX_CONSOLEAPP_RESULT_T tTestResult;
+        ptFlasherInputParameter ptAppParams;
+        unsigned long ulParamVersion;
+        tOperationMode tOpMode;
 
 
-  /*  switch off sys led */
-  setRdyRunLed(RDYRUN_LED_OFF);
+        /*  switch off sys led */
+        setRdyRunLed(RDYRUN_LED_OFF);
 
         /*  say hi */
         uprintf("\f\n\n\n\nFlasher v");
@@ -72,77 +72,77 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
         uprintf(". Init parameter:  0x$8\n", (unsigned long)ptTestParam->pvInitParams);
         uprintf("\n");
 
-  /*  get application parameters */
-  ptAppParams = (ptFlasherInputParameter)ptTestParam->pvInitParams;
+        /*  get application parameters */
+        ptAppParams = (ptFlasherInputParameter)ptTestParam->pvInitParams;
 
-  /*  show application parameters */
-  uprintf(". Application parameters:\n");
-  uprintf(". parameter version: 0x$8\n", ptAppParams->ulParamVersion);
-  uprintf(". operation mode:    0x$8\n", ptAppParams->ulOperationMode);
-  uprintf(". data start:        0x$8\n", (unsigned long)ptAppParams->pbData);
-  uprintf(". data size:         0x$8\n", ptAppParams->ulDataByteSize);
-  uprintf(". boot type:         0x$8\n", ptAppParams->ulBootBlockSrcType);
-  uprintf(". device offset:     0x$8\n", ptAppParams->ulDstDeviceOffset);
-  uprintf("\n");
+        /*  show application parameters */
+        uprintf(". Application parameters:\n");
+        uprintf(". parameter version: 0x$8\n", ptAppParams->ulParamVersion);
+        uprintf(". operation mode:    0x$8\n", ptAppParams->ulOperationMode);
+        uprintf(". data start:        0x$8\n", (unsigned long)ptAppParams->pbData);
+        uprintf(". data size:         0x$8\n", ptAppParams->ulDataByteSize);
+        uprintf(". boot type:         0x$8\n", ptAppParams->ulBootBlockSrcType);
+        uprintf(". device offset:     0x$8\n", ptAppParams->ulDstDeviceOffset);
+        uprintf("\n");
 
-  /*  check parameter version */
-  ulParamVersion = ptAppParams->ulParamVersion;
-  if( ulParamVersion!=0x00010000 )
-  {
-    uprintf("! unknown parameter version: $4.$4. Expected 0001.0000!\n", ulParamVersion>>16, ulParamVersion&0xffff);
-    setRdyRunLed(RDYRUN_LED_RED);
-    return NETX_CONSOLEAPP_RESULT_ERROR;
-  }
+        /*  check parameter version */
+        ulParamVersion = ptAppParams->ulParamVersion;
+        if( ulParamVersion!=0x00010000 )
+        {
+                uprintf("! unknown parameter version: $4.$4. Expected 0001.0000!\n", ulParamVersion>>16, ulParamVersion&0xffff);
+                setRdyRunLed(RDYRUN_LED_RED);
+                return NETX_CONSOLEAPP_RESULT_ERROR;
+        }
 
-  /*  check offset, non 0 is not suppoerted yet */
-  if( ptAppParams->ulDstDeviceOffset!=0 )
-  {
-    uprintf("! a device offset greater than 0 is not supported yet!\n");
-    setRdyRunLed(RDYRUN_LED_RED);
-    return NETX_CONSOLEAPP_RESULT_ERROR;
-  }
+        /*  check offset, non 0 is not suppoerted yet */
+        if( ptAppParams->ulDstDeviceOffset!=0 )
+        {
+                uprintf("! a device offset greater than 0 is not supported yet!\n");
+                setRdyRunLed(RDYRUN_LED_RED);
+                return NETX_CONSOLEAPP_RESULT_ERROR;
+        }
 
-  /*  run operation */
-  tOpMode = (tOperationMode)ptAppParams->ulOperationMode;
-  switch( tOpMode )
-  {
-  case OperationMode_Flash:
-    uprintf(". Operation Mode: Flash\n");
-    tTestResult = opMode_flash(ptAppParams);
-    break;
+        /*  run operation */
+        tOpMode = (tOperationMode)ptAppParams->ulOperationMode;
+        switch( tOpMode )
+        {
+        case OperationMode_Flash:
+                uprintf(". Operation Mode: Flash\n");
+                tTestResult = opMode_flash(ptAppParams);
+                break;
 
-  case OperationMode_Erase:
-    uprintf(". Operation Mode: Erase\n");
-    tTestResult = opMode_erase(ptAppParams);
-    break;
+        case OperationMode_Erase:
+                uprintf(". Operation Mode: Erase\n");
+                tTestResult = opMode_erase(ptAppParams);
+                break;
 
-  case OperationMode_Read:
-    uprintf(". Operation Mode: Read\n");
-    tTestResult = opMode_read(ptAppParams);
-    break;
+        case OperationMode_Read:
+                uprintf(". Operation Mode: Read\n");
+                tTestResult = opMode_read(ptAppParams);
+                break;
 
-  case OperationMode_Verify:
-    uprintf(". Operation Mode: Verify\n");
-    tTestResult = opMode_verify(ptAppParams);
-    break;
+        case OperationMode_Verify:
+                uprintf(". Operation Mode: Verify\n");
+                tTestResult = opMode_verify(ptAppParams);
+                break;
 
-  default:
-    uprintf("! unknown operation mode: $8\n", tOpMode);
-    setRdyRunLed(RDYRUN_LED_RED);
-    tTestResult = NETX_CONSOLEAPP_RESULT_ERROR;
-  }
+        default:
+                uprintf("! unknown operation mode: $8\n", tOpMode);
+                setRdyRunLed(RDYRUN_LED_RED);
+                tTestResult = NETX_CONSOLEAPP_RESULT_ERROR;
+        }
 
-  if( tTestResult==NETX_CONSOLEAPP_RESULT_OK )
-  {
-          /*  operation ok */
-    uprintf("* OK *\n");
-          setRdyRunLed(RDYRUN_LED_GREEN);
-  }
-  else
-  {
-    /*  operation failed */
-    setRdyRunLed(RDYRUN_LED_RED);
-  }
+        if( tTestResult==NETX_CONSOLEAPP_RESULT_OK )
+        {
+                /*  operation ok */
+                uprintf("* OK *\n");
+                setRdyRunLed(RDYRUN_LED_GREEN);
+        }
+        else
+        {
+                /*  operation failed */
+                setRdyRunLed(RDYRUN_LED_RED);
+        }
 
         return tTestResult;
 }
@@ -152,74 +152,75 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 
 NETX_CONSOLEAPP_RESULT_T opMode_flash(ptFlasherInputParameter ptAppParams)
 {
-  NETX_CONSOLEAPP_RESULT_T tResult;
-  tBootBlockSrcType tBBSrcType;
+        NETX_CONSOLEAPP_RESULT_T tResult;
+        tBootBlockSrcType tBBSrcType;
 
 
-  tBBSrcType = (tBootBlockSrcType)ptAppParams->ulBootBlockSrcType;
+        tBBSrcType = (tBootBlockSrcType)ptAppParams->ulBootBlockSrcType;
 
-  uprintf(". Device :");
-        switch(tBBSrcType) {
+        uprintf(". Device :");
+        switch(tBBSrcType)
+        {
         case BootBlockSrcType_OldStyle:
                 /*  old style bootblock, default to SPI */
-    uprintf("old style, fallback to SPI flash\n");
+                uprintf("old style, fallback to SPI flash\n");
                 tResult = spi_flash(ptAppParams->pbData, ptAppParams->ulDataByteSize);
                 break;
 
         case BootBlockSrcType_SRamBus:
                 /*  use parallel flash on SRam bus */
-    uprintf("SRam Bus parflash\n");
+                uprintf("SRam Bus parflash\n");
                 tResult = srb_flash(ptAppParams->pbData, ptAppParams->ulDataByteSize);
                 break;
 
         case BootBlockSrcType_SPI:
                 /*  use SPI flash */
-    uprintf("SPI flash\n");
+                uprintf("SPI flash\n");
                 tResult = spi_flash(ptAppParams->pbData, ptAppParams->ulDataByteSize);
                 break;
 
         case BootBlockSrcType_I2C:
                 /*  use I2C eeprom */
-    uprintf("I2C eeprom\n");
+                uprintf("I2C eeprom\n");
                 tResult = i2c_flash(ptAppParams->pbData, ptAppParams->ulDataByteSize);
                 break;
 
         case BootBlockSrcType_MMC:
                 /*  use MMC/SD card */
-    uprintf("MMC / SD card\n");
+                uprintf("MMC / SD card\n");
 
                 /*  not yet... */
-    uprintf("! MMC / SD card is not supported yet...\n");
+                uprintf("! MMC / SD card is not supported yet...\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 
                 break;
 
         case BootBlockSrcType_DPM:
                 /*  DPM can't be flashed */
-    uprintf("DPM\n");
+                uprintf("DPM\n");
 
-    uprintf("! DPM is not supported\n");
+                uprintf("! DPM is not supported\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                 break;
 
         case BootBlockSrcType_DPE:
-    uprintf("DPM extended\n");
+                uprintf("DPM extended\n");
 
                 /*  DPM extended can't be flashed */
-    uprintf("! DPM extented not supported\n");
+                uprintf("! DPM extented not supported\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                 break;
 
         case BootBlockSrcType_ExtBus:
                 /*  use parallel flash on Extension bus */
-    uprintf("extension bus parflash\n");
+                uprintf("extension bus parflash\n");
                 tResult = ext_flash(ptAppParams->pbData, ptAppParams->ulDataByteSize);
                 break;
 
         default:
                 /*  unknown boot device */
-    uprintf("unknown\n");
-    uprintf("! illegal device id specified\n");
+                uprintf("unknown\n");
+                uprintf("! illegal device id specified\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                 break;
         }
@@ -233,74 +234,75 @@ NETX_CONSOLEAPP_RESULT_T opMode_flash(ptFlasherInputParameter ptAppParams)
 
 NETX_CONSOLEAPP_RESULT_T opMode_erase(ptFlasherInputParameter ptAppParams)
 {
-  NETX_CONSOLEAPP_RESULT_T tResult;
-  tBootBlockSrcType tBBSrcType;
+        NETX_CONSOLEAPP_RESULT_T tResult;
+        tBootBlockSrcType tBBSrcType;
 
 
-  tBBSrcType = (tBootBlockSrcType)ptAppParams->ulBootBlockSrcType;
+        tBBSrcType = (tBootBlockSrcType)ptAppParams->ulBootBlockSrcType;
 
-  uprintf(". Device :");
-        switch(tBBSrcType) {
+        uprintf(". Device :");
+        switch(tBBSrcType)
+        {
         case BootBlockSrcType_OldStyle:
                 /*  old style bootblock, not supported for this operation */
-    uprintf("old style device id, not supported for erase mode!\n");
+                uprintf("old style device id, not supported for erase mode!\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                 break;
 
         case BootBlockSrcType_SRamBus:
                 /*  use parallel flash on SRam bus */
-    uprintf("SRam Bus parflash\n");
+                uprintf("SRam Bus parflash\n");
                 tResult = srb_erase(ptAppParams->ulDataByteSize);
                 break;
 
         case BootBlockSrcType_SPI:
                 /*  use SPI flash */
-    uprintf("SPI flash\n");
+                uprintf("SPI flash\n");
                 tResult = spi_erase(ptAppParams->ulDataByteSize);
                 break;
 
         case BootBlockSrcType_I2C:
                 /*  use I2C eeprom */
-    uprintf("I2C eeprom\n");
+                uprintf("I2C eeprom\n");
                 tResult = i2c_erase(ptAppParams->ulDataByteSize);
                 break;
 
         case BootBlockSrcType_MMC:
                 /*  use MMC/SD card */
-    uprintf("MMC / SD card\n");
+                uprintf("MMC / SD card\n");
 
                 /*  not yet... */
-    uprintf("! MMC / SD card is not supported yet...\n");
+                uprintf("! MMC / SD card is not supported yet...\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 
                 break;
 
         case BootBlockSrcType_DPM:
                 /*  DPM can't be flashed */
-    uprintf("DPM\n");
+                uprintf("DPM\n");
 
-    uprintf("! DPM is not supported\n");
+                uprintf("! DPM is not supported\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                 break;
 
         case BootBlockSrcType_DPE:
-    uprintf("DPM extended\n");
+                uprintf("DPM extended\n");
 
                 /*  DPM extended can't be flashed */
-    uprintf("! DPM extented not supported\n");
+                uprintf("! DPM extented not supported\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                 break;
 
         case BootBlockSrcType_ExtBus:
                 /*  use parallel flash on Extension bus */
-    uprintf("extension bus parflash\n");
+                uprintf("extension bus parflash\n");
                 tResult = ext_erase(ptAppParams->ulDataByteSize);
                 break;
 
         default:
                 /*  unknown boot device */
-    uprintf("unknown\n");
-    uprintf("! illegal device id specified\n");
+                uprintf("unknown\n");
+                uprintf("! illegal device id specified\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                 break;
         }
@@ -314,75 +316,76 @@ NETX_CONSOLEAPP_RESULT_T opMode_erase(ptFlasherInputParameter ptAppParams)
 
 NETX_CONSOLEAPP_RESULT_T opMode_read(ptFlasherInputParameter ptAppParams)
 {
-  NETX_CONSOLEAPP_RESULT_T tResult;
-  tBootBlockSrcType tBBSrcType;
+        NETX_CONSOLEAPP_RESULT_T tResult;
+        tBootBlockSrcType tBBSrcType;
 
 
-  tBBSrcType = (tBootBlockSrcType)ptAppParams->ulBootBlockSrcType;
+        tBBSrcType = (tBootBlockSrcType)ptAppParams->ulBootBlockSrcType;
 
-  uprintf(". Device :");
-        switch(tBBSrcType) {
+        uprintf(". Device :");
+        switch(tBBSrcType)
+        {
         case BootBlockSrcType_OldStyle:
                 /*  old style bootblock, not supported for this operation */
-    uprintf("old style device id\n");
-    uprintf("! old style device id is not supported for read mode\n");
+                uprintf("old style device id\n");
+                uprintf("! old style device id is not supported for read mode\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                 break;
 
         case BootBlockSrcType_SRamBus:
                 /*  use parallel flash on SRam bus */
-    uprintf("SRam Bus parflash\n");
+                uprintf("SRam Bus parflash\n");
                 tResult = srb_read(ptAppParams->pbData, ptAppParams->ulDataByteSize);
                 break;
 
         case BootBlockSrcType_SPI:
                 /*  use SPI flash */
-    uprintf("SPI flash\n");
+                uprintf("SPI flash\n");
                 tResult = spi_read(ptAppParams->pbData, ptAppParams->ulDataByteSize);
                 break;
 
         case BootBlockSrcType_I2C:
                 /*  use I2C eeprom */
-    uprintf("I2C eeprom\n");
+                uprintf("I2C eeprom\n");
                 tResult = i2c_read(ptAppParams->pbData, ptAppParams->ulDataByteSize);
                 break;
 
         case BootBlockSrcType_MMC:
                 /*  use MMC/SD card */
-    uprintf("MMC / SD card\n");
+                uprintf("MMC / SD card\n");
 
                 /*  not yet... */
-    uprintf("! MMC / SD card is not supported yet...\n");
+                uprintf("! MMC / SD card is not supported yet...\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 
                 break;
 
         case BootBlockSrcType_DPM:
                 /*  DPM can't be flashed */
-    uprintf("DPM\n");
+                uprintf("DPM\n");
 
-    uprintf("! DPM is not supported\n");
+                uprintf("! DPM is not supported\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                 break;
 
         case BootBlockSrcType_DPE:
-    uprintf("DPM extended\n");
+                uprintf("DPM extended\n");
 
                 /*  DPM extended can't be flashed */
-    uprintf("! DPM extented not supported\n");
+                uprintf("! DPM extented not supported\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                 break;
 
         case BootBlockSrcType_ExtBus:
                 /*  use parallel flash on Extension bus */
-    uprintf("extension bus parflash\n");
+                uprintf("extension bus parflash\n");
                 tResult = ext_read(ptAppParams->pbData, ptAppParams->ulDataByteSize);
                 break;
 
         default:
                 /*  unknown boot device */
-    uprintf("unknown\n");
-    uprintf("! illegal device id specified\n");
+                uprintf("unknown\n");
+                uprintf("! illegal device id specified\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                 break;
         }
@@ -396,74 +399,75 @@ NETX_CONSOLEAPP_RESULT_T opMode_read(ptFlasherInputParameter ptAppParams)
 
 NETX_CONSOLEAPP_RESULT_T opMode_verify(ptFlasherInputParameter ptAppParams)
 {
-  NETX_CONSOLEAPP_RESULT_T tResult;
-  tBootBlockSrcType tBBSrcType;
+        NETX_CONSOLEAPP_RESULT_T tResult;
+        tBootBlockSrcType tBBSrcType;
 
 
-  tBBSrcType = (tBootBlockSrcType)ptAppParams->ulBootBlockSrcType;
+        tBBSrcType = (tBootBlockSrcType)ptAppParams->ulBootBlockSrcType;
 
-  uprintf(". Device :");
-        switch(tBBSrcType) {
+        uprintf(". Device :");
+        switch(tBBSrcType)
+        {
         case BootBlockSrcType_OldStyle:
                 /*  old style bootblock, default to SPI */
-    uprintf("old style, fallback to SPI flash\n");
+                uprintf("old style, fallback to SPI flash\n");
                 tResult = spi_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
                 break;
 
         case BootBlockSrcType_SRamBus:
                 /*  use parallel flash on SRam bus */
-    uprintf("SRam Bus parflash\n");
+                uprintf("SRam Bus parflash\n");
                 tResult = srb_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
                 break;
 
         case BootBlockSrcType_SPI:
                 /*  use SPI flash */
-    uprintf("SPI flash\n");
+                uprintf("SPI flash\n");
                 tResult = spi_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
                 break;
 
         case BootBlockSrcType_I2C:
                 /*  use I2C eeprom */
-    uprintf("I2C eeprom\n");
+                uprintf("I2C eeprom\n");
                 tResult = i2c_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
                 break;
 
         case BootBlockSrcType_MMC:
                 /*  use MMC/SD card */
-    uprintf("MMC / SD card\n");
+                uprintf("MMC / SD card\n");
 
                 /*  not yet... */
-    uprintf("! MMC / SD card is not supported yet...\n");
+                uprintf("! MMC / SD card is not supported yet...\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 
                 break;
 
         case BootBlockSrcType_DPM:
                 /*  DPM can't be flashed */
-    uprintf("DPM\n");
+                uprintf("DPM\n");
 
-    uprintf("! DPM is not supported\n");
+                uprintf("! DPM is not supported\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                 break;
 
         case BootBlockSrcType_DPE:
-    uprintf("DPM extended\n");
+                uprintf("DPM extended\n");
 
                 /*  DPM extended can't be flashed */
-    uprintf("! DPM extented not supported\n");
+                uprintf("! DPM extented not supported\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                 break;
 
         case BootBlockSrcType_ExtBus:
                 /*  use parallel flash on Extension bus */
-    uprintf("extension bus parflash\n");
+                uprintf("extension bus parflash\n");
                 tResult = ext_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
                 break;
 
         default:
                 /*  unknown boot device */
-    uprintf("unknown\n");
-    uprintf("! illegal device id specified\n");
+                uprintf("unknown\n");
+                uprintf("! illegal device id specified\n");
                 tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                 break;
         }
