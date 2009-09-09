@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+
+<project name="gcc_arm_elf_common" xmlns:cpptasks="antlib:net.sf.antcontrib.cpptasks">
+	<!-- Set the directory for the targets. This directory will contain
+	     one folder for each flavour (e.g. debug or release). -->
+	<property name="targets.home" value="targets" />
+
+	<!-- Set the default build type. It can be overridden from the command
+	     line with the option -Dbuild=<flavour> , with flavour as debug or
+	     release:
+	     
+	     ant -Dbuild=release
+	     to build the release flavour of the target, or
+	     
+	     ant -Dbuild=debug
+	     to build the debug flavour of the target.
+	-->
+	<condition property="build" value="release">
+		<not>
+			<isset property="build" />
+		</not>
+	</condition>
+	<!-- Check the build type, it must be "release" or "debug". -->
+	<fail message="The 'build' property can be empty, 'release' or 'debug'. All other values are invalid.">
+		<condition>
+			<and>
+				<not>
+					<equals arg1="${build}" arg2="debug" casesensitive="false" trim="false" />
+				</not>
+				<not>
+					<equals arg1="${build}" arg2="release" casesensitive="false" trim="false" />
+				</not>
+			</and>
+		</condition>
+	</fail>
+
+	<!-- Construct the path to the build directory (that's where all compiled files go to). -->
+	<property name="build.home" value="${targets.home}/${build}" />
+
+
+	<!-- The "gcc_compile" target passes all source files from the fileset
+	     "build.gcc.compile.sources_id" to the compiler defined by "build.gcc.compile.compiler_id".
+	     
+	     build.gcc.home : output directory for the object files
+	     build.gcc.compile.compiler_id : the id of the compiler
+	     build.gcc.compile.flags : the defines (-Dkey=val) in form of a comma separated list
+	     build.gcc.compile.includes_id : the id of the pathlist
+	     build.gcc.compile.sources_id : the sourcefiles as a fileset
+	-->
+	<target name="gcc_compile">
+		<mkdir dir="${build.gcc.home}" />
+
+		<cpptasks:cc objdir="${build.gcc.home}">
+			<compiler refid="${build.gcc.compile.compiler_id}" />
+			<defineset define="${build.gcc.compile.flags}" />
+			<includepath>
+				<path refid="${build.gcc.compile.includes_id}" />
+			</includepath>
+			<fileset refid="${build.gcc.compile.sources_id}" />
+		</cpptasks:cc>
+	</target>
+
+
+	<target name="gcc_link">
+		<mkdir dir="${build.gcc.home}" />
+
+		<cpptasks:cc objdir="${build.gcc.home}" outfile="${build.gcc.link.artefact}.elf" outtype="executable">
+			<linker extends="${build.gcc.link.linker_id}" />
+			<fileset dir="${basedir}" includes="${build.gcc.link.objects}" />
+			<linkerarg value="-v" />
+			<linkerarg value="-T${build.gcc.link.ldfile}" />
+			<linkerarg value="-Map=${build.gcc.link.artefact}.map" />
+			<linkerarg value="-L${gcc.arm.elf.lib.c}" />
+			<linkerarg value="-L${gcc.arm.elf.lib.gcc}" />
+		</cpptasks:cc>
+	</target>
+
+
+	<!-- extract the binary from the elf file -->
+	<target name="gcc_bin">
+		<mkdir dir="${build.gcc.home}" />
+
+		<exec executable="${gcc.arm.elf.path}objcopy" failonerror="true">
+			<!-- set verbose mode -->
+			<arg value="-v"/>
+			<!-- the output format is binary -->
+			<arg value="-O"/>
+			<arg value="binary"/>
+			<!-- use the elf file as input -->
+			<arg value="${build.gcc.bin.in}"/>
+			<!-- set the output file -->
+			<arg value="${build.gcc.bin.out}"/>
+		</exec>
+	</target>
+
+
+	<!-- convert a binary to a linkable bfd chunk -->
+	<target name="gcc_bin2obj">
+		<mkdir dir="${build.gcc.home}" />
+
+		<exec executable="${gcc.arm.elf.path}objcopy" failonerror="true">
+			<!-- set verbose mode -->
+			<arg value="-v"/>
+			<!-- set input format -->
+			<arg value="-I"/>
+			<arg value="binary"/>
+			<!-- set output format -->
+			<arg value="-O"/>
+			<arg value="elf32-littlearm"/>
+			<!-- set architecture of output -->
+			<arg value="-B"/>
+			<arg value="ARM"/>
+			<!-- use the elf file as input -->
+			<arg value="${build.gcc.bin.in}"/>
+			<!-- set the output file -->
+			<arg value="${build.gcc.bin.out}"/>
+		</exec>
+	</target>
+
+
+</project>
