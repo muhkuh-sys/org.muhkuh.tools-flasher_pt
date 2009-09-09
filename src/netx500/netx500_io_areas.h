@@ -42,10 +42,10 @@
 ************************************************************
 */
 
-#include "netx_regdef.h"
+#include "netx500_regdef.h"
 
-#ifndef __NETX_IO_AREAS_H__
-#define __NETX_IO_AREAS_H__
+#ifndef __NETX500_IO_AREAS_H__
+#define __NETX500_IO_AREAS_H__
 
 
 /*
@@ -191,4 +191,4 @@ typedef struct
 extern const PNETX_GLOBAL_REG_BLOCK_2_AREA_T ptNetXGlobalRegBlock2Area;
 
 
-#endif  /*  __NETX_IO_AREAS_H__ */
+#endif  /*  __NETX500_IO_AREAS_H__ */

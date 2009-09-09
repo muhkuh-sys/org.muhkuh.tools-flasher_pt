@@ -504,8 +504,7 @@ typedef struct NX50_IO_CONFIG_BIT_Ttag {
 	                                                               /* 1: use external PHY instead of internal PHY0 (s. mmio table)       */
 	unsigned int sel_ext_phy1  : BFW_NX50_io_config_sel_ext_phy1;  /* external/internal PHY1 select:                                     */
 	                                                               /* 1: use external PHY instead of internal PHY1 (s. mmio table)       */
-	unsigned int if_select_n   : BFW_NX50_io_config_if_select_n;   /* inverted HIF interace-select signal:                               */
-	                                                               /* 1: PCI-Mode                                                        */
+	unsigned int if_select_n   : BFW_NX50_io_config_if_select_n;   /* inverted HIF interace-select signal                                */
 } NX50_IO_CONFIG_BIT_T;
 
 typedef union {
@@ -13969,34 +13968,6 @@ typedef union {
 #define NX50_NETX_DPM_HOST_GLOB_AREA                    0x1C003100U
 
 /* --------------------------------------------------------------------- */
-/* Register pci_base */
-/* => dpmhs_pci_targ2_mem_base */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_pci_base                                   0x000000BCU
-#define Adr_NX50_host_controlled_global_register_block_pci_base 0x1C0031BCU
-#define Adr_NX50_pci_base                                       0x1C0031BCU
-#define DFLT_VAL_NX50_pci_base                                  0x00000000U
-
-#define MSK_NX50_pci_base_keine_ahnung      0xffffffffU
-#define SRT_NX50_pci_base_keine_ahnung      0
-#define DFLT_VAL_NX50_pci_base_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_pci_base_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_PCI_BASE_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_pci_base_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_PCI_BASE_BIT_T;
-
-typedef union {
-	unsigned int        val;
-	NX50_PCI_BASE_BIT_T bf;
-} NX50_PCI_BASE_T;
-
-/* --------------------------------------------------------------------- */
 /* Register wdg_host */
 /* => dpmhs_wdg_host_timeout */
 /* => Mode: R/W */
@@ -16574,398 +16545,6 @@ typedef union {
 #define Addr_NX50_netx_controlled_global_register_block_1 0x1C003400U
 
 /* --------------------------------------------------------------------- */
-/* Register pci_window_low0 */
-/* => dpmas_mem_win_start0 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_pci_window_low0                                     0x00000080U
-#define Adr_NX50_netx_controlled_global_register_block_1_pci_window_low0 0x1C003480U
-#define Adr_NX50_pci_window_low0                                         0x1C003480U
-#define DFLT_VAL_NX50_pci_window_low0                                    0x00000000U
-
-#define MSK_NX50_pci_window_low0_keine_ahnung      0xffffffffU
-#define SRT_NX50_pci_window_low0_keine_ahnung      0
-#define DFLT_VAL_NX50_pci_window_low0_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_pci_window_low0_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_PCI_WINDOW_LOW0_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_pci_window_low0_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_PCI_WINDOW_LOW0_BIT_T;
-
-typedef union {
-	unsigned int               val;
-	NX50_PCI_WINDOW_LOW0_BIT_T bf;
-} NX50_PCI_WINDOW_LOW0_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_window_high0 */
-/* => dpmas_mem_win_end0 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_pci_window_high0                                     0x00000084U
-#define Adr_NX50_netx_controlled_global_register_block_1_pci_window_high0 0x1C003484U
-#define Adr_NX50_pci_window_high0                                         0x1C003484U
-#define DFLT_VAL_NX50_pci_window_high0                                    0x00000000U
-
-#define MSK_NX50_pci_window_high0_keine_ahnung      0xffffffffU
-#define SRT_NX50_pci_window_high0_keine_ahnung      0
-#define DFLT_VAL_NX50_pci_window_high0_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_pci_window_high0_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_PCI_WINDOW_HIGH0_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_pci_window_high0_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_PCI_WINDOW_HIGH0_BIT_T;
-
-typedef union {
-	unsigned int                val;
-	NX50_PCI_WINDOW_HIGH0_BIT_T bf;
-} NX50_PCI_WINDOW_HIGH0_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_window_low1 */
-/* => dpmas_mem_win_start1 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_pci_window_low1                                     0x00000088U
-#define Adr_NX50_netx_controlled_global_register_block_1_pci_window_low1 0x1C003488U
-#define Adr_NX50_pci_window_low1                                         0x1C003488U
-#define DFLT_VAL_NX50_pci_window_low1                                    0x00000000U
-
-#define MSK_NX50_pci_window_low1_keine_ahnung      0xffffffffU
-#define SRT_NX50_pci_window_low1_keine_ahnung      0
-#define DFLT_VAL_NX50_pci_window_low1_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_pci_window_low1_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_PCI_WINDOW_LOW1_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_pci_window_low1_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_PCI_WINDOW_LOW1_BIT_T;
-
-typedef union {
-	unsigned int               val;
-	NX50_PCI_WINDOW_LOW1_BIT_T bf;
-} NX50_PCI_WINDOW_LOW1_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_window_high1 */
-/* => dpmas_mem_win_end1 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_pci_window_high1                                     0x0000008CU
-#define Adr_NX50_netx_controlled_global_register_block_1_pci_window_high1 0x1C00348CU
-#define Adr_NX50_pci_window_high1                                         0x1C00348CU
-#define DFLT_VAL_NX50_pci_window_high1                                    0x00000000U
-
-#define MSK_NX50_pci_window_high1_keine_ahnung      0xffffffffU
-#define SRT_NX50_pci_window_high1_keine_ahnung      0
-#define DFLT_VAL_NX50_pci_window_high1_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_pci_window_high1_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_PCI_WINDOW_HIGH1_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_pci_window_high1_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_PCI_WINDOW_HIGH1_BIT_T;
-
-typedef union {
-	unsigned int                val;
-	NX50_PCI_WINDOW_HIGH1_BIT_T bf;
-} NX50_PCI_WINDOW_HIGH1_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_window_low2 */
-/* => dpmas_mem_win_start2 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_pci_window_low2                                     0x00000090U
-#define Adr_NX50_netx_controlled_global_register_block_1_pci_window_low2 0x1C003490U
-#define Adr_NX50_pci_window_low2                                         0x1C003490U
-#define DFLT_VAL_NX50_pci_window_low2                                    0x00000000U
-
-#define MSK_NX50_pci_window_low2_keine_ahnung      0xffffffffU
-#define SRT_NX50_pci_window_low2_keine_ahnung      0
-#define DFLT_VAL_NX50_pci_window_low2_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_pci_window_low2_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_PCI_WINDOW_LOW2_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_pci_window_low2_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_PCI_WINDOW_LOW2_BIT_T;
-
-typedef union {
-	unsigned int               val;
-	NX50_PCI_WINDOW_LOW2_BIT_T bf;
-} NX50_PCI_WINDOW_LOW2_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_window_high2 */
-/* => dpmas_mem_win_end2 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_pci_window_high2                                     0x00000094U
-#define Adr_NX50_netx_controlled_global_register_block_1_pci_window_high2 0x1C003494U
-#define Adr_NX50_pci_window_high2                                         0x1C003494U
-#define DFLT_VAL_NX50_pci_window_high2                                    0x00000000U
-
-#define MSK_NX50_pci_window_high2_keine_ahnung      0xffffffffU
-#define SRT_NX50_pci_window_high2_keine_ahnung      0
-#define DFLT_VAL_NX50_pci_window_high2_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_pci_window_high2_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_PCI_WINDOW_HIGH2_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_pci_window_high2_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_PCI_WINDOW_HIGH2_BIT_T;
-
-typedef union {
-	unsigned int                val;
-	NX50_PCI_WINDOW_HIGH2_BIT_T bf;
-} NX50_PCI_WINDOW_HIGH2_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_window_low3 */
-/* => dpmas_mem_win_start3 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_pci_window_low3                                     0x00000098U
-#define Adr_NX50_netx_controlled_global_register_block_1_pci_window_low3 0x1C003498U
-#define Adr_NX50_pci_window_low3                                         0x1C003498U
-#define DFLT_VAL_NX50_pci_window_low3                                    0x00000000U
-
-#define MSK_NX50_pci_window_low3_keine_ahnung      0xffffffffU
-#define SRT_NX50_pci_window_low3_keine_ahnung      0
-#define DFLT_VAL_NX50_pci_window_low3_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_pci_window_low3_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_PCI_WINDOW_LOW3_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_pci_window_low3_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_PCI_WINDOW_LOW3_BIT_T;
-
-typedef union {
-	unsigned int               val;
-	NX50_PCI_WINDOW_LOW3_BIT_T bf;
-} NX50_PCI_WINDOW_LOW3_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_window_high3 */
-/* => dpmas_mem_win_end3 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_pci_window_high3                                     0x0000009CU
-#define Adr_NX50_netx_controlled_global_register_block_1_pci_window_high3 0x1C00349CU
-#define Adr_NX50_pci_window_high3                                         0x1C00349CU
-#define DFLT_VAL_NX50_pci_window_high3                                    0x00000000U
-
-#define MSK_NX50_pci_window_high3_keine_ahnung      0xffffffffU
-#define SRT_NX50_pci_window_high3_keine_ahnung      0
-#define DFLT_VAL_NX50_pci_window_high3_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_pci_window_high3_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_PCI_WINDOW_HIGH3_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_pci_window_high3_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_PCI_WINDOW_HIGH3_BIT_T;
-
-typedef union {
-	unsigned int                val;
-	NX50_PCI_WINDOW_HIGH3_BIT_T bf;
-} NX50_PCI_WINDOW_HIGH3_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_io_base */
-/* => dpmas_pci_io_base */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_pci_io_base                                     0x000000A0U
-#define Adr_NX50_netx_controlled_global_register_block_1_pci_io_base 0x1C0034A0U
-#define Adr_NX50_pci_io_base                                         0x1C0034A0U
-#define DFLT_VAL_NX50_pci_io_base                                    0x00000000U
-
-#define MSK_NX50_pci_io_base_keine_ahnung      0xffffffffU
-#define SRT_NX50_pci_io_base_keine_ahnung      0
-#define DFLT_VAL_NX50_pci_io_base_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_pci_io_base_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_PCI_IO_BASE_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_pci_io_base_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_PCI_IO_BASE_BIT_T;
-
-typedef union {
-	unsigned int           val;
-	NX50_PCI_IO_BASE_BIT_T bf;
-} NX50_PCI_IO_BASE_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_rom_base */
-/* => dpmas_pci_rom_base */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_pci_rom_base                                     0x000000A4U
-#define Adr_NX50_netx_controlled_global_register_block_1_pci_rom_base 0x1C0034A4U
-#define Adr_NX50_pci_rom_base                                         0x1C0034A4U
-#define DFLT_VAL_NX50_pci_rom_base                                    0x00000000U
-
-#define MSK_NX50_pci_rom_base_keine_ahnung      0xffffffffU
-#define SRT_NX50_pci_rom_base_keine_ahnung      0
-#define DFLT_VAL_NX50_pci_rom_base_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_pci_rom_base_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_PCI_ROM_BASE_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_pci_rom_base_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_PCI_ROM_BASE_BIT_T;
-
-typedef union {
-	unsigned int            val;
-	NX50_PCI_ROM_BASE_BIT_T bf;
-} NX50_PCI_ROM_BASE_T;
-
-/* --------------------------------------------------------------------- */
-/* Register arb_ctrl */
-/* => dpmas_arb_ctrl */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_arb_ctrl                                     0x000000A8U
-#define Adr_NX50_netx_controlled_global_register_block_1_arb_ctrl 0x1C0034A8U
-#define Adr_NX50_arb_ctrl                                         0x1C0034A8U
-#define DFLT_VAL_NX50_arb_ctrl                                    0x00000000U
-
-#define MSK_NX50_arb_ctrl_keine_ahnung      0xffffffffU
-#define SRT_NX50_arb_ctrl_keine_ahnung      0
-#define DFLT_VAL_NX50_arb_ctrl_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_arb_ctrl_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_ARB_CTRL_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_arb_ctrl_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_ARB_CTRL_BIT_T;
-
-typedef union {
-	unsigned int        val;
-	NX50_ARB_CTRL_BIT_T bf;
-} NX50_ARB_CTRL_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_config */
-/* => dpmas_pci_cntrl */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_pci_config                                     0x000000ACU
-#define Adr_NX50_netx_controlled_global_register_block_1_pci_config 0x1C0034ACU
-#define Adr_NX50_pci_config                                         0x1C0034ACU
-#define DFLT_VAL_NX50_pci_config                                    0x00000000U
-
-#define MSK_NX50_pci_config_keine_ahnung      0xffffffffU
-#define SRT_NX50_pci_config_keine_ahnung      0
-#define DFLT_VAL_NX50_pci_config_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_pci_config_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_PCI_CONFIG_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_pci_config_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_PCI_CONFIG_BIT_T;
-
-typedef union {
-	unsigned int          val;
-	NX50_PCI_CONFIG_BIT_T bf;
-} NX50_PCI_CONFIG_T;
-
-/* --------------------------------------------------------------------- */
-/* Register sfr_base_addr */
-/* => special frank register */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_sfr_base_addr                                     0x000000B8U
-#define Adr_NX50_netx_controlled_global_register_block_1_sfr_base_addr 0x1C0034B8U
-#define Adr_NX50_sfr_base_addr                                         0x1C0034B8U
-#define DFLT_VAL_NX50_sfr_base_addr                                    0x00000000U
-
-#define MSK_NX50_sfr_base_addr_keine_ahnung      0xffffffffU
-#define SRT_NX50_sfr_base_addr_keine_ahnung      0
-#define DFLT_VAL_NX50_sfr_base_addr_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_sfr_base_addr_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_SFR_BASE_ADDR_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_sfr_base_addr_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_SFR_BASE_ADDR_BIT_T;
-
-typedef union {
-	unsigned int             val;
-	NX50_SFR_BASE_ADDR_BIT_T bf;
-} NX50_SFR_BASE_ADDR_T;
-
-/* --------------------------------------------------------------------- */
-/* Register cis_base */
-/* => dpmas_cis_base */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_cis_base                                     0x000000BCU
-#define Adr_NX50_netx_controlled_global_register_block_1_cis_base 0x1C0034BCU
-#define Adr_NX50_cis_base                                         0x1C0034BCU
-#define DFLT_VAL_NX50_cis_base                                    0x00000000U
-
-#define MSK_NX50_cis_base_keine_ahnung      0xffffffffU
-#define SRT_NX50_cis_base_keine_ahnung      0
-#define DFLT_VAL_NX50_cis_base_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_cis_base_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_CIS_BASE_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_cis_base_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_CIS_BASE_BIT_T;
-
-typedef union {
-	unsigned int        val;
-	NX50_CIS_BASE_BIT_T bf;
-} NX50_CIS_BASE_T;
-
-/* --------------------------------------------------------------------- */
 /* Register wdg_netx */
 /* => dpmas_wdg_host_timeout */
 /* => Mode: R/W */
@@ -19084,127 +18663,6 @@ typedef union {
 	unsigned int            val;
 	NX50_DPMAS_HSCR15_BIT_T bf;
 } NX50_DPMAS_HSCR15_T;
-
-
-/* ===================================================================== */
-
-/* Area of netx_controlled_pci_configuration_shadow_register_block */
-
-/* ===================================================================== */
-
-#define Addr_NX50_netx_controlled_pci_configuration_shadow_register_block 0x1C003700U
-
-/* --------------------------------------------------------------------- */
-/* Register pci_regs_addr */
-/* => dpmas_pci_conf_rd_ctrl */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_pci_regs_addr                                                     0x00000000U
-#define Adr_NX50_netx_controlled_pci_configuration_shadow_register_block_pci_regs_addr 0x1C003700U
-#define Adr_NX50_pci_regs_addr                                                         0x1C003700U
-#define DFLT_VAL_NX50_pci_regs_addr                                                    0x00000000U
-
-#define MSK_NX50_pci_regs_addr_keine_ahnung      0xffffffffU
-#define SRT_NX50_pci_regs_addr_keine_ahnung      0
-#define DFLT_VAL_NX50_pci_regs_addr_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_pci_regs_addr_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_PCI_REGS_ADDR_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_pci_regs_addr_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_PCI_REGS_ADDR_BIT_T;
-
-typedef union {
-	unsigned int             val;
-	NX50_PCI_REGS_ADDR_BIT_T bf;
-} NX50_PCI_REGS_ADDR_T;
-
-/* --------------------------------------------------------------------- */
-/* Register dpmas_pci_conf_rd_data */
-/* =>  */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_dpmas_pci_conf_rd_data                                                     0x00000004U
-#define Adr_NX50_netx_controlled_pci_configuration_shadow_register_block_dpmas_pci_conf_rd_data 0x1C003704U
-#define Adr_NX50_dpmas_pci_conf_rd_data                                                         0x1C003704U
-#define DFLT_VAL_NX50_dpmas_pci_conf_rd_data                                                    0x00000000U
-
-#define MSK_NX50_dpmas_pci_conf_rd_data_keine_ahnung      0xffffffffU
-#define SRT_NX50_dpmas_pci_conf_rd_data_keine_ahnung      0
-#define DFLT_VAL_NX50_dpmas_pci_conf_rd_data_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_dpmas_pci_conf_rd_data_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_DPMAS_PCI_CONF_RD_DATA_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_dpmas_pci_conf_rd_data_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_DPMAS_PCI_CONF_RD_DATA_BIT_T;
-
-typedef union {
-	unsigned int                      val;
-	NX50_DPMAS_PCI_CONF_RD_DATA_BIT_T bf;
-} NX50_DPMAS_PCI_CONF_RD_DATA_T;
-
-/* --------------------------------------------------------------------- */
-/* Register dpmas_pci_conf_wr_ctrl */
-/* =>  */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_dpmas_pci_conf_wr_ctrl                                                     0x00000008U
-#define Adr_NX50_netx_controlled_pci_configuration_shadow_register_block_dpmas_pci_conf_wr_ctrl 0x1C003708U
-#define Adr_NX50_dpmas_pci_conf_wr_ctrl                                                         0x1C003708U
-#define DFLT_VAL_NX50_dpmas_pci_conf_wr_ctrl                                                    0x00000000U
-
-#define MSK_NX50_dpmas_pci_conf_wr_ctrl_keine_ahnung      0xffffffffU
-#define SRT_NX50_dpmas_pci_conf_wr_ctrl_keine_ahnung      0
-#define DFLT_VAL_NX50_dpmas_pci_conf_wr_ctrl_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_dpmas_pci_conf_wr_ctrl_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_DPMAS_PCI_CONF_WR_CTRL_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_dpmas_pci_conf_wr_ctrl_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_DPMAS_PCI_CONF_WR_CTRL_BIT_T;
-
-typedef union {
-	unsigned int                      val;
-	NX50_DPMAS_PCI_CONF_WR_CTRL_BIT_T bf;
-} NX50_DPMAS_PCI_CONF_WR_CTRL_T;
-
-/* --------------------------------------------------------------------- */
-/* Register dpmas_pci_conf_wr_data */
-/* =>  */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX50_dpmas_pci_conf_wr_data                                                     0x0000000CU
-#define Adr_NX50_netx_controlled_pci_configuration_shadow_register_block_dpmas_pci_conf_wr_data 0x1C00370CU
-#define Adr_NX50_dpmas_pci_conf_wr_data                                                         0x1C00370CU
-#define DFLT_VAL_NX50_dpmas_pci_conf_wr_data                                                    0x00000000U
-
-#define MSK_NX50_dpmas_pci_conf_wr_data_keine_ahnung      0xffffffffU
-#define SRT_NX50_dpmas_pci_conf_wr_data_keine_ahnung      0
-#define DFLT_VAL_NX50_dpmas_pci_conf_wr_data_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX50_dpmas_pci_conf_wr_data_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX50_DPMAS_PCI_CONF_WR_DATA_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX50_dpmas_pci_conf_wr_data_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX50_DPMAS_PCI_CONF_WR_DATA_BIT_T;
-
-typedef union {
-	unsigned int                      val;
-	NX50_DPMAS_PCI_CONF_WR_DATA_BIT_T bf;
-} NX50_DPMAS_PCI_CONF_WR_DATA_T;
 
 
 /* ===================================================================== */
@@ -32698,7 +32156,7 @@ typedef struct NX50_VIC_IRQ_STATUS_BIT_Ttag {
 	unsigned int spi        : BFW_NX50_vic_irq_status_spi;        /* combimned SPI0, SPI1 interrupt                                                              */
 	unsigned int i2c        : BFW_NX50_vic_irq_status_i2c;        /* I2C                                                                                         */
 	unsigned int lcd        : BFW_NX50_vic_irq_status_lcd;        /* reserved                                                                                    */
-	unsigned int hif        : BFW_NX50_vic_irq_status_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX50_vic_irq_status_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX50_vic_irq_status_gpio;       /* other external Interrupts from GPIO 0-30                                                    */
 	unsigned int com0       : BFW_NX50_vic_irq_status_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX50_vic_irq_status_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -32848,7 +32306,7 @@ typedef struct NX50_VIC_FIQ_STATUS_BIT_Ttag {
 	unsigned int spi        : BFW_NX50_vic_fiq_status_spi;        /* combimned SPI0, SPI1 interrupt                                                              */
 	unsigned int i2c        : BFW_NX50_vic_fiq_status_i2c;        /* I2C                                                                                         */
 	unsigned int lcd        : BFW_NX50_vic_fiq_status_lcd;        /* reserved                                                                                    */
-	unsigned int hif        : BFW_NX50_vic_fiq_status_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX50_vic_fiq_status_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX50_vic_fiq_status_gpio;       /* other external Interrupts from GPIO 0-30                                                    */
 	unsigned int com0       : BFW_NX50_vic_fiq_status_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX50_vic_fiq_status_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -32998,7 +32456,7 @@ typedef struct NX50_VIC_RAW_INTR_BIT_Ttag {
 	unsigned int spi        : BFW_NX50_vic_raw_intr_spi;        /* combimned SPI0, SPI1 interrupt                                                              */
 	unsigned int i2c        : BFW_NX50_vic_raw_intr_i2c;        /* I2C                                                                                         */
 	unsigned int lcd        : BFW_NX50_vic_raw_intr_lcd;        /* reserved                                                                                    */
-	unsigned int hif        : BFW_NX50_vic_raw_intr_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX50_vic_raw_intr_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX50_vic_raw_intr_gpio;       /* other external Interrupts from GPIO 0-30                                                    */
 	unsigned int com0       : BFW_NX50_vic_raw_intr_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX50_vic_raw_intr_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -33183,7 +32641,7 @@ typedef struct NX50_VIC_INT_SELECT_BIT_Ttag {
 	unsigned int spi        : BFW_NX50_vic_int_select_spi;        /* combimned SPI0, SPI1 interrupt                                                              */
 	unsigned int i2c        : BFW_NX50_vic_int_select_i2c;        /* I2C                                                                                         */
 	unsigned int lcd        : BFW_NX50_vic_int_select_lcd;        /* reserved                                                                                    */
-	unsigned int hif        : BFW_NX50_vic_int_select_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX50_vic_int_select_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX50_vic_int_select_gpio;       /* other external Interrupts from GPIO 0-30                                                    */
 	unsigned int com0       : BFW_NX50_vic_int_select_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX50_vic_int_select_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -33368,7 +32826,7 @@ typedef struct NX50_VIC_INT_ENABLE_BIT_Ttag {
 	unsigned int spi        : BFW_NX50_vic_int_enable_spi;        /* combimned SPI0, SPI1 interrupt                                                              */
 	unsigned int i2c        : BFW_NX50_vic_int_enable_i2c;        /* I2C                                                                                         */
 	unsigned int lcd        : BFW_NX50_vic_int_enable_lcd;        /* reserved                                                                                    */
-	unsigned int hif        : BFW_NX50_vic_int_enable_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX50_vic_int_enable_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX50_vic_int_enable_gpio;       /* other external Interrupts from GPIO 0-30                                                    */
 	unsigned int com0       : BFW_NX50_vic_int_enable_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX50_vic_int_enable_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -33552,7 +33010,7 @@ typedef struct NX50_VIC_INT_ENCLEAR_BIT_Ttag {
 	unsigned int spi        : BFW_NX50_vic_int_enclear_spi;        /* combimned SPI0, SPI1 interrupt                                                              */
 	unsigned int i2c        : BFW_NX50_vic_int_enclear_i2c;        /* I2C                                                                                         */
 	unsigned int lcd        : BFW_NX50_vic_int_enclear_lcd;        /* reserved                                                                                    */
-	unsigned int hif        : BFW_NX50_vic_int_enclear_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX50_vic_int_enclear_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX50_vic_int_enclear_gpio;       /* other external Interrupts from GPIO 0-30                                                    */
 	unsigned int com0       : BFW_NX50_vic_int_enclear_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX50_vic_int_enclear_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -33735,7 +33193,7 @@ typedef struct NX50_VIC_SOFTINT_BIT_Ttag {
 	unsigned int spi        : BFW_NX50_vic_softint_spi;        /* combimned SPI0, SPI1 interrupt                                                              */
 	unsigned int i2c        : BFW_NX50_vic_softint_i2c;        /* I2C                                                                                         */
 	unsigned int lcd        : BFW_NX50_vic_softint_lcd;        /* reserved                                                                                    */
-	unsigned int hif        : BFW_NX50_vic_softint_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX50_vic_softint_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX50_vic_softint_gpio;       /* other external Interrupts from GPIO 0-30                                                    */
 	unsigned int com0       : BFW_NX50_vic_softint_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX50_vic_softint_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -33919,7 +33377,7 @@ typedef struct NX50_VIC_SOFTINT_CLEAR_BIT_Ttag {
 	unsigned int spi        : BFW_NX50_vic_softint_clear_spi;        /* combimned SPI0, SPI1 interrupt                                                              */
 	unsigned int i2c        : BFW_NX50_vic_softint_clear_i2c;        /* I2C                                                                                         */
 	unsigned int lcd        : BFW_NX50_vic_softint_clear_lcd;        /* reserved                                                                                    */
-	unsigned int hif        : BFW_NX50_vic_softint_clear_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX50_vic_softint_clear_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX50_vic_softint_clear_gpio;       /* other external Interrupts from GPIO 0-30                                                    */
 	unsigned int com0       : BFW_NX50_vic_softint_clear_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX50_vic_softint_clear_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -35042,22 +34500,22 @@ typedef union {
 
 /* ===================================================================== */
 
-/* Area of pci_ahbls6 */
+/* Area of hif_ahbls6 */
 
 /* ===================================================================== */
 
-#define Addr_NX50_pci_ahbls6 0x20000000U
+#define Addr_NX50_hif_ahbls6 0x20000000U
 
 /* --------------------------------------------------------------------- */
-/* Register pci_ahbls6_BASE */
+/* Register hif_ahbls6_BASE */
 /* => Base Address of AHLB Slave 6 */
-/*    Memory area of PCI/Host-Bus Interface */
+/*    Memory area of HIF/Host-Bus Interface */
 /* => Mode: R/W */
 /* --------------------------------------------------------------------- */
 
-#define REL_Adr_NX50_pci_ahbls6_BASE        0x00000000U
-#define Adr_NX50_pci_ahbls6_pci_ahbls6_BASE 0x20000000U
-#define Adr_NX50_pci_ahbls6_BASE            0x20000000U
+#define REL_Adr_NX50_hif_ahbls6_BASE        0x00000000U
+#define Adr_NX50_hif_ahbls6_hif_ahbls6_BASE 0x20000000U
+#define Adr_NX50_hif_ahbls6_BASE            0x20000000U
 
 
 /* ===================================================================== */
@@ -35504,8 +34962,7 @@ typedef struct NX50_HOST_CONTROLLED_DMA_REGISTER_BLOCK_AREA_Ttag
 
 typedef struct NX50_HOST_CONTROLLED_GLOBAL_REGISTER_BLOCK_AREA_Ttag
 {
-  volatile unsigned long aulReserved0[47];
-  volatile unsigned long  ulPci_base;
+  volatile unsigned long aulReserved0[48];
   volatile unsigned long  ulWdg_host;
   volatile unsigned long  ulDpmhs_wdg_host_trig;
   volatile unsigned long  ulDpmhs_wdg_arm_timeout;
@@ -35543,22 +35000,7 @@ typedef struct NX50_NETX_CONTROLLED_DMA_REGISTER_BLOCK_AREA_Ttag
 
 typedef struct NX50_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_1_AREA_Ttag
 {
-  volatile unsigned long aulReserved0[32];
-  volatile unsigned long  ulPci_window_low0;
-  volatile unsigned long  ulPci_window_high0;
-  volatile unsigned long  ulPci_window_low1;
-  volatile unsigned long  ulPci_window_high1;
-  volatile unsigned long  ulPci_window_low2;
-  volatile unsigned long  ulPci_window_high2;
-  volatile unsigned long  ulPci_window_low3;
-  volatile unsigned long  ulPci_window_high3;
-  volatile unsigned long  ulPci_io_base;
-  volatile unsigned long  ulPci_rom_base;
-  volatile unsigned long  ulArb_ctrl;
-  volatile unsigned long  ulPci_config;
-  volatile unsigned long aulReserved1[2];
-  volatile unsigned long  ulSfr_base_addr;
-  volatile unsigned long  ulCis_base;
+  volatile unsigned long aulReserved0[48];
   volatile unsigned long  ulWdg_netx;
   volatile unsigned long aulReserved2[1];
   volatile unsigned long  ulDpmas_wdg_arm_timeout;
@@ -35624,14 +35066,6 @@ typedef struct NX50_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_2_AREA_Ttag
   volatile unsigned long  ulDpmas_hscr9;
   volatile unsigned long aulDpmas_hscr1[6];
 } NX50_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_2_AREA_T;
-
-typedef struct NX50_NETX_CONTROLLED_PCI_CONFIGURATION_SHADOW_REGISTER_BLOCK_AREA_Ttag
-{
-  volatile unsigned long  ulPci_regs_addr;
-  volatile unsigned long  ulDpmas_pci_conf_rd_data;
-  volatile unsigned long  ulDpmas_pci_conf_wr_ctrl;
-  volatile unsigned long  ulDpmas_pci_conf_wr_data;
-} NX50_NETX_CONTROLLED_PCI_CONFIGURATION_SHADOW_REGISTER_BLOCK_AREA_T;
 
 typedef struct NX50_DMAC_CH_AREA_Ttag
 {
@@ -35963,10 +35397,10 @@ typedef struct NX50_VIC_AREA_Ttag
   volatile unsigned long aulVic_vect_cntl[16];
 } NX50_VIC_AREA_T;
 
-typedef struct NX50_PCI_AHBLS6_AREA_Ttag
+typedef struct NX50_HIF_AHBLS6_AREA_Ttag
 {
-  volatile unsigned long  ulPci_ahbls6_BASE;
-} NX50_PCI_AHBLS6_AREA_T;
+  volatile unsigned long  ulHif_ahbls6_BASE;
+} NX50_HIF_AHBLS6_AREA_T;
 
 
 #endif

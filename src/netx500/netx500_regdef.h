@@ -384,8 +384,7 @@ typedef struct NX500_IO_CONFIG_BIT_Ttag {
 	unsigned int sel_e_pwm2_eclk  : BFW_NX500_io_config_sel_e_pwm2_eclk;  /* select outputs for PWM-signals clocked by xmac2_eclk_in at PIO pads       */
 	                                                                      /* usually used for xmac2 fiber-optic mode with low clock jitter             */
 	unsigned int reserved1        : BFW_NX500_io_config_reserved1;        /* reserved                                                                  */
-	unsigned int if_select_n      : BFW_NX500_io_config_if_select_n;      /* inverted HIF interace-select signal:                                      */
-	                                                                      /* 1: PCI-Mode                                                               */
+	unsigned int if_select_n      : BFW_NX500_io_config_if_select_n;      /* inverted HIF interace-select signal                                       */
 } NX500_IO_CONFIG_BIT_T;
 
 typedef union {
@@ -8813,34 +8812,6 @@ typedef union {
 #define NX500_NETX_DPM_HOST_GLOB_AREA                    0x00103100U
 
 /* --------------------------------------------------------------------- */
-/* Register pci_base */
-/* => dpmhs_pci_targ2_mem_base */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_pci_base                                   0x000000BCU
-#define Adr_NX500_host_controlled_global_register_block_pci_base 0x001031BCU
-#define Adr_NX500_pci_base                                       0x001031BCU
-#define DFLT_VAL_NX500_pci_base                                  0x00000000U
-
-#define MSK_NX500_pci_base_keine_ahnung      0xffffffffU
-#define SRT_NX500_pci_base_keine_ahnung      0
-#define DFLT_VAL_NX500_pci_base_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_pci_base_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_PCI_BASE_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_pci_base_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_PCI_BASE_BIT_T;
-
-typedef union {
-	unsigned int         val;
-	NX500_PCI_BASE_BIT_T bf;
-} NX500_PCI_BASE_T;
-
-/* --------------------------------------------------------------------- */
 /* Register wdg_host */
 /* => dpmhs_wdg_host_timeout */
 /* => Mode: R/W */
@@ -11530,370 +11501,6 @@ typedef union {
 #define Addr_NX500_netx_controlled_global_register_block_1 0x00103400U
 
 /* --------------------------------------------------------------------- */
-/* Register pci_window_low0 */
-/* => dpmas_mem_win_start0 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_pci_window_low0                                     0x00000080U
-#define Adr_NX500_netx_controlled_global_register_block_1_pci_window_low0 0x00103480U
-#define Adr_NX500_pci_window_low0                                         0x00103480U
-#define DFLT_VAL_NX500_pci_window_low0                                    0x00000000U
-
-#define MSK_NX500_pci_window_low0_keine_ahnung      0xffffffffU
-#define SRT_NX500_pci_window_low0_keine_ahnung      0
-#define DFLT_VAL_NX500_pci_window_low0_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_pci_window_low0_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_PCI_WINDOW_LOW0_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_pci_window_low0_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_PCI_WINDOW_LOW0_BIT_T;
-
-typedef union {
-	unsigned int                val;
-	NX500_PCI_WINDOW_LOW0_BIT_T bf;
-} NX500_PCI_WINDOW_LOW0_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_window_high0 */
-/* => dpmas_mem_win_end0 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_pci_window_high0                                     0x00000084U
-#define Adr_NX500_netx_controlled_global_register_block_1_pci_window_high0 0x00103484U
-#define Adr_NX500_pci_window_high0                                         0x00103484U
-#define DFLT_VAL_NX500_pci_window_high0                                    0x00000000U
-
-#define MSK_NX500_pci_window_high0_keine_ahnung      0xffffffffU
-#define SRT_NX500_pci_window_high0_keine_ahnung      0
-#define DFLT_VAL_NX500_pci_window_high0_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_pci_window_high0_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_PCI_WINDOW_HIGH0_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_pci_window_high0_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_PCI_WINDOW_HIGH0_BIT_T;
-
-typedef union {
-	unsigned int                 val;
-	NX500_PCI_WINDOW_HIGH0_BIT_T bf;
-} NX500_PCI_WINDOW_HIGH0_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_window_low1 */
-/* => dpmas_mem_win_start1 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_pci_window_low1                                     0x00000088U
-#define Adr_NX500_netx_controlled_global_register_block_1_pci_window_low1 0x00103488U
-#define Adr_NX500_pci_window_low1                                         0x00103488U
-#define DFLT_VAL_NX500_pci_window_low1                                    0x00000000U
-
-#define MSK_NX500_pci_window_low1_keine_ahnung      0xffffffffU
-#define SRT_NX500_pci_window_low1_keine_ahnung      0
-#define DFLT_VAL_NX500_pci_window_low1_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_pci_window_low1_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_PCI_WINDOW_LOW1_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_pci_window_low1_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_PCI_WINDOW_LOW1_BIT_T;
-
-typedef union {
-	unsigned int                val;
-	NX500_PCI_WINDOW_LOW1_BIT_T bf;
-} NX500_PCI_WINDOW_LOW1_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_window_high1 */
-/* => dpmas_mem_win_end1 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_pci_window_high1                                     0x0000008CU
-#define Adr_NX500_netx_controlled_global_register_block_1_pci_window_high1 0x0010348CU
-#define Adr_NX500_pci_window_high1                                         0x0010348CU
-#define DFLT_VAL_NX500_pci_window_high1                                    0x00000000U
-
-#define MSK_NX500_pci_window_high1_keine_ahnung      0xffffffffU
-#define SRT_NX500_pci_window_high1_keine_ahnung      0
-#define DFLT_VAL_NX500_pci_window_high1_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_pci_window_high1_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_PCI_WINDOW_HIGH1_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_pci_window_high1_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_PCI_WINDOW_HIGH1_BIT_T;
-
-typedef union {
-	unsigned int                 val;
-	NX500_PCI_WINDOW_HIGH1_BIT_T bf;
-} NX500_PCI_WINDOW_HIGH1_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_window_low2 */
-/* => dpmas_mem_win_start2 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_pci_window_low2                                     0x00000090U
-#define Adr_NX500_netx_controlled_global_register_block_1_pci_window_low2 0x00103490U
-#define Adr_NX500_pci_window_low2                                         0x00103490U
-#define DFLT_VAL_NX500_pci_window_low2                                    0x00000000U
-
-#define MSK_NX500_pci_window_low2_keine_ahnung      0xffffffffU
-#define SRT_NX500_pci_window_low2_keine_ahnung      0
-#define DFLT_VAL_NX500_pci_window_low2_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_pci_window_low2_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_PCI_WINDOW_LOW2_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_pci_window_low2_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_PCI_WINDOW_LOW2_BIT_T;
-
-typedef union {
-	unsigned int                val;
-	NX500_PCI_WINDOW_LOW2_BIT_T bf;
-} NX500_PCI_WINDOW_LOW2_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_window_high2 */
-/* => dpmas_mem_win_end2 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_pci_window_high2                                     0x00000094U
-#define Adr_NX500_netx_controlled_global_register_block_1_pci_window_high2 0x00103494U
-#define Adr_NX500_pci_window_high2                                         0x00103494U
-#define DFLT_VAL_NX500_pci_window_high2                                    0x00000000U
-
-#define MSK_NX500_pci_window_high2_keine_ahnung      0xffffffffU
-#define SRT_NX500_pci_window_high2_keine_ahnung      0
-#define DFLT_VAL_NX500_pci_window_high2_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_pci_window_high2_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_PCI_WINDOW_HIGH2_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_pci_window_high2_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_PCI_WINDOW_HIGH2_BIT_T;
-
-typedef union {
-	unsigned int                 val;
-	NX500_PCI_WINDOW_HIGH2_BIT_T bf;
-} NX500_PCI_WINDOW_HIGH2_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_window_low3 */
-/* => dpmas_mem_win_start3 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_pci_window_low3                                     0x00000098U
-#define Adr_NX500_netx_controlled_global_register_block_1_pci_window_low3 0x00103498U
-#define Adr_NX500_pci_window_low3                                         0x00103498U
-#define DFLT_VAL_NX500_pci_window_low3                                    0x00000000U
-
-#define MSK_NX500_pci_window_low3_keine_ahnung      0xffffffffU
-#define SRT_NX500_pci_window_low3_keine_ahnung      0
-#define DFLT_VAL_NX500_pci_window_low3_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_pci_window_low3_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_PCI_WINDOW_LOW3_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_pci_window_low3_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_PCI_WINDOW_LOW3_BIT_T;
-
-typedef union {
-	unsigned int                val;
-	NX500_PCI_WINDOW_LOW3_BIT_T bf;
-} NX500_PCI_WINDOW_LOW3_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_window_high3 */
-/* => dpmas_mem_win_end3 */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_pci_window_high3                                     0x0000009CU
-#define Adr_NX500_netx_controlled_global_register_block_1_pci_window_high3 0x0010349CU
-#define Adr_NX500_pci_window_high3                                         0x0010349CU
-#define DFLT_VAL_NX500_pci_window_high3                                    0x00000000U
-
-#define MSK_NX500_pci_window_high3_keine_ahnung      0xffffffffU
-#define SRT_NX500_pci_window_high3_keine_ahnung      0
-#define DFLT_VAL_NX500_pci_window_high3_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_pci_window_high3_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_PCI_WINDOW_HIGH3_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_pci_window_high3_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_PCI_WINDOW_HIGH3_BIT_T;
-
-typedef union {
-	unsigned int                 val;
-	NX500_PCI_WINDOW_HIGH3_BIT_T bf;
-} NX500_PCI_WINDOW_HIGH3_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_io_base */
-/* => dpmas_pci_io_base */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_pci_io_base                                     0x000000A0U
-#define Adr_NX500_netx_controlled_global_register_block_1_pci_io_base 0x001034A0U
-#define Adr_NX500_pci_io_base                                         0x001034A0U
-#define DFLT_VAL_NX500_pci_io_base                                    0x00000000U
-
-#define MSK_NX500_pci_io_base_keine_ahnung      0xffffffffU
-#define SRT_NX500_pci_io_base_keine_ahnung      0
-#define DFLT_VAL_NX500_pci_io_base_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_pci_io_base_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_PCI_IO_BASE_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_pci_io_base_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_PCI_IO_BASE_BIT_T;
-
-typedef union {
-	unsigned int            val;
-	NX500_PCI_IO_BASE_BIT_T bf;
-} NX500_PCI_IO_BASE_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_rom_base */
-/* => dpmas_pci_rom_base */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_pci_rom_base                                     0x000000A4U
-#define Adr_NX500_netx_controlled_global_register_block_1_pci_rom_base 0x001034A4U
-#define Adr_NX500_pci_rom_base                                         0x001034A4U
-#define DFLT_VAL_NX500_pci_rom_base                                    0x00000000U
-
-#define MSK_NX500_pci_rom_base_keine_ahnung      0xffffffffU
-#define SRT_NX500_pci_rom_base_keine_ahnung      0
-#define DFLT_VAL_NX500_pci_rom_base_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_pci_rom_base_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_PCI_ROM_BASE_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_pci_rom_base_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_PCI_ROM_BASE_BIT_T;
-
-typedef union {
-	unsigned int             val;
-	NX500_PCI_ROM_BASE_BIT_T bf;
-} NX500_PCI_ROM_BASE_T;
-
-/* --------------------------------------------------------------------- */
-/* Register arb_ctrl */
-/* => dpmas_arb_ctrl */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_arb_ctrl                                     0x000000A8U
-#define Adr_NX500_netx_controlled_global_register_block_1_arb_ctrl 0x001034A8U
-#define Adr_NX500_arb_ctrl                                         0x001034A8U
-#define DFLT_VAL_NX500_arb_ctrl                                    0x00000000U
-
-#define MSK_NX500_arb_ctrl_keine_ahnung      0xffffffffU
-#define SRT_NX500_arb_ctrl_keine_ahnung      0
-#define DFLT_VAL_NX500_arb_ctrl_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_arb_ctrl_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_ARB_CTRL_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_arb_ctrl_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_ARB_CTRL_BIT_T;
-
-typedef union {
-	unsigned int         val;
-	NX500_ARB_CTRL_BIT_T bf;
-} NX500_ARB_CTRL_T;
-
-/* --------------------------------------------------------------------- */
-/* Register pci_config */
-/* => dpmas_pci_cntrl */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_pci_config                                     0x000000ACU
-#define Adr_NX500_netx_controlled_global_register_block_1_pci_config 0x001034ACU
-#define Adr_NX500_pci_config                                         0x001034ACU
-#define DFLT_VAL_NX500_pci_config                                    0x00000000U
-
-#define MSK_NX500_pci_config_keine_ahnung      0xffffffffU
-#define SRT_NX500_pci_config_keine_ahnung      0
-#define DFLT_VAL_NX500_pci_config_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_pci_config_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_PCI_CONFIG_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_pci_config_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_PCI_CONFIG_BIT_T;
-
-typedef union {
-	unsigned int           val;
-	NX500_PCI_CONFIG_BIT_T bf;
-} NX500_PCI_CONFIG_T;
-
-/* --------------------------------------------------------------------- */
-/* Register cis_base */
-/* => dpmas_cis_base */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_cis_base                                     0x000000BCU
-#define Adr_NX500_netx_controlled_global_register_block_1_cis_base 0x001034BCU
-#define Adr_NX500_cis_base                                         0x001034BCU
-#define DFLT_VAL_NX500_cis_base                                    0x00000000U
-
-#define MSK_NX500_cis_base_keine_ahnung      0xffffffffU
-#define SRT_NX500_cis_base_keine_ahnung      0
-#define DFLT_VAL_NX500_cis_base_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_cis_base_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_CIS_BASE_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_cis_base_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_CIS_BASE_BIT_T;
-
-typedef union {
-	unsigned int         val;
-	NX500_CIS_BASE_BIT_T bf;
-} NX500_CIS_BASE_T;
-
-/* --------------------------------------------------------------------- */
 /* Register wdg_netx */
 /* => dpmas_wdg_host_timeout */
 /* => Mode: R/W */
@@ -14012,127 +13619,6 @@ typedef union {
 	unsigned int             val;
 	NX500_DPMAS_HSCR15_BIT_T bf;
 } NX500_DPMAS_HSCR15_T;
-
-
-/* ===================================================================== */
-
-/* Area of netx_controlled_pci_configuration_shadow_register_block */
-
-/* ===================================================================== */
-
-#define Addr_NX500_netx_controlled_pci_configuration_shadow_register_block 0x00103700U
-
-/* --------------------------------------------------------------------- */
-/* Register pci_regs_addr */
-/* => dpmas_pci_conf_rd_ctrl */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_pci_regs_addr                                                     0x00000000U
-#define Adr_NX500_netx_controlled_pci_configuration_shadow_register_block_pci_regs_addr 0x00103700U
-#define Adr_NX500_pci_regs_addr                                                         0x00103700U
-#define DFLT_VAL_NX500_pci_regs_addr                                                    0x00000000U
-
-#define MSK_NX500_pci_regs_addr_keine_ahnung      0xffffffffU
-#define SRT_NX500_pci_regs_addr_keine_ahnung      0
-#define DFLT_VAL_NX500_pci_regs_addr_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_pci_regs_addr_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_PCI_REGS_ADDR_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_pci_regs_addr_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_PCI_REGS_ADDR_BIT_T;
-
-typedef union {
-	unsigned int              val;
-	NX500_PCI_REGS_ADDR_BIT_T bf;
-} NX500_PCI_REGS_ADDR_T;
-
-/* --------------------------------------------------------------------- */
-/* Register dpmas_pci_conf_rd_data */
-/* =>  */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_dpmas_pci_conf_rd_data                                                     0x00000004U
-#define Adr_NX500_netx_controlled_pci_configuration_shadow_register_block_dpmas_pci_conf_rd_data 0x00103704U
-#define Adr_NX500_dpmas_pci_conf_rd_data                                                         0x00103704U
-#define DFLT_VAL_NX500_dpmas_pci_conf_rd_data                                                    0x00000000U
-
-#define MSK_NX500_dpmas_pci_conf_rd_data_keine_ahnung      0xffffffffU
-#define SRT_NX500_dpmas_pci_conf_rd_data_keine_ahnung      0
-#define DFLT_VAL_NX500_dpmas_pci_conf_rd_data_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_dpmas_pci_conf_rd_data_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_DPMAS_PCI_CONF_RD_DATA_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_dpmas_pci_conf_rd_data_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_DPMAS_PCI_CONF_RD_DATA_BIT_T;
-
-typedef union {
-	unsigned int                       val;
-	NX500_DPMAS_PCI_CONF_RD_DATA_BIT_T bf;
-} NX500_DPMAS_PCI_CONF_RD_DATA_T;
-
-/* --------------------------------------------------------------------- */
-/* Register dpmas_pci_conf_wr_ctrl */
-/* =>  */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_dpmas_pci_conf_wr_ctrl                                                     0x00000008U
-#define Adr_NX500_netx_controlled_pci_configuration_shadow_register_block_dpmas_pci_conf_wr_ctrl 0x00103708U
-#define Adr_NX500_dpmas_pci_conf_wr_ctrl                                                         0x00103708U
-#define DFLT_VAL_NX500_dpmas_pci_conf_wr_ctrl                                                    0x00000000U
-
-#define MSK_NX500_dpmas_pci_conf_wr_ctrl_keine_ahnung      0xffffffffU
-#define SRT_NX500_dpmas_pci_conf_wr_ctrl_keine_ahnung      0
-#define DFLT_VAL_NX500_dpmas_pci_conf_wr_ctrl_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_dpmas_pci_conf_wr_ctrl_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_DPMAS_PCI_CONF_WR_CTRL_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_dpmas_pci_conf_wr_ctrl_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_DPMAS_PCI_CONF_WR_CTRL_BIT_T;
-
-typedef union {
-	unsigned int                       val;
-	NX500_DPMAS_PCI_CONF_WR_CTRL_BIT_T bf;
-} NX500_DPMAS_PCI_CONF_WR_CTRL_T;
-
-/* --------------------------------------------------------------------- */
-/* Register dpmas_pci_conf_wr_data */
-/* =>  */
-/* => Mode: R/W */
-/* --------------------------------------------------------------------- */
-
-#define REL_Adr_NX500_dpmas_pci_conf_wr_data                                                     0x0000000CU
-#define Adr_NX500_netx_controlled_pci_configuration_shadow_register_block_dpmas_pci_conf_wr_data 0x0010370CU
-#define Adr_NX500_dpmas_pci_conf_wr_data                                                         0x0010370CU
-#define DFLT_VAL_NX500_dpmas_pci_conf_wr_data                                                    0x00000000U
-
-#define MSK_NX500_dpmas_pci_conf_wr_data_keine_ahnung      0xffffffffU
-#define SRT_NX500_dpmas_pci_conf_wr_data_keine_ahnung      0
-#define DFLT_VAL_NX500_dpmas_pci_conf_wr_data_keine_ahnung 0x00000000U
-
-enum {
-	BFW_NX500_dpmas_pci_conf_wr_data_keine_ahnung = 32  /* [31:0] */
-};
-
-typedef struct NX500_DPMAS_PCI_CONF_WR_DATA_BIT_Ttag {
-	unsigned int keine_ahnung : BFW_NX500_dpmas_pci_conf_wr_data_keine_ahnung; /* HIF, ask Hilscher HIF specialists */
-} NX500_DPMAS_PCI_CONF_WR_DATA_BIT_T;
-
-typedef union {
-	unsigned int                       val;
-	NX500_DPMAS_PCI_CONF_WR_DATA_BIT_T bf;
-} NX500_DPMAS_PCI_CONF_WR_DATA_T;
 
 
 /* ===================================================================== */
@@ -25206,7 +24692,7 @@ typedef struct NX500_VIC_IRQ_STATUS_BIT_Ttag {
 	unsigned int spi        : BFW_NX500_vic_irq_status_spi;        /* SPI interrupt                                                                               */
 	unsigned int i2c        : BFW_NX500_vic_irq_status_i2c;        /* reserved                                                                                    */
 	unsigned int lcd        : BFW_NX500_vic_irq_status_lcd;        /* LCD-Controller interrupt                                                                    */
-	unsigned int hif        : BFW_NX500_vic_irq_status_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX500_vic_irq_status_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX500_vic_irq_status_gpio;       /* other external Interrupts from GPIO 0-14                                                    */
 	unsigned int com0       : BFW_NX500_vic_irq_status_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX500_vic_irq_status_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -25350,7 +24836,7 @@ typedef struct NX500_VIC_FIQ_STATUS_BIT_Ttag {
 	unsigned int spi        : BFW_NX500_vic_fiq_status_spi;        /* SPI interrupt                                                                               */
 	unsigned int i2c        : BFW_NX500_vic_fiq_status_i2c;        /* reserved                                                                                    */
 	unsigned int lcd        : BFW_NX500_vic_fiq_status_lcd;        /* LCD-Controller interrupt                                                                    */
-	unsigned int hif        : BFW_NX500_vic_fiq_status_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX500_vic_fiq_status_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX500_vic_fiq_status_gpio;       /* other external Interrupts from GPIO 0-14                                                    */
 	unsigned int com0       : BFW_NX500_vic_fiq_status_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX500_vic_fiq_status_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -25494,7 +24980,7 @@ typedef struct NX500_VIC_RAW_INTR_BIT_Ttag {
 	unsigned int spi        : BFW_NX500_vic_raw_intr_spi;        /* SPI interrupt                                                                               */
 	unsigned int i2c        : BFW_NX500_vic_raw_intr_i2c;        /* reserved                                                                                    */
 	unsigned int lcd        : BFW_NX500_vic_raw_intr_lcd;        /* LCD-Controller interrupt                                                                    */
-	unsigned int hif        : BFW_NX500_vic_raw_intr_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX500_vic_raw_intr_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX500_vic_raw_intr_gpio;       /* other external Interrupts from GPIO 0-14                                                    */
 	unsigned int com0       : BFW_NX500_vic_raw_intr_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX500_vic_raw_intr_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -25671,7 +25157,7 @@ typedef struct NX500_VIC_INT_SELECT_BIT_Ttag {
 	unsigned int spi        : BFW_NX500_vic_int_select_spi;        /* SPI interrupt                                                                               */
 	unsigned int i2c        : BFW_NX500_vic_int_select_i2c;        /* reserved                                                                                    */
 	unsigned int lcd        : BFW_NX500_vic_int_select_lcd;        /* LCD-Controller interrupt                                                                    */
-	unsigned int hif        : BFW_NX500_vic_int_select_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX500_vic_int_select_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX500_vic_int_select_gpio;       /* other external Interrupts from GPIO 0-14                                                    */
 	unsigned int com0       : BFW_NX500_vic_int_select_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX500_vic_int_select_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -25848,7 +25334,7 @@ typedef struct NX500_VIC_INT_ENABLE_BIT_Ttag {
 	unsigned int spi        : BFW_NX500_vic_int_enable_spi;        /* SPI interrupt                                                                               */
 	unsigned int i2c        : BFW_NX500_vic_int_enable_i2c;        /* reserved                                                                                    */
 	unsigned int lcd        : BFW_NX500_vic_int_enable_lcd;        /* LCD-Controller interrupt                                                                    */
-	unsigned int hif        : BFW_NX500_vic_int_enable_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX500_vic_int_enable_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX500_vic_int_enable_gpio;       /* other external Interrupts from GPIO 0-14                                                    */
 	unsigned int com0       : BFW_NX500_vic_int_enable_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX500_vic_int_enable_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -26024,7 +25510,7 @@ typedef struct NX500_VIC_INT_ENCLEAR_BIT_Ttag {
 	unsigned int spi        : BFW_NX500_vic_int_enclear_spi;        /* SPI interrupt                                                                               */
 	unsigned int i2c        : BFW_NX500_vic_int_enclear_i2c;        /* reserved                                                                                    */
 	unsigned int lcd        : BFW_NX500_vic_int_enclear_lcd;        /* LCD-Controller interrupt                                                                    */
-	unsigned int hif        : BFW_NX500_vic_int_enclear_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX500_vic_int_enclear_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX500_vic_int_enclear_gpio;       /* other external Interrupts from GPIO 0-14                                                    */
 	unsigned int com0       : BFW_NX500_vic_int_enclear_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX500_vic_int_enclear_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -26199,7 +25685,7 @@ typedef struct NX500_VIC_SOFTINT_BIT_Ttag {
 	unsigned int spi        : BFW_NX500_vic_softint_spi;        /* SPI interrupt                                                                               */
 	unsigned int i2c        : BFW_NX500_vic_softint_i2c;        /* reserved                                                                                    */
 	unsigned int lcd        : BFW_NX500_vic_softint_lcd;        /* LCD-Controller interrupt                                                                    */
-	unsigned int hif        : BFW_NX500_vic_softint_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX500_vic_softint_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX500_vic_softint_gpio;       /* other external Interrupts from GPIO 0-14                                                    */
 	unsigned int com0       : BFW_NX500_vic_softint_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX500_vic_softint_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -26375,7 +25861,7 @@ typedef struct NX500_VIC_SOFTINT_CLEAR_BIT_Ttag {
 	unsigned int spi        : BFW_NX500_vic_softint_clear_spi;        /* SPI interrupt                                                                               */
 	unsigned int i2c        : BFW_NX500_vic_softint_clear_i2c;        /* reserved                                                                                    */
 	unsigned int lcd        : BFW_NX500_vic_softint_clear_lcd;        /* LCD-Controller interrupt                                                                    */
-	unsigned int hif        : BFW_NX500_vic_softint_clear_hif;        /* PCI / HIF interrupt                                                                         */
+	unsigned int hif        : BFW_NX500_vic_softint_clear_hif;        /* HIF interrupt                                                                               */
 	unsigned int gpio       : BFW_NX500_vic_softint_clear_gpio;       /* other external Interrupts from GPIO 0-14                                                    */
 	unsigned int com0       : BFW_NX500_vic_softint_clear_com0;       /* Communication channel 0 (= |xpec0_irq[11:0])                                                */
 	unsigned int com1       : BFW_NX500_vic_softint_clear_com1;       /* Communication channel 1 (= |xpec1_irq[11:0])                                                */
@@ -27604,22 +27090,22 @@ typedef union {
 
 /* ===================================================================== */
 
-/* Area of pci_ahbls6 */
+/* Area of hif_ahbls6 */
 
 /* ===================================================================== */
 
-#define Addr_NX500_pci_ahbls6 0x20000000U
+#define Addr_NX500_hif_ahbls6 0x20000000U
 
 /* --------------------------------------------------------------------- */
-/* Register pci_ahbls6_BASE */
+/* Register hif_ahbls6_BASE */
 /* => Base Address of AHLB Slave 6 */
-/*    Memory area of PCI/Host-Bus Interface */
+/*    Memory area of Host-Bus Interface */
 /* => Mode: R/W */
 /* --------------------------------------------------------------------- */
 
-#define REL_Adr_NX500_pci_ahbls6_BASE        0x00000000U
-#define Adr_NX500_pci_ahbls6_pci_ahbls6_BASE 0x20000000U
-#define Adr_NX500_pci_ahbls6_BASE            0x20000000U
+#define REL_Adr_NX500_hif_ahbls6_BASE        0x00000000U
+#define Adr_NX500_hif_ahbls6_hif_ahbls6_BASE 0x20000000U
+#define Adr_NX500_hif_ahbls6_BASE            0x20000000U
 
 
 /* ===================================================================== */
@@ -28004,7 +27490,7 @@ typedef struct NX500_HOST_CONTROLLED_DMA_REGISTER_BLOCK_AREA_Ttag
 typedef struct NX500_HOST_CONTROLLED_GLOBAL_REGISTER_BLOCK_AREA_Ttag
 {
   volatile unsigned long aulReserved0[47];
-  volatile unsigned long  ulPci_base;
+  volatile unsigned long  ulHif_base;
   volatile unsigned long  ulWdg_host;
   volatile unsigned long  ulDpmhs_wdg_host_trig;
   volatile unsigned long  ulDpmhs_wdg_arm_timeout;
@@ -28041,21 +27527,7 @@ typedef struct NX500_NETX_CONTROLLED_DMA_REGISTER_BLOCK_AREA_Ttag
 
 typedef struct NX500_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_1_AREA_Ttag
 {
-  volatile unsigned long aulReserved0[32];
-  volatile unsigned long  ulPci_window_low0;
-  volatile unsigned long  ulPci_window_high0;
-  volatile unsigned long  ulPci_window_low1;
-  volatile unsigned long  ulPci_window_high1;
-  volatile unsigned long  ulPci_window_low2;
-  volatile unsigned long  ulPci_window_high2;
-  volatile unsigned long  ulPci_window_low3;
-  volatile unsigned long  ulPci_window_high3;
-  volatile unsigned long  ulPci_io_base;
-  volatile unsigned long  ulPci_rom_base;
-  volatile unsigned long  ulArb_ctrl;
-  volatile unsigned long  ulPci_config;
-  volatile unsigned long aulReserved1[3];
-  volatile unsigned long  ulCis_base;
+  volatile unsigned long aulReserved0[48];
   volatile unsigned long  ulWdg_netx;
   volatile unsigned long aulReserved2[1];
   volatile unsigned long  ulDpmas_wdg_arm_timeout;
@@ -28118,14 +27590,6 @@ typedef struct NX500_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_2_AREA_Ttag
   volatile unsigned long  ulDpmas_hscr9;
   volatile unsigned long aulDpmas_hscr1[6];
 } NX500_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_2_AREA_T;
-
-typedef struct NX500_NETX_CONTROLLED_PCI_CONFIGURATION_SHADOW_REGISTER_BLOCK_AREA_Ttag
-{
-  volatile unsigned long  ulPci_regs_addr;
-  volatile unsigned long  ulDpmas_pci_conf_rd_data;
-  volatile unsigned long  ulDpmas_pci_conf_wr_ctrl;
-  volatile unsigned long  ulDpmas_pci_conf_wr_data;
-} NX500_NETX_CONTROLLED_PCI_CONFIGURATION_SHADOW_REGISTER_BLOCK_AREA_T;
 
 typedef struct NX500_LCD_CTRL_AREA_Ttag
 {
@@ -28391,10 +27855,10 @@ typedef struct NX500_VIC_AREA_Ttag
   volatile unsigned long aulVic_vect_cntl[16];
 } NX500_VIC_AREA_T;
 
-typedef struct NX500_PCI_AHBLS6_AREA_Ttag
+typedef struct NX500_HIF_AHBLS6_AREA_Ttag
 {
-  volatile unsigned long  ulPci_ahbls6_BASE;
-} NX500_PCI_AHBLS6_AREA_T;
+  volatile unsigned long  ulHif_ahbls6_BASE;
+} NX500_HIF_AHBLS6_AREA_T;
 
 
 #endif

@@ -11,7 +11,29 @@ This is the buildfile for the netX5 irq sim project which is crossloaded by a ne
 
 	<!-- *** Compiler and Linker Settings ****************************************************** -->
 
-	<cpptasks:compiler id="armgcc" classname="${gcc.arm.elf.4_3_3.gcc}">
+	<cpptasks:compiler id="armgcc_netx500" classname="${gcc.arm.elf.4_3_3.gcc}">
+		<compilerarg value="-ffreestanding"/>
+		<compilerarg value="-mlong-calls"/>
+		<compilerarg value="-mcpu=arm926ej-s"/>
+		<compilerarg value="-Wall"/>
+		<compilerarg value="-Wextra"/>
+		<compilerarg value="-Wconversion"/>
+		<compilerarg value="-Wshadow"/>
+		<compilerarg value="-Wcast-qual"/>
+		<compilerarg value="-Wwrite-strings"/>
+		<compilerarg value="-Wcast-align"/>
+		<compilerarg value="-Wpointer-arith"/>
+		<compilerarg value="-Wmissing-prototypes"/>
+		<compilerarg value="-Wstrict-prototypes"/>
+		<compilerarg value="-mapcs"/>
+		<compilerarg value="-O2"/>
+		<compilerarg value="-g3"/>
+		<compilerarg value="-gdwarf-2"/>
+<!--		<compilerarg value="-ansi"/>
+		<compilerarg value="-pedantic"/> -->
+	</cpptasks:compiler>
+
+	<cpptasks:compiler id="armgcc_netx50" classname="${gcc.arm.elf.4_3_3.gcc}">
 		<compilerarg value="-ffreestanding"/>
 		<compilerarg value="-mlong-calls"/>
 		<compilerarg value="-mcpu=arm966e-s"/>
@@ -26,21 +48,21 @@ This is the buildfile for the netX5 irq sim project which is crossloaded by a ne
 		<compilerarg value="-Wmissing-prototypes"/>
 		<compilerarg value="-Wstrict-prototypes"/>
 		<compilerarg value="-mapcs"/>
-		<compilerarg value="-O0"/>
+		<compilerarg value="-O2"/>
 		<compilerarg value="-g3"/>
 		<compilerarg value="-gdwarf-2"/>
-		<compilerarg value="-ansi"/>
-		<compilerarg value="-pedantic"/>
+<!--		<compilerarg value="-ansi"/>
+		<compilerarg value="-pedantic"/> -->
 	</cpptasks:compiler>
 
 	<cpptasks:linker id="armlink" classname="${gcc.arm.elf.4_3_3.ld}">
 		<linkerarg value="-static"/>
-		<!--            <syslibset libs="m,c,gcc"/> -->
+		<syslibset libs="m,c,gcc"/>
 	</cpptasks:linker>
 
 	<!-- *** targets ****************************************************************************** -->
 
-	<target name="all" depends="mach_was_arm" description="compiles the source code, build the elf file and run the cmm converter">
+	<target name="all" depends="build_netx500,build_netx50" description="compiles the source code, build the elf file and run the cmm converter">
 		<!-- show summary -->
 		<echo>Build: ${build}</echo>
 	</target>
@@ -74,12 +96,12 @@ This is the buildfile for the netX5 irq sim project which is crossloaded by a ne
 		<!-- netx500 sources -->
 		<include name="netx500/flasher_header.c" />
 		<include name="netx500/hal_spi.c" />
-		<include name="netx500/netx_io_areas.c" />
+		<include name="netx500/netx500_io_areas.c" />
 	</fileset>
 	<pathconvert pathsep="," property="flasher_netx500_objects" refid="flasher_netx500_sources">
 		<chainedmapper>
 			<flattenmapper/>
-			<globmapper from="*" to="${arm_build_home}/*" />
+			<globmapper from="*" to="${flasher_netx500_build_home}/*" />
 			<compositemapper>
 				<globmapper from="*.c" to="*.o"/>
 				<globmapper from="*.s" to="*.o"/>
@@ -89,6 +111,7 @@ This is the buildfile for the netX5 irq sim project which is crossloaded by a ne
 
 	<path id="flasher_netx500_includes">
 		<pathelement location="src"/>
+		<pathelement location="src/netx500"/>
 	</path>
 
 
@@ -121,12 +144,12 @@ This is the buildfile for the netX5 irq sim project which is crossloaded by a ne
 		<!-- netx50 sources -->
 		<include name="netx50/flasher_header.c" />
 		<include name="netx50/hal_spi.c" />
-		<include name="netx50/netx_io_areas.c" />
+		<include name="netx50/netx50_io_areas.c" />
 	</fileset>
 	<pathconvert pathsep="," property="flasher_netx50_objects" refid="flasher_netx50_sources">
 		<chainedmapper>
 			<flattenmapper/>
-			<globmapper from="*" to="${arm_build_home}/*" />
+			<globmapper from="*" to="${flasher_netx50_build_home}/*" />
 			<compositemapper>
 				<globmapper from="*.c" to="*.o"/>
 				<globmapper from="*.s" to="*.o"/>
@@ -136,15 +159,16 @@ This is the buildfile for the netX5 irq sim project which is crossloaded by a ne
 	
 	<path id="flasher_netx50_includes">
 		<pathelement location="src"/>
+		<pathelement location="src/netx50"/>
 	</path>
 
 	<!-- *** build the arm objects, but do not link *********************************************** -->
 
-	<target name="mach_was_arm" description="compile the arm code">
+	<target name="build_netx500" description="build the netx500 version">
 		<antcall target="gcc_compile">
 			<param name="build.gcc.home" value="${flasher_netx500_build_home}" />
-			<param name="build.gcc.compile.compiler_id" value="armgcc" />
-			<param name="build.gcc.compile.flags" value="" />
+			<param name="build.gcc.compile.compiler_id" value="armgcc_netx500" />
+			<param name="build.gcc.compile.flags" value="__NETX500" />
 			<param name="build.gcc.compile.includes_id" value="flasher_netx500_includes" />
 			<param name="build.gcc.compile.sources_id" value="flasher_netx500_sources" />
 
@@ -152,8 +176,8 @@ This is the buildfile for the netX5 irq sim project which is crossloaded by a ne
 			<param name="gcc.arm.elf.path"    value="${gcc.arm.elf.4_3_3.path}"/>
 
 			<!-- the library search paths -->
-			<param name="gcc.arm.elf.lib.c"   value="${gcc.arm.elf.4_3_3.lib.c}"/>
-			<param name="gcc.arm.elf.lib.gcc" value="${gcc.arm.elf.4_3_3.lib.gcc}"/>
+			<param name="gcc.arm.elf.lib.c"   value="${gcc.arm.elf.4_3_3.lib.c.926ej-s}"/>
+			<param name="gcc.arm.elf.lib.gcc" value="${gcc.arm.elf.4_3_3.lib.gcc.926ej-s}"/>
 
 			<!-- shortcuts for the tools -->
 			<param name="gcc.arm.elf.gcc"     value="${gcc.arm.elf.4_3_3.gcc}"/>
@@ -172,8 +196,8 @@ This is the buildfile for the netX5 irq sim project which is crossloaded by a ne
 			<param name="gcc.arm.elf.path"    value="${gcc.arm.elf.4_3_3.path}"/>
 			
 			<!-- the library search paths -->
-			<param name="gcc.arm.elf.lib.c"   value="${gcc.arm.elf.4_3_3.lib.c}"/>
-			<param name="gcc.arm.elf.lib.gcc" value="${gcc.arm.elf.4_3_3.lib.gcc}"/>
+			<param name="gcc.arm.elf.lib.c"   value="${gcc.arm.elf.4_3_3.lib.c.926ej-s}"/>
+			<param name="gcc.arm.elf.lib.gcc" value="${gcc.arm.elf.4_3_3.lib.gcc.926ej-s}"/>
 			
 			<!-- shortcuts for the tools -->
 			<param name="gcc.arm.elf.gcc"     value="${gcc.arm.elf.4_3_3.gcc}"/>
@@ -190,8 +214,69 @@ This is the buildfile for the netX5 irq sim project which is crossloaded by a ne
 			<param name="gcc.arm.elf.path"    value="${gcc.arm.elf.4_3_3.path}"/>
 			
 			<!-- the library search paths -->
-			<param name="gcc.arm.elf.lib.c"   value="${gcc.arm.elf.4_3_3.lib.c}"/>
-			<param name="gcc.arm.elf.lib.gcc" value="${gcc.arm.elf.4_3_3.lib.gcc}"/>
+			<param name="gcc.arm.elf.lib.c"   value="${gcc.arm.elf.4_3_3.lib.c.926ej-s}"/>
+			<param name="gcc.arm.elf.lib.gcc" value="${gcc.arm.elf.4_3_3.lib.gcc.926ej-s}"/>
+			
+			<!-- shortcuts for the tools -->
+			<param name="gcc.arm.elf.gcc"     value="${gcc.arm.elf.4_3_3.gcc}"/>
+			<param name="gcc.arm.elf.ld"      value="${gcc.arm.elf.4_3_3.ld}" />
+			<param name="gcc.arm.elf.ar"      value="${gcc.arm.elf.4_3_3.ar}" />
+		</antcall>
+	</target>
+
+
+	<target name="build_netx50" description="build the netx50 version">
+		<antcall target="gcc_compile">
+			<param name="build.gcc.home" value="${flasher_netx50_build_home}" />
+			<param name="build.gcc.compile.compiler_id" value="armgcc_netx50" />
+			<param name="build.gcc.compile.flags" value="__NETX50" />
+			<param name="build.gcc.compile.includes_id" value="flasher_netx50_includes" />
+			<param name="build.gcc.compile.sources_id" value="flasher_netx50_sources" />
+			
+			<!-- the exe search path -->
+			<param name="gcc.arm.elf.path"    value="${gcc.arm.elf.4_3_3.path}"/>
+			
+			<!-- the library search paths -->
+			<param name="gcc.arm.elf.lib.c"   value="${gcc.arm.elf.4_3_3.lib.c.966e-s}"/>
+			<param name="gcc.arm.elf.lib.gcc" value="${gcc.arm.elf.4_3_3.lib.gcc.966e-s}"/>
+			
+			<!-- shortcuts for the tools -->
+			<param name="gcc.arm.elf.gcc"     value="${gcc.arm.elf.4_3_3.gcc}"/>
+			<param name="gcc.arm.elf.ld"      value="${gcc.arm.elf.4_3_3.ld}" />
+			<param name="gcc.arm.elf.ar"      value="${gcc.arm.elf.4_3_3.ar}" />
+		</antcall>
+		
+		<antcall target="gcc_link">
+			<param name="build.gcc.home" value="${flasher_netx50_build_home}" />
+			<param name="build.gcc.link.linker_id" value="armlink" />
+			<param name="build.gcc.link.artefact" value="${flasher_netx50_build_artefact}" />
+			<param name="build.gcc.link.objects" value="${flasher_netx50_objects}" />
+			<param name="build.gcc.link.ldfile" value="src/flasher_netx50.ld" />
+			
+			<!-- the exe search path -->
+			<param name="gcc.arm.elf.path"    value="${gcc.arm.elf.4_3_3.path}"/>
+			
+			<!-- the library search paths -->
+			<param name="gcc.arm.elf.lib.c"   value="${gcc.arm.elf.4_3_3.lib.c.966e-s}"/>
+			<param name="gcc.arm.elf.lib.gcc" value="${gcc.arm.elf.4_3_3.lib.gcc.966e-s}"/>
+			
+			<!-- shortcuts for the tools -->
+			<param name="gcc.arm.elf.gcc"     value="${gcc.arm.elf.4_3_3.gcc}"/>
+			<param name="gcc.arm.elf.ld"      value="${gcc.arm.elf.4_3_3.ld}" />
+			<param name="gcc.arm.elf.ar"      value="${gcc.arm.elf.4_3_3.ar}" />
+		</antcall>
+		
+		<antcall target="gcc_bin">
+			<param name="build.gcc.home" value="${flasher_netx50_build_home}" />
+			<param name="build.gcc.bin.in" value="${flasher_netx50_build_artefact}.elf" />
+			<param name="build.gcc.bin.out" value="${flasher_netx50_build_artefact}.bin" />
+			
+			<!-- the exe search path -->
+			<param name="gcc.arm.elf.path"    value="${gcc.arm.elf.4_3_3.path}"/>
+			
+			<!-- the library search paths -->
+			<param name="gcc.arm.elf.lib.c"   value="${gcc.arm.elf.4_3_3.lib.c.966e-s}"/>
+			<param name="gcc.arm.elf.lib.gcc" value="${gcc.arm.elf.4_3_3.lib.gcc.966e-s}"/>
 			
 			<!-- shortcuts for the tools -->
 			<param name="gcc.arm.elf.gcc"     value="${gcc.arm.elf.4_3_3.gcc}"/>
@@ -206,10 +291,12 @@ This is the buildfile for the netX5 irq sim project which is crossloaded by a ne
 		<!-- delete the objects -->
 		<delete verbose="true">
 			<filelist dir="${basedir}" files="${flasher_netx500_objects}" />
+			<filelist dir="${basedir}" files="${flasher_netx50_objects}" />
 		</delete>
 		<!-- delete the elf and map file -->
 		<delete verbose="true">
 			<filelist dir="${basedir}" files="${flasher_netx500_build_artefact}.map,${flasher_netx500_build_artefact}.elf,${flasher_netx500_build_artefact}.bin" />
+			<filelist dir="${basedir}" files="${flasher_netx50_build_artefact}.map,${flasher_netx50_build_artefact}.elf,${flasher_netx50_build_artefact}.bin" />
 		</delete>
 	</target>
 

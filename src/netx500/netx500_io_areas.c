@@ -42,11 +42,11 @@
 ************************************************************
 */
 
-#include "netx_io_areas.h"
+#include "netx500_io_areas.h"
 
-const PI2C_AREA_T                       ptNetXI2CArea  =                (PI2C_AREA_T) Addr_i2c;                        /* Pointer to I2C Master Control Register         */
-const PSPI_AREA_T                       ptNetXSpi0Area =                (PSPI_AREA_T) Addr_spi;                        /* Pointer to SPI Control Register 0              */
-const PUART_AREA_T                      ptNetXUartArea =                (PUART_AREA_T) Addr_uart0;                     /* Pointer to UART Register                       */
-const PGPIO_AREA_T                      ptNetXGpioArea =                (PGPIO_AREA_T) Addr_gpio;                      /* Pointer to GPIO Register                       */
-const PNETX_GLOBAL_REG_BLOCK_1_AREA_T   ptNetXGlobalRegBlock1Area =     (PNETX_GLOBAL_REG_BLOCK_1_AREA_T) Adr_sta_netx;
-const PNETX_GLOBAL_REG_BLOCK_2_AREA_T   ptNetXGlobalRegBlock2Area =     (PNETX_GLOBAL_REG_BLOCK_2_AREA_T) Addr_netx_controlled_global_register_block_2;
+const PI2C_AREA_T                       ptNetXI2CArea  =                (PI2C_AREA_T) Addr_NX500_i2c;                        /* Pointer to I2C Master Control Register         */
+const PSPI_AREA_T                       ptNetXSpi0Area =                (PSPI_AREA_T) Addr_NX500_spi;                        /* Pointer to SPI Control Register 0              */
+const PUART_AREA_T                      ptNetXUartArea =                (PUART_AREA_T) Addr_NX500_uart0;                     /* Pointer to UART Register                       */
+const PGPIO_AREA_T                      ptNetXGpioArea =                (PGPIO_AREA_T) Addr_NX500_gpio;                      /* Pointer to GPIO Register                       */
+const PNETX_GLOBAL_REG_BLOCK_1_AREA_T   ptNetXGlobalRegBlock1Area =     (PNETX_GLOBAL_REG_BLOCK_1_AREA_T) Adr_NX500_sta_netx;
+const PNETX_GLOBAL_REG_BLOCK_2_AREA_T   ptNetXGlobalRegBlock2Area =     (PNETX_GLOBAL_REG_BLOCK_2_AREA_T) Addr_NX500_netx_controlled_global_register_block_2;

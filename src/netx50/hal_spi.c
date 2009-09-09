@@ -65,7 +65,7 @@ void HalSPI_Init(const HAL_SPI_T *ptHalSpi)
   ptRegs = ptHalSpi->ptSpiRegBase;
 
           /* set 8 bits            // set speed and filter */
-  ulVal = (7<<SRT_spi_cr0_datasize) | ptHalSpi->ulSpeed;                
+  ulVal = (7<<HOSTSRT(spi_cr0_datasize)) | ptHalSpi->ulSpeed;                
     
     
 
@@ -73,29 +73,29 @@ void HalSPI_Init(const HAL_SPI_T *ptHalSpi)
   /* mode 2 and 3 have spo=1 */
   if( ptHalSpi->tMode==HAL_SPI_MODE2 || ptHalSpi->tMode==HAL_SPI_MODE3 ) 
   {
-    ulVal |= MSK_spi_cr0_SPO;
+    ulVal |= HOSTMSK(spi_cr0_SPO);
   }
 
   /* set the clock phase     */
   /* mode 0 and 2 have sph=1 */
   if( ptHalSpi->tMode==HAL_SPI_MODE1 || ptHalSpi->tMode==HAL_SPI_MODE3 ) 
   {
-    ulVal |= MSK_spi_cr0_SPH;
+    ulVal |= HOSTMSK(spi_cr0_SPH);
   }
 
 
   ptRegs->ul_spi_cr0 = ulVal;
 
   ptRegs->ul_spi_cr1 =  /* manual chipselect    */
-                        MSK_spi_cr1_fss_static |
+                        HOSTMSK(spi_cr1_fss_static) |
                         /* enable the interface */
-                        MSK_spi_cr1_SSE;
+                        HOSTMSK(spi_cr1_SSE);
 
   /* do not use irqs in bootloader */
   ptRegs->ul_spi_imsc = 0;
 
   /* clear input fifo */
-  while( (ptRegs->ul_spi_sr&MSK_spi_sr_rx_fifo_level)!=0 )
+  while( (ptRegs->ul_spi_sr&HOSTMSK(spi_sr_rx_fifo_level))!=0 )
   {
     /* get one byte from the fifo */
     ulDummy = ptRegs->ul_spi_dr;
@@ -213,18 +213,18 @@ int HalSPI_ExchangeByte(const HAL_SPI_T *ptHalSpi, unsigned int uiOutByte, unsig
   do
   {
     ulVal  = ptRegs->ul_spi_sr;
-    ulVal &= MSK_spi_sr_BSY;
+    ulVal &= HOSTMSK(spi_sr_BSY);
   } while( ulVal!=0 );
 
   /* wait for one byte in the fifo */
   do
   {
-    ulVal = ptRegs->ul_spi_sr & MSK_spi_sr_rx_fifo_level;
+    ulVal = ptRegs->ul_spi_sr & HOSTMSK(spi_sr_rx_fifo_level);
   } while( ulVal==0 );
 
   /* get the response */
   ulVal  = ptRegs->ul_spi_dr;
-  ulVal &= MSK_spi_dr_data;
+  ulVal &= HOSTMSK(spi_dr_data);
 
   /* return the response */
   if( puiRecByte!=NULL )
@@ -281,14 +281,14 @@ void HalSPI_SlaveSelect(const HAL_SPI_T *ptHalSpi, unsigned int uiSlaveId)
   ptRegs = ptHalSpi->ptSpiRegBase;
 
   /* limit the slave id to valid range */
-  uiSlaveId <<= SRT_spi_cr1_fss;
-  uiSlaveId  &= MSK_spi_cr1_fss;
+  uiSlaveId <<= HOSTSRT(spi_cr1_fss);
+  uiSlaveId  &= HOSTMSK(spi_cr1_fss);
 
   /* get control register contents */
   ulVal  = ptRegs->ul_spi_cr1;
   
   /* mask out the slave select bits */
-  ulVal &= ~MSK_spi_cr1_fss;
+  ulVal &= ~HOSTMSK(spi_cr1_fss);
   
   /* mask in the new slave id */
   ulVal |= uiSlaveId;
@@ -329,11 +329,11 @@ unsigned long HalSpiGetDeviceSpeedRepresentation(unsigned long ulSpeed)
   ulInputFilter = 0;
   if( ulDevSpeed<=0x0200 )
   {
-    ulInputFilter = MSK_spi_cr0_filter_in;
+    ulInputFilter = HOSTMSK(spi_cr0_filter_in);
   }
 
   /* shift to register position */
-  ulDevSpeed <<= SRT_spi_cr0_sck_muladd;
+  ulDevSpeed <<= HOSTSRT(spi_cr0_sck_muladd);
   
   /* add filter bit */
   ulDevSpeed |= ulInputFilter;
