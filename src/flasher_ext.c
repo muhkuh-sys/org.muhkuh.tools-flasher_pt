@@ -97,7 +97,7 @@ NETX_CONSOLEAPP_RESULT_T ext_flash(const unsigned char *pbData, unsigned long ul
 
 
         /*  try to detect flash */
-        tFlashDevice.pbFlashBase = (unsigned char*)Adr_hif_ahbls6_BASE;
+        tFlashDevice.pbFlashBase = (unsigned char*)HOSTADR(hif_ahbls6_BASE);
         iRes = CFI_IdentifyFlash(&tFlashDevice, setup_flash_ext);
         if( iRes==0 )
         {
@@ -123,7 +123,7 @@ NETX_CONSOLEAPP_RESULT_T ext_erase(unsigned long ulDataByteLen)
 
 
         /*  try to detect flash */
-        tFlashDevice.pbFlashBase = (unsigned char*)Adr_hif_ahbls6_BASE;
+        tFlashDevice.pbFlashBase = (unsigned char*)HOSTADR(hif_ahbls6_BASE);
         iRes = CFI_IdentifyFlash(&tFlashDevice, setup_flash_ext);
         if( iRes==0 )
         {
@@ -151,7 +151,7 @@ NETX_CONSOLEAPP_RESULT_T ext_read(unsigned char *pbData, unsigned long ulDataByt
 
 
         /*  try to detect flash */
-        tFlashDevice.pbFlashBase = (unsigned char*)Adr_hif_ahbls6_BASE;
+        tFlashDevice.pbFlashBase = (unsigned char*)HOSTADR(hif_ahbls6_BASE);
         iRes = CFI_IdentifyFlash(&tFlashDevice, setup_flash_ext);
         if( iRes==0 )
         {
@@ -179,7 +179,7 @@ NETX_CONSOLEAPP_RESULT_T ext_verify(const unsigned char *pbData, unsigned long u
 
 
         /*  try to detect flash */
-        tFlashDevice.pbFlashBase = (unsigned char*)Adr_hif_ahbls6_BASE;
+        tFlashDevice.pbFlashBase = (unsigned char*)HOSTADR(hif_ahbls6_BASE);
         iRes = CFI_IdentifyFlash(&tFlashDevice, setup_flash_ext);
         if( iRes==0 )
         {

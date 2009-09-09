@@ -253,13 +253,13 @@ void i2c_sendAddress(unsigned int uiParams, int iStopFlag)
 
 
   /*  first byte of the command is the ID */
-  ulVal  = 0x50<<SRT_i2c_ctrl_ID;
+  ulVal  = 0x50<<HOSTSRT(i2c_ctrl_ID);
   
-  /*  set speed to max (MSK_i2c_ctrl_SPEED) */
-  ulVal |= 4<<SRT_i2c_ctrl_SPEED;
+  /*  set speed to max (HOSTMSK(i2c_ctrl_SPEED)) */
+  ulVal |= 4<<HOSTSRT(i2c_ctrl_SPEED);
   
-  /*  enable i2c core (MSK_i2c_ctrl_ENABLE) */
-  ulVal |= MSK_i2c_ctrl_ENABLE;
+  /*  enable i2c core (HOSTMSK(i2c_ctrl_ENABLE)) */
+  ulVal |= HOSTMSK(i2c_ctrl_ENABLE);
   ptNetXI2CArea->ulCtrl = ulVal;
 
   /*  send parameter data */
@@ -269,32 +269,32 @@ void i2c_sendAddress(unsigned int uiParams, int iStopFlag)
   ulVal  = (uiParams >> 8)&0xff;
   
   /*  prepend start data */
-  ulVal |= MSK_i2c_data_CMD2;
+  ulVal |= HOSTMSK(i2c_data_CMD2);
   
   /*  execute command */
-  ulVal |= MSK_i2c_data_CMD3;
+  ulVal |= HOSTMSK(i2c_data_CMD3);
   ptNetXI2CArea->ulData = ulVal;
 
   /*  wait for execution */
-  while( (ptNetXI2CArea->ulData&MSK_i2c_data_CMD3)!=0 ) {}
+  while( (ptNetXI2CArea->ulData&HOSTMSK(i2c_data_CMD3))!=0 ) {}
 
 
   /*  second parameter byte */
   ulVal  = uiParams&0xff;
   
   /*  execute command */
-  ulVal |= MSK_i2c_data_CMD3;
+  ulVal |= HOSTMSK(i2c_data_CMD3);
   
   /*  append stop condition? */
   if( iStopFlag!=0 ) 
   {
-          ulVal |= MSK_i2c_data_CMD0;
+          ulVal |= HOSTMSK(i2c_data_CMD0);
   }
   
   ptNetXI2CArea->ulData = ulVal;
 
   /*  wait for execution */
-  while( (ptNetXI2CArea->ulData&MSK_i2c_data_CMD3)!=0 ) {}
+  while( (ptNetXI2CArea->ulData&HOSTMSK(i2c_data_CMD3))!=0 ) {}
 #endif
 }
 
@@ -310,32 +310,32 @@ void i2c_readResponse(unsigned char *pucBuffer, unsigned int uiLength)
         while( uiCnt<uiLength ) 
         {
            /*  read byte */
-           ulVal  = MSK_i2c_data_CMD1;
+           ulVal  = HOSTMSK(i2c_data_CMD1);
            
            /*  execute command */
-           ulVal |= MSK_i2c_data_CMD3;
+           ulVal |= HOSTMSK(i2c_data_CMD3);
 
           /*  is this the first byte? */
           if( uiCnt==0 ) 
           {
              /*  yes -> prepend start data */
-             ulVal |= MSK_i2c_data_CMD2;
+             ulVal |= HOSTMSK(i2c_data_CMD2);
           }
           
           /*  is this the last byte? */
           if( (uiCnt+1)==uiLength ) 
           {
              /*  yes -> append stop condition */
-             ulVal |= MSK_i2c_data_CMD0;
+             ulVal |= HOSTMSK(i2c_data_CMD0);
           }
           
           ptNetXI2CArea->ulData = ulVal;
 
           /*  wait exec */
-          while( (ptNetXI2CArea->ulData&MSK_i2c_data_CMD3)!=0 ) {}
+          while( (ptNetXI2CArea->ulData&HOSTMSK(i2c_data_CMD3))!=0 ) {}
 
           /*  get byte */
-          pucBuffer[uiCnt] = (unsigned char)(ptNetXI2CArea->ulData&MSK_i2c_data_DATA);
+          pucBuffer[uiCnt] = (unsigned char)(ptNetXI2CArea->ulData&HOSTMSK(i2c_data_DATA));
 
           /*  next byte */
           ++uiCnt;
@@ -358,19 +358,19 @@ void i2c_writeData(const unsigned char *pucBuffer, unsigned int uiLength)
            ulVal  = pucBuffer[uiCnt];
            
            /*  execute command */
-           ulVal |= MSK_i2c_data_CMD3;
+           ulVal |= HOSTMSK(i2c_data_CMD3);
 
            /*  is this the last byte? */
            if( (uiCnt+1)==uiLength ) 
            {
                    /*  yes -> append stop condition */
-                   ulVal |= MSK_i2c_data_CMD0;
+                   ulVal |= HOSTMSK(i2c_data_CMD0);
            }
            
            ptNetXI2CArea->ulData = ulVal;
 
            /*  wait exec */
-           while( (ptNetXI2CArea->ulData&MSK_i2c_data_CMD3)!=0 ) {}
+           while( (ptNetXI2CArea->ulData&HOSTMSK(i2c_data_CMD3))!=0 ) {}
 
            /*  next byte */
            ++uiCnt;
@@ -387,21 +387,21 @@ void i2c_pollAck(unsigned int uiAckCnt)
 
         /*  ack polling can't be done with netX500 :( */
         i2c_sendAddress(0, 0);
-        ulVal = MSK_i2c_data_CMD1|MSK_i2c_data_CMD3;
+        ulVal = HOSTMSK(i2c_data_CMD1)|HOSTMSK(i2c_data_CMD3);
         do {
                 /*  send dummy byte */
                 ptNetXI2CArea->ulData = ulVal;
 
                 /*  wait exec */
-                while( (ptNetXI2CArea->ulData&MSK_i2c_data_CMD3)!=0 ) {}
+                while( (ptNetXI2CArea->ulData&HOSTMSK(i2c_data_CMD3))!=0 ) {}
         } while( --uiAckCnt!=0 );
 
         /*  send stop condition */
-        ulVal = MSK_i2c_data_CMD0|MSK_i2c_data_CMD1|MSK_i2c_data_CMD3;
+        ulVal = HOSTMSK(i2c_data_CMD0)|HOSTMSK(i2c_data_CMD1)|HOSTMSK(i2c_data_CMD3);
         ptNetXI2CArea->ulData = ulVal;
 
         /*  wait exec */
-        while( (ptNetXI2CArea->ulData&MSK_i2c_data_CMD3)!=0 ) {}
+        while( (ptNetXI2CArea->ulData&HOSTMSK(i2c_data_CMD3))!=0 ) {}
 #endif
 }
 

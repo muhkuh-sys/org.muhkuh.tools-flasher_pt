@@ -20,6 +20,7 @@
 
 #include "cfi_flash.h"
 #include "flasher_srb.h"
+#include "netx_io_areas.h"
 #include "parflash_common.h"
 #include "uprintf.h"
 
@@ -30,10 +31,10 @@
 /*  ///////////////////////////////////////////////////// */
 static void setup_flash_srb(unsigned int uiWidth)
 {
-        unsigned long* pulFlashCtrl = (unsigned long*)(Adr_extsram0_ctrl);
-        unsigned long  ulRegValue   = ((DEFAULT_PREPAUSE   << SRT_extsram0_ctrl_WSPrePauseExtMem0)  & MSK_extsram0_ctrl_WSPrePauseExtMem0)  |
-                                ((DEFAULT_POSTPAUSE  << SRT_extsram0_ctrl_WSPostPauseExtMem0) & MSK_extsram0_ctrl_WSPostPauseExtMem0) |
-                                ((DEFAULT_WAITSTATES << SRT_extsram0_ctrl_WSExtMem0)          & MSK_extsram0_ctrl_WSExtMem0);
+        unsigned long* pulFlashCtrl = (unsigned long*)(HOSTADR(extsram0_ctrl));
+        unsigned long  ulRegValue   = ((DEFAULT_PREPAUSE   << HOSTSRT(extsram0_ctrl_WSPrePauseExtMem0))  & HOSTMSK(extsram0_ctrl_WSPrePauseExtMem0))  |
+                                ((DEFAULT_POSTPAUSE  << HOSTSRT(extsram0_ctrl_WSPostPauseExtMem0)) & HOSTMSK(extsram0_ctrl_WSPostPauseExtMem0)) |
+                                ((DEFAULT_WAITSTATES << HOSTSRT(extsram0_ctrl_WSExtMem0))          & HOSTMSK(extsram0_ctrl_WSExtMem0));
 
         switch(uiWidth)
         {
@@ -42,11 +43,11 @@ static void setup_flash_srb(unsigned int uiWidth)
                 break;
 
         case 16:
-                ulRegValue |= (0x01 << SRT_extsram0_ctrl_WidthExtMem0) & MSK_extsram0_ctrl_WidthExtMem0;
+                ulRegValue |= (0x01 << HOSTSRT(extsram0_ctrl_WidthExtMem0)) & HOSTMSK(extsram0_ctrl_WidthExtMem0);
                 break;
 
         case 32:
-                ulRegValue |= (0x02 << SRT_extsram0_ctrl_WidthExtMem0) & MSK_extsram0_ctrl_WidthExtMem0;
+                ulRegValue |= (0x02 << HOSTSRT(extsram0_ctrl_WidthExtMem0)) & HOSTMSK(extsram0_ctrl_WidthExtMem0);
                 break;
         }
 
@@ -67,7 +68,7 @@ NETX_CONSOLEAPP_RESULT_T srb_flash(const unsigned char *pbData, unsigned long ul
 
 
         /*  set parflash baseaddress */
-        tFlashDevice.pbFlashBase = (unsigned char*)Addr_extsram0;
+        tFlashDevice.pbFlashBase = (unsigned char*)HOSTADDR(extsram0);
 
         /*  try to detect flash */
         uprintf(". Detecting CFI flash at 0x$...\n", tFlashDevice.pbFlashBase);
@@ -102,7 +103,7 @@ NETX_CONSOLEAPP_RESULT_T srb_erase(unsigned long ulDataByteLen)
 
 
         /*  try to detect flash */
-        tFlashDevice.pbFlashBase = (unsigned char*)Addr_extsram0;
+        tFlashDevice.pbFlashBase = (unsigned char*)HOSTADDR(extsram0);
         iRes = CFI_IdentifyFlash(&tFlashDevice, setup_flash_srb);
         if( iRes==0 ) 
         {
@@ -123,7 +124,7 @@ NETX_CONSOLEAPP_RESULT_T srb_read(unsigned char *pbData, unsigned long ulDataByt
 
 
         /*  try to detect flash */
-        tFlashDevice.pbFlashBase = (unsigned char*)Addr_extsram0;
+        tFlashDevice.pbFlashBase = (unsigned char*)HOSTADDR(extsram0);
         iRes = CFI_IdentifyFlash(&tFlashDevice, setup_flash_srb);
         if( iRes==0 ) 
         {
@@ -144,7 +145,7 @@ NETX_CONSOLEAPP_RESULT_T srb_verify(const unsigned char *pbData, unsigned long u
 
 
         /*  try to detect flash */
-        tFlashDevice.pbFlashBase = (unsigned char*)Addr_extsram0;
+        tFlashDevice.pbFlashBase = (unsigned char*)HOSTADDR(extsram0);
         iRes = CFI_IdentifyFlash(&tFlashDevice, setup_flash_srb);
         if( iRes==0 ) 
         {

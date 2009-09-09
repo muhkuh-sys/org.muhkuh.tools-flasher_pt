@@ -43,7 +43,7 @@
 */
 
 #include "cfi_flash.h"
-#include "netx_regdef.h"
+#include "netx_io_areas.h"
 #include "strata.h"
 #include "spansion.h"
 #include "uprintf.h"
@@ -180,10 +180,10 @@ static int CFIMemCmp(volatile void* pvFlash, const void* pvCmpBuf, unsigned long
 // ///////////////////////////////////////////////////// 
 static void SetupFlash(unsigned int uiWidth)
 {
-	volatile unsigned long* pulFlashCtrl = (volatile unsigned long*)(Adr_extsram0_ctrl);
-	unsigned long  ulRegValue = ((DEFAULT_PREPAUSE   << SRT_extsram0_ctrl_WSPrePauseExtMem0)  & MSK_extsram0_ctrl_WSPrePauseExtMem0)  |
-                              ((DEFAULT_POSTPAUSE  << SRT_extsram0_ctrl_WSPostPauseExtMem0) & MSK_extsram0_ctrl_WSPostPauseExtMem0) |
-                              ((DEFAULT_WAITSTATES << SRT_extsram0_ctrl_WSExtMem0)          & MSK_extsram0_ctrl_WSExtMem0);
+	volatile unsigned long* pulFlashCtrl = (volatile unsigned long*)(HOSTADR(extsram0_ctrl));
+	unsigned long  ulRegValue = ((DEFAULT_PREPAUSE   << HOSTSRT(extsram0_ctrl_WSPrePauseExtMem0))  & HOSTMSK(extsram0_ctrl_WSPrePauseExtMem0))  |
+                              ((DEFAULT_POSTPAUSE  << HOSTSRT(extsram0_ctrl_WSPostPauseExtMem0)) & HOSTMSK(extsram0_ctrl_WSPostPauseExtMem0)) |
+                              ((DEFAULT_WAITSTATES << HOSTSRT(extsram0_ctrl_WSExtMem0))          & HOSTMSK(extsram0_ctrl_WSExtMem0));
 
 
 	DEBUGMSG(ZONE_FUNCTION, ("+SetupFlash(): uiWidth=0x$8\n", uiWidth));
@@ -195,11 +195,11 @@ static void SetupFlash(unsigned int uiWidth)
 		break;
 
 	case 16:
-		ulRegValue |= (0x01 << SRT_extsram0_ctrl_WidthExtMem0) & MSK_extsram0_ctrl_WidthExtMem0;
+		ulRegValue |= (0x01 << HOSTSRT(extsram0_ctrl_WidthExtMem0)) & HOSTMSK(extsram0_ctrl_WidthExtMem0);
 		break;
 
 	case 32:
-		ulRegValue |= (0x02 << SRT_extsram0_ctrl_WidthExtMem0) & MSK_extsram0_ctrl_WidthExtMem0;
+		ulRegValue |= (0x02 << HOSTSRT(extsram0_ctrl_WidthExtMem0)) & HOSTMSK(extsram0_ctrl_WidthExtMem0);
 		break;
 	}
 

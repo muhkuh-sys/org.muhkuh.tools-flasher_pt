@@ -48,39 +48,40 @@
 /*! This function creates a delay                                 
 * The function unction creates a delay with the entered parameter.                
 *   \param uiDelayUs  Delay value
-* 																																					 */                                                                              
+*
+*/
 /*****************************************************************************/
 void delay_us(unsigned int uiDelayUs)
 {
-  unsigned long ulTimerValue;
-  unsigned long ulTimerCtrl;
+	unsigned long ulTimerValue;
+	unsigned long ulTimerCtrl;
 
 
-  /*  Clear the timer register */
-  ptNetXGpioArea->aul_gpio_counter_ctrl[0] = 0;
-  
-  /*  convert delay value to 10ns units */
-  ulTimerValue = uiDelayUs * 100;
-  
-  /*  wait for 0.5 sec */
-  ptNetXGpioArea->aul_gpio_counter_max[0] = ulTimerValue;
+	/*  Clear the timer register */
+	ptNetXGpioArea->aul_gpio_counter_ctrl[0] = 0;
 
-  /*  Clear the current timer value */
-  ptNetXGpioArea->aul_gpio_counter_cnt[0] = 0;
-  
-  /*  Enable the timer */
-  ptNetXGpioArea->aul_gpio_counter_ctrl[0] = MSK_gpio_counter0_ctrl_run|MSK_gpio_counter0_ctrl_once;
+	/*  convert delay value to 10ns units */
+	ulTimerValue = uiDelayUs * 100;
 
-  do
-  {
-    ulTimerCtrl  = ptNetXGpioArea->aul_gpio_counter_ctrl[0];
-    ulTimerCtrl &= MSK_gpio_counter0_ctrl_run;
-  } while( ulTimerCtrl!=0 );
+	/*  wait for 0.5 sec */
+	ptNetXGpioArea->aul_gpio_counter_max[0] = ulTimerValue;
 
-  /*  Clear the timer register */
-  ptNetXGpioArea->aul_gpio_counter_ctrl[0] = 0;
-  
-  /*  Reset the counter max value */
-  ptNetXGpioArea->aul_gpio_counter_max[0] = 0;
+	/*  Clear the current timer value */
+	ptNetXGpioArea->aul_gpio_counter_cnt[0] = 0;
+
+	/*  Enable the timer */
+	ptNetXGpioArea->aul_gpio_counter_ctrl[0] = HOSTMSK(gpio_counter0_ctrl_run)|HOSTMSK(gpio_counter0_ctrl_once);
+
+	do
+	{
+		ulTimerCtrl  = ptNetXGpioArea->aul_gpio_counter_ctrl[0];
+		ulTimerCtrl &= HOSTMSK(gpio_counter0_ctrl_run);
+	} while( ulTimerCtrl!=0 );
+
+	/*  Clear the timer register */
+	ptNetXGpioArea->aul_gpio_counter_ctrl[0] = 0;
+
+	/*  Reset the counter max value */
+	ptNetXGpioArea->aul_gpio_counter_max[0] = 0;
 }
 
