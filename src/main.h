@@ -18,30 +18,10 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef __main__
-#define __main__
-
-//-------------------------------------
-
-typedef struct {
-	unsigned long ulParamVersion;
-	unsigned long ulOperationMode;
-        unsigned char *pbData;
-        unsigned long ulDataByteSize;
-        unsigned long ulBootBlockSrcType;
-        unsigned long ulDstDeviceOffset;
-} tFlasherInputParameter, *ptFlasherInputParameter;
-
-typedef enum
-{
-	OperationMode_Flash = 0,
-	OperationMode_Erase = 1,
-	OperationMode_Read = 2,
-	OperationMode_Verify = 3
-} tOperationMode;
-
-//-------------------------------------
+#ifndef __MAIN_H__
+#define __MAIN_H__
 
 
-#endif
+
+#endif	/* __MAIN_H__ */
 

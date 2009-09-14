@@ -18,15 +18,20 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "netx_consoleapp.h"
-
 
 #ifndef __FLASHER_SPI_H__
 #define __FLASHER_SPI_H__
 
-NETX_CONSOLEAPP_RESULT_T spi_flash (const unsigned char *pbData, unsigned long ulDataByteLen);
-NETX_CONSOLEAPP_RESULT_T spi_erase (unsigned long       ulDataByteLen);
+#include "netx_consoleapp.h"
+#include "flasher_interface.h"
+
+
+NETX_CONSOLEAPP_RESULT_T spi_flash (CMD_PARAMETER_FLASH_T *ptParameter);
+NETX_CONSOLEAPP_RESULT_T spi_erase (CMD_PARAMETER_ERASE_T *ptParameter);
 NETX_CONSOLEAPP_RESULT_T spi_read  (unsigned char       *pbData, unsigned long ulDataByteLen);
 NETX_CONSOLEAPP_RESULT_T spi_verify(const unsigned char *pbData, unsigned long ulDataByteLen);
 
-#endif  /* __FLASHER_SPI_H__ */
+NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter);
+NETX_CONSOLEAPP_RESULT_T spi_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptParameter);
+
+#endif	/* __FLASHER_SPI_H__ */

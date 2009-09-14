@@ -76,8 +76,8 @@ typedef enum
 
 typedef struct HAL_SPI_Ttag
 {
-	PSPI_AREA_T    ptSpiRegBase;    /* base address of spi block 	*/
-	unsigned int   uiIdleChar;			/* Idle character 						*/
+	NX500_SPI_AREA_T *ptSpiRegBase;		/* base address of spi block */
+	unsigned int   uiIdleChar;		/* Idle character */
 	unsigned long  ulSpeed;
 	HAL_SPI_MODE_t tMode;
 } HAL_SPI_T;

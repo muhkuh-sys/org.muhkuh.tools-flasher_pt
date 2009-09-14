@@ -86,7 +86,7 @@ static const SPI_KHZ_TO_CLOCK_T aulSpeedSteps[] =
 /*****************************************************************************/
 void HalSPI_Init(const HAL_SPI_T *ptHalSpi)
 {
-	PSPI_AREA_T ptSpiRegBase;
+	NX500_SPI_AREA_T *ptSpiRegBase;
 	unsigned long ulVal;
 
 
@@ -94,41 +94,41 @@ void HalSPI_Init(const HAL_SPI_T *ptHalSpi)
 	ptSpiRegBase = ptHalSpi->ptSpiRegBase;
 
 	/* soft reset spi and clear both fifos */
-	ptSpiRegBase->ulControl =	HOSTMSK(spi_control_register_CR_softreset) |
-								            HOSTMSK(spi_control_register_CR_clr_infifo)|
-								            HOSTMSK(spi_control_register_CR_clr_outfifo);
+	ptSpiRegBase->ulSpi_control_register = HOSTMSK(spi_control_register_CR_softreset) |
+						       HOSTMSK(spi_control_register_CR_clr_infifo)|
+						       HOSTMSK(spi_control_register_CR_clr_outfifo);
 
 	/* configure the spi interface */
 	ulVal =	HOSTMSK(spi_control_register_CR_read)  |				    /* enable read              */
-			    HOSTMSK(spi_control_register_CR_write) |				    /* enable write             */
-			    HOSTMSK(spi_control_register_CR_ms)    |				    /* me master                */
-			    (7<<HOSTSRT(spi_control_register_CR_burst)) |	    /* max possible burst block */
-			    (0<<HOSTSRT(spi_control_register_CR_burstdelay))|	/* 0 SCLK burst delay       */
-			    HOSTMSK(spi_control_register_CR_en) |				      /* enable spi interface     */
-			    ptHalSpi->ulSpeed<<1;							            /* clock divider for SCK    */
+			HOSTMSK(spi_control_register_CR_write) |				    /* enable write             */
+			HOSTMSK(spi_control_register_CR_ms)    |				    /* me master                */
+			(7<<HOSTSRT(spi_control_register_CR_burst)) |	    /* max possible burst block */
+			(0<<HOSTSRT(spi_control_register_CR_burstdelay))|	/* 0 SCLK burst delay       */
+			HOSTMSK(spi_control_register_CR_en) |				      /* enable spi interface     */
+			ptHalSpi->ulSpeed<<1;							            /* clock divider for SCK    */
 
 	/* set the clock polarity */
 	/* mode 2 and 3 have cpol=1 */
-	if( ptHalSpi->tMode==HAL_SPI_MODE2 || ptHalSpi->tMode==HAL_SPI_MODE3 )
+	if( (ptHalSpi->tMode==HAL_SPI_MODE2) || (ptHalSpi->tMode==HAL_SPI_MODE3) )
 	{
 		ulVal |= HOSTMSK(spi_control_register_CR_cpol);
 	}
 
 	/* set the clock phase */
 	/* mode 0 and 2 have ncpha=1 */
-	if( ptHalSpi->tMode==HAL_SPI_MODE0 || ptHalSpi->tMode==HAL_SPI_MODE2 )
+	if( (ptHalSpi->tMode==HAL_SPI_MODE0) || (ptHalSpi->tMode==HAL_SPI_MODE2) )
 	{
 		ulVal |= HOSTMSK(spi_control_register_CR_ncpha);
 	}
 
 	/* write value to control register */
-	ptSpiRegBase->ulControl = ulVal;
+	ptSpiRegBase->ulSpi_control_register = ulVal;
 
 	/* reset status bits */
-	ptSpiRegBase->ulStatus = 0;
+	ptSpiRegBase->ulSpi_status_register = 0;
 
 	/* do not use irqs for now */
-	ptSpiRegBase->ulInterruptControl = 0;
+	ptSpiRegBase->ulSpi_interrupt_control_register = 0;
 }
 
 
@@ -233,7 +233,7 @@ int HalSPI_BlockIo(const HAL_SPI_T *ptHalSpi, unsigned long ulLength, const unsi
 /*****************************************************************************/ 
 int HalSPI_ExchangeByte(const HAL_SPI_T *ptHalSpi, unsigned int uiSendByte, unsigned int *puiRecByte)
 {
-	PSPI_AREA_T ptSpiRegBase;
+	NX500_SPI_AREA_T *ptSpiRegBase;
 	unsigned long ulOutFuel;
 	unsigned int uiRecByte;
 
@@ -245,23 +245,23 @@ int HalSPI_ExchangeByte(const HAL_SPI_T *ptHalSpi, unsigned int uiSendByte, unsi
 	uiSendByte &= 0xff;
 
 	/* write byte to spi bus */
-	ptSpiRegBase->ulData = uiSendByte | HOSTMSK(spi_data_register_dr_valid0);
+	ptSpiRegBase->ulSpi_data_register = uiSendByte | HOSTMSK(spi_data_register_dr_valid0);
 
 	/* wait until all bytes are clocked out. There will be a byte in the
 	 * receive buffer */
 	/* TODO: limit the polling time, this will wait forever! On timeout return -1 . */
 	do
 	{
-		ulOutFuel   = ptSpiRegBase->ulStatus & HOSTMSK(spi_status_register_SR_out_fuel_val);
+		ulOutFuel   = ptSpiRegBase->ulSpi_status_register & HOSTMSK(spi_status_register_SR_out_fuel_val);
 	} while( ulOutFuel!=0 );
 
 	/* get the received byte */
-	uiRecByte = ptSpiRegBase->ulData & HOSTMSK(spi_data_register_data_byte_0);
+	uiRecByte = ptSpiRegBase->ulSpi_data_register & HOSTMSK(spi_data_register_data_byte_0);
 
     /* return the received byte only if a valid pointer was passed */
     if( puiRecByte!=NULL )
     {
-      *puiRecByte = uiRecByte;    
+      *puiRecByte = uiRecByte;
     }
 
     /* receive ok */
@@ -284,7 +284,7 @@ int HalSPI_ExchangeByte(const HAL_SPI_T *ptHalSpi, unsigned int uiSendByte, unsi
 /*****************************************************************************/
 void HalSPI_SlaveSelect(const HAL_SPI_T *ptHalSpi, unsigned int uiSlaveId)
 {
-	PSPI_AREA_T ptSpiRegBase;
+	NX500_SPI_AREA_T *ptSpiRegBase;
 	unsigned long ulVal;
 
 
@@ -292,7 +292,7 @@ void HalSPI_SlaveSelect(const HAL_SPI_T *ptHalSpi, unsigned int uiSlaveId)
 	ptSpiRegBase = ptHalSpi->ptSpiRegBase;
 
 	/* get control register contents */
-	ulVal = ptSpiRegBase->ulControl;
+	ulVal = ptSpiRegBase->ulSpi_control_register;
 	
 	/* mask out the slave select bits */
 	ulVal &= ~HOSTMSK(spi_control_register_CR_ss);
@@ -304,7 +304,7 @@ void HalSPI_SlaveSelect(const HAL_SPI_T *ptHalSpi, unsigned int uiSlaveId)
 	ulVal |= HOSTMSK(spi_control_register_CR_clr_infifo)|HOSTMSK(spi_control_register_CR_clr_outfifo);
 	
 	/* write back new value */
-	ptSpiRegBase->ulControl = ulVal;
+	ptSpiRegBase->ulSpi_control_register = ulVal;
 }
 
 

@@ -46,35 +46,35 @@
 #ifndef __HAL_SPI__
 #define __HAL_SPI__
 
-/*                                                                  
-************************************************************        
-*   Defines for the SPI Interface                                     
-************************************************************        
-*/                                                                  
+/*
+************************************************************
+*   Defines for the SPI Interface
+************************************************************
+*/
 #define SPI_MHZ2SPEED(freq) ((unsigned long)(((freq*4096)/100)+0.5))
 
 typedef enum
 {
-  HAL_SPI_MODE0,
-  HAL_SPI_MODE1,
-  HAL_SPI_MODE2,
-  HAL_SPI_MODE3
+	HAL_SPI_MODE0,
+	HAL_SPI_MODE1,
+	HAL_SPI_MODE2,
+	HAL_SPI_MODE3
 } HAL_SPI_MODE_t;
 
 typedef struct
 {
-  PSPI_AREA_T ptSpiRegBase;   /* pointer to the spi register block  */
-  unsigned int uiIdleChar;    /* Idle character                     */
-  unsigned long ulSpeed;      /* device speed in MHz                */
-  HAL_SPI_MODE_t tMode;       /* bus mode                           */
+	NX50_SPI_AREA_T *ptSpiRegBase;	/* pointer to the spi register block */
+	unsigned int uiIdleChar;	/* Idle character */
+	unsigned long ulSpeed;		/* device speed in MHz */
+	HAL_SPI_MODE_t tMode;		/* bus mode */
 } HAL_SPI_T;
 
 
-/*                                                                  
-************************************************************        
-*   Function Prototypes, Global                                     
-************************************************************        
-*/                                                                  
+/*
+************************************************************
+*   Function Prototypes, Global
+************************************************************
+*/
 void  HalSPI_Init         (const HAL_SPI_T *ptHalSpi);
 int   HalSPI_ClearBus     (const HAL_SPI_T *ptHalSpi);
 int   HalSPI_BlockIo      (const HAL_SPI_T *ptHalSpi, unsigned long ulLength,  const unsigned char *pbOutBuffer, unsigned char *pbInBuffer);

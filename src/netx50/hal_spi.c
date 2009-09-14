@@ -56,288 +56,290 @@
 /*****************************************************************************/ 
 void HalSPI_Init(const HAL_SPI_T *ptHalSpi)
 {
-  PSPI_AREA_T ptRegs;
-  unsigned long ulVal;
-  volatile unsigned long ulDummy;
+	NX50_SPI_AREA_T *ptRegs;
+	unsigned long ulVal;
+	volatile unsigned long ulDummy;
 
 
-  /* get the base address of the SPI interafce */
-  ptRegs = ptHalSpi->ptSpiRegBase;
+	/* get the base address of the SPI interafce */
+	ptRegs = ptHalSpi->ptSpiRegBase;
 
-          /* set 8 bits            // set speed and filter */
-  ulVal = (7<<HOSTSRT(spi_cr0_datasize)) | ptHalSpi->ulSpeed;                
-    
-    
-
-  /* set the clock polarity  */
-  /* mode 2 and 3 have spo=1 */
-  if( ptHalSpi->tMode==HAL_SPI_MODE2 || ptHalSpi->tMode==HAL_SPI_MODE3 ) 
-  {
-    ulVal |= HOSTMSK(spi_cr0_SPO);
-  }
-
-  /* set the clock phase     */
-  /* mode 0 and 2 have sph=1 */
-  if( ptHalSpi->tMode==HAL_SPI_MODE1 || ptHalSpi->tMode==HAL_SPI_MODE3 ) 
-  {
-    ulVal |= HOSTMSK(spi_cr0_SPH);
-  }
+	/* set 8 bits */
+	ulVal  = 7 << HOSTSRT(spi_cr0_datasize);
+	/* set speed and filter */
+	ulVal |= ptHalSpi->ulSpeed;
 
 
-  ptRegs->ul_spi_cr0 = ulVal;
+	/* set the clock polarity  */
+	/* mode 2 and 3 have spo=1 */
+	if( (ptHalSpi->tMode==HAL_SPI_MODE2) || (ptHalSpi->tMode==HAL_SPI_MODE3) )
+	{
+		ulVal |= HOSTMSK(spi_cr0_SPO);
+	}
 
-  ptRegs->ul_spi_cr1 =  /* manual chipselect    */
-                        HOSTMSK(spi_cr1_fss_static) |
-                        /* enable the interface */
-                        HOSTMSK(spi_cr1_SSE);
+	/* set the clock phase     */
+	/* mode 0 and 2 have sph=1 */
+	if( (ptHalSpi->tMode==HAL_SPI_MODE1) || (ptHalSpi->tMode==HAL_SPI_MODE3) )
+	{
+		ulVal |= HOSTMSK(spi_cr0_SPH);
+	}
 
-  /* do not use irqs in bootloader */
-  ptRegs->ul_spi_imsc = 0;
 
-  /* clear input fifo */
-  while( (ptRegs->ul_spi_sr&HOSTMSK(spi_sr_rx_fifo_level))!=0 )
-  {
-    /* get one byte from the fifo */
-    ulDummy = ptRegs->ul_spi_dr;
-  }
+	ptRegs->aulSpi_cr[0] = ulVal;
+
+	/* manual chipselect */
+	ulVal  = HOSTMSK(spi_cr1_fss_static);
+	/* enable the interface */
+	ulVal |= HOSTMSK(spi_cr1_SSE);
+	ptRegs->aulSpi_cr[1] = ulVal;
+
+	/* do not use irqs in bootloader */
+	ptRegs->ulSpi_imsc = 0;
+
+	/* clear input fifo */
+	while( (ptRegs->ulSpi_sr&HOSTMSK(spi_sr_rx_fifo_level))!=0 )
+	{
+		/* get one byte from the fifo */
+		ulDummy = ptRegs->ulSpi_dr;
+	}
 }
 
 
-/*****************************************************************************/ 
+/*****************************************************************************/
 /*! This function clear the SPI bus
 * The function clear the SPI bus.   
 *   \param ptHalSpi   The Parameter Set for the SPI Interface
-*                      
+*
 *                     ptSpiRegBase  Pointer to the SPI Register Block
 *                     uiIdleChar    Idle Character
 *                     ulSpeed       SPI Clock Speed
-*                     tMode         Bus Mode                                 
+*                     tMode         Bus Mode
 *   \return iResult   ToDo*/
-/*****************************************************************************/ 
+/*****************************************************************************/
 int HalSPI_ClearBus(const HAL_SPI_T *ptHalSpi)
 {
-  int iCnt;
-  int iResult;
+	int iCnt;
+	int iResult;
 
 
-  /* send 10 HalSPI_IdleByte */
-  iCnt = 0;
-  do
-  {
-    iResult = HalSPI_ExchangeByte(ptHalSpi, ptHalSpi->uiIdleChar, NULL);
-    ++iCnt;
-  } while( iCnt<10 && iResult!=0 );
+	/* send 10 HalSPI_IdleByte */
+	iCnt = 0;
+	do
+	{
+		iResult = HalSPI_ExchangeByte(ptHalSpi, ptHalSpi->uiIdleChar, NULL);
+		++iCnt;
+	} while( iCnt<10 && iResult!=0 );
 
-  /* return result */
-  return iResult;
+	/* return result */
+	return iResult;
 }
 
 
-/*****************************************************************************/ 
+/*****************************************************************************/
 /*! This function ToDo
 * The function  ToDo  
 *   \param ptHalSpi   The Parameter Set for the SPI Interface
-*                      
+*
 *                     ptSpiRegBase  Pointer to the SPI Register Block
 *                     uiIdleChar    Idle Character
 *                     ulSpeed       SPI Clock Speed
 *                     tMode         Bus Mode 
 *
-*   \param  ulLength        Lenght of the Block      
+*   \param  ulLength        Lenght of the Block
 *   \param  *pucOutBuffer   Pointer to the SPI Output Buffer
 *   \param  *pucInBuffer    Pointer to the SPI Input Buffer
 *   \return 1               Result = 1 all ok; Result = 0 failure.           */
-/*****************************************************************************/ 
+/*****************************************************************************/
 int HalSPI_BlockIo(const HAL_SPI_T *ptHalSpi, unsigned long ulLength, const unsigned char *pucOutBuffer, unsigned char *pucInBuffer)
 {
-  unsigned long ulCnt;
-  unsigned int uiByte;
+	unsigned long ulCnt;
+	unsigned int uiByte;
 
 
-  if( ulLength==0 )
-  {
-    return 1;
-  }
+	if( ulLength==0 )
+	{
+		return 1;
+	}
 
-  /* send data */
-  ulCnt = ulLength;
-  do
-  {
-    if( pucOutBuffer!=NULL )
-    {
-      uiByte = *(pucOutBuffer++);
-    }
-    else
-    {
-      uiByte = ptHalSpi->uiIdleChar;
-    }
-    HalSPI_ExchangeByte(ptHalSpi, uiByte, &uiByte);
-    
-    if( pucInBuffer!=NULL )
-    {
-      *(pucInBuffer++) = (unsigned char)uiByte;
-    }
-  } while( --ulCnt!=0 );
+	/* send data */
+	ulCnt = ulLength;
+	do
+	{
+		if( pucOutBuffer!=NULL )
+		{
+			uiByte = *(pucOutBuffer++);
+		}
+		else
+		{
+			uiByte = ptHalSpi->uiIdleChar;
+		}
+		HalSPI_ExchangeByte(ptHalSpi, uiByte, &uiByte);
 
-  return 1;
+		if( pucInBuffer!=NULL )
+		{
+			*(pucInBuffer++) = (unsigned char)uiByte;
+		}
+	} while( --ulCnt!=0 );
+	
+	return 1;
 }
 
 
-/*****************************************************************************/ 
+/*****************************************************************************/
 /*! This function ToDo
 * The function  ToDo  
 *   \param ptHalSpi   The Parameter Set for the SPI Interface
-*                      
+*
 *                     ptSpiRegBase  Pointer to the SPI Register Block
 *                     uiIdleChar    Idle Character
 *                     ulSpeed       SPI Clock Speed
 *                     tMode         Bus Mode 
 *
-*   \param  uiOutByte       Output Byte to write on the SPI Bus      
+*   \param  uiOutByte       Output Byte to write on the SPI Bus
 *   \param  *puiRecByte     ToDo
 *   \return 1               Result = 1 all ok; Result = 0 failure.           */
-/*****************************************************************************/ 
+/*****************************************************************************/
 int HalSPI_ExchangeByte(const HAL_SPI_T *ptHalSpi, unsigned int uiOutByte, unsigned int *puiRecByte)
-{  
-  PSPI_AREA_T   ptRegs;
-  unsigned long ulVal;
+{
+	NX50_SPI_AREA_T *ptRegs;
+	unsigned long ulVal;
 
 
-  /* get the base address of tghe SPI interface */
-  ptRegs = ptHalSpi->ptSpiRegBase;
+	/* get the base address of tghe SPI interface */
+	ptRegs = ptHalSpi->ptSpiRegBase;
 
-  /* write byte to spi bus */
-  ptRegs->ul_spi_dr = uiOutByte;
+	/* write byte to spi bus */
+	ptRegs->ulSpi_dr = uiOutByte;
 
-  /* wait for operation finish */
-  do
-  {
-    ulVal  = ptRegs->ul_spi_sr;
-    ulVal &= HOSTMSK(spi_sr_BSY);
-  } while( ulVal!=0 );
+	/* wait for operation finish */
+	do
+	{
+		ulVal  = ptRegs->ulSpi_sr;
+		ulVal &= HOSTMSK(spi_sr_BSY);
+	} while( ulVal!=0 );
 
-  /* wait for one byte in the fifo */
-  do
-  {
-    ulVal = ptRegs->ul_spi_sr & HOSTMSK(spi_sr_rx_fifo_level);
-  } while( ulVal==0 );
+	/* wait for one byte in the fifo */
+	do
+	{
+		ulVal = ptRegs->ulSpi_sr & HOSTMSK(spi_sr_rx_fifo_level);
+	} while( ulVal==0 );
 
-  /* get the response */
-  ulVal  = ptRegs->ul_spi_dr;
-  ulVal &= HOSTMSK(spi_dr_data);
+	/* get the response */
+	ulVal  = ptRegs->ulSpi_dr;
+	ulVal &= HOSTMSK(spi_dr_data);
 
-  /* return the response */
-  if( puiRecByte!=NULL )
-  {
-    *puiRecByte = ulVal;
-  }
+	/* return the response */
+	if( puiRecByte!=NULL )
+	{
+		*puiRecByte = ulVal;
+	}
 
-  /* ok! */
-  return 1;
+	/* ok! */
+	return 1;
 }
 
 
-/*****************************************************************************/ 
-/*! This function sends IDLE Bytes                                                          
+/*****************************************************************************/
+/*! This function sends IDLE Bytes
 * The function sends IDLE Bytes to the Bus to bring the SPI bus into a defined 
-* condition                                                            
-*   \param ptHalSpi   The Parameter Set for the SPI Interface                   
-*                                                                               
-*                     ptSpiRegBase  Pointer to the SPI Register Block           
-*                     uiIdleChar    Idle Character                              
-*                     ulSpeed       SPI Clock Speed                             
-*                     tMode         Bus Mode                                    
-*                                                                               
+* condition
+*   \param ptHalSpi   The Parameter Set for the SPI Interface
+*
+*                     ptSpiRegBase  Pointer to the SPI Register Block
+*                     uiIdleChar    Idle Character
+*                     ulSpeed       SPI Clock Speed
+*                     tMode         Bus Mode
+*
 *   \param  uiCnt       ToDo number of IDLE Bits???
 *   \return ToDo           */ 
-/*****************************************************************************/ 
+/*****************************************************************************/
 int HalSPI_SendIdles(const HAL_SPI_T *ptHalSpi, unsigned int uiCnt)
 {
-  /* send idle bytes */
-  return HalSPI_BlockIo(ptHalSpi, uiCnt, NULL, NULL);
+	/* send idle bytes */
+	return HalSPI_BlockIo(ptHalSpi, uiCnt, NULL, NULL);
 }
 
 
-/*****************************************************************************/ 
-/*! This function selects the slave device                                                          
-* The function selects the SPI-slave device                                                           
+/*****************************************************************************/
+/*! This function selects the slave device
+* The function selects the SPI-slave device
 *
-*   \param ptHalSpi   The Parameter Set for the SPI Interface                   
-*                                                                               
-*                     ptSpiRegBase  Pointer to the SPI Register Block           
-*                     uiIdleChar    Idle Character                              
-*                     ulSpeed       SPI Clock Speed                             
-*                     tMode         Bus Mode                                    
-*                                                                               
+*   \param ptHalSpi   The Parameter Set for the SPI Interface
+*
+*                     ptSpiRegBase  Pointer to the SPI Register Block
+*                     uiIdleChar    Idle Character
+*                     ulSpeed       SPI Clock Speed
+*                     tMode         Bus Mode
+*
 *   \param  uiSlaveId   Number of the used slave device                      */
-/*****************************************************************************/ 
+/*****************************************************************************/
 void HalSPI_SlaveSelect(const HAL_SPI_T *ptHalSpi, unsigned int uiSlaveId)
 {
-  PSPI_AREA_T ptRegs;
-  unsigned long ulVal;
+	NX50_SPI_AREA_T *ptRegs;
+	unsigned long ulVal;
 
 
-  /* get the base address of the SPI interface */
-  ptRegs = ptHalSpi->ptSpiRegBase;
+	/* get the base address of the SPI interface */
+	ptRegs = ptHalSpi->ptSpiRegBase;
 
-  /* limit the slave id to valid range */
-  uiSlaveId <<= HOSTSRT(spi_cr1_fss);
-  uiSlaveId  &= HOSTMSK(spi_cr1_fss);
+	/* limit the slave id to valid range */
+	uiSlaveId <<= HOSTSRT(spi_cr1_fss);
+	uiSlaveId  &= HOSTMSK(spi_cr1_fss);
 
-  /* get control register contents */
-  ulVal  = ptRegs->ul_spi_cr1;
-  
-  /* mask out the slave select bits */
-  ulVal &= ~HOSTMSK(spi_cr1_fss);
-  
-  /* mask in the new slave id */
-  ulVal |= uiSlaveId;
-  
-  /* write back new value */
-  ptRegs->ul_spi_cr1 = ulVal;
+	/* get control register contents */
+	ulVal  = ptRegs->aulSpi_cr[1];
+
+	/* mask out the slave select bits */
+	ulVal &= ~HOSTMSK(spi_cr1_fss);
+
+	/* mask in the new slave id */
+	ulVal |= uiSlaveId;
+
+	/* write back new value */
+	ptRegs->aulSpi_cr[1] = ulVal;
 }
 
 
-/*****************************************************************************/ 
-/*! This function identify the slave speed                                                          
+/*****************************************************************************/
+/*! This function identify the slave speed
 * The function tries to identify the speed of the used SPI-Slave device
 *
 *   \param  ulSpeed   Speed
 *   \param  Return    Device Speed                                           */
-/*****************************************************************************/ 
+/*****************************************************************************/
 unsigned long HalSpiGetDeviceSpeedRepresentation(unsigned long ulSpeed)
 {
-  unsigned long ulDevSpeed;
-  unsigned long ulInputFilter;
+	unsigned long ulDevSpeed;
+	unsigned long ulInputFilter;
 
 
-  /* ulSpeed is in kHz */
+	/* ulSpeed is in kHz */
 
-  /* limit speed to upper border */
-  if( ulSpeed>25000 )
-  {
-    ulSpeed = 25000;
-  }
+	/* limit speed to upper border */
+	if( ulSpeed>25000 )
+	{
+		ulSpeed = 25000;
+	}
 
-  /* convert speed to "multiply add value" */
-  ulDevSpeed  = ulSpeed * 4096;
-  
-  /* NOTE: do not round up here */
-  ulDevSpeed /= 100000;
+	/* convert speed to "multiply add value" */
+	ulDevSpeed  = ulSpeed * 4096;
 
-  /* use input filtering? */
-  ulInputFilter = 0;
-  if( ulDevSpeed<=0x0200 )
-  {
-    ulInputFilter = HOSTMSK(spi_cr0_filter_in);
-  }
+	/* NOTE: do not round up here */
+	ulDevSpeed /= 100000;
 
-  /* shift to register position */
-  ulDevSpeed <<= HOSTSRT(spi_cr0_sck_muladd);
-  
-  /* add filter bit */
-  ulDevSpeed |= ulInputFilter;
+	/* use input filtering? */
+	ulInputFilter = 0;
+	if( ulDevSpeed<=0x0200 )
+	{
+		ulInputFilter = HOSTMSK(spi_cr0_filter_in);
+	}
 
-  return ulDevSpeed;
+	/* shift to register position */
+	ulDevSpeed <<= HOSTSRT(spi_cr0_sck_muladd);
+
+	/* add filter bit */
+	ulDevSpeed |= ulInputFilter;
+
+	return ulDevSpeed;
 }
 

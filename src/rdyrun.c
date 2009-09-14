@@ -44,14 +44,14 @@ void setRdyRunLed(RDYRUN_LED_T tMode)
     break;
 
   case RDYRUN_LED_INV:
-    ulBlinki  = ptNetXGlobalRegBlock1Area->ul_sta_netx;
+    ulBlinki  = ptNetXGlobalRegBlock1Area->ulSta_netx;
     ulBlinki &= 3;
     ulBlinki ^= 3;
     ulBlinki |= 0x030c0000;
     break;
   }
 
-  ptNetXGlobalRegBlock1Area->ul_sta_netx = ulBlinki;
+  ptNetXGlobalRegBlock1Area->ulSta_netx = ulBlinki;
 }
 
 /* ------------------------------------- */

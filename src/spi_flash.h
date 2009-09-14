@@ -45,12 +45,12 @@
 
 typedef struct SPI_FLASH_Ttag
 {
-  SPIFLASH_ATTRIBUTES_T tAttributes;  /* attributes of the flash      */
-  HAL_SPI_T tSpiDev;                  /* spi device and it's settings */
-  unsigned long ulSectorSize;         /* size of one sector in bytes  */
-  unsigned int  uiSlaveId;            /* SPI Slave Id of the flash    */
-  unsigned int  uiPageAdrShift;       /* bitshift for the page part of the address, 0 means no page / byte split  */
-  unsigned int  uiSectorAdrShift;     /* bitshift for one sector, 0 means no page / byte split                    */
+	SPIFLASH_ATTRIBUTES_T tAttributes;	/* attributes of the flash      */
+	HAL_SPI_T tSpiDev;			/* spi device and it's settings */
+	unsigned long ulSectorSize;		/* size of one sector in bytes  */
+	unsigned int uiSlaveId;			/* SPI Slave Id of the flash    */
+	unsigned int uiPageAdrShift;		/* bitshift for the page part of the address, 0 means no page / byte split  */
+	unsigned int uiSectorAdrShift;		/* bitshift for one sector, 0 means no page / byte split                    */
 } SPI_FLASH_T;
 
 /*-----------------------------------*/

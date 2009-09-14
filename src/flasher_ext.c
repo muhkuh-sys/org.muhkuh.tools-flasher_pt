@@ -54,31 +54,31 @@
 /*****************************************************************************/
 static void setup_flash_ext(unsigned int uiWidth)
 {
-        unsigned long ulIoRegMode0;
-        unsigned long ulExtBusConfig;
+	unsigned long ulIoRegMode0;
+	unsigned long ulExtBusConfig;
 
 
-        if( uiWidth==8 )
-        {
-                ulIoRegMode0   = 0xFFFFFFFF;
-                ulExtBusConfig = 0x0012F781;
-        }
-        else
-        {
-                ulIoRegMode0   = 0xFFFFFFFF;
-                ulExtBusConfig = 0x0012F783;
-        }
+	if( uiWidth==8 )
+	{
+		ulIoRegMode0   = 0xFFFFFFFF;
+		ulExtBusConfig = 0x0012F781;
+	}
+	else
+	{
+		ulIoRegMode0   = 0xFFFFFFFF;
+		ulExtBusConfig = 0x0012F783;
+	}
 
-        ptNetXGlobalRegBlock2Area->ul_io_reg_mode0        = ulIoRegMode0;
-        ptNetXGlobalRegBlock2Area->ul_io_reg_mode1        = 0x000E7EFF;
+	ptNetXGlobalRegBlock2Area->ulIo_reg_mode0	= ulIoRegMode0;
+	ptNetXGlobalRegBlock2Area->ulIo_reg_mode1	= 0x000E7EFF;
 
-        ptNetXGlobalRegBlock2Area->ul_if_conf1            = 0x10000000;
-/*   ptNetXGlobalRegBlock2Area->ul_if_conf2      = 0x60000000; */
+	ptNetXGlobalRegBlock2Area->ulIf_conf1		= 0x10000000;
+/*	ptNetXGlobalRegBlock2Area->ulIf_conf2		= 0x60000000; */
 
-        ptNetXGlobalRegBlock2Area->ul_io_reg_drv_en0      = 0xFFFFFFFF;
-        ptNetXGlobalRegBlock2Area->ul_io_reg_drv_en1      = 0x000E7EFF;
+	ptNetXGlobalRegBlock2Area->ulIo_reg_drv_en0	= 0xFFFFFFFF;
+	ptNetXGlobalRegBlock2Area->ulIo_reg_drv_en1	= 0x000E7EFF;
 
-        ptNetXGlobalRegBlock2Area->aul_ext_bus_config[0]  = ulExtBusConfig;
+	ptNetXGlobalRegBlock2Area->ulExp_bus_reg	= ulExtBusConfig;
 }
 
 

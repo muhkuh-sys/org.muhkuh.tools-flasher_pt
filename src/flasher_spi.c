@@ -23,6 +23,7 @@
 #include "flasher_spi.h"
 #include "spi_flash.h"
 
+#include "flasher_interface.h"
 #include "progress_bar.h"
 #include "uprintf.h"
 
@@ -46,37 +47,26 @@ unsigned char pucSpiBuffer[SPI_BUFFER_SIZE];
 
 /*-----------------------------------*/
 
-NETX_CONSOLEAPP_RESULT_T spi_flash(const unsigned char *pbData, unsigned long ulDataByteLen)
+NETX_CONSOLEAPP_RESULT_T spi_flash(CMD_PARAMETER_FLASH_T *ptParameter)
 {
-	NETX_CONSOLEAPP_RESULT_T tResult;
-	SPI_FLASH_T tFlashDev;  
-	int                 iResult;
-	const unsigned char *pucDataStartAdr;
-	unsigned long       ulFlashStartAdr;
+	NETX_CONSOLEAPP_RESULT_T  tResult;
+	const unsigned char      *pucDataStartAdr;
+	unsigned long             ulFlashStartAdr;
+	unsigned long             ulDataByteSize;
+	SPI_FLASH_T              *ptFlashDescription;
 
 
-	pucDataStartAdr = pbData;
-
-	/* try to detect flash */
-	uprintf(". Detecting SPI flash...\n");
-	tFlashDev.uiSlaveId = SPI_SLAVE_ID;
-	iResult = Drv_SpiInitializeFlash(&tFlashDev);
-	if( iResult==0 )
-	{
-		/* failed to detect the spi flash */
-		uprintf("! failed to detect flash!\n");
-		return NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	uprintf(". ok, found ");
-	uprintf(tFlashDev.tAttributes.acName);
-	uprintf("\n");
+	pucDataStartAdr = ptParameter->pucData;
+	ulFlashStartAdr = ptParameter->ulDstDeviceOffset;
+	ulDataByteSize  = ptParameter->ulDataByteSize;
+	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
 
 	/* test flash size */
 
 	uprintf(". Check size...\n");
-	uprintf(". data size:  0x$8\n", ulDataByteLen);
-	uprintf(". flash size: 0x$8\n", tFlashDev.tAttributes.ulSize);
-	if( ulDataByteLen>tFlashDev.tAttributes.ulSize )
+	uprintf(". data size:  0x$8\n", ulDataByteSize);
+	uprintf(". flash size: 0x$8\n", ptFlashDescription->tAttributes.ulSize);
+	if( ulDataByteSize>ptFlashDescription->tAttributes.ulSize )
 	{
 		/* data is larger than flash */
 		uprintf("! error, data size exceeds flash\n");
@@ -84,11 +74,8 @@ NETX_CONSOLEAPP_RESULT_T spi_flash(const unsigned char *pbData, unsigned long ul
 	}
 	uprintf(". ok, data fits into flash\n");
 
-	/* write data to start of flash (address 0) */
-	ulFlashStartAdr = 0;
-
 	/* write data */
-	tResult = spi_write_with_progress(&tFlashDev, ulFlashStartAdr, ulDataByteLen, pucDataStartAdr);
+	tResult = spi_write_with_progress(ptFlashDescription, ulFlashStartAdr, ulDataByteSize, pucDataStartAdr);
 	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 	{
 		uprintf("! write error\n");
@@ -96,7 +83,7 @@ NETX_CONSOLEAPP_RESULT_T spi_flash(const unsigned char *pbData, unsigned long ul
 	}
 
 	/* verify data */
-	tResult = spi_verify_with_progress(&tFlashDev, ulFlashStartAdr, ulDataByteLen, pucDataStartAdr);
+	tResult = spi_verify_with_progress(ptFlashDescription, ulFlashStartAdr, ulDataByteSize, pucDataStartAdr);
 	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 	{
 		uprintf("! verify error\n");
@@ -108,41 +95,34 @@ NETX_CONSOLEAPP_RESULT_T spi_flash(const unsigned char *pbData, unsigned long ul
 }
 
 
-NETX_CONSOLEAPP_RESULT_T spi_erase(unsigned long ulDataByteLen)
+NETX_CONSOLEAPP_RESULT_T spi_erase(CMD_PARAMETER_ERASE_T *ptParameter)
 {
 	int           iResult;
-	unsigned long ulFlashStartAdr;  
-	SPI_FLASH_T tFlashDev;  
+	unsigned long ulFlashStartAdr;
+	SPI_FLASH_T tFlashDev;
 	NETX_CONSOLEAPP_RESULT_T tResult;
+	SPI_FLASH_T              *ptFlashDescription;
+	unsigned long ulDataByteSize;
+	unsigned long ulDstDeviceOffset;
 
 
-	/* try to detect flash */
-	uprintf(". Detecting SPI flash...\n");
-	tFlashDev.uiSlaveId = SPI_SLAVE_ID;
-	iResult = Drv_SpiInitializeFlash(&tFlashDev);
-	if( iResult==0 )
-	{
-		/* failed to detect the spi flash */
-		uprintf("! failed to detect flash\n");
-		return NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	uprintf(". ok, found ");
-	uprintf(tFlashDev.tAttributes.acName);
-	uprintf("\n");
+	ulDataByteSize = ptParameter->ulDataByteSize;
+	ulDstDeviceOffset = ptParameter->ulDstDeviceOffset;
+	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
 
 	/* test flash size */
 
 	uprintf(". Check size...\n");
-	if( ulDataByteLen==0xffffffff )
+	if( ulDataByteSize==0xffffffff && ulDstDeviceOffset==0 )
 	{
-		ulDataByteLen = tFlashDev.tAttributes.ulSize;
-		uprintf(". requested to erase the complete flash, size: 0x$8\n", ulDataByteLen);
+		ulDataByteSize = ptFlashDescription->tAttributes.ulSize;
+		uprintf(". requested to erase the complete flash, size: 0x$8\n", ulDataByteSize);
 	}
 	else
 	{
-		uprintf(". data size:  0x$8\n", ulDataByteLen);
-		uprintf(". flash size: 0x$8\n", tFlashDev.tAttributes.ulSize);
-		if( ulDataByteLen>tFlashDev.tAttributes.ulSize )
+		uprintf(". data size:  0x$8\n", ulDataByteSize);
+		uprintf(". flash size: 0x$8\n", ptFlashDescription->tAttributes.ulSize);
+		if( ulDataByteSize>ptFlashDescription->tAttributes.ulSize )
 		{
 			/* data is larger than flash */
 			uprintf("! error, data size exceeds flash\n");
@@ -151,11 +131,8 @@ NETX_CONSOLEAPP_RESULT_T spi_erase(unsigned long ulDataByteLen)
 		uprintf(". ok, section fits into flash\n");
 	}
 
-	/* erase data from start of flash (address 0) */
-	ulFlashStartAdr = 0;
-
 	/* first erase the block */
-	tResult = spi_erase_with_progress(&tFlashDev, ulFlashStartAdr, ulDataByteLen);
+	tResult = spi_erase_with_progress(ptFlashDescription, ulDstDeviceOffset, ulDataByteSize);
 	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 	{
 		uprintf("! erase error\n");
@@ -702,6 +679,114 @@ NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFlashDev, 
 	uprintf(". erase ok\n");
 
 	/* return result */
+	return tResult;
+}
+
+
+/*-----------------------------------*/
+
+
+NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	int iResult;
+	unsigned long ulChipSelect;
+	DEVICE_DESCRIPTION_T *ptDeviceDescription;
+	SPI_FLASH_T              *ptFlashDescription;
+
+
+	ulChipSelect = ptParameter->ulChipSelect;
+	ptDeviceDescription = ptParameter->ptDeviceDescription;
+	ptFlashDescription = &(ptDeviceDescription->uInfo.tSpiInfo);
+
+	/* try to detect flash */
+	uprintf(". Detecting SPI flash on cs 0x$...\n", ulChipSelect);
+	ptFlashDescription->uiSlaveId = ulChipSelect;
+	iResult = Drv_SpiInitializeFlash(ptFlashDescription);
+	if( iResult==0 )
+	{
+		/* failed to detect the spi flash */
+		uprintf("! failed to detect flash!\n");
+
+		/* clear the result data */
+		memset(ptDeviceDescription, 0, sizeof(DEVICE_DESCRIPTION_T));
+
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else
+	{
+		uprintf(". ok, found ");
+		uprintf(ptFlashDescription->tAttributes.acName);
+		uprintf("\n");
+
+		/* set the result data */
+		ptDeviceDescription->fIsValid = 1;
+		ptDeviceDescription->sizThis = sizeof(DEVICE_DESCRIPTION_T);
+		ptDeviceDescription->ulVersion = FLASHER_INTERFACE_VERSION;
+		ptDeviceDescription->tSourceTyp = BootBlockSrcType_SPI;
+
+		tResult = NETX_CONSOLEAPP_RESULT_OK;
+	}
+
+	return tResult;
+}
+
+
+/*-----------------------------------*/
+
+
+NETX_CONSOLEAPP_RESULT_T spi_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptParameter)
+{
+	NETX_CONSOLEAPP_RESULT_T  tResult;
+	SPI_FLASH_T              *ptFlashDescription;
+	unsigned long             ulStartAdr;
+	unsigned long             ulEndAdr;
+	unsigned long ulFlashSize;
+	unsigned long ulEraseBlockSize;
+
+
+	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
+	ulStartAdr = ptParameter->ulStartAdr;
+	ulEndAdr  = ptParameter->ulEndAdr;
+
+	ulFlashSize = ptFlashDescription->tAttributes.ulSize;
+	ulEraseBlockSize = ptFlashDescription->ulSectorSize;
+
+	uprintf("flash size: 0x$8\n", ulFlashSize);
+	uprintf("ferase block size: 0x$8\n", ulEraseBlockSize);
+
+	/* test addresses */
+	if( (ulStartAdr>=ulFlashSize) || (ulEndAdr>ulFlashSize) )
+	{
+		/* data is larger than flash */
+		uprintf("! error, the specified area exceeds the flash size\n");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else
+	{
+		uprintf(". ok, the area fits into the flash\n");
+
+		/* NOTE: this code assumes that the serial flash has uniform erase block sizes. */
+
+		uprintf("0x$8 - 0x$8\n", ulStartAdr, ulEndAdr);
+
+		/* round down the first address */
+		ulStartAdr /= ulEraseBlockSize;
+		ulStartAdr *= ulEraseBlockSize;
+		/* round up the last address */
+		ulEndAdr += ulEraseBlockSize - 1;
+		ulEndAdr /= ulEraseBlockSize;
+		ulEndAdr *= ulEraseBlockSize;
+
+		uprintf("0x$8 - 0x$8\n", ulStartAdr, ulEndAdr);
+
+		ptParameter->ulStartAdr = ulStartAdr;
+		ptParameter->ulEndAdr = ulEndAdr;
+
+		tResult = NETX_CONSOLEAPP_RESULT_OK;
+	}
+
+	/* all ok */
 	return tResult;
 }
 

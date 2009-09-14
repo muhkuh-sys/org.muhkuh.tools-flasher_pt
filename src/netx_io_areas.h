@@ -8,13 +8,14 @@
 #if defined(__NETX500)
 	#define HOST NX500
 	#include "netx500/netx500_io_areas.h"
-#else
-#if defined(__NETX50)
+#elif defined(__NETX50)
 	#define HOST NX50
 	#include "netx50/netx50_io_areas.h"
+#elif defined(__NETX5_500)
+	#define HOST NX500
+	#include "netx500/netx500_io_areas.h"
 #else
 	#error "no host define set!"
-#endif
 #endif
 
 

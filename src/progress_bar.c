@@ -43,9 +43,9 @@ void progress_bar_init(unsigned long ulMaxvalue)
 	ulProgressBar_MaxValue = ulMaxvalue;
 
 	/*  setup gpio counter */
-	ptNetXGpioArea->aul_gpio_counter_ctrl[0] = 0;
+	ptNetXGpioArea->aulGpio_counter_ctrl[0] = 0;
 	/*  wait for 0.5 sec */
-	ptNetXGpioArea->aul_gpio_counter_max[0] = (DEV_FREQUENCY/2);
+	ptNetXGpioArea->aulGpio_counter_max[0] = (DEV_FREQUENCY/2);
 
 	/*  show initial position */
 	progress_bar_show_progress(0);
@@ -57,7 +57,7 @@ void progress_bar_init(unsigned long ulMaxvalue)
 void progress_bar_set_position(unsigned long ulPosition)
 {
 	/*  is the counter still running? */
-	if( (ptNetXGpioArea->aul_gpio_counter_ctrl[0] & HOSTMSK(gpio_counter0_ctrl_run))==0 )
+	if( (ptNetXGpioArea->aulGpio_counter_ctrl[0] & HOSTMSK(gpio_counter0_ctrl_run))==0 )
 	{
 		/*  counter already stopped -> time to print the progress */
 		progress_bar_show_progress(ulPosition);
@@ -77,9 +77,9 @@ void progress_bar_finalize(void)
 void progress_bar_restart_counter(void)
 {
 	/*  Clear the current timer value */
-	ptNetXGpioArea->aul_gpio_counter_cnt[0] = 0;
+	ptNetXGpioArea->aulGpio_counter_cnt[0] = 0;
 	/*  Enable the timer */
-	ptNetXGpioArea->aul_gpio_counter_ctrl[0] = HOSTMSK(gpio_counter0_ctrl_run)|HOSTMSK(gpio_counter0_ctrl_once);
+	ptNetXGpioArea->aulGpio_counter_ctrl[0] = HOSTMSK(gpio_counter0_ctrl_run)|HOSTMSK(gpio_counter0_ctrl_once);
 }
 
 void progress_bar_show_progress(unsigned long ulPosition)
