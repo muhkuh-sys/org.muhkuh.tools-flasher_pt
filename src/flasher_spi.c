@@ -97,9 +97,6 @@ NETX_CONSOLEAPP_RESULT_T spi_flash(CMD_PARAMETER_FLASH_T *ptParameter)
 
 NETX_CONSOLEAPP_RESULT_T spi_erase(CMD_PARAMETER_ERASE_T *ptParameter)
 {
-	int           iResult;
-	unsigned long ulFlashStartAdr;
-	SPI_FLASH_T tFlashDev;
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	SPI_FLASH_T              *ptFlashDescription;
 	unsigned long ulDataByteSize;
@@ -131,16 +128,14 @@ NETX_CONSOLEAPP_RESULT_T spi_erase(CMD_PARAMETER_ERASE_T *ptParameter)
 		uprintf(". ok, section fits into flash\n");
 	}
 
-	/* first erase the block */
+	/* erase the block */
 	tResult = spi_erase_with_progress(ptFlashDescription, ulDstDeviceOffset, ulDataByteSize);
 	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 	{
 		uprintf("! erase error\n");
-		return tResult;
 	}
 
-	/* all ok */
-	return NETX_CONSOLEAPP_RESULT_OK;
+	return tResult;
 }
 
 
