@@ -22,7 +22,8 @@
 #include <string.h>
 #include "hal_spi.h"
 
-#include "netx50/netx50_regdef.h"
+#include "netx500/netx500_regdef.h"
+#include "netx5_500/netx5_io_areas.h"
 
 
 /*****************************************************************************/ 
@@ -35,54 +36,71 @@
 *                     ulSpeed       SPI Clock Speed
 *                     tMode         Bus Mode                                 */
 /*****************************************************************************/ 
-void HalSPI_Init(const HAL_SPI_T *ptHalSpi)
+int HalSPI_Init(HAL_SPI_T *ptHalSpi, unsigned int uiUnit)
 {
-	NX5_SPI_AREA_T *ptRegs;
+	NX5_SPI_AREA_T *ptSpiRegBase;
 	unsigned long ulVal;
 	volatile unsigned long ulDummy;
+	int iResult;
 
 
-	/* get the base address of the SPI interafce */
-	ptRegs = ptHalSpi->ptSpiRegBase;
+	iResult = 1;
 
-	/* set 8 bits */
-	ulVal  = 7 << SRT_NX5_spi_cr0_datasize;
-	/* set speed and filter */
-	ulVal |= ptHalSpi->ulSpeed;
-
-
-	/* set the clock polarity  */
-	/* mode 2 and 3 have spo=1 */
-	if( (ptHalSpi->tMode==HAL_SPI_MODE2) || (ptHalSpi->tMode==HAL_SPI_MODE3) )
+	/* get the base address of the SPI interface */
+	if( uiUnit==0 )
 	{
-		ulVal |= MSK_NX5_spi_cr0_SPO;
+		ptSpiRegBase = (NX5_SPI_AREA_T*)(Addr_NX500_hif_ahbls6+NX5_DPM_OFFSET_SPI);
 	}
-	
-	/* set the clock phase     */
-	/* mode 0 and 2 have sph=1 */
-	if( (ptHalSpi->tMode==HAL_SPI_MODE1) || (ptHalSpi->tMode==HAL_SPI_MODE3) )
+	else
 	{
-		ulVal |= MSK_NX5_spi_cr0_SPH;
+		iResult = 0;
 	}
 
-	/* write the value to the config register */
-	ptRegs->aulSpi_cr[0] = ulVal;
-
-	/* manual chipselect */
-	ulVal  = MSK_NX5_spi_cr1_fss_static;
-	/* enable the interface */
-	ulVal |= MSK_NX5_spi_cr1_SSE;
-	ptRegs->aulSpi_cr[1] = ulVal;
-
-	/* do not use irqs in bootloader */
-	ptRegs->ulSpi_imsc = 0;
-
-	/* clear input fifo */
-	while( (ptRegs->ulSpi_sr&MSK_NX5_spi_sr_rx_fifo_level)!=0 )
+	if( iResult!=0 )
 	{
-		/* get one byte from the fifo */
-		ulDummy = ptRegs->ulSpi_dr;
+		ptHalSpi->ptSpiRegBase = ptSpiRegBase;
+
+		/* set 8 bits */
+		ulVal  = 7 << SRT_NX5_spi_cr0_datasize;
+		/* set speed and filter */
+		ulVal |= ptHalSpi->ulSpeed;
+
+
+		/* set the clock polarity  */
+		/* mode 2 and 3 have spo=1 */
+		if( (ptHalSpi->tMode==HAL_SPI_MODE2) || (ptHalSpi->tMode==HAL_SPI_MODE3) )
+		{
+			ulVal |= MSK_NX5_spi_cr0_SPO;
+		}
+
+		/* set the clock phase     */
+		/* mode 0 and 2 have sph=1 */
+		if( (ptHalSpi->tMode==HAL_SPI_MODE1) || (ptHalSpi->tMode==HAL_SPI_MODE3) )
+		{
+			ulVal |= MSK_NX5_spi_cr0_SPH;
+		}
+
+		/* write the value to the config register */
+		ptSpiRegBase->aulSpi_cr[0] = ulVal;
+
+		/* manual chipselect */
+		ulVal  = MSK_NX5_spi_cr1_fss_static;
+		/* enable the interface */
+		ulVal |= MSK_NX5_spi_cr1_SSE;
+		ptSpiRegBase->aulSpi_cr[1] = ulVal;
+
+		/* do not use irqs in bootloader */
+		ptSpiRegBase->ulSpi_imsc = 0;
+
+		/* clear input fifo */
+		while( (ptSpiRegBase->ulSpi_sr&MSK_NX5_spi_sr_rx_fifo_level)!=0 )
+		{
+			/* get one byte from the fifo */
+			ulDummy = ptSpiRegBase->ulSpi_dr;
+		}
 	}
+
+	return iResult;
 }
 
 

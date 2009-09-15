@@ -75,7 +75,7 @@ typedef struct
 *   Function Prototypes, Global
 ************************************************************
 */
-void  HalSPI_Init         (const HAL_SPI_T *ptHalSpi);
+int  HalSPI_Init         (HAL_SPI_T *ptHalSpi, unsigned int uiUnit);
 int   HalSPI_ClearBus     (const HAL_SPI_T *ptHalSpi);
 int   HalSPI_BlockIo      (const HAL_SPI_T *ptHalSpi, unsigned long ulLength,  const unsigned char *pbOutBuffer, unsigned char *pbInBuffer);
 int   HalSPI_ExchangeByte (const HAL_SPI_T *ptHalSpi, unsigned int  uiOutByte, unsigned int *puiRecByte);

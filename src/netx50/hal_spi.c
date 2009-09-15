@@ -54,54 +54,71 @@
 *                     ulSpeed       SPI Clock Speed
 *                     tMode         Bus Mode                                 */
 /*****************************************************************************/ 
-void HalSPI_Init(const HAL_SPI_T *ptHalSpi)
+int HalSPI_Init(HAL_SPI_T *ptHalSpi, unsigned int uiUnit)
 {
-	NX50_SPI_AREA_T *ptRegs;
+	NX50_SPI_AREA_T *ptSpiRegBase;
 	unsigned long ulVal;
 	volatile unsigned long ulDummy;
+	int iResult;
 
 
-	/* get the base address of the SPI interafce */
-	ptRegs = ptHalSpi->ptSpiRegBase;
+	iResult = 1;
 
-	/* set 8 bits */
-	ulVal  = 7 << HOSTSRT(spi_cr0_datasize);
-	/* set speed and filter */
-	ulVal |= ptHalSpi->ulSpeed;
-
-
-	/* set the clock polarity  */
-	/* mode 2 and 3 have spo=1 */
-	if( (ptHalSpi->tMode==HAL_SPI_MODE2) || (ptHalSpi->tMode==HAL_SPI_MODE3) )
+	/* get the base address of the SPI interface */
+	if( uiUnit==0 )
 	{
-		ulVal |= HOSTMSK(spi_cr0_SPO);
+		ptSpiRegBase = ptNetXSpi0Area;
+	}
+	else
+	{
+		iResult = 0;
 	}
 
-	/* set the clock phase     */
-	/* mode 0 and 2 have sph=1 */
-	if( (ptHalSpi->tMode==HAL_SPI_MODE1) || (ptHalSpi->tMode==HAL_SPI_MODE3) )
+	if( iResult!=0 )
 	{
-		ulVal |= HOSTMSK(spi_cr0_SPH);
+		ptHalSpi->ptSpiRegBase = ptSpiRegBase;
+
+		/* set 8 bits */
+		ulVal  = 7 << HOSTSRT(spi_cr0_datasize);
+		/* set speed and filter */
+		ulVal |= ptHalSpi->ulSpeed;
+
+
+		/* set the clock polarity  */
+		/* mode 2 and 3 have spo=1 */
+		if( (ptHalSpi->tMode==HAL_SPI_MODE2) || (ptHalSpi->tMode==HAL_SPI_MODE3) )
+		{
+			ulVal |= HOSTMSK(spi_cr0_SPO);
+		}
+
+		/* set the clock phase     */
+		/* mode 0 and 2 have sph=1 */
+		if( (ptHalSpi->tMode==HAL_SPI_MODE1) || (ptHalSpi->tMode==HAL_SPI_MODE3) )
+		{
+			ulVal |= HOSTMSK(spi_cr0_SPH);
+		}
+
+
+		ptSpiRegBase->aulSpi_cr[0] = ulVal;
+
+		/* manual chipselect */
+		ulVal  = HOSTMSK(spi_cr1_fss_static);
+		/* enable the interface */
+		ulVal |= HOSTMSK(spi_cr1_SSE);
+		ptSpiRegBase->aulSpi_cr[1] = ulVal;
+
+		/* do not use irqs in bootloader */
+		ptSpiRegBase->ulSpi_imsc = 0;
+
+		/* clear input fifo */
+		while( (ptSpiRegBase->ulSpi_sr&HOSTMSK(spi_sr_rx_fifo_level))!=0 )
+		{
+			/* get one byte from the fifo */
+			ulDummy = ptSpiRegBase->ulSpi_dr;
+		}
 	}
 
-
-	ptRegs->aulSpi_cr[0] = ulVal;
-
-	/* manual chipselect */
-	ulVal  = HOSTMSK(spi_cr1_fss_static);
-	/* enable the interface */
-	ulVal |= HOSTMSK(spi_cr1_SSE);
-	ptRegs->aulSpi_cr[1] = ulVal;
-
-	/* do not use irqs in bootloader */
-	ptRegs->ulSpi_imsc = 0;
-
-	/* clear input fifo */
-	while( (ptRegs->ulSpi_sr&HOSTMSK(spi_sr_rx_fifo_level))!=0 )
-	{
-		/* get one byte from the fifo */
-		ulDummy = ptRegs->ulSpi_dr;
-	}
+	return iResult;
 }
 
 

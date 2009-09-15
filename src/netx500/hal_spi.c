@@ -84,51 +84,69 @@ static const SPI_KHZ_TO_CLOCK_T aulSpeedSteps[] =
 *                     ulSpeed       SPI Clock Speed                            
 *                     tMode         Bus Mode                                 */
 /*****************************************************************************/
-void HalSPI_Init(const HAL_SPI_T *ptHalSpi)
+int HalSPI_Init(HAL_SPI_T *ptHalSpi, unsigned int uiUnit)
 {
 	NX500_SPI_AREA_T *ptSpiRegBase;
 	unsigned long ulVal;
+	int iResult;
 
 
-	/* get the base address */
-	ptSpiRegBase = ptHalSpi->ptSpiRegBase;
+	iResult = 1;
 
-	/* soft reset spi and clear both fifos */
-	ptSpiRegBase->ulSpi_control_register = HOSTMSK(spi_control_register_CR_softreset) |
-						       HOSTMSK(spi_control_register_CR_clr_infifo)|
-						       HOSTMSK(spi_control_register_CR_clr_outfifo);
-
-	/* configure the spi interface */
-	ulVal =	HOSTMSK(spi_control_register_CR_read)  |				    /* enable read              */
-			HOSTMSK(spi_control_register_CR_write) |				    /* enable write             */
-			HOSTMSK(spi_control_register_CR_ms)    |				    /* me master                */
-			(7<<HOSTSRT(spi_control_register_CR_burst)) |	    /* max possible burst block */
-			(0<<HOSTSRT(spi_control_register_CR_burstdelay))|	/* 0 SCLK burst delay       */
-			HOSTMSK(spi_control_register_CR_en) |				      /* enable spi interface     */
-			ptHalSpi->ulSpeed<<1;							            /* clock divider for SCK    */
-
-	/* set the clock polarity */
-	/* mode 2 and 3 have cpol=1 */
-	if( (ptHalSpi->tMode==HAL_SPI_MODE2) || (ptHalSpi->tMode==HAL_SPI_MODE3) )
+	/* get the base address of the SPI interface */
+	if( uiUnit==0 )
 	{
-		ulVal |= HOSTMSK(spi_control_register_CR_cpol);
+		ptSpiRegBase = ptNetXSpi0Area;
+	}
+	else
+	{
+		iResult = 0;
 	}
 
-	/* set the clock phase */
-	/* mode 0 and 2 have ncpha=1 */
-	if( (ptHalSpi->tMode==HAL_SPI_MODE0) || (ptHalSpi->tMode==HAL_SPI_MODE2) )
+	if( iResult!=0 )
 	{
-		ulVal |= HOSTMSK(spi_control_register_CR_ncpha);
+		ptHalSpi->ptSpiRegBase = ptSpiRegBase;
+
+		/* soft reset spi and clear both fifos */
+		ulVal  = HOSTMSK(spi_control_register_CR_softreset);
+		ulVal |= HOSTMSK(spi_control_register_CR_clr_infifo);
+		ulVal |= HOSTMSK(spi_control_register_CR_clr_outfifo);
+		ptSpiRegBase->ulSpi_control_register = ulVal;
+
+		/* configure the spi interface */
+		ulVal  = HOSTMSK(spi_control_register_CR_read);			/* enable read              */
+		ulVal |= HOSTMSK(spi_control_register_CR_write);		/* enable write             */
+		ulVal |= HOSTMSK(spi_control_register_CR_ms);			/* me master                */
+		ulVal |= (7<<HOSTSRT(spi_control_register_CR_burst));		/* max possible burst block */
+		ulVal |= (0<<HOSTSRT(spi_control_register_CR_burstdelay));	/* 0 SCLK burst delay       */
+		ulVal |= HOSTMSK(spi_control_register_CR_en);			/* enable spi interface     */
+		ulVal |= ptHalSpi->ulSpeed<<1;					/* clock divider for SCK    */
+
+		/* set the clock polarity */
+		/* mode 2 and 3 have cpol=1 */
+		if( (ptHalSpi->tMode==HAL_SPI_MODE2) || (ptHalSpi->tMode==HAL_SPI_MODE3) )
+		{
+			ulVal |= HOSTMSK(spi_control_register_CR_cpol);
+		}
+
+		/* set the clock phase */
+		/* mode 0 and 2 have ncpha=1 */
+		if( (ptHalSpi->tMode==HAL_SPI_MODE0) || (ptHalSpi->tMode==HAL_SPI_MODE2) )
+		{
+			ulVal |= HOSTMSK(spi_control_register_CR_ncpha);
+		}
+
+		/* write value to control register */
+		ptSpiRegBase->ulSpi_control_register = ulVal;
+
+		/* reset status bits */
+		ptSpiRegBase->ulSpi_status_register = 0;
+
+		/* do not use irqs for now */
+		ptSpiRegBase->ulSpi_interrupt_control_register = 0;
 	}
 
-	/* write value to control register */
-	ptSpiRegBase->ulSpi_control_register = ulVal;
-
-	/* reset status bits */
-	ptSpiRegBase->ulSpi_status_register = 0;
-
-	/* do not use irqs for now */
-	ptSpiRegBase->ulSpi_interrupt_control_register = 0;
+	return iResult;
 }
 
 

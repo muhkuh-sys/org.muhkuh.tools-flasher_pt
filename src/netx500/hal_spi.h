@@ -83,7 +83,7 @@ typedef struct HAL_SPI_Ttag
 } HAL_SPI_T;
 
 
-void HalSPI_Init        (const HAL_SPI_T *ptHalSpi);
+int  HalSPI_Init        (HAL_SPI_T *ptHalSpi, unsigned int uiUnit);
 int  HalSPI_SendIdles   (const HAL_SPI_T *ptHalSpi, unsigned int  uiCnt);
 int  HalSPI_BlockIo     (const HAL_SPI_T *ptHalSpi, unsigned long ulLength,   const unsigned char *pucOutBuffer, unsigned char *pucInBuffer);
 int  HalSPI_ExchangeByte(const HAL_SPI_T *ptHalSpi, unsigned int  uiSendByte, unsigned int        *puiRecByte);
