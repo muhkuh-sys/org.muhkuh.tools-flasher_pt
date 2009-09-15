@@ -127,7 +127,7 @@ static unsigned long getDeviceAddress(const SPI_FLASH_T *ptFlash, unsigned long 
   unsigned long ulByteOffset;
 
 
-  DEBUGMSG(ZONE_FUNCTION, ("+getDeviceAddress(): ptFlash=0x$8, ulDeviceAddress=0x$8\n", ptFlash, ulDeviceAddress));
+  DEBUGMSG(ZONE_FUNCTION, ("+getDeviceAddress(): ptFlash=0x$8, ulLinearAddress=0x$8\n", ptFlash, ulLinearAddress));
 
   /* is the pagesize a multiple of 256? -> no page-byte split is needed */
   switch(ptFlash->tAttributes.tAdrMode)
@@ -142,10 +142,10 @@ static unsigned long getDeviceAddress(const SPI_FLASH_T *ptFlash, unsigned long 
 
     /*  get the page number of the address */
     ulPageNr = ulLinearAddress / ptFlash->tAttributes.ulPageSize;
-    
+
     /*  get the byte ulOffsModuloet of the address */
     ulByteOffset = ulLinearAddress % ptFlash->tAttributes.ulPageSize;
-    
+
     /*  shift the sector number to the right position */
     ulDeviceAddress = (ulPageNr << ptFlash->uiPageAdrShift) | ulByteOffset;
     break;
@@ -153,7 +153,7 @@ static unsigned long getDeviceAddress(const SPI_FLASH_T *ptFlash, unsigned long 
   default:
     /* unknown addressing mode! */
     DEBUGMSG(ZONE_ERROR, ("ERROR: getDeviceAddress: unknown addressing mode: 0x$8. This check was already passed in Drv_SpiInitializeFlash, the memory seems to be corrupted!\n", ptFlash->tAttributes.tAdrMode));
-    
+
     /* TODO: throw some fatal error here */
     break;
   }
@@ -525,107 +525,118 @@ static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 /*****************************************************************************/
 int Drv_SpiInitializeFlash(SPI_FLASH_T *ptFlash)
 {
-  int   iResult;
-  const SPIFLASH_ATTRIBUTES_T *ptFlashAttr;
-  HAL_SPI_T *ptSpiDev;
-  unsigned int uiCmdLen;
+	int   iResult;
+	const SPIFLASH_ATTRIBUTES_T *ptFlashAttr;
+	HAL_SPI_T *ptSpiDev;
+	unsigned int uiCmdLen;
 
 
-  DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiInitializeFlash(): ptFlash=0x$8\n", ptFlash));
+	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiInitializeFlash(): ptFlash=0x$8\n", ptFlash));
 
-  /* no flash detected yet */
-  ptFlashAttr = NULL;
+	/* no flash detected yet */
+	ptFlashAttr = NULL;
 
-  /* get device */
-  ptSpiDev = &ptFlash->tSpiDev;
+	/* get device */
+	ptSpiDev = &ptFlash->tSpiDev;
 
-  /* configure spi bus, minimum speed for all flash roms is 1MHz, mode3 is supported by all */
-  ptSpiDev->ptSpiRegBase  = ptNetXSpi0Area;
-  ptSpiDev->uiIdleChar    = 0x00;
-  ptSpiDev->tMode         = HAL_SPI_MODE3;
-  ptSpiDev->ulSpeed       = HalSpiGetDeviceSpeedRepresentation(1000);
-  HalSPI_Init(ptSpiDev);
-
-  /* try to autodetect the flash */
-  iResult = detect_flash(ptFlash, &ptFlashAttr);
-  if( !iResult )
-  {
-    DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: detect_flash failed with 0x$8.\n", iResult));
-  }
-  else
-  {
-    /* was a spi flash detected? */
-    if(NULL == ptFlashAttr)
-    {
-      /* failed to detect flash */
-      iResult = 0;
-    }
-    else
-    {
-      /* yes, detected spi flash -> copy all attributes */
-      memcpy(&ptFlash->tAttributes, ptFlashAttr, sizeof(SPIFLASH_ATTRIBUTES_T));
-
-      /* set higher speed for the device */
-      ptSpiDev->ulSpeed = HalSpiGetDeviceSpeedRepresentation(ptFlash->tAttributes.ulClock);
-      HalSPI_Init(ptSpiDev);
-
-      /* send the init commands */
-      uiCmdLen = ptFlash->tAttributes.uiInitCmd0_length;
-      if( uiCmdLen!=0 )
-      {
-	iResult = send_simple_cmd(ptFlash, ptFlash->tAttributes.abInitCmd0, uiCmdLen);
+	/* configure spi bus, minimum speed for all flash roms is 1MHz, mode3 is supported by all */
+	ptSpiDev->uiIdleChar    = 0x00;
+	ptSpiDev->tMode         = HAL_SPI_MODE3;
+	ptSpiDev->ulSpeed       = HalSpiGetDeviceSpeedRepresentation(1000);
+	iResult = HalSPI_Init(ptSpiDev, 0);
 	if( iResult==0 )
 	{
-	  DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: send_simple_cmd failed with 0x$8.\n", iResult));
+		DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: HalSPI_Init failed with 0x$8.\n", iResult));
 	}
-      }
-      uiCmdLen = ptFlash->tAttributes.uiInitCmd1_length;
-      if( iResult!=0 && uiCmdLen!=0 )
-      {
-	iResult = send_simple_cmd(ptFlash, ptFlash->tAttributes.abInitCmd1, uiCmdLen);
-	if( iResult==0 )
+	else
 	{
-	  DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: send_simple_cmd failed with 0x$8.\n", iResult));
+		/* try to autodetect the flash */
+		iResult = detect_flash(ptFlash, &ptFlashAttr);
+		if( !iResult )
+		{
+			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: detect_flash failed with 0x$8.\n", iResult));
+		}
+		else
+		{
+			/* was a spi flash detected? */
+			if(NULL == ptFlashAttr)
+			{
+				/* failed to detect flash */
+				iResult = 0;
+			}
+			else
+			{
+				/* yes, detected spi flash -> copy all attributes */
+				memcpy(&ptFlash->tAttributes, ptFlashAttr, sizeof(SPIFLASH_ATTRIBUTES_T));
+	
+				/* set higher speed for the device */
+				ptSpiDev->ulSpeed = HalSpiGetDeviceSpeedRepresentation(ptFlash->tAttributes.ulClock);
+				iResult = HalSPI_Init(ptSpiDev, 0);
+				if( iResult==0 )
+				{
+					DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: HalSPI_Init failed with 0x$8.\n", iResult));
+				}
+				else
+				{
+					/* send the init commands */
+					uiCmdLen = ptFlash->tAttributes.uiInitCmd0_length;
+					if( uiCmdLen!=0 )
+					{
+						iResult = send_simple_cmd(ptFlash, ptFlash->tAttributes.abInitCmd0, uiCmdLen);
+						if( iResult==0 )
+						{
+							DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: send_simple_cmd failed with 0x$8.\n", iResult));
+						}
+					}
+					uiCmdLen = ptFlash->tAttributes.uiInitCmd1_length;
+					if( iResult!=0 && uiCmdLen!=0 )
+					{
+						iResult = send_simple_cmd(ptFlash, ptFlash->tAttributes.abInitCmd1, uiCmdLen);
+						if( iResult==0 )
+						{
+							DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: send_simple_cmd failed with 0x$8.\n", iResult));
+						}
+					}
+
+					if( iResult!=0 )
+					{
+#ifdef DEBUG
+						/* show initial status */
+						iResult = print_status(ptFlash);
+						if( iResult!=0 )
+						{
+#endif
+							ptFlash->ulSectorSize = ptFlash->tAttributes.ulPageSize * ptFlash->tAttributes.ulSectorPages;
+
+							/* get the number of bits used for the pagesize */
+							ptFlash->uiPageAdrShift   = getMaskLength(ptFlash->tAttributes.ulPageSize - 1);
+							ptFlash->uiSectorAdrShift = getMaskLength(ptFlash->ulSectorSize - 1);
+
+							/* check the addressing mode */
+							switch(ptFlash->tAttributes.tAdrMode)
+							{
+							case SPIFLASH_ADR_LINEAR:
+							case SPIFLASH_ADR_PAGESIZE_BITSHIFT:
+								/* all valid settings */
+								break;
+
+							default:
+								/* unknown addressing mode! */
+								/* the flash configuration is invalid */
+								DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: flash addressing mode is invalid: 0x$8.\n", ptFlash->tAttributes.tAdrMode));
+								iResult = 0;
+							}
+#ifdef DEBUG
+						}
+#endif
+					}
+				}
+			}
+		}
 	}
-      }
 
-      if( iResult!=0 )
-      {
-#ifdef DEBUG
-        /* show initial status */
-        iResult = print_status(ptFlash);
-	if( iResult!=0 )
-        {
-#endif
-          ptFlash->ulSectorSize = ptFlash->tAttributes.ulPageSize * ptFlash->tAttributes.ulSectorPages;
-
-          /* get the number of bits used for the pagesize */
-          ptFlash->uiPageAdrShift   = getMaskLength(ptFlash->tAttributes.ulPageSize - 1);
-          ptFlash->uiSectorAdrShift = getMaskLength(ptFlash->ulSectorSize - 1);
-
-          /* check the addressing mode */
-          switch(ptFlash->tAttributes.tAdrMode)
-          {
-          case SPIFLASH_ADR_LINEAR:
-          case SPIFLASH_ADR_PAGESIZE_BITSHIFT:
-            /* all valid settings */
-            break;
-
-          default:
-            /* unknown addressing mode! */
-            /* the flash configuration is invalid */
-            DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: flash addressing mode is invalid: 0x$8.\n", ptFlash->tAttributes.tAdrMode));
-            iResult = 0;
-          }
-#ifdef DEBUG
-        }
-#endif
-      }
-    }
-  }
-
-  DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiInitializeFlash(): iResult=0x$.\n", iResult));
-  return iResult;
+	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiInitializeFlash(): iResult=0x$.\n", iResult));
+	return iResult;
 }
 
 
@@ -1303,7 +1314,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
         aucCmd[3] = 0U;
 
         iResult = HalSPI_BlockIo(ptSpiDev, 4, aucCmd, NULL);
-        if( !iResult )
+        if( iResult==0 )
         {
                 DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_BlockIo failed with 0x$.\n", iResult));
         }
@@ -1311,7 +1322,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
         {
                 /* send data */
                 iResult = HalSPI_BlockIo(ptSpiDev, ptFlash->tAttributes.ulPageSize, pabBuffer, NULL);
-                if( !iResult )
+                if( iResult==0 )
                 {
                         DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_BlockIo failed with 0x$.\n", iResult));
                 }
@@ -1320,10 +1331,10 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
         /* deselect slave */
         HalSPI_SlaveSelect(ptSpiDev, 0);
 
-        if( iResult )
+        if( iResult!=0 )
         {
                 iResult = HalSPI_SendIdles(ptSpiDev, 1);
-                if( !iResult )
+                if( iResult==0 )
                 {
                         DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_SendIdles failed with 0x$.\n", iResult));
                 }
@@ -1331,17 +1342,20 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
                 {
                         /* unlock write operations */
                         iResult = write_enable(ptFlash);
-                        if( !iResult )
+                        if( iResult==0 )
                         {
                                 DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: write_enable failed with 0x$.\n", iResult));
                         }
                         else
                         {
-#ifdef DEBUG
+#if 0
                                 iResult = print_status(ptFlash);
                                 if( iResult!=0 )
                                 {
 #endif
+					/* select slave */
+					HalSPI_SlaveSelect(ptSpiDev, ptFlash->uiSlaveId);
+
                                         /* write buffer to main memory */
 
                                         /* translate the address to the device format */
@@ -1380,7 +1394,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
                                                         }
                                                 }
                                         }
-#ifdef DEBUG
+#if 0
                                 }
 #endif
                         }
