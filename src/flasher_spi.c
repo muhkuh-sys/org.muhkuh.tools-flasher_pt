@@ -32,7 +32,7 @@
 NETX_CONSOLEAPP_RESULT_T spi_write_with_progress (const SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulDataByteLen, const unsigned char *pucDataStartAdr);
 NETX_CONSOLEAPP_RESULT_T spi_verify_with_progress(const SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulDataByteLen, const unsigned char *pucDataStartAdr);
 NETX_CONSOLEAPP_RESULT_T spi_read_with_progress  (const SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulDataByteLen, unsigned char *pucDataStartAdr);
-NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress (const SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulDataByteLen);
+NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress (const SPI_FLASH_T *ptFlashDev, unsigned long ulStartAdr, unsigned long ulEndAdr);
 
 /*-----------------------------------*/
 
@@ -56,10 +56,10 @@ NETX_CONSOLEAPP_RESULT_T spi_flash(CMD_PARAMETER_FLASH_T *ptParameter)
 	SPI_FLASH_T              *ptFlashDescription;
 
 
-	pucDataStartAdr = ptParameter->pucData;
-	ulFlashStartAdr = ptParameter->ulDstDeviceOffset;
-	ulDataByteSize  = ptParameter->ulDataByteSize;
 	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
+	ulFlashStartAdr = ptParameter->ulStartAdr;
+	ulDataByteSize  = ptParameter->ulDataByteSize;
+	pucDataStartAdr = ptParameter->pucData;
 
 	/* test flash size */
 
@@ -99,40 +99,38 @@ NETX_CONSOLEAPP_RESULT_T spi_erase(CMD_PARAMETER_ERASE_T *ptParameter)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	SPI_FLASH_T              *ptFlashDescription;
-	unsigned long ulDataByteSize;
-	unsigned long ulDstDeviceOffset;
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
+	unsigned long ulFlashByteSize;
 
 
-	ulDataByteSize = ptParameter->ulDataByteSize;
-	ulDstDeviceOffset = ptParameter->ulDstDeviceOffset;
 	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
+	ulStartAdr = ptParameter->ulStartAdr;
+	ulEndAdr = ptParameter->ulEndAdr;
 
 	/* test flash size */
+	ulFlashByteSize = ptFlashDescription->tAttributes.ulSize;
 
 	uprintf(". Check size...\n");
-	if( ulDataByteSize==0xffffffff && ulDstDeviceOffset==0 )
+	uprintf(". start adr:  0x$8\n", ulStartAdr);
+	uprintf(". end adr:    0x$8\n", ulEndAdr);
+	uprintf(". flash size: 0x$8\n", ulFlashByteSize);
+	if( (ulStartAdr>=ulFlashByteSize) || (ulEndAdr>ulFlashByteSize) )
 	{
-		ulDataByteSize = ptFlashDescription->tAttributes.ulSize;
-		uprintf(". requested to erase the complete flash, size: 0x$8\n", ulDataByteSize);
+		/* data is larger than flash */
+		uprintf("! error, the area exceeds the flash\n");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 	}
 	else
 	{
-		uprintf(". data size:  0x$8\n", ulDataByteSize);
-		uprintf(". flash size: 0x$8\n", ptFlashDescription->tAttributes.ulSize);
-		if( ulDataByteSize>ptFlashDescription->tAttributes.ulSize )
-		{
-			/* data is larger than flash */
-			uprintf("! error, data size exceeds flash\n");
-			return NETX_CONSOLEAPP_RESULT_ERROR;
-		}
-		uprintf(". ok, section fits into flash\n");
-	}
+		uprintf(". ok, the area fits into the flash\n");
 
-	/* erase the block */
-	tResult = spi_erase_with_progress(ptFlashDescription, ulDstDeviceOffset, ulDataByteSize);
-	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
-	{
-		uprintf("! erase error\n");
+		/* erase the block */
+		tResult = spi_erase_with_progress(ptFlashDescription, ulStartAdr, ulEndAdr);
+		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
+		{
+			uprintf("! erase error\n");
+		}
 	}
 
 	return tResult;
@@ -270,226 +268,104 @@ NETX_CONSOLEAPP_RESULT_T spi_write_with_progress(const SPI_FLASH_T *ptFlashDev, 
 		return NETX_CONSOLEAPP_RESULT_ERROR;
 	}
 
-	/* does the flash support erasing pages somehow? */
-	if( ptFlashDev->tAttributes.bEraseAndPageProgOpcode==0 && ptFlashDev->tAttributes.bErasePageOpcode==0 )
+	/* write the complete data */
+	uprintf("# Write data...\n");
+
+	/* loop over all data */
+	ulC = ulFlashStartAdr;
+	ulE = ulC + ulDataByteLen;
+	pucDC = pucDataStartAdr;
+
+	ulProgressCnt = 0;
+	progress_bar_init( ulDataByteLen );
+
+	/* start inside a page? */
+	ulOffset = ulFlashStartAdr % ulPageSize;
+	if( ulOffset!=0 )
 	{
-		/* no, it does not support page erase */
-		uprintf(". The flash does not support erasing or reprogramming single pages\n");
-		uprintf("# Erasing the complete area...\n");
+		/* yes, start inside a page */
 
-		/* try to erase the complete area */
-		tResult = spi_erase_with_progress(ptFlashDev, ulFlashStartAdr, ulDataByteLen);
-		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
+		/* get the startaddress of the page */
+		ulPageStartAdr = ulFlashStartAdr - ulOffset;
+
+		/* get the new max segment size for the rest of the page */
+		ulMaxSegSize = ulPageSize - ulOffset;
+
+		/* get the next segment, limit it to 'ulMaxSegSize' */
+		ulSegSize = ulE - ulC;
+		if( ulSegSize>ulMaxSegSize )
 		{
-			uprintf("! erase error\n");
-			return tResult;
-		}
-		uprintf(". erase ok\n");
-
-		/* write the complete data */
-		uprintf("# Write data...\n");
-
-		/* loop over all data */
-		ulC = ulFlashStartAdr;
-		ulE = ulC + ulDataByteLen;
-		pucDC = pucDataStartAdr;
-
-		ulProgressCnt = 0;
-		progress_bar_init( ulDataByteLen );
-
-		/* start inside a page? */
-		ulOffset = ulFlashStartAdr % ulPageSize;
-		if( ulOffset!=0 )
-		{
-			/* yes, start inside a page */
-
-			/* get the startaddress of the page */
-			ulPageStartAdr = ulFlashStartAdr - ulOffset;
-
-			/* get the new max segment size for the rest of the page */
-			ulMaxSegSize = ulPageSize - ulOffset;
-
-			/* get the next segment, limit it to 'ulMaxSegSize' */
-			ulSegSize = ulE - ulC;
-			if( ulSegSize>ulMaxSegSize )
-			{
-				ulSegSize = ulMaxSegSize;
-			}
-
-			/* clear the start of the page with 0xff */
-			memset(pucSpiBuffer, 0xff, ulPageSize-ulSegSize);
-
-			/* modify the rest of the page */
-			memcpy(pucSpiBuffer+ulOffset, pucDC, ulSegSize);
-
-			/* write the modified buffer */
-			iResult = Drv_SpiWritePage(ptFlashDev, ulPageStartAdr, ulPageSize, pucSpiBuffer);
-			if( iResult==0 )
-			{
-				uprintf("! write error\n");
-				return NETX_CONSOLEAPP_RESULT_ERROR;
-			}
-
-			/* next segment */
-			ulC += ulSegSize;
-			pucDC += ulSegSize;
-
-			/* inc progress */
-			ulProgressCnt += ulSegSize;
-			progress_bar_set_position(ulProgressCnt);
+			ulSegSize = ulMaxSegSize;
 		}
 
-		/* process complete pages */
-		while( ulC+ulPageSize<ulE )
+		/* clear the start of the page with 0xff */
+		memset(pucSpiBuffer, 0xff, ulPageSize-ulSegSize);
+
+		/* modify the rest of the page */
+		memcpy(pucSpiBuffer+ulOffset, pucDC, ulSegSize);
+
+		/* write the modified buffer */
+		iResult = Drv_SpiWritePage(ptFlashDev, ulPageStartAdr, ulPageSize, pucSpiBuffer);
+//		iResult = Drv_SpiEraseAndWritePage(ptFlashDev, ulPageStartAdr, ulPageSize, pucSpiBuffer);
+		if( iResult==0 )
 		{
-			/* write one page */
-			iResult = Drv_SpiWritePage(ptFlashDev, ulC, ulPageSize, pucDC);
-			if( iResult==0 )
-			{
-				uprintf("! write error\n");
-				return NETX_CONSOLEAPP_RESULT_ERROR;
-			}
-
-			/* next segment */
-			ulC += ulPageSize;
-			pucDC += ulPageSize;
-
-			/* inc progress */
-			ulProgressCnt += ulPageSize;
-			progress_bar_set_position(ulProgressCnt);
+			uprintf("! write error\n");
+			return NETX_CONSOLEAPP_RESULT_ERROR;
 		}
 
-		/* part of a page left? */
-		if( ulC<ulE )
-		{
-			/* yes, start inside a page -> get the next segment */
-			ulSegSize = ulE - ulC;
+		/* next segment */
+		ulC += ulSegSize;
+		pucDC += ulSegSize;
 
-			/* modify the beginning of the page */
-			memcpy(pucSpiBuffer, pucDC, ulSegSize);
-			/* clear the rest of the buffer */
-			memset(pucSpiBuffer+ulSegSize, 0xff, ulPageSize-ulSegSize);
-
-			/* write the buffer */
-			iResult = Drv_SpiWritePage(ptFlashDev, ulC, ulPageSize, pucSpiBuffer);
-			if( iResult==0 )
-			{
-				uprintf("! write error\n");
-				return NETX_CONSOLEAPP_RESULT_ERROR;
-			}
-		}
-
-		progress_bar_finalize();
-		uprintf(". write ok\n");
+		/* inc progress */
+		ulProgressCnt += ulSegSize;
+		progress_bar_set_position(ulProgressCnt);
 	}
-	else
+
+	/* process complete pages */
+	while( ulC+ulPageSize<ulE )
 	{
-		uprintf("# Write data...\n");
-
-		/* loop over all data */
-		ulC = ulFlashStartAdr;
-		ulE = ulC + ulDataByteLen;
-		pucDC = pucDataStartAdr;
-
-		ulProgressCnt = 0;
-		progress_bar_init( ulDataByteLen );
-
-		/* start inside a page? */
-		ulOffset = ulFlashStartAdr % ulPageSize;
-		if( ulOffset!=0 )
+		/* write one page */
+		iResult = Drv_SpiWritePage(ptFlashDev, ulC, ulPageSize, pucDC);
+//		iResult = Drv_SpiEraseAndWritePage(ptFlashDev, ulC, ulPageSize, pucDC);
+		if( iResult==0 )
 		{
-			/* yes, start inside a page */
-
-			/* get the startaddress of the page */
-			ulPageStartAdr = ulFlashStartAdr - ulOffset;
-
-			/* get the new max segment size for the rest of the page */
-			ulMaxSegSize = ulPageSize - ulOffset;
-
-			/* get the next segment, limit it to 'ulMaxSegSize' */
-			ulSegSize = ulE - ulC;
-			if( ulSegSize>ulMaxSegSize )
-			{
-				ulSegSize = ulMaxSegSize;
-			}
-
-			/* read the complete page into the buffer */
-			iResult = Drv_SpiReadFlash(ptFlashDev, ulPageStartAdr, pucSpiBuffer, ulPageSize);
-			if( iResult==0 )
-			{
-				uprintf("! read error\n");
-				return NETX_CONSOLEAPP_RESULT_ERROR;
-			}
-
-			/* modify the rest of the page */
-			memcpy(pucSpiBuffer+ulOffset, pucDC, ulSegSize);
-
-			/* write the modified buffer back */
-			iResult = Drv_SpiEraseAndWritePage(ptFlashDev, ulPageStartAdr, ulPageSize, pucSpiBuffer);
-			if( iResult==0 )
-			{
-				uprintf("! write error\n");
-				return NETX_CONSOLEAPP_RESULT_ERROR;
-			}
-
-			/* next segment */
-			ulC += ulSegSize;
-			pucDC += ulSegSize;
-
-			/* inc progress */
-			ulProgressCnt += ulSegSize;
-			progress_bar_set_position(ulProgressCnt);
+			uprintf("! write error\n");
+			return NETX_CONSOLEAPP_RESULT_ERROR;
 		}
 
-		/* process complete pages */
-		while( ulC+ulPageSize<=ulE )
-		{
-			/* write one page */
-			iResult = Drv_SpiEraseAndWritePage(ptFlashDev, ulC, ulPageSize, pucDC);
-			if( iResult==0 )
-			{
-				uprintf("! write error\n");
-				return NETX_CONSOLEAPP_RESULT_ERROR;
-			}
+		/* next segment */
+		ulC += ulPageSize;
+		pucDC += ulPageSize;
 
-			/* next segment */
-			ulC += ulPageSize;
-			pucDC += ulPageSize;
-
-			/* inc progress */
-			ulProgressCnt += ulPageSize;
-			progress_bar_set_position(ulProgressCnt);
-		}
-
-		/* part of a page left? */
-		if( ulC<ulE )
-		{
-			/* get the next segment */
-			ulSegSize = ulE - ulC;
-
-			/* yes, start inside a page -> read the complete page into the buffer */
-			iResult = Drv_SpiReadFlash(ptFlashDev, ulC, pucSpiBuffer, ulPageSize);
-			if( iResult==0 )
-			{
-				uprintf("! read error\n");
-				return NETX_CONSOLEAPP_RESULT_ERROR;
-			}
-
-			/* modify the beginning of the page */
-			memcpy(pucSpiBuffer, pucDC, ulSegSize);
-
-			/* write the modified buffer back */
-			iResult = Drv_SpiEraseAndWritePage(ptFlashDev, ulC, ulPageSize, pucSpiBuffer);
-			if( iResult==0 )
-			{
-				uprintf("! write error\n");
-				return NETX_CONSOLEAPP_RESULT_ERROR;
-			}
-		}
-
-		progress_bar_finalize();
-		uprintf(". write ok\n");
+		/* inc progress */
+		ulProgressCnt += ulPageSize;
+		progress_bar_set_position(ulProgressCnt);
 	}
+
+	/* part of a page left? */
+	if( ulC<ulE )
+	{
+		/* yes, start inside a page -> get the next segment */
+		ulSegSize = ulE - ulC;
+
+		/* modify the beginning of the page */
+		memcpy(pucSpiBuffer, pucDC, ulSegSize);
+		/* clear the rest of the buffer */
+		memset(pucSpiBuffer+ulSegSize, 0xff, ulPageSize-ulSegSize);
+
+		/* write the buffer */
+		iResult = Drv_SpiWritePage(ptFlashDev, ulC, ulPageSize, pucSpiBuffer);
+//		iResult = Drv_SpiEraseAndWritePage(ptFlashDev, ulC, ulPageSize, pucSpiBuffer);
+		if( iResult==0 )
+		{
+			uprintf("! write error\n");
+			return NETX_CONSOLEAPP_RESULT_ERROR;
+		}
+	}
+
+	progress_bar_finalize();
+	uprintf(". write ok\n");
 
 	/* write ok! */
 	return NETX_CONSOLEAPP_RESULT_OK;
@@ -498,7 +374,7 @@ NETX_CONSOLEAPP_RESULT_T spi_write_with_progress(const SPI_FLASH_T *ptFlashDev, 
 
 NETX_CONSOLEAPP_RESULT_T spi_verify_with_progress(const SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulDataByteLen, const unsigned char *pucDataStartAdr)
 {
-	int iResult;       
+	int iResult;
 	unsigned long       ulC, ulE;
 	unsigned long       ulSegSize, ulMaxSegSize;
 	unsigned long       ulProgressCnt;
@@ -620,13 +496,10 @@ NETX_CONSOLEAPP_RESULT_T spi_read_with_progress(const SPI_FLASH_T *ptFlashDev, u
 }
 
 
-NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulDataByteLen)
+NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFlashDev, unsigned long ulStartAdr, unsigned long ulEndAdr)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	unsigned long ulSectorSize;
-	unsigned long ulOffset;
-	unsigned long ulSectorStartAddress;
-	unsigned long ulSectorEndAddress;
 	unsigned long ulAddress;
 	unsigned long ulProgressCnt;
 	int iResult;
@@ -634,44 +507,52 @@ NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFlashDev, 
 
 	uprintf("# Erase flash...\n");
 
-	/* get the sector start and end address */
-	ulSectorSize          = ptFlashDev->ulSectorSize;
-	ulOffset              = ulFlashStartAdr % ulSectorSize;
-	ulSectorStartAddress  = ulFlashStartAdr - ulOffset;
-	ulSectorEndAddress    = ulFlashStartAdr + ulDataByteLen + ulSectorSize-1;
-	ulSectorEndAddress   &= ~((1<<ptFlashDev->uiSectorAdrShift)-1);
-
-	/* show start and end of erase area */
-	uprintf(". erase $8 - $8\n", ulSectorStartAddress, ulSectorEndAddress);
-
-	ulProgressCnt = 0;
-	progress_bar_init( ulDataByteLen );
-
 	/* assume success */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
-	/* erase the complete area */
-	ulAddress = ulSectorStartAddress;
-	while( ulAddress<ulSectorEndAddress )
+	/* get the sector start and end address */
+	ulSectorSize = ptFlashDev->ulSectorSize;
+	if( (ulStartAdr%ulSectorSize)!=0 )
 	{
-		iResult = Drv_SpiEraseFlashSector(ptFlashDev, ulAddress);
-		if( iResult==0 )
+		uprintf("! The start address is not aligned to a sector!\n");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else if( (ulEndAdr%ulSectorSize)!=0 )
+	{
+		uprintf("! The end address is not aligned to a sector!\n");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else
+	{
+		/* show start and end of erase area */
+		uprintf(". erase $8 - $8\n", ulStartAdr, ulEndAdr);
+
+		ulProgressCnt = 0;
+		progress_bar_init( ulEndAdr-ulStartAdr );
+
+		/* erase the complete area */
+		ulAddress = ulStartAdr;
+		while( ulAddress<ulEndAdr )
 		{
-			uprintf("! erase failed at address $8\n", ulAddress);
-			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-			break;
+			iResult = Drv_SpiEraseFlashSector(ptFlashDev, ulAddress);
+			if( iResult==0 )
+			{
+				uprintf("! erase failed at address $8\n", ulAddress);
+				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+				break;
+			}
+
+			/* next segment */
+			ulAddress += ulSectorSize;
+
+			/* inc progress */
+			ulProgressCnt += ulSectorSize;
+			progress_bar_set_position(ulProgressCnt);
 		}
 
-		/* next segment */
-		ulAddress += ulSectorSize;
-
-		/* inc progress */
-		ulProgressCnt += ulSectorSize;
-		progress_bar_set_position(ulProgressCnt);
+		progress_bar_finalize();
+		uprintf(". erase ok\n");
 	}
-
-	progress_bar_finalize();
-	uprintf(". erase ok\n");
 
 	/* return result */
 	return tResult;
@@ -721,6 +602,109 @@ NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 		ptDeviceDescription->tSourceTyp = BootBlockSrcType_SPI;
 
 		tResult = NETX_CONSOLEAPP_RESULT_OK;
+	}
+
+	return tResult;
+}
+
+
+/*-----------------------------------*/
+
+
+NETX_CONSOLEAPP_RESULT_T spi_isErased(CMD_PARAMETER_ISERASED_T *ptParameter, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+{
+	NETX_CONSOLEAPP_RESULT_T  tResult;
+	SPI_FLASH_T              *ptFlashDescription;
+	unsigned long             ulStartAdr;
+	unsigned long             ulEndAdr;
+	unsigned long ulFlashSize;
+	unsigned long ulCnt;
+	unsigned char *pucCnt;
+	unsigned char *pucEnd;
+	unsigned long ulSegSize, ulMaxSegSize;
+	unsigned long ulProgressCnt;
+	int iResult;
+	unsigned long ulErased;
+
+
+	/* expect success */
+	tResult = NETX_CONSOLEAPP_RESULT_OK;
+
+	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
+	ulStartAdr = ptParameter->ulStartAdr;
+	ulEndAdr  = ptParameter->ulEndAdr;
+
+	ulFlashSize = ptFlashDescription->tAttributes.ulSize;
+
+	uprintf("flash size: 0x$8\n", ulFlashSize);
+
+	/* test addresses */
+	if( (ulStartAdr>=ulFlashSize) || (ulEndAdr>ulFlashSize) )
+	{
+		/* data is larger than flash */
+		uprintf("! error, the specified area exceeds the flash size\n");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else
+	{
+		uprintf(". ok, the area fits into the flash\n");
+
+		ulErased = 0xffU;
+
+		uprintf("# Checking data...\n");
+
+		ulMaxSegSize = SPI_BUFFER_SIZE;
+
+		/* loop over all data */
+		ulCnt = ulStartAdr;
+
+		ulProgressCnt = 0;
+		progress_bar_init(ulEndAdr-ulStartAdr);
+
+		while( ulCnt<ulEndAdr )
+		{
+			/* get the next segment, limit it to 'ulMaxSegSize' */
+			ulSegSize = ulEndAdr - ulCnt;
+			if( ulSegSize>ulMaxSegSize )
+			{
+				ulSegSize = ulMaxSegSize;
+			}
+
+			/* read the segment */
+			iResult = Drv_SpiReadFlash(ptFlashDescription, ulCnt, pucSpiBuffer, ulSegSize);
+			if( iResult==0 )
+			{
+				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+				break;
+			}
+
+			pucCnt = pucSpiBuffer;
+			pucEnd = pucSpiBuffer + ulSegSize;
+			while( pucCnt<pucEnd )
+			{
+				ulErased &= *(pucCnt++);
+			}
+
+			if( ulErased!=0xff )
+			{
+				break;
+			}
+
+			/* next segment */
+			ulCnt += ulSegSize;
+			pucCnt += ulSegSize;
+
+			/* inc progress */
+			ulProgressCnt += ulSegSize;
+			progress_bar_set_position(ulProgressCnt);
+		}
+
+		progress_bar_finalize();
+	}
+
+	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+	{
+		ptConsoleParams->pvReturnMessage = (void*)ulErased;
 	}
 
 	return tResult;

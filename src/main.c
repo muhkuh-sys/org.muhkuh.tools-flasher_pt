@@ -45,6 +45,7 @@ NETX_CONSOLEAPP_RESULT_T opMode_flash (ptFlasherInputParameter ptAppParams);
 NETX_CONSOLEAPP_RESULT_T opMode_erase (ptFlasherInputParameter ptAppParams);
 NETX_CONSOLEAPP_RESULT_T opMode_read  (ptFlasherInputParameter ptAppParams);
 NETX_CONSOLEAPP_RESULT_T opMode_verify(ptFlasherInputParameter ptAppParams);
+NETX_CONSOLEAPP_RESULT_T opMode_isErased(ptFlasherInputParameter ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams);
 NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(ptFlasherInputParameter ptAppParams);
 
 /* ------------------------------------- */
@@ -135,6 +136,11 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 // //				tResult = opMode_verify(ptAppParams);
 // 				break;
 
+			case OperationMode_IsErased:
+				uprintf(". Operation Mode: IsErased\n");
+				tResult = opMode_isErased(ptAppParams, ptTestParam);
+				break;
+
 			case OperationMode_GetEraseArea:
 				uprintf(". Operation Mode: Get Erase Area\n");
 				tResult = opMode_getEraseArea(ptAppParams);
@@ -179,57 +185,11 @@ NETX_CONSOLEAPP_RESULT_T opMode_detect(ptFlasherInputParameter ptAppParams)
 	uprintf(". Device :");
 	switch(tBBSrcType)
 	{
-// 	case BootBlockSrcType_SRamBus:
-// 		/*  use parallel flash on SRam bus */
-// 		uprintf("SRam Bus parflash\n");
-// 		uprintf("! not supported yet...\n");
-// 		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-// 		break;
-
 	case BootBlockSrcType_SPI:
 		/*  use SPI flash */
 		uprintf("SPI flash\n");
 		tResult = spi_detect(&(ptAppParams->uParameter.tDetect));
 		break;
-
-// 	case BootBlockSrcType_I2C:
-// 		/*  use I2C eeprom */
-// 		uprintf("I2C eeprom\n");
-// 		uprintf("! not supported yet...\n");
-// 		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-// 		break;
-
-// 	case BootBlockSrcType_MMC:
-// 		/*  use MMC/SD card */
-// 		uprintf("MMC / SD card\n");
-// 
-// 		/*  not yet... */
-// 		uprintf("! not supported yet...\n");
-// 		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-// 
-// 		break;
-
-// 	case BootBlockSrcType_DPM:
-// 		/*  DPM can't be flashed */
-// 		uprintf("DPM\n");
-// 
-// 		uprintf("! not supported yet...\n");
-// 		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-// 		break;
-
-// 	case BootBlockSrcType_DPE:
-// 		uprintf("DPM extended\n");
-// 
-// 		/*  DPM extended can't be flashed */
-// 		uprintf("! DPM extented not supported\n");
-// 		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-// 		break;
-
-// 	case BootBlockSrcType_ExtBus:
-// 		/*  use parallel flash on Extension bus */
-// 		uprintf("extension bus parflash\n");
-// 		tResult = ext_flash(ptAppParams->pbData, ptAppParams->ulDataByteSize);
-// 		break;
 
 	default:
 		/*  unknown boot device */
@@ -296,11 +256,11 @@ NETX_CONSOLEAPP_RESULT_T opMode_flash(ptFlasherInputParameter ptAppParams)
 	uprintf(". Device :");
 	switch(tSourceTyp)
 	{
-        case BootBlockSrcType_SPI:
-                /*  use SPI flash */
-                uprintf("SPI flash\n");
-                tResult = spi_flash(&(ptAppParams->uParameter.tFlash));
-                break;
+	case BootBlockSrcType_SPI:
+		/*  use SPI flash */
+		uprintf("SPI flash\n");
+		tResult = spi_flash(&(ptAppParams->uParameter.tFlash));
+		break;
 
 	default:
 		/*  unknown boot device */
@@ -520,6 +480,49 @@ NETX_CONSOLEAPP_RESULT_T opMode_verify(ptFlasherInputParameter ptAppParams)
 /* ------------------------------------- */
 
 #endif
+
+
+
+NETX_CONSOLEAPP_RESULT_T opMode_isErased(ptFlasherInputParameter ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	tBootBlockSrcType tSrcType;
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
+
+
+	tSrcType = ptAppParams->uParameter.tIsErased.ptDeviceDescription->tSourceTyp;
+	ulStartAdr = ptAppParams->uParameter.tIsErased.ulStartAdr;
+	ulEndAdr = ptAppParams->uParameter.tIsErased.ulEndAdr;
+
+	if( ulStartAdr>=ulEndAdr )
+	{
+		uprintf("! first address is greater or equal than last address.");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else
+	{
+		uprintf(". Device :");
+		switch(tSrcType)
+		{
+		case BootBlockSrcType_SPI:
+			/*  use SPI flash */
+			uprintf("SPI flash\n");
+			tResult = spi_isErased(&(ptAppParams->uParameter.tIsErased), ptConsoleParams);
+			break;
+
+		default:
+			/*  unknown boot device */
+			uprintf("unknown\n");
+			uprintf("! illegal device id specified\n");
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+			break;
+		}
+	}
+
+	return tResult;
+}
+
 
 
 NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(ptFlasherInputParameter ptAppParams)

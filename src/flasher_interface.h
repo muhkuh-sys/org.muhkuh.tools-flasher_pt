@@ -74,17 +74,17 @@ typedef struct
 typedef struct
 {
 	DEVICE_DESCRIPTION_T *ptDeviceDescription;
-	unsigned char *pucData;
+	unsigned long ulStartAdr;
 	unsigned long ulDataByteSize;
-	unsigned long ulDstDeviceOffset;
+	unsigned char *pucData;
 } CMD_PARAMETER_FLASH_T;
 
 
 typedef struct
 {
 	DEVICE_DESCRIPTION_T *ptDeviceDescription;
-	unsigned long ulDataByteSize;
-	unsigned long ulDstDeviceOffset;
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
 } CMD_PARAMETER_ERASE_T;
 
 
@@ -123,8 +123,8 @@ typedef struct
 typedef struct
 {
 	DEVICE_DESCRIPTION_T *ptDeviceDescription;
-	unsigned long ulAreaByteSize;
-	unsigned long ulDeviceOffset;
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
 } CMD_PARAMETER_ISERASED_T;
 
 

@@ -32,6 +32,7 @@ NETX_CONSOLEAPP_RESULT_T spi_read  (unsigned char       *pbData, unsigned long u
 NETX_CONSOLEAPP_RESULT_T spi_verify(const unsigned char *pbData, unsigned long ulDataByteLen);
 
 NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter);
+NETX_CONSOLEAPP_RESULT_T spi_isErased(CMD_PARAMETER_ISERASED_T *ptParameter, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams);
 NETX_CONSOLEAPP_RESULT_T spi_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptParameter);
 
 #endif	/* __FLASHER_SPI_H__ */
