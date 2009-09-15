@@ -1,3 +1,22 @@
+/*************************************************************************** 
+ *   Copyright (C) 2009 by Hilscher GmbH                                   * 
+ *   cthelen@hilscher.com                                                  * 
+ *                                                                         * 
+ *   This program is free software; you can redistribute it and/or modify  * 
+ *   it under the terms of the GNU Library General Public License as       * 
+ *   published by the Free Software Foundation; either version 2 of the    * 
+ *   License, or (at your option) any later version.                       * 
+ *                                                                         * 
+ *   This program is distributed in the hope that it will be useful,       * 
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        * 
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * 
+ *   GNU General Public License for more details.                          * 
+ *                                                                         * 
+ *   You should have received a copy of the GNU Library General Public     * 
+ *   License along with this program; if not, write to the                 * 
+ *   Free Software Foundation, Inc.,                                       * 
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             * 
+ ***************************************************************************/
 
 #include <string.h>
 
@@ -80,8 +99,8 @@ static NETX_CONSOLEAPP_RESULT_T setup_extbus(EXTBUS_SIZE_T tSize)
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
 	/* enable DPM mode */
-	ptNetXAsicCtrlArea->ul_asic_ctrl_access_key = ptNetXAsicCtrlArea->ul_asic_ctrl_access_key;
-	ptNetXAsicCtrlArea->ul_io_config = 0;
+	ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+	ptAsicCtrlArea->ulIo_config = 0;
 
 	switch(tSize)
 	{
@@ -100,13 +119,13 @@ static NETX_CONSOLEAPP_RESULT_T setup_extbus(EXTBUS_SIZE_T tSize)
 
 	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 	{
-		ptNetXGlobalRegBlock2Area->aul_ext_bus_config[0]  = ulExtBusCs0Cfg;
-		ptNetXGlobalRegBlock2Area->ul_if_conf1            = 0x10247912;
-		ptNetXGlobalRegBlock2Area->ul_if_conf2            = 0x01000000;
-		ptNetXGlobalRegBlock2Area->ul_io_reg_mode0        = 0x37ff7ee7;
-		ptNetXGlobalRegBlock2Area->ul_io_reg_mode1        = 0x400e7e67;
-		ptNetXGlobalRegBlock2Area->ul_io_reg_drv_en0      = 0;
-		ptNetXGlobalRegBlock2Area->ul_io_reg_drv_en1      = 0;
+		ptNetXGlobalRegBlock2Area->ulExp_bus_reg	= ulExtBusCs0Cfg;
+		ptNetXGlobalRegBlock2Area->ulIf_conf1		= 0x10247912;
+		ptNetXGlobalRegBlock2Area->ulIf_conf2		= 0x01000000;
+		ptNetXGlobalRegBlock2Area->ulIo_reg_mode0	= 0x37ff7ee7;
+		ptNetXGlobalRegBlock2Area->ulIo_reg_mode1	= 0x400e7e67;
+		ptNetXGlobalRegBlock2Area->ulIo_reg_drv_en0	= 0;
+		ptNetXGlobalRegBlock2Area->ulIo_reg_drv_en1	= 0;
 	}
 
 	return tResult;
@@ -133,60 +152,60 @@ static NETX_CONSOLEAPP_RESULT_T netx5_init_dpm(DPM_SIZE_T tSize)
 	unsigned char ucCfg0x0;
 	unsigned char ucRdAddrSetupTime;
 	NETX_CONSOLEAPP_RESULT_T tResult;
+	EXTBUS_SIZE_T tExtBusSize;
 
 
-	/* expect error */
-	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	/* expect success */
+	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
-	/* t_osa?!? */
-	ucRdAddrSetupTime = 0;
-
-	/* configure the DPM to 8bit */
-	setup_extbus(EXTBUS_SIZE_08BIT);
-
-	/* try to configure DPM several times */
-	iCnt = 32768;
-	do
+	switch( tSize )
 	{
-		/* write configuration (DPM = 8 bit) */
-		ptNetX5Dpm->auc_raw[0x18] = 0x03; /* RDY=PushPull, Polarity=1 (High), RDY is generated as Wait/Busy state signal */
-		ptNetX5Dpm->auc_raw[0xa0] = 0x00; /* enable RDY pin, leave SIRQ and DIRQ as IRQ pins */
-		ptNetX5Dpm->auc_raw[0x10] = 0x08; /* address area=128kB */
+	case DPM_SIZE_08:
+		ucCfg0x0 = 0x00;
+		tExtBusSize = EXTBUS_SIZE_08BIT;
+		break;
+	case DPM_SIZE_16:
+		ucCfg0x0 = 0x05;
+		tExtBusSize = EXTBUS_SIZE_16BIT;
+		break;
+	case DPM_SIZE_32:
+		/* this is not possible with the netX500 */
+	default:
+		/* invalid DPM size */
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		break;
+	}
 
-		/* read back configuration */
-		ulValue  = (ptNetX5Dpm->auc_raw[0x18] ^ 0x03);
-		ulValue |= (ptNetX5Dpm->auc_raw[0xa0] ^ 0x00);
-		ulValue |= (ptNetX5Dpm->auc_raw[0x10] ^ 0x08);
-	} while( ulValue!=0 && --iCnt>=0);
-
-	/* Configuration successful? */
-	if( ulValue==0 )
+	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 	{
-		/* now it will work for sure :) */
-		tResult = NETX_CONSOLEAPP_RESULT_OK;
+		/* t_osa?!? */
+		ucRdAddrSetupTime = 0;
 
-		switch( tSize )
+		/* configure the DPM to 8bit */
+		setup_extbus(EXTBUS_SIZE_08BIT);
+
+		/* try to configure DPM several times */
+		iCnt = 32768;
+		do
 		{
-		case DPM_SIZE_08:
-			ucCfg0x0 = 0x00;
-			break;
-		case DPM_SIZE_16:
-			ucCfg0x0 = 0x05;
-			break;
-		case DPM_SIZE_32:
-			ucCfg0x0 = 0x08;
-			break;
-		default:
-			/* invalid DPM size */
+			/* write configuration (DPM = 8 bit) */
+			ptNetX5Dpm->auc_raw[0x18] = 0x03; /* RDY=PushPull, Polarity=1 (High), RDY is generated as Wait/Busy state signal */
+			ptNetX5Dpm->auc_raw[0xa0] = 0x00; /* enable RDY pin, leave SIRQ and DIRQ as IRQ pins */
+			ptNetX5Dpm->auc_raw[0x10] = 0x08; /* address area=128kB */
+
+			/* read back configuration */
+			ulValue  = (ptNetX5Dpm->auc_raw[0x18] ^ 0x03);
+			ulValue |= (ptNetX5Dpm->auc_raw[0xa0] ^ 0x00);
+			ulValue |= (ptNetX5Dpm->auc_raw[0x10] ^ 0x08);
+		} while( ulValue!=0 && --iCnt>=0);
+
+		/* Configuration successful? */
+		if( ulValue!=0 )
+		{
 			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-			break;
 		}
-
-		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+		else
 		{
-			/* expect error */
-			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-
 			/* configure netX5 DPM with selected size */
 			ptNetX5Dpm->auc_raw[0x00] = ucCfg0x0;
 
@@ -194,17 +213,29 @@ static NETX_CONSOLEAPP_RESULT_T netx5_init_dpm(DPM_SIZE_T tSize)
 			ptNetX5Dpm->auc_raw[0x14] = 0x20U | ucRdAddrSetupTime;
 
 			/* check for successful configuration */
-			if( ptNetX5Dpm->auc_raw[0x00]==ucCfg0x0 )
+			if( ptNetX5Dpm->auc_raw[0x00]!=ucCfg0x0 )
+			{
+				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+			}
+			else
 			{
 				/* check for netx version */
 				ulValue = ptNetX5Dpm->sReg.ul_netx_version;
 				/* mask out the license bits */
 				ulValue &= 0x000000ff;
-				if( ulValue==0x00000041 )
+				if( ulValue!=0x00000041 )
+				{
+					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+				}
+				else
 				{
 					/* check the dpm_win4_end register, it is fixed to 0x001fff00 */
 					ulValue = ptNetX5Dpm->sReg.atDpmWin[4].ul_win_end;
-					if( ulValue==0x0001ff00 )
+					if( ulValue!=0x0001ff00 )
+					{
+						tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					}
+					else
 					{
 						/* set the standard netx5 dpm config */
 						for(iCnt=0; iCnt<5; ++iCnt)
@@ -212,9 +243,6 @@ static NETX_CONSOLEAPP_RESULT_T netx5_init_dpm(DPM_SIZE_T tSize)
 							ptNetX5Dpm->sReg.atDpmWin[iCnt].ul_win_end = atNetx5WinCfg[iCnt].ul_win_end;
 							ptNetX5Dpm->sReg.atDpmWin[iCnt].ul_win_map = atNetx5WinCfg[iCnt].ul_win_map;
 						}
-
-						/* ok, netx5 DPM detected! */
-						iResult = NETX_CONSOLEAPP_RESULT_OK;
 					}
 				}
 			}
@@ -222,7 +250,7 @@ static NETX_CONSOLEAPP_RESULT_T netx5_init_dpm(DPM_SIZE_T tSize)
 	}
 
 	/* all ok */
-	return iResult;
+	return tResult;
 }
 
 
@@ -236,13 +264,6 @@ NETX_CONSOLEAPP_RESULT_T board_init(void)
 
 	tResult = netx5_init_dpm(DPM_SIZE_08);
 	uprintf(". result=$\n", tResult);
-
-	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
-	{
-		uprintf(". setting up extension bus to 16 bit.\n");
-		tResult = setup_extbus(EXTBUS_SIZE_08BIT);
-		uprintf(". result=$\n", tResult);
-	}
 
 	return tResult;
 }

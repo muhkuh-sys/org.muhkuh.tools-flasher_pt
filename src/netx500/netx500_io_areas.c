@@ -45,9 +45,9 @@
 #include "netx500_io_areas.h"
 
 
-NX500_ASIC_CTRL_AREA_T * const					ptNetXAsicCtrlArea =		(NX500_ASIC_CTRL_AREA_T * const)Addr_NX500_asic_ctrl;
-NX500_SPI_AREA_T * const					ptNetXSpi0Area =                (NX500_SPI_AREA_T * const) Addr_NX500_spi;
-NX500_GPIO_AREA_T * const					ptNetXGpioArea =                (NX500_GPIO_AREA_T * const) Addr_NX500_gpio;
-NX500_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_1_AREA_T * const	ptNetXGlobalRegBlock1Area =     (NX500_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_1_AREA_T * const)Addr_NX500_netx_controlled_global_register_block_1;
-NX500_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_2_AREA_T * const	ptNetXGlobalRegBlock2Area =     (NX500_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_2_AREA_T * const)Addr_NX500_netx_controlled_global_register_block_2;
+NX500_ASIC_CTRL_AREA_T * const					ptAsicCtrlArea =		(NX500_ASIC_CTRL_AREA_T * const)Addr_NX500_asic_ctrl;
+NX500_SPI_AREA_T * const					ptNetXSpi0Area =		(NX500_SPI_AREA_T * const) Addr_NX500_spi;
+NX500_GPIO_AREA_T * const					ptNetXGpioArea =		(NX500_GPIO_AREA_T * const) Addr_NX500_gpio;
+NX500_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_1_AREA_T * const	ptNetXGlobalRegBlock1Area =	(NX500_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_1_AREA_T * const)Addr_NX500_netx_controlled_global_register_block_1;
+NX500_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_2_AREA_T * const	ptNetXGlobalRegBlock2Area =	(NX500_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_2_AREA_T * const)Addr_NX500_netx_controlled_global_register_block_2;
 
