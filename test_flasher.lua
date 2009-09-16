@@ -10,6 +10,7 @@ require("flasher")
 
 -- strFlasherBin_nx500 = "flasher_netx500.bin"
 strFlasherBin_nx500 = "flasher_netx5_500.bin"
+strDataFile = "/home/christoph/Compile/netx5/zpu_irq_sim/spi.bin"
 
 
 local function progress(cnt,max)
@@ -109,72 +110,72 @@ else
 	-- connect the plugin
 	tPlugin:Connect()
 
+	-- try to load the data binary
+	strDataBin, msg = loadBin(strDataFile)
+	if not strDataBin then
+		error("failed to load flasher binary: " .. msg)
+	end
+
 	-- try to load netx500 binary
 	strBin, msg = loadBin(strFlasherBin_nx500)
 	if not strBin then
-		print("failed to load flasher binary: " .. msg)
-		print("skipping call test.")
+		error("failed to load flasher binary: " .. msg)
+	end
+
+	local strDevDesc
+	local ulDevDescAdr = 0x00018100
+	local ulEraseStart
+	local ulEraseEnd
+
+
+	-- download binary to 0x00008000
+	tPlugin:write_image(0x00008000, strBin, progress, string.len(strBin))
+
+	strDevDesc = flasher.detect(tPlugin, 2, 1, ulDevDescAdr)
+--	strDevDesc = flasher.detect(tPlugin, 2, 2, ulDevDescAdr)
+--	strDevDesc = flasher.detect(tPlugin, 2, 4, ulDevDescAdr)
+	if not strDevDesc then
+		error("Failed to get a device description!")
+	end
+
+	-- show the device description
+	hexdump(strDevDesc)
+
+	-- erase the first 64KBytes
+	ulEraseStart, ulEraseEnd = flasher.getEraseArea(tPlugin, ulDevDescAdr, 0, 65536)
+	if not ulEraseStart then
+		error("Failed to get erase areas!")
+	end
+
+	local fIsErased
+	print(string.format("Checking area 0x%08x-0x%08x...", ulEraseStart, ulEraseEnd))
+	fIsErased = flasher.isErased(tPlugin, ulDevDescAdr, ulEraseStart, ulEraseEnd)
+	if fIsErased==nil then
+		error("failed to check the area!")
+	end
+
+
+	if fIsErased==true then
+		print("The area is already erased.")
 	else
-		local strDevDesc
-		local ulDevDescAdr = 0x00018100
-		local ulEraseStart
-		local ulEraseEnd
+		print("The area is not erased. Erasing it now...")
+		local fIsOk = flasher.erase(tPlugin, ulDevDescAdr, ulEraseStart, ulEraseEnd)
+		if not fIsOk then
+			error("Failed to erase the area!")
+		end
 
-
-		-- download binary to 0x00008000
-		tPlugin:write_image(0x00008000, strBin, progress, string.len(strBin))
-
-		strDevDesc = flasher.detect(tPlugin, 2, 1, ulDevDescAdr)
---		strDevDesc = flasher.detect(tPlugin, 2, 2, ulDevDescAdr)
---		strDevDesc = flasher.detect(tPlugin, 2, 4, ulDevDescAdr)
-		if not strDevDesc then
-			print("Failed to get a device description!")
-		else
-			-- show the device description
-			hexdump(strDevDesc)
-
-			-- erase the first 64KBytes
-			ulEraseStart, ulEraseEnd = flasher.getEraseArea(tPlugin, ulDevDescAdr, 0, 65536)
-			if not ulEraseStart then
-				print("Failed to get erase areas!")
-			else
-				local fIsErased
-
-
-				print(string.format("Checking area 0x%08x-0x%08x...", ulEraseStart, ulEraseEnd))
-				fIsErased = flasher.isErased(tPlugin, ulDevDescAdr, ulEraseStart, ulEraseEnd)
-				if fIsErased==nil then
-					print("failed to check the area!")
-				else
-					local fIsOk
-
-
-					if fIsErased==true then
-						print("The area is already erased.")
-						fIsOk = true
-					else
-						print("The area is not erased. Erasing it now...")
-						fIsOk = flasher.erase(tPlugin, ulDevDescAdr, ulEraseStart, ulEraseEnd)
-						if not fIsOk then
-							print("Failed to erase the area!")
-						else
-							fIsErased = flasher.isErased(tPlugin, ulDevDescAdr, ulEraseStart, ulEraseEnd)
-							if not fIsErased then
-								print("No error reported, but the area is not erased!")
-								fIsOk = false
-							end
-						end
-					end
-
-					if fIsOk==true then
-						print("Writing area...")
-						-- TODO: Write area in little chunks. For this test it's a 64K chunk so ot does not matter.
-						fIsOk = flasher.flash(tPlugin, ulDevDescAdr, 0, 65536, 0x00200000)
-					end
-				end
-			end
+		fIsErased = flasher.isErased(tPlugin, ulDevDescAdr, ulEraseStart, ulEraseEnd)
+		if not fIsErased then
+			error("No error reported, but the area is not erased!")
 		end
 	end
+
+	-- download data to 0x0001a000
+	tPlugin:write_image(0x0001a000, strDataBin, progress, string.len(strDataBin))
+
+	print("Writing area...")
+	-- TODO: Write area in little chunks. For this test it's a 64K chunk so ot does not matter.
+	fIsOk = flasher.flash(tPlugin, ulDevDescAdr, 0, string.len(strDataBin), 0x0001a000)
 
 	-- disconnect the plugin
 	tPlugin:Disconnect()
