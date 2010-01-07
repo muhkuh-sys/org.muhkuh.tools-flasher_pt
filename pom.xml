@@ -1,0 +1,115 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>net.sourceforge.muhkuh</groupId>
+	<artifactId>test_netx</artifactId>
+	<packaging>jar</packaging>
+	<version>1.0-SNAPSHOT</version>
+	<name>test_netx</name>
+	<url>http://muhkuh.sourceforge.net</url>
+
+	<repositories>
+		<repository>
+			<id>muhkuh_at_sourceforge</id>
+			<url>http://muhkuh.sourceforge.net/maven2</url>
+		</repository>
+	</repositories>
+
+	<properties>
+		<depack_markers_dir>${user.home}/.m2/depack</depack_markers_dir>
+		<scons_dir>${user.home}/.m2/depack/scons</scons_dir>
+		<gcc_dir>${user.home}/.m2/depack/gcc</gcc_dir>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>unpack_tools</id>
+						<phase>initialize</phase>
+						<goals>
+							<goal>unpack</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<!-- Unpack the scons build system to a temp work folder -->
+								<artifactItem>
+									<groupId>scons</groupId>
+									<artifactId>scons-local</artifactId>
+									<version>1.2.0_1</version>
+									<type>zip</type>
+									<overWrite>false</overWrite>
+									<outputDirectory>${scons_dir}</outputDirectory>
+								</artifactItem>
+								<!-- Unpack the compiler to a temp work folder -->
+								<artifactItem>
+									<groupId>org.gnu.gcc</groupId>
+									<artifactId>gcc-arm-elf_${os.name}_${os.arch}</artifactId>
+									<version>4.3.3_1</version>
+									<type>zip</type>
+									<overWrite>false</overWrite>
+									<outputDirectory>${gcc_dir}</outputDirectory>
+								</artifactItem>
+							</artifactItems>
+							<markersDirectory>${depack_markers_dir}</markersDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- This is a fix for Maven 2.x Dependency Plugin bug MDEP-109 .
+			     See <http://jira.codehaus.org/browse/MDEP-109> for details. It seems
+			     to be quite hard to fix. The bug was filed in 2004 and it is still open. %-(
+			     
+			     Find all executable files and write them to list.txt:
+			         find . -executable -type f | sed 's/^\.\///' >list.txt
+			-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>initialize</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3/bin/*" perm="ugo+rx"/>
+								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3/arm-elf/bin/*" perm="ugo+rx"/>
+								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3/libexec/gcc/arm-elf/4.3.3/cc1" perm="ugo+rx"/>
+								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3/libexec/gcc/arm-elf/4.3.3/cc1plus" perm="ugo+rx"/>
+								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3/libexec/gcc/arm-elf/4.3.3/collect2" perm="ugo+rx"/>
+							</tasks>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Run scons -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.1</version>
+				<executions>
+					<execution>
+						<phase>compile</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<executable>python</executable>
+					<arguments>
+						<argument>${scons_dir}/scons.py</argument>
+						<argument>--site-dir=${gcc_dir}</argument>
+					</arguments>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
