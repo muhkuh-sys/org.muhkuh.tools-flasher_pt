@@ -2,11 +2,116 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.sourceforge.muhkuh</groupId>
-	<artifactId>test_netx</artifactId>
-	<packaging>jar</packaging>
+	<artifactId>flasher</artifactId>
+	<packaging>zip</packaging>
 	<version>1.0-SNAPSHOT</version>
-	<name>test_netx</name>
-	<url>http://muhkuh.sourceforge.net</url>
+	<name>Flasher</name>
+	<url>http://muhkuh.sourceforge.net/flasher</url>
+
+	<description>
+		The "flasher" is an in-system programmer for parallel and serial flash devices connected to a netX chip.
+	</description>
+
+	<licenses>
+		<license>
+			<name>GNU Lesser General Public License, version 2.1</name>
+			<url>http://www.gnu.org/licenses/lgpl-2.1.txt</url>
+			<distribution>manual</distribution>
+		</license>
+	</licenses>
+
+
+	<!--**************************************************************-->
+	<!--*                                                            *-->
+	<!--*            List all developers and contributors            *-->
+	<!--*                                                            *-->
+	<!--**************************************************************-->
+	<organization>
+		<name>Muhkuh Team</name>
+		<url>http://muhkuh.sourceforge.net</url>
+	</organization>
+
+	<developers>
+		<developer>
+			<id>doc_bacardi</id>
+			<name>Chris</name>
+			<email>doc_bacardi@sourceforge.net</email>
+			<url>http://sourceforge.net/users/doc_bacardi</url>
+			<organization>Muhkuh</organization>
+			<organizationUrl>http://muhkuh.sourceforge.net</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+			<timezone>+1</timezone>
+			<properties>
+				<picUrl>http://tinyurl.com/prv4t</picUrl>
+			</properties>
+		</developer>
+		<developer>
+			<id>djangothebest</id>
+			<name>aj</name>
+			<email>djangothebest@sourceforge.net</email>
+			<url>http://sourceforge.net/users/djangothebest</url>
+			<organization>Muhkuh</organization>
+			<organizationUrl>http://muhkuh.sourceforge.net</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+		<developer>
+			<id>stephan_lesch</id>
+			<name>Stephan Lesch</name>
+			<email>stephan_lesch@sourceforge.net</email>
+			<url>http://sourceforge.net/users/stephan_lesch</url>
+			<organization>Muhkuh</organization>
+			<organizationUrl>http://muhkuh.sourceforge.net</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+	</developers>
+
+	<contributors>
+		<contributor>
+			<name>Michael Trensch</name>
+			<organization>Hilscher</organization>
+			<organizationUrl>http://www.hilscher.com</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+			<timezone>+1</timezone>
+		</contributor>
+	</contributors>
+
+
+	<!--**************************************************************-->
+	<!--*                                                            *-->
+	<!--*            List all services            *-->
+	<!--*                                                            *-->
+	<!--**************************************************************-->
+	<scm>
+		<connection>scm:svn:http://muhkuh.svn.sourceforge.net/svnroot/muhkuh</connection>
+		<developerConnection>scm:svn:https://muhkuh.svn.sourceforge.net/svnroot/muhkuh</developerConnection>
+		<tag>HEAD</tag>
+		<url>http://muhkuh.svn.sourceforge.net/viewvc/muhkuh/flasher/</url>
+	</scm>
+
+	<issueManagement>
+		<system>Trac</system>
+		<url>http://sourceforge.net/apps/trac/muhkuh/report</url>
+	</issueManagement>
+
+
+	<distributionManagement>
+		<site>
+			<id>sourceforge.muhkuh.website</id>
+			<name>Muhkuh Website on Sourceforge, Flasher section</name>
+			<url>sftp://web.sourceforge.net/home/groups/m/mu/muhkuh/htdocs/flasher</url>
+		</site>
+	</distributionManagement>
+
 
 	<repositories>
 		<repository>
@@ -22,6 +127,8 @@
 	</properties>
 
 	<build>
+		<defaultGoal>compile</defaultGoal>
+		<finalName>${artifactId}-${version}</finalName>
 		<resources>
 			<resource>
 				<directory>templates</directory>
