@@ -22,7 +22,25 @@
 	</properties>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>templates</directory>
+				<includes>
+					<include>site_init.py</include>
+				</includes>
+				<targetPath>${basedir}/site_scons</targetPath>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
@@ -37,9 +55,9 @@
 							<artifactItems>
 								<!-- Unpack the scons build system to a temp work folder -->
 								<artifactItem>
-									<groupId>scons</groupId>
+									<groupId>org.scons</groupId>
 									<artifactId>scons-local</artifactId>
-									<version>1.2.0_1</version>
+									<version>1.2.0.d20091224_1</version>
 									<type>zip</type>
 									<overWrite>false</overWrite>
 									<outputDirectory>${scons_dir}</outputDirectory>
@@ -106,7 +124,6 @@
 					<executable>python</executable>
 					<arguments>
 						<argument>${scons_dir}/scons.py</argument>
-						<argument>--site-dir=${gcc_dir}</argument>
 					</arguments>
 				</configuration>
 			</plugin>

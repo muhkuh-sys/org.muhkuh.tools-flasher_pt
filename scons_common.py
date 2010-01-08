@@ -9,9 +9,19 @@ from SCons.Script import *
 # much easier to work with an IDE like KDevelop.
 #
 if 'clean' in COMMAND_LINE_TARGETS:
-	Alias('clean', '.');
-	SetOption('clean', 1);
+	Alias('clean', '.')
+	SetOption('clean', 1)
 
+
+#----------------------------------------------------------------------------
+#
+# Add the depack_gcc_dir define to the site directory.
+#
+global depack_gcc_dir
+try:
+	SCons.Script.Main._load_site_scons_dir(SCons.Node.FS.get_default_fs().SConstruct_dir, depack_gcc_dir)
+except NameError:
+	print "No GCC directory specified!"
 
 #----------------------------------------------------------------------------
 #

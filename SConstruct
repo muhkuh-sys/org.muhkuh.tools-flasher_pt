@@ -89,8 +89,7 @@ if not GetOption('help'):
 	#
 	import gcc_arm_elf_4_3_3
 	
-	env = Environment()
-	print env['CCCOM']
+	
 	#----------------------------------------------------------------------------
 	#
 	# create the default environment
