@@ -122,6 +122,14 @@ if not GetOption('help'):
 	env_default.Replace(LINKFLAGS = ['-nostdlib', '-static', '-Map=$TARGET\.map'])
 	
 	
+	#----------------------------------------------------------------------------
+	#
+	# Create a special filter builder which includes the svnversion command.
+	#
+	import versionfilter
+	versionfilter.generate(env_default)
+	env_default.GenVersion('templates/flasher_version.h', 'src/flasher_version.h')
+	
 	# create environments for both builds
 	env_netx500 = env_default.Clone()
 	env_netx500.Append(CCFLAGS = ['-mcpu=arm926ej-s'])

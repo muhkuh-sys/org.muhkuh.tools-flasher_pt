@@ -1,4 +1,0 @@
-define(__VERSION_MAJ__, 1)
-define(__VERSION_MIN__, 0)
-define(__VERSION_SUB__, regexp(esyscmd(`svnversion -n'), `\([0-9]+\)', `\1'))
-define(__VERSION_ALL__, __VERSION_MAJ__`.'__VERSION_MIN__`.'__VERSION_SUB__)
