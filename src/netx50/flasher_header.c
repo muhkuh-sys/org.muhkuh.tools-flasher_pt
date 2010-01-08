@@ -50,7 +50,7 @@ const tFlasherVersion flasher_version =
 	},
 	.ulVersionMaj = FLASHER_VERSION_MAJ,
 	.ulVersionMin = FLASHER_VERSION_MIN,
-	.ulVersionSub = FLASHER_VERSION_SUB
+	.acVersion    = FLASHER_VERSION_ALL
 };
 
 /*-----------------------------------*/

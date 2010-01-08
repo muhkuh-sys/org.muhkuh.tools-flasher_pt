@@ -2,8 +2,14 @@
 
 import os
 
+from SCons.Script import *
+
 
 def gen_version(env, src_name, dst_name):
+	global PROJECT_VERSION_MAJ
+	global PROJECT_VERSION_MIN
+	
+	
 	# get the svn version
 	if not env['SVNVERSION']:
 		project_svnversion = 'unknown'
@@ -13,6 +19,8 @@ def gen_version(env, src_name, dst_name):
 		err = child.close()
 		if err:
 			project_svnversion = 'unknown'
+	env['PROJECT_VERSION_MAJ'] = PROJECT_VERSION_MAJ
+	env['PROJECT_VERSION_MIN'] = PROJECT_VERSION_MIN
 	env['PROJECT_VERSION_SVN'] = project_svnversion
 	
 	# read the template

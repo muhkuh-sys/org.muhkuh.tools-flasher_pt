@@ -62,7 +62,7 @@ typedef struct
 	unsigned long aulIf[4];
 	unsigned long ulVersionMaj;
 	unsigned long ulVersionMin;
-	unsigned long ulVersionSub;
+	const char    acVersion[16];
 } tFlasherVersion;
 
 /*-----------------------------------*/
