@@ -119,7 +119,7 @@ if not GetOption('help'):
 	env_default.Append(CPPPATH = ['src'])
 	env_default.Replace(CCFLAGS = Split(default_ccflags))
 	env_default.Replace(LIBS = ['m', 'c', 'gcc'])
-	env_default.Replace(LINKFLAGS = ['-nostdlib', '-static', '-Map=$TARGET\.map'])
+	env_default.Replace(LINKFLAGS = ['-nostdlib', '-static', '-Map=${TARGET}.map'])
 	
 	
 	#----------------------------------------------------------------------------
@@ -134,7 +134,7 @@ if not GetOption('help'):
 	env_netx500 = env_default.Clone()
 	env_netx500.Append(CCFLAGS = ['-mcpu=arm926ej-s'])
 	env_netx500.Replace(LDFILE = 'src/flasher_netx500.ld')
-	env_netx500.Replace(LIBPATH = ['$GCC_DIR/arm-elf/lib/arm926ej-s', '$GCC_DIR/lib/gcc/arm-elf/$GCC_VERSION/arm926ej-s'])
+	env_netx500.Replace(LIBPATH = ['${GCC_DIR}/arm-elf/lib/arm926ej-s', '${GCC_DIR}/lib/gcc/arm-elf/${GCC_VERSION}/arm926ej-s'])
 	env_netx500.Append(CPPDEFINES = ['__NETX500'])
 	env_netx500.Append(CPPPATH = ['src/netx500'])
 	env_netx500.VariantDir('target/netx500', 'src', duplicate=0)
@@ -142,7 +142,7 @@ if not GetOption('help'):
 	env_netx50 = env_default.Clone()
 	env_netx50.Append(CCFLAGS = ['-mcpu=arm966e-s'])
 	env_netx50.Replace(LDFILE = 'src/flasher_netx50.ld')
-	env_netx50.Replace(LIBPATH = ['$GCC_DIR/arm-elf/lib/arm966e-s', '$GCC_DIR/lib/gcc/arm-elf/$GCC_VERSION/arm966e-s'])
+	env_netx50.Replace(LIBPATH = ['${GCC_DIR}/arm-elf/lib/arm966e-s', '${GCC_DIR}/lib/gcc/arm-elf/${GCC_VERSION}/arm966e-s'])
 	env_netx50.Append(CPPDEFINES = ['__NETX50'])
 	env_netx50.Append(CPPPATH = ['src/netx50'])
 	env_netx50.VariantDir('target/netx50', 'src', duplicate=0)
