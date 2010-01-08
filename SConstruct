@@ -115,7 +115,7 @@ if not GetOption('help'):
 	#
 	env_default = gcc_arm_elf_4_3_3.get_gcc_arm_elf_4_3_3()
 	build_properties.ApplyToEnv(env_default)
-	#env_default.Decider('timestamp-newer')
+	env_default.Decider('timestamp-newer')
 	env_default.Append(CPPPATH = ['src'])
 	env_default.Replace(CCFLAGS = Split(default_ccflags))
 	env_default.Replace(LIBS = ['m', 'c', 'gcc'])
@@ -145,8 +145,10 @@ if not GetOption('help'):
 	# build the files
 	#
 	flasher_sources_netx500 = [src.replace('src', 'target/netx500') for src in Split(flasher_sources_common+flasher_sources_custom_netx500)]
-	env_netx500.Elf('target/flasher_netx500', flasher_sources_netx500)
+	flasher_netx500_elf = env_netx500.Elf('target/flasher_netx500', flasher_sources_netx500)
+	env_netx500.ObjCopy('target/flasher_netx500', flasher_netx500_elf)
 	
 	flasher_sources_netx50  = [src.replace('src', 'target/netx50')  for src in Split(flasher_sources_common+flasher_sources_custom_netx50)]
-	env_netx50.Elf('target/flasher_netx50', flasher_sources_netx50)
+	flasher_netx50_elf = env_netx50.Elf('target/flasher_netx50', flasher_sources_netx50)
+	env_netx50.ObjCopy('target/flasher_netx50', flasher_netx50_elf)
 
