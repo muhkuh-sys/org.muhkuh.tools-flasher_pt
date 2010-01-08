@@ -115,10 +115,11 @@ if not GetOption('help'):
 	#
 	env_default = gcc_arm_elf_4_3_3.get_gcc_arm_elf_4_3_3()
 	build_properties.ApplyToEnv(env_default)
-	env_default.Decider('timestamp-newer')
+	#env_default.Decider('timestamp-newer')
 	env_default.Append(CPPPATH = ['src'])
 	env_default.Replace(CCFLAGS = Split(default_ccflags))
 	env_default.Replace(LIBS = ['m', 'c', 'gcc'])
+	env_default.Replace(LINKFLAGS = ['-nostdlib', '-static', '-Map=$TARGET\.map'])
 	
 	
 	# create environments for both builds
