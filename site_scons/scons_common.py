@@ -18,8 +18,14 @@ if 'clean' in COMMAND_LINE_TARGETS:
 # Add the depack_gcc_dir define to the site directory.
 #
 global depack_gcc_dir
+
+# Build something with a 'path' member to satisfy SCons.Script.Main._load_site_scons_dir .
+class tdc:
+	path=''
+topdir=tdc()
+
 try:
-	SCons.Script.Main._load_site_scons_dir(SCons.Node.FS.get_default_fs().SConstruct_dir, depack_gcc_dir)
+	SCons.Script.Main._load_site_scons_dir(topdir, depack_gcc_dir)
 except NameError:
 	print "No GCC directory specified!"
 
