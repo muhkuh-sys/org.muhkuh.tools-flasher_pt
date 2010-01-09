@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.sourceforge.muhkuh</groupId>
 	<artifactId>flasher</artifactId>
-	<packaging>zip</packaging>
+	<packaging>jar</packaging>
 	<version>1.0-SNAPSHOT</version>
 	<name>Flasher</name>
 	<url>http://muhkuh.sourceforge.net/flasher</url>
