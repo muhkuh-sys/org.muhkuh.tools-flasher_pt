@@ -20,7 +20,6 @@
 		</license>
 	</licenses>
 
-	<!-- TODO: do not escape colons in windows path name (c:\blah becomes c\:\\blah) -->
 	<!-- TODO: use the normal sourceforge download system instead of the web space, url format is
 	     http://downloads.sourceforge.net/project/{project-name}/{package-name}/{release-name}/{file}
 	     e.g. for a scons release it is

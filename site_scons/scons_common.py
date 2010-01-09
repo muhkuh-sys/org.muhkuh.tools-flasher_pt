@@ -17,17 +17,24 @@ if 'clean' in COMMAND_LINE_TARGETS:
 #
 # Add the depack_gcc_dir define to the site directory.
 #
-global depack_gcc_dir
+
+# Get the depack directory for the gcc.
+global DEPACK_GCC_DIR
+try:
+	# Remove any strange escaping from the gcc dir.
+	gcc_dir = DEPACK_GCC_DIR.replace('\:', ':')
+	print "GCC dir: '" + gcc_dir + "'"
+except NameError:
+	print "No GCC directory specified!"
+	gcc_dir = None
 
 # Build something with a 'path' member to satisfy SCons.Script.Main._load_site_scons_dir .
 class tdc:
 	path=''
 topdir=tdc()
 
-try:
-	SCons.Script.Main._load_site_scons_dir(topdir, depack_gcc_dir)
-except NameError:
-	print "No GCC directory specified!"
+if gcc_dir:
+	SCons.Script.Main._load_site_scons_dir(topdir, gcc_dir)
 
 #----------------------------------------------------------------------------
 #
