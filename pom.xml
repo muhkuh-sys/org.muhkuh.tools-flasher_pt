@@ -4,7 +4,7 @@
 	<groupId>net.sourceforge.muhkuh</groupId>
 	<artifactId>flasher</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.0</version>
 	<name>Flasher</name>
 	<url>http://muhkuh.sourceforge.net/flasher</url>
 
@@ -20,6 +20,12 @@
 		</license>
 	</licenses>
 
+	<!-- TODO: do not escape colons in windows path name (c:\blah becomes c\:\\blah) -->
+	<!-- TODO: use the normal sourceforge download system instead of the web space, url format is
+	     http://downloads.sourceforge.net/project/{project-name}/{package-name}/{release-name}/{file}
+	     e.g. for a scons release it is
+	     http://downloads.sourceforge.net/project/scons/scons-local/1.2.0.d20091224/scons-local-1.2.0.d20091224.zip
+	-->
 
 	<!--**************************************************************-->
 	<!--*                                                            *-->
@@ -112,11 +118,18 @@
 		</site>
 	</distributionManagement>
 
-
+<!--
 	<repositories>
 		<repository>
 			<id>muhkuh_at_sourceforge</id>
 			<url>http://muhkuh.sourceforge.net/maven2</url>
+		</repository>
+	</repositories>
+-->
+	<repositories>
+		<repository>
+			<id>muhkuh_at_yakumo</id>
+			<url>http://127.0.0.1/maven2</url>
 		</repository>
 	</repositories>
 
