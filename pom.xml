@@ -126,6 +126,32 @@
 		<gcc_dir>${user.home}/.m2/depack/gcc</gcc_dir>
 	</properties>
 
+	<!-- This is just an emulation for the missing os.family . Argh! -->
+	<profiles>
+		<profile>
+			<id>Windows</id>
+			<activation>
+				<os>
+					<family>windows</family>
+				</os>
+			</activation>
+			<properties>
+				<os_family>windows</os_family>
+			</properties>
+		</profile>
+		<profile>
+			<id>Linux</id>
+			<activation>
+				<os>
+					<family>unix</family>
+				</os>
+			</activation>
+			<properties>
+				<os_family>linux</os_family>
+			</properties>
+		</profile>
+	</profiles>
+
 	<build>
 		<defaultGoal>compile</defaultGoal>
 		<finalName>${artifactId}-${version}</finalName>
@@ -172,7 +198,7 @@
 								<!-- Unpack the compiler to a temp work folder -->
 								<artifactItem>
 									<groupId>org.gnu.gcc</groupId>
-									<artifactId>gcc-arm-elf_${os.name}_${os.arch}</artifactId>
+									<artifactId>gcc-arm-elf_${os_family}_${os.arch}</artifactId>
 									<version>4.3.3_1</version>
 									<type>zip</type>
 									<overWrite>false</overWrite>
