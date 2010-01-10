@@ -20,10 +20,8 @@
 		</license>
 	</licenses>
 
-	<!-- TODO: use the normal sourceforge download system instead of the web space, url format is
-	     http://downloads.sourceforge.net/project/{project-name}/{package-name}/{release-name}/{file}
-	     e.g. for a scons release it is
-	     http://downloads.sourceforge.net/project/scons/scons-local/1.2.0.d20091224/scons-local-1.2.0.d20091224.zip
+	<!-- Bootstrapping with just the pom would save the developers from typing the reository url.
+	     More: http://maven.apache.org/scm/plugins/examples/bootstrapping-with-pom.html
 	-->
 
 	<!--**************************************************************-->
@@ -117,20 +115,20 @@
 		</site>
 	</distributionManagement>
 
-<!--
+
 	<repositories>
 		<repository>
 			<id>muhkuh_at_sourceforge</id>
-			<url>http://muhkuh.sourceforge.net/maven2</url>
+			<url>http://downloads.sourceforge.net/project/muhkuh/maven2</url>
+			<releases>
+				<checksumPolicy>fail</checksumPolicy>
+			</releases>
+			<snapshots>
+				<checksumPolicy>fail</checksumPolicy>
+			</snapshots>
 		</repository>
 	</repositories>
--->
-	<repositories>
-		<repository>
-			<id>muhkuh_at_yakumo</id>
-			<url>http://127.0.0.1/maven2</url>
-		</repository>
-	</repositories>
+
 
 	<properties>
 		<depack_markers_dir>${user.home}/.m2/depack</depack_markers_dir>
@@ -203,7 +201,7 @@
 									<groupId>org.scons</groupId>
 									<artifactId>scons-local</artifactId>
 									<version>1.2.0.d20091224_1</version>
-									<type>zip</type>
+									<type>tar.bz2</type>
 									<overWrite>false</overWrite>
 									<outputDirectory>${scons_dir}</outputDirectory>
 								</artifactItem>
@@ -212,7 +210,7 @@
 									<groupId>org.gnu.gcc</groupId>
 									<artifactId>gcc-arm-elf_${os_family}_${os.arch}</artifactId>
 									<version>4.3.3_1</version>
-									<type>zip</type>
+									<type>tar.bz2</type>
 									<overWrite>false</overWrite>
 									<outputDirectory>${gcc_dir}</outputDirectory>
 								</artifactItem>
