@@ -20,8 +20,16 @@
 		</license>
 	</licenses>
 
-	<!-- Bootstrapping with just the pom would save the developers from typing the reository url.
+	<!-- TODO: Bootstrapping with just the pom would save the developers from typing the reository url.
 	     More: http://maven.apache.org/scm/plugins/examples/bootstrapping-with-pom.html
+	-->
+	<!-- TODO: Get path to python interpreter from settings.xml, but this must be optional! It must still
+	     be possible to have python on the path.
+	-->
+	<!-- TODO: Generate a scons.bat and scons.sh file in the project root which executes the depacked
+	     scons with the detected python environment.
+	-->
+	<!-- TODO: Add asciidoc to the repository/dependencies and call it from the SConscript.
 	-->
 
 	<!--**************************************************************-->
@@ -134,6 +142,7 @@
 		<depack_markers_dir>${user.home}/.m2/depack</depack_markers_dir>
 		<scons_dir>${user.home}/.m2/depack/scons</scons_dir>
 		<gcc_dir>${user.home}/.m2/depack/gcc</gcc_dir>
+		<asciidoc_dir>${user.home}/.m2/depack/asciidoc</asciidoc_dir>
 	</properties>
 
 	<!-- This is just an emulation for the missing os.family . Argh! -->
@@ -196,7 +205,7 @@
 						</goals>
 						<configuration>
 							<artifactItems>
-								<!-- Unpack the scons build system to a temp work folder -->
+								<!-- Unpack the scons build system to a working folder. -->
 								<artifactItem>
 									<groupId>org.scons</groupId>
 									<artifactId>scons-local</artifactId>
@@ -205,7 +214,7 @@
 									<overWrite>false</overWrite>
 									<outputDirectory>${scons_dir}</outputDirectory>
 								</artifactItem>
-								<!-- Unpack the compiler to a temp work folder -->
+								<!-- Unpack the compiler to a working folder. -->
 								<artifactItem>
 									<groupId>org.gnu.gcc</groupId>
 									<artifactId>gcc-arm-elf_${os_family}_${os.arch}</artifactId>
@@ -213,6 +222,15 @@
 									<type>tar.bz2</type>
 									<overWrite>false</overWrite>
 									<outputDirectory>${gcc_dir}</outputDirectory>
+								</artifactItem>
+								<!-- Unpack the Asciidoc system to a working folder. -->
+								<artifactItem>
+									<groupId>nz.co.methods</groupId>
+									<artifactId>asciidoc</artifactId>
+									<version>8.5.2_1</version>
+									<type>tar.bz2</type>
+									<overWrite>false</overWrite>
+									<outputDirectory>${asciidoc_dir}</outputDirectory>
 								</artifactItem>
 							</artifactItems>
 							<markersDirectory>${depack_markers_dir}</markersDirectory>
