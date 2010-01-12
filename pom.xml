@@ -143,6 +143,7 @@
 		<scons_dir>${user.home}/.m2/depack/scons</scons_dir>
 		<gcc_dir>${user.home}/.m2/depack/gcc</gcc_dir>
 		<asciidoc_dir>${user.home}/.m2/depack/asciidoc</asciidoc_dir>
+		<PYTHON>python</PYTHON>
 	</properties>
 
 	<!-- This is just an emulation for the missing os.family . Argh! -->
@@ -282,7 +283,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<executable>python</executable>
+					<executable>${PYTHON}</executable>
 					<arguments>
 						<argument>${scons_dir}/scons.py</argument>
 					</arguments>
