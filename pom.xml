@@ -175,23 +175,53 @@
 	<build>
 		<defaultGoal>compile</defaultGoal>
 		<finalName>${artifactId}-${version}</finalName>
-		<resources>
-			<resource>
-				<directory>templates</directory>
-				<includes>
-					<include>site_init.py</include>
-				</includes>
-				<targetPath>${basedir}/site_scons</targetPath>
-				<filtering>true</filtering>
-			</resource>
-		</resources>
 		<plugins>
+			<!-- This pom does not use ressource filtering, but without these lines
+			     maven keeps japping about using platform encoding to copy ressources.
+			-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
 				<configuration>
 					<encoding>UTF-8</encoding>
 				</configuration>
+			</plugin>
+
+			<!-- This is a replacement for the ressource filtering. Maven can not
+			     resist to escape colons. This might be important for java
+			     properties, but it is pure evil for everything else: batch files,
+			     shell scripts, python includes... Whatever it is, it hates escaped
+			     colons. :-(((((
+			-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>filter_files</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<copy file="templates/site_init.py" todir="${basedir}/site_scons" filtering="true" overwrite="true">
+									<filterset>
+										<filter token="asciidoc_dir"    value="${asciidoc_dir}" />
+										<filter token="gcc_dir"         value="${gcc_dir}" />
+										<filter token="project.version" value="${project.version}" />
+									</filterset>
+								</copy>
+								<copy file="templates/scons.bat" todir="${basedir}" filtering="true" overwrite="true">
+									<filterset id="filter">
+										<filter token="scons_dir"       value="${scons_dir}" />
+										<filter token="PYTHON"          value="${PYTHON}" />
+									</filterset>
+								</copy>
+							</tasks>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
 			<plugin>
@@ -252,6 +282,7 @@
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
 					<execution>
+						<id>fix_gcc_filemodes</id>
 						<phase>initialize</phase>
 						<goals>
 							<goal>run</goal>
@@ -276,6 +307,7 @@
 				<version>1.1</version>
 				<executions>
 					<execution>
+						<id>run_scons</id>
 						<phase>compile</phase>
 						<goals>
 							<goal>exec</goal>
