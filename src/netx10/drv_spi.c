@@ -154,17 +154,78 @@ static int spi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 }
 
 
-static void spi_send_idle(const SPI_CFG_T *ptCfg, unsigned int uiIdleChars)
+static int spi_send_idle(const SPI_CFG_T *ptCfg, size_t sizBytes)
 {
 	unsigned char ucIdleChar;
 
 
 	/* get the idle byte */
 	ucIdleChar = ptCfg->ucIdleChar;
-	do
+	while( sizBytes>0 )
 	{
 		spi_exchange_byte(ptCfg, ucIdleChar);
-	} while( uiIdleChars--!=0 );
+		--sizBytes;
+	}
+
+	return 0;
+}
+
+
+static int spi_send_data(const SPI_CFG_T *ptCfg, const unsigned char *pucData, size_t sizData)
+{
+	const unsigned char *pucDataEnd;
+
+
+	/* send data */
+	pucDataEnd = pucData + sizData;
+	while( pucData<pucDataEnd )
+	{
+		spi_exchange_byte(ptCfg, *(pucData++));
+	}
+
+	return 0;
+}
+
+
+static int spi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size_t sizData)
+{
+	unsigned char ucIdleChar;
+	unsigned char *pucDataEnd;
+
+
+	/* get the idle byte */
+	ucIdleChar = ptCfg->ucIdleChar;
+
+	/* send data */
+	pucDataEnd = pucData + sizData;
+	while( pucData<pucDataEnd )
+	{
+		*pucData = spi_exchange_byte(ptCfg, ucIdleChar);
+		++pucData;
+	}
+
+	return 0;
+}
+
+
+static int spi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucOutData, unsigned char *pucInData, size_t sizData)
+{
+	unsigned char ucIdleChar;
+	unsigned char *pucInDataEnd;
+
+
+	/* get the idle byte */
+	ucIdleChar = ptCfg->ucIdleChar;
+
+	/* send data */
+	pucInDataEnd = pucInData + sizData;
+	while( pucInData<pucInDataEnd )
+	{
+		*pucInData = spi_exchange_byte(ptCfg, *(pucOutData++));
+		++pucInData;
+	}
+
+	return 0;
 }
 
 
