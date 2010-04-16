@@ -54,6 +54,7 @@
 /*****************************************************************************/
 static void setup_flash_ext(unsigned int uiWidth)
 {
+#if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
 	unsigned long ulIoRegMode0;
 	unsigned long ulExtBusConfig;
 
@@ -79,6 +80,7 @@ static void setup_flash_ext(unsigned int uiWidth)
 	ptNetXGlobalRegBlock2Area->ulIo_reg_drv_en1	= 0x000E7EFF;
 
 	ptNetXGlobalRegBlock2Area->ulExp_bus_reg	= ulExtBusConfig;
+#endif
 }
 
 
@@ -91,6 +93,7 @@ static void setup_flash_ext(unsigned int uiWidth)
 /*****************************************************************************/
 NETX_CONSOLEAPP_RESULT_T ext_flash(const unsigned char *pbData, unsigned long ulDataByteLen)
 {
+#if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
         FLASH_DEVICE tFlashDevice;
         NETX_CONSOLEAPP_RESULT_T tResult;
         int iRes;
@@ -107,6 +110,9 @@ NETX_CONSOLEAPP_RESULT_T ext_flash(const unsigned char *pbData, unsigned long ul
 
         tResult = parflash_writeImage(&tFlashDevice, 0, pbData, ulDataByteLen);
         return tResult;
+#elif ASIC_TYP==10
+	return NETX_CONSOLEAPP_RESULT_ERROR;
+#endif
 }
 
 /*****************************************************************************/
@@ -117,6 +123,7 @@ NETX_CONSOLEAPP_RESULT_T ext_flash(const unsigned char *pbData, unsigned long ul
 /*****************************************************************************/
 NETX_CONSOLEAPP_RESULT_T ext_erase(unsigned long ulDataByteLen)
 {
+#if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
         FLASH_DEVICE tFlashDevice;
         NETX_CONSOLEAPP_RESULT_T tResult;
         int iRes;
@@ -133,6 +140,9 @@ NETX_CONSOLEAPP_RESULT_T ext_erase(unsigned long ulDataByteLen)
 
         tResult = parflash_erase(&tFlashDevice, 0, ulDataByteLen);
         return tResult;
+#elif ASIC_TYP==10
+	return NETX_CONSOLEAPP_RESULT_ERROR;
+#endif
 }
 
 
@@ -145,6 +155,7 @@ NETX_CONSOLEAPP_RESULT_T ext_erase(unsigned long ulDataByteLen)
 /*****************************************************************************/
 NETX_CONSOLEAPP_RESULT_T ext_read(unsigned char *pbData, unsigned long ulDataByteLen)
 {
+#if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
         FLASH_DEVICE tFlashDevice;
         NETX_CONSOLEAPP_RESULT_T tResult;
         int iRes;
@@ -161,6 +172,9 @@ NETX_CONSOLEAPP_RESULT_T ext_read(unsigned char *pbData, unsigned long ulDataByt
 
         tResult = parflash_read(&tFlashDevice, 0, pbData, ulDataByteLen);
         return tResult;
+#elif ASIC_TYP==10
+	return NETX_CONSOLEAPP_RESULT_ERROR;
+#endif
 }
 
 
@@ -173,6 +187,7 @@ NETX_CONSOLEAPP_RESULT_T ext_read(unsigned char *pbData, unsigned long ulDataByt
 /*****************************************************************************/
 NETX_CONSOLEAPP_RESULT_T ext_verify(const unsigned char *pbData, unsigned long ulDataByteLen)
 {
+#if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
         FLASH_DEVICE tFlashDevice;
         NETX_CONSOLEAPP_RESULT_T tResult;
         int iRes;
@@ -189,4 +204,7 @@ NETX_CONSOLEAPP_RESULT_T ext_verify(const unsigned char *pbData, unsigned long u
 
         tResult = parflash_verify(&tFlashDevice, 0, pbData, ulDataByteLen);
         return tResult;
+#elif ASIC_TYP==10
+	return NETX_CONSOLEAPP_RESULT_ERROR;
+#endif
 }
