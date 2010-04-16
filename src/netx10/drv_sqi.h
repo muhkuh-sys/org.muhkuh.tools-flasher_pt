@@ -20,7 +20,7 @@
 /*-------------------------------------*/
 
 
-int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const BOOT_SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiChipSelect);
+int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiChipSelect);
 
 
 /*-------------------------------------*/

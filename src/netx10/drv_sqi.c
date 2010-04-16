@@ -13,7 +13,6 @@
 #include "drv_sqi.h"
 
 #include "netx_io_areas.h"
-#include "tools.h"
 
 
 static const MMIO_CFG_T aatMmioValues[3][4] =
@@ -179,30 +178,20 @@ static int qsi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 }
 
 
-static void qsi_send_idle(const SPI_CFG_T *ptCfg, unsigned int uiIdleChars)
+static int qsi_send_idle(const SPI_CFG_T *ptCfg, size_t sizIdleChars)
 {
 	unsigned long ulValue;
-	unsigned int uiShift;
 
-
-	/* 0 means 1 cycle */
-	++uiIdleChars;
-
-	/* get the current mode */
-	ulValue   = ptCfg->ulTrcBase;
-	ulValue  &= HOSTMSK(sqi_tcr_mode);
-	ulValue >>= HOSTSRT(sqi_tcr_mode);
-	uiShift = 3U - ulValue;
 
 	/* convert the number of idle bytes to cycles */
-	uiIdleChars <<= uiShift;
-	--uiIdleChars;
+	sizIdleChars <<= 3U;
+	--sizIdleChars;
 
 	/* set mode to "send dummy" */
 	ulValue  = ptCfg->ulTrcBase;
 	ulValue |= 0 << HOSTSRT(sqi_tcr_duplex);
 	/* set the transfer size */
-	ulValue |= uiIdleChars << HOSTSRT(sqi_tcr_transfer_size);
+	ulValue |= sizIdleChars << HOSTSRT(sqi_tcr_transfer_size);
 	/* start the transfer */
 	ulValue |= HOSTMSK(sqi_tcr_start_transfer);
 	ptSqiArea->ulSqi_tcr = ulValue;
@@ -213,78 +202,90 @@ static void qsi_send_idle(const SPI_CFG_T *ptCfg, unsigned int uiIdleChars)
 		ulValue  = ptSqiArea->ulSqi_sr;
 		ulValue &= HOSTMSK(sqi_sr_busy);
 	} while( ulValue!=0 );
+
+	return 0;
 }
 
 
-static unsigned long qsi_read_simple_chksum(const SPI_CFG_T *ptCfg, unsigned long *pulDst, size_t sizDword)
+static int qsi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size_t sizData)
 {
 	unsigned long ulValue;
-	int iCnt;
-	unsigned long ulData;
-	volatile unsigned long *pulCnt;
-	volatile unsigned long *pulEnd;
-	unsigned long ulChecksum;
+	unsigned char *pucDataEnd;
 
 
-	ulChecksum = 0;
-
-	/* set mode to "receive" */
+	/* set mode to "half duplex receive" */
 	ulValue  = ptCfg->ulTrcBase;
 	ulValue |= 1 << HOSTSRT(sqi_tcr_duplex);
 	/* set the transfer size */
-	ulValue |= (sizDword*sizeof(unsigned long) - 1) << HOSTSRT(sqi_tcr_transfer_size);
+	ulValue |= (sizData-1) << HOSTSRT(sqi_tcr_transfer_size);
 	/* start the transfer */
 	ulValue |= HOSTMSK(sqi_tcr_start_transfer);
 	ptSqiArea->ulSqi_tcr = ulValue;
 
-	/* get start and end address */
-	pulCnt = pulDst;
-	pulEnd = pulDst + sizDword;
+	/* get end address */
+	pucDataEnd = pucData + sizData;
 
-	/* check the mode */
-	if( (ptCfg->ulTrcBase&HOSTMSK(sqi_tcr_mode))==0 )
+	while( pucData<pucDataEnd )
 	{
-		ulData = 0;
-
-		/* mode 0 : the fifo size is 8 bit */
-		while( pulCnt<pulEnd )
+		/* wait for one byte in the fifo */
+		do
 		{
-			iCnt = 3;
-			do
-			{
-				/* wait for one byte in the fifo */
-				do
-				{
-					ulValue  = ptSqiArea->ulSqi_sr;
-					ulValue &= HOSTMSK(sqi_sr_rx_fifo_not_empty);
-				} while( ulValue==0 );
-				/* grab byte */
-				ulData >>= 8U;
-				ulData  |= ptSqiArea->ulSqi_dr << 24U;
-			} while( --iCnt>=0 );
-			*pulCnt = ulData;
-			ulChecksum += *(pulCnt++);
-		}
-	}
-	else
-	{
-		/* DSI/QSI mode : the fifo size is 32 bit */
-		while( pulCnt<pulEnd )
-		{
-			/* wait for one dword in the fifo */
-			do
-			{
-				ulValue  = ptSqiArea->ulSqi_sr;
-				ulValue &= HOSTMSK(sqi_sr_rx_fifo_not_empty);
-			} while( ulValue==0 );
+			ulValue  = ptSqiArea->ulSqi_sr;
+			ulValue &= HOSTMSK(sqi_sr_rx_fifo_not_empty);
+		} while( ulValue==0 );
 
-			/* get the dword */
-			*pulCnt = ptSqiArea->ulSqi_dr;
-			ulChecksum += *(pulCnt++);
-		}
+		/* grab byte */
+		*pucData = (unsigned char)(ptSqiArea->ulSqi_dr);
+		++pucData;
 	}
 
-	return ulChecksum;
+	/* wait until the transfer is done */
+	do
+	{
+		ulValue  = ptSqiArea->ulSqi_sr;
+		ulValue &= HOSTMSK(sqi_sr_busy);
+	} while( ulValue!=0 );
+
+	return 0;
+}
+
+
+static int qsi_send_data(const SPI_CFG_T *ptCfg, const unsigned char *pucData, size_t sizData)
+{
+	unsigned long ulValue;
+	const unsigned char *pucDataEnd;
+
+
+	/* set mode to "half duplex transmit" */
+	ulValue  = ptCfg->ulTrcBase;
+	ulValue |= 2 << HOSTSRT(sqi_tcr_duplex);
+	/* start the transfer */
+	ulValue |= HOSTMSK(sqi_tcr_start_transfer);
+	ptSqiArea->ulSqi_tcr = ulValue;
+
+	pucDataEnd = pucData + sizData;
+
+	while( pucData<pucDataEnd )
+	{
+		/* wait for tx fifo not full */
+		do
+		{
+			ulValue  = ptSqiArea->ulSqi_sr;
+			ulValue &= HOSTMSK(sqi_sr_tx_fifo_not_full);
+		} while( ulValue==0 );
+
+		/* push byte into the fifo */
+		ptSqiArea->ulSqi_dr = *(pucData++);
+	}
+
+	/* wait until the transfer is done */
+	do
+	{
+		ulValue  = ptSqiArea->ulSqi_sr;
+		ulValue &= HOSTMSK(sqi_sr_busy);
+	} while( ulValue!=0 );
+
+	return 0;
 }
 
 
@@ -337,11 +338,11 @@ static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 	ptSqiArea->aulSqi_cr[1] = 0;
 
 	/* activate the spi pins */
-	boot_spi_deactivate_mmio(ptCfg, aatMmioValues[ptCfg->uiChipSelect]);
+	spi_deactivate_mmios(ptCfg, aatMmioValues[ptCfg->uiChipSelect]);
 }
 
 
-int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const BOOT_SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiChipSelect)
+int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiChipSelect)
 {
 	unsigned long ulValue;
 	int iResult;
@@ -359,7 +360,9 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const BOOT_SPI_CONFIGURATION_T *ptSpiCfg
 	/* set the function pointers */
 	ptCfg->pfnSelect = qsi_slave_select;
 	ptCfg->pfnSendIdle = qsi_send_idle;
-	ptCfg->pfnReadSimpleChecksum = qsi_read_simple_chksum;
+	ptCfg->pfnSendData = qsi_send_data;
+	ptCfg->pfnReceiveData = qsi_receive_data;
+	ptCfg->pfnExchangeData = qsi_exchange_data;
 	ptCfg->pfnSetNewSpeed = qsi_set_new_speed;
 	ptCfg->pfnExchangeByte = qsi_spi_exchange_byte;
 	ptCfg->pfnGetDeviceSpeedRepresentation = qsi_get_device_speed_representation;
@@ -468,7 +471,7 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const BOOT_SPI_CONFIGURATION_T *ptSpiCfg
 	ptCfg->ucIdleChar = ucIdleChar;
 
 	/* activate the spi pins */
-	boot_spi_activate_mmio(ptCfg, aatMmioValues[uiChipSelect]);
+	spi_activate_mmios(ptCfg, aatMmioValues[uiChipSelect]);
 
 	return iResult;
 }
