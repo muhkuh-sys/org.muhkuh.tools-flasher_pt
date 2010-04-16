@@ -63,34 +63,34 @@ typedef enum SPIFLASH_ADR_Ttag
 
 typedef struct SPIFLASH_ATTRIBUTES_Ttag
 {
-	char		acName[SPIFLASH_NAMESIZE];		                  /* name of the flash, 0 terminated                              */
-	unsigned long	ulSize;					                          /* size of the flash memory in bytes                            */
-	unsigned long	ulClock;				                          /* maximum speed in kHz                                         */
-	unsigned long	ulPageSize;				                        /* size of one page in bytes                                    */
-	unsigned long	ulSectorPages;				                    /* size of one sector in pages                                  */
-	SPIFLASH_ADR_T	tAdrMode;				                        /* addressing mode                                              */
-	unsigned char	bReadOpcode;				                      /* opcode for 'continuous array read' command                   */
-	unsigned char	bReadOpcodeDCBytes;			                  /* don't care bytes after readOpcode and address                */
-	unsigned char	bWriteEnableOpcode;			                  /* opcode for 'write enable' command, 0x00 means no write protect mechanism */
-	unsigned char	bErasePageOpcode;			                    /* opcode for 'erase page'                                      */
-	unsigned char	bEraseSectorOpcode;			                  /* opcode for 'erase sector'                                    */
-	unsigned int	uiEraseChipCmdLen;			                  /* length of the 'erase chip' command, 0 means not available    */
-	unsigned char	abEraseChipCmd[SPIFLASH_ERASECHIPSIZE];	  /* command to erase the complete chip                           */
-	unsigned char	bPageProgOpcode;			                    /* opcode for 'page program (without buildin erase)'            */
-	unsigned char	bBufferFill;				                      /* opcode for 'fill buffer with data'                           */
-	unsigned char	bBufferWriteOpcode;			                  /* opcode for 'write buffer to flash'                           */
-	unsigned char	bEraseAndPageProgOpcode;		              /* opcode for 'page program with buildin erase'                 */
-	unsigned char	bReadStatusOpcode;			                  /* opcode for 'read status register'                            */
-	unsigned char	bStatusReadyMask;			                    /* the bitmask indicating device busy                           */
-	unsigned char	bStatusReadyValue;			                  /* eor bitmask for device busy                                  */
-	unsigned int	uiInitCmd0_length;			                  /* length of the first init command in bytes                    */
-	unsigned char	abInitCmd0[SPIFLASH_INITSIZE];		        /* first command string to init the device                      */
-	unsigned int	uiInitCmd1_length;			                  /* length of the second init command in bytes                   */
-	unsigned char	abInitCmd1[SPIFLASH_INITSIZE];		        /* second command string to init the device                     */
-	unsigned int	uiIdLength;				                        /* length in bytes of the id_send, id_mask and id_magic fields  */
-	unsigned char	abIdSend[SPIFLASH_IDSIZE];		            /* command string to request the id                             */
-	unsigned char	abIdMask[SPIFLASH_IDSIZE];		            /* mask for the device id. the data received from the id_send command will be anded with this field */
-	unsigned char	abIdMagic[SPIFLASH_IDSIZE];		            /* magic sequence of this device                                */
+	char		acName[SPIFLASH_NAMESIZE];			/* name of the flash, 0 terminated                              */
+	unsigned long	ulSize;						/* size of the flash memory in bytes                            */
+	unsigned long	ulClock;					/* maximum speed in kHz                                         */
+	unsigned long	ulPageSize;					/* size of one page in bytes                                    */
+	unsigned long	ulSectorPages;					/* size of one sector in pages                                  */
+	SPIFLASH_ADR_T	tAdrMode;					/* addressing mode                                              */
+	unsigned char	ucReadOpcode;					/* opcode for 'continuous array read' command                   */
+	unsigned char	ucReadOpcodeDCBytes;				/* don't care bytes after readOpcode and address                */
+	unsigned char	ucWriteEnableOpcode;				/* opcode for 'write enable' command, 0x00 means no write protect mechanism */
+	unsigned char	ucErasePageOpcode;				/* opcode for 'erase page'                                      */
+	unsigned char	ucEraseSectorOpcode;				/* opcode for 'erase sector'                                    */
+	unsigned int	uiEraseChipCmdLen;				/* length of the 'erase chip' command, 0 means not available    */
+	unsigned char	aucEraseChipCmd[SPIFLASH_ERASECHIPSIZE];	/* command to erase the complete chip                           */
+	unsigned char	ucPageProgOpcode;				/* opcode for 'page program (without buildin erase)'            */
+	unsigned char	ucBufferFill;					/* opcode for 'fill buffer with data'                           */
+	unsigned char	ucBufferWriteOpcode;				/* opcode for 'write buffer to flash'                           */
+	unsigned char	ucEraseAndPageProgOpcode;			/* opcode for 'page program with buildin erase'                 */
+	unsigned char	ucReadStatusOpcode;				/* opcode for 'read status register'                            */
+	unsigned char	ucStatusReadyMask;				/* the bitmask indicating device busy                           */
+	unsigned char	ucStatusReadyValue;				/* eor bitmask for device busy                                  */
+	unsigned int	uiInitCmd0_length;				/* length of the first init command in bytes                    */
+	unsigned char	aucInitCmd0[SPIFLASH_INITSIZE];			/* first command string to init the device                      */
+	unsigned int	uiInitCmd1_length;				/* length of the second init command in bytes                   */
+	unsigned char	aucInitCmd1[SPIFLASH_INITSIZE];			/* second command string to init the device                     */
+	unsigned int	uiIdLength;					/* length in bytes of the id_send, id_mask and id_magic fields  */
+	unsigned char	aucIdSend[SPIFLASH_IDSIZE];			/* command string to request the id                             */
+	unsigned char	aucIdMask[SPIFLASH_IDSIZE];			/* mask for the device id. the data received from the id_send command will be anded with this field */
+	unsigned char	aucIdMagic[SPIFLASH_IDSIZE];			/* magic sequence of this device                                */
 } SPIFLASH_ATTRIBUTES_T;
 
 /* array of all known flash types */
