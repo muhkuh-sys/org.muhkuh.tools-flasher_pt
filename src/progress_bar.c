@@ -19,21 +19,21 @@
  ***************************************************************************/
 
 #include "progress_bar.h"
-#include "uprintf.h"
-#include "netx_io_areas.h"
 
-/* ------------------------------------- */
-/*  100 Mhz */
-#define DEV_FREQUENCY 100000000L
+#include "uprintf.h"
+#include "systime.h"
 
 /* ------------------------------------- */
 
 static unsigned long ulProgressBar_MaxValue;
+static unsigned long ulProgressBar_TimerHandle;
 
 /* ------------------------------------- */
 
-void progress_bar_restart_counter(void);
-void progress_bar_show_progress  (unsigned long ulPosition);
+static void progress_bar_show_progress(unsigned long ulPosition)
+{
+	uprintf("% $8/$8\n", ulPosition, ulProgressBar_MaxValue);
+}
 
 /* ------------------------------------- */
 
@@ -42,49 +42,29 @@ void progress_bar_init(unsigned long ulMaxvalue)
 	/*  remember max value */
 	ulProgressBar_MaxValue = ulMaxvalue;
 
-	/*  setup gpio counter */
-	ptNetXGpioArea->aulGpio_counter_ctrl[0] = 0;
-	/*  wait for 0.5 sec */
-	ptNetXGpioArea->aulGpio_counter_max[0] = (DEV_FREQUENCY/2);
+	/*  Init the timer handle. */
+	ulProgressBar_TimerHandle = 0;
 
 	/*  show initial position */
 	progress_bar_show_progress(0);
-
-	/*  start counter */
-	progress_bar_restart_counter();
 }
 
 void progress_bar_set_position(unsigned long ulPosition)
 {
 	/*  is the counter still running? */
-	if( (ptNetXGpioArea->aulGpio_counter_ctrl[0] & HOSTMSK(gpio_counter0_ctrl_run))==0 )
+	if( systime_elapsed(ulProgressBar_TimerHandle, 500)!=0 )
 	{
 		/*  counter already stopped -> time to print the progress */
 		progress_bar_show_progress(ulPosition);
 
 		/*  restart counter */
-		progress_bar_restart_counter();
+		ulProgressBar_TimerHandle = systime_get_ms();
 	}
 }
 
 void progress_bar_finalize(void)
 {
 	progress_bar_show_progress(ulProgressBar_MaxValue);
-}
-
-/* ------------------------------------- */
-
-void progress_bar_restart_counter(void)
-{
-	/*  Clear the current timer value */
-	ptNetXGpioArea->aulGpio_counter_cnt[0] = 0;
-	/*  Enable the timer */
-	ptNetXGpioArea->aulGpio_counter_ctrl[0] = HOSTMSK(gpio_counter0_ctrl_run)|HOSTMSK(gpio_counter0_ctrl_once);
-}
-
-void progress_bar_show_progress(unsigned long ulPosition)
-{
-	uprintf("% $8/$8\n", ulPosition, ulProgressBar_MaxValue);
 }
 
 /* ------------------------------------- */
