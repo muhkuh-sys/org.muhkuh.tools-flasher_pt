@@ -21,17 +21,17 @@
 #ifndef __RDYRUN_H__
 #define __RDYRUN_H__
 
-//-------------------------------------
+/* ------------------------------------- */
 
-typedef enum {
-        RDYRUN_LED_OFF = 0,
-        RDYRUN_LED_GREEN,
-        RDYRUN_LED_RED,
-        RDYRUN_LED_INV
+typedef enum
+{
+	RDYRUN_LED_OFF		= 0,
+	RDYRUN_LED_GREEN	= 1,
+	RDYRUN_LED_RED		= 2,
 } RDYRUN_LED_T;
 
 void setRdyRunLed(RDYRUN_LED_T tMode);
 
-//-------------------------------------
+/* ------------------------------------- */
 
-#endif  /* __RDYRUN_H__ */
+#endif	/* __RDYRUN_H__ */

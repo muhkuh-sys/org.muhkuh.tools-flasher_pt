@@ -18,40 +18,56 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "netx_io_areas.h"
 #include "rdyrun.h"
+
+#if ASIC_TYP==500 || ASIC_TYP==100
+#	include "netx_io_areas.h"
+#elif ASIC_TYP==50 || ASIC_TYP==10
+#	include "i2c_hifsta.h"
+#endif
 
 /* ------------------------------------- */
 
 void setRdyRunLed(RDYRUN_LED_T tMode)
 {
-  unsigned long ulBlinki;
-
-
-  switch(tMode)
-  {
-  default:
-  case RDYRUN_LED_OFF:
-    ulBlinki = 0x030c0000;
-    break;
-
-  case RDYRUN_LED_GREEN:
-    ulBlinki = 0x030c0002;
-    break;
-
-  case RDYRUN_LED_RED:
-    ulBlinki = 0x030c0001;
-    break;
-
-  case RDYRUN_LED_INV:
-    ulBlinki  = ptNetXGlobalRegBlock1Area->ulSta_netx;
-    ulBlinki &= 3;
-    ulBlinki ^= 3;
-    ulBlinki |= 0x030c0000;
-    break;
-  }
-
-  ptNetXGlobalRegBlock1Area->ulSta_netx = ulBlinki;
+#if ASIC_TYP==500 || ASIC_TYP==100
+	unsigned long ulBlinki;
+	
+	
+	switch(tMode)
+	{
+	default:
+	case RDYRUN_LED_OFF:
+		ulBlinki = 0x030c0000;
+		break;
+	
+	case RDYRUN_LED_GREEN:
+		ulBlinki = 0x030c0002;
+		break;
+	
+	case RDYRUN_LED_RED:
+		ulBlinki = 0x030c0001;
+		break;
+	}
+	
+	ptNetXGlobalRegBlock1Area->ulSta_netx = ulBlinki;
+#elif ASIC_TYP==50 || ASIC_TYP==10
+	switch(tMode)
+	{
+	default:
+	case RDYRUN_LED_OFF:
+		i2c_hifsta_rdy_off_run_off();
+		break;
+	
+	case RDYRUN_LED_GREEN:
+		i2c_hifsta_rdy_on_run_off();
+		break;
+	
+	case RDYRUN_LED_RED:
+		i2c_hifsta_rdy_off_run_on();
+		break;
+	}
+#endif
 }
 
 /* ------------------------------------- */
