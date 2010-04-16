@@ -15,6 +15,7 @@
 
 import scons_common
 import build_properties
+import uuencode
 
 build_properties.Read()
 
@@ -39,11 +40,11 @@ build_properties.GenerateHelp()
 # (i.e. spaces, tabs, newlines). The amount of whitespace does not matter.
 flasher_sources_common = """
 	src/cfi_flash.c
-	src/delay.c
 	src/spi_flash.c
 	src/flasher_ext.c
 	src/flasher_spi.c
 	src/flasher_srb.c
+	src/i2c_hifsta.c
 	src/init_netx_test.s
 	src/main.c
 	src/netx_consoleapp.c
@@ -54,6 +55,7 @@ flasher_sources_common = """
 	src/spi_flash_types.c
 	src/startvector.s
 	src/strata.c
+	src/systime.c
 	src/uprintf.c
 """
 
@@ -71,6 +73,16 @@ flasher_sources_custom_netx50 = """
 	src/netx50/flasher_header.c
 	src/netx50/hal_spi.c
 	src/netx50/netx50_io_areas.c
+"""
+
+
+flasher_sources_custom_netx10 = """
+	src/netx10/board.c
+	src/netx10/drv_spi.c
+	src/netx10/drv_sqi.c
+	src/netx10/flasher_header.c
+	src/netx10/spi.c
+	src/netx10/netx10_io_areas.c
 """
 
 
@@ -114,12 +126,13 @@ if not GetOption('help'):
 	# create the default environment
 	#
 	env_default = gcc_arm_elf_4_3_3.get_gcc_arm_elf_4_3_3()
-	build_properties.ApplyToEnv(env_default)
 	env_default.Decider('timestamp-newer')
 	env_default.Append(CPPPATH = ['src'])
 	env_default.Replace(CCFLAGS = Split(default_ccflags))
 	env_default.Replace(LIBS = ['m', 'c', 'gcc'])
 	env_default.Replace(LINKFLAGS = ['-nostdlib', '-static', '-Map=${TARGET}.map'])
+	build_properties.ApplyToEnv(env_default)
+	uuencode.ApplyToEnv(env_default)
 	
 	
 	#----------------------------------------------------------------------------
@@ -130,33 +143,50 @@ if not GetOption('help'):
 	versionfilter.generate(env_default)
 	env_default.GenVersion('templates/flasher_version.h', 'src/flasher_version.h')
 	
-	# create environments for both builds
+	# create environments for all builds
 	env_netx500 = env_default.Clone()
 	env_netx500.Append(CCFLAGS = ['-mcpu=arm926ej-s'])
-	env_netx500.Replace(LDFILE = 'src/flasher_netx500.ld')
+	env_netx500.Replace(LDFILE = 'src/netx500/netx500.ld')
 	env_netx500.Replace(LIBPATH = ['${GCC_DIR}/arm-elf/lib/arm926ej-s', '${GCC_DIR}/lib/gcc/arm-elf/${GCC_VERSION}/arm926ej-s'])
-	env_netx500.Append(CPPDEFINES = ['__NETX500'])
+	env_netx500.Append(CPPDEFINES = [['ASIC_TYP', '500']])
 	env_netx500.Append(CPPPATH = ['src/netx500'])
-	env_netx500.VariantDir('target/netx500', 'src', duplicate=0)
+	env_netx500.VariantDir('targets/netx500', 'src', duplicate=0)
 	
 	env_netx50 = env_default.Clone()
 	env_netx50.Append(CCFLAGS = ['-mcpu=arm966e-s'])
-	env_netx50.Replace(LDFILE = 'src/flasher_netx50.ld')
+	env_netx50.Replace(LDFILE = 'src/netx50/netx50.ld')
 	env_netx50.Replace(LIBPATH = ['${GCC_DIR}/arm-elf/lib/arm966e-s', '${GCC_DIR}/lib/gcc/arm-elf/${GCC_VERSION}/arm966e-s'])
-	env_netx50.Append(CPPDEFINES = ['__NETX50'])
+	env_netx50.Append(CPPDEFINES = [['ASIC_TYP', '50']])
 	env_netx50.Append(CPPPATH = ['src/netx50'])
-	env_netx50.VariantDir('target/netx50', 'src', duplicate=0)
+	env_netx50.VariantDir('targets/netx50', 'src', duplicate=0)
+	
+	env_netx10 = env_default.Clone()
+	env_netx10.Append(CCFLAGS = ['-mcpu=arm966e-s'])
+	env_netx10.Replace(LDFILE = 'src/netx10/netx10.ld')
+	env_netx10.Replace(LIBPATH = ['${GCC_DIR}/arm-elf/lib/arm966e-s', '${GCC_DIR}/lib/gcc/arm-elf/${GCC_VERSION}/arm966e-s'])
+	env_netx10.Append(CPPDEFINES = [['ASIC_TYP', '10']])
+	env_netx10.Append(CPPPATH = ['src/netx10'])
+	env_netx10.VariantDir('targets/netx10', 'src', duplicate=0)
+	env_netx10.Replace(UUE_PRE = """
+L 00020000
+""")
+	env_netx10.Replace(UUE_POST = "")
 	
 	
 	#----------------------------------------------------------------------------
 	#
 	# build the files
 	#
-	flasher_sources_netx500 = [src.replace('src', 'target/netx500') for src in Split(flasher_sources_common+flasher_sources_custom_netx500)]
-	flasher_netx500_elf = env_netx500.Elf('target/flasher_netx500', flasher_sources_netx500)
-	env_netx500.ObjCopy('target/flasher_netx500', flasher_netx500_elf)
+	flasher_sources_netx500 = [src.replace('src', 'targets/netx500') for src in Split(flasher_sources_common+flasher_sources_custom_netx500)]
+	flasher_netx500_elf = env_netx500.Elf('targets/flasher_netx500', flasher_sources_netx500)
+	flasher_netx500_bin = env_netx500.ObjCopy('targets/flasher_netx500', flasher_netx500_elf)
 	
-	flasher_sources_netx50  = [src.replace('src', 'target/netx50')  for src in Split(flasher_sources_common+flasher_sources_custom_netx50)]
-	flasher_netx50_elf = env_netx50.Elf('target/flasher_netx50', flasher_sources_netx50)
-	env_netx50.ObjCopy('target/flasher_netx50', flasher_netx50_elf)
+	flasher_sources_netx50  = [src.replace('src', 'targets/netx50')  for src in Split(flasher_sources_common+flasher_sources_custom_netx50)]
+	flasher_netx50_elf = env_netx50.Elf('targets/flasher_netx50', flasher_sources_netx50)
+	env_netx50.ObjCopy('targets/flasher_netx50', flasher_netx50_elf)
+	
+	flasher_sources_netx10  = [src.replace('src', 'targets/netx10')  for src in Split(flasher_sources_common+flasher_sources_custom_netx10)]
+	flasher_netx10_elf = env_netx10.Elf('targets/flasher_netx10', flasher_sources_netx10)
+	flasher_netx10_bin = env_netx10.ObjCopy('targets/flasher_netx10', flasher_netx10_elf)
+	flasher_netx10_uue = env_netx10.Uuencode('targets/flasher_netx10.uue', flasher_netx10_bin)
 
