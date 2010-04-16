@@ -118,10 +118,10 @@ static const CFI_CHECK_CONDITIONS s_atCFIChecks[] =
 
 	{0x40,	32,	TRUE,	12,	"Q\0Q\0R\0R\0Y\0Y\0",		CFISETUP_2x16 },	/* 2x 16Bit Flash */
 //	{0x20,	16,	FALSE,	10,	"Q\0??R\0??Y\0",		CFISETUP_1x16 },	/* 1x 16Bit Flash */
-	{0x20,	16,	FALSE, 6,	"Q\0R\0Y\0",	CFISETUP_1x16 },	  /* 1x 16Bit Flash */
+	{0x20,	16,	FALSE, 6,	"Q\0R\0Y\0",			CFISETUP_1x16 },	/* 1x 16Bit Flash */
 
-	{0x20,	16,	TRUE,	 6,	"QQRRYY",			CFISETUP_2x08 },	  /* 2x 8Bit Flash */
-	{0x10,	 8,	FALSE, 3,	"QRY",				CFISETUP_1x08 }		  /* 8 Bit Flash   */
+	{0x20,	16,	TRUE,	 6,	"QQRRYY",			CFISETUP_2x08 },	/* 2x 8Bit Flash */
+	{0x10,	 8,	FALSE, 3,	"QRY",				CFISETUP_1x08 }		/* 8 Bit Flash   */
 };
 
 #define ARRAY_SIZE(a)   (sizeof(a) / sizeof(a[0]))
@@ -169,43 +169,6 @@ static int CFIMemCmp(volatile void* pvFlash, const void* pvCmpBuf, unsigned long
 	DEBUGMSG(ZONE_FUNCTION, ("-CFIMemCmp(): iRet=0x$\n", iRet));
 
 	return iRet;
-}
-
-// ///////////////////////////////////////////////////// 
-//! Sets up the flash with the given parameters.
-//!  \param bWidth Bus width to set (8, 16, 32Bits)
-//!  \param ulPrePause Pre pause waitstates (0..3)
-//!  \param ulPostPause Post pause waitstates (0..3)
-//!  \param ulWaitstates Global waitstates (0..63)
-// ///////////////////////////////////////////////////// 
-static void SetupFlash(unsigned int uiWidth)
-{
-	volatile unsigned long* pulFlashCtrl = (volatile unsigned long*)(HOSTADR(extsram0_ctrl));
-	unsigned long  ulRegValue = ((DEFAULT_PREPAUSE   << HOSTSRT(extsram0_ctrl_WSPrePauseExtMem0))  & HOSTMSK(extsram0_ctrl_WSPrePauseExtMem0))  |
-                              ((DEFAULT_POSTPAUSE  << HOSTSRT(extsram0_ctrl_WSPostPauseExtMem0)) & HOSTMSK(extsram0_ctrl_WSPostPauseExtMem0)) |
-                              ((DEFAULT_WAITSTATES << HOSTSRT(extsram0_ctrl_WSExtMem0))          & HOSTMSK(extsram0_ctrl_WSExtMem0));
-
-
-	DEBUGMSG(ZONE_FUNCTION, ("+SetupFlash(): uiWidth=0x$8\n", uiWidth));
-
-	switch(uiWidth)
-	{
-	case 8:
-	default:
-		break;
-
-	case 16:
-		ulRegValue |= (0x01 << HOSTSRT(extsram0_ctrl_WidthExtMem0)) & HOSTMSK(extsram0_ctrl_WidthExtMem0);
-		break;
-
-	case 32:
-		ulRegValue |= (0x02 << HOSTSRT(extsram0_ctrl_WidthExtMem0)) & HOSTMSK(extsram0_ctrl_WidthExtMem0);
-		break;
-	}
-
-	*pulFlashCtrl = ulRegValue;
-
-	DEBUGMSG(ZONE_FUNCTION, ("-SetupFlash()\n"));
 }
 
 // ///////////////////////////////////////////////////// 
@@ -394,12 +357,6 @@ int CFI_IdentifyFlash(FLASH_DEVICE* ptFlashDevice, PFN_FLASHSETUP pfnSetup)
 	else
 	{
 		pbFlashBase  = ptFlashDevice->pbFlashBase;
-
-		/* use default setup function if none provided */
-  		if( pfnSetup==NULL )
-  		{
-			pfnSetup = SetupFlash;
-		}
 
 		/* check if we find patterns of QRY response to identify flash width and pairing */
 		ulDetectedTypes = 0;
