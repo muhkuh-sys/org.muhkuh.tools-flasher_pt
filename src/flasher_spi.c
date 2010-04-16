@@ -151,7 +151,7 @@ NETX_CONSOLEAPP_RESULT_T spi_read(unsigned char *pbData, unsigned long ulDataByt
 	/* try to detect flash */
 	uprintf(". Detecting SPI flash...\n");
 	tFlashDev.uiSlaveId = SPI_SLAVE_ID;
-	iResult = Drv_SpiInitializeFlash(&tFlashDev);
+	iResult = Drv_SpiInitializeFlash(0, 0, &tFlashDev);
 	if( iResult==0 )
 	{
 		/* failed to detect the spi flash */
@@ -205,7 +205,7 @@ NETX_CONSOLEAPP_RESULT_T spi_verify(const unsigned char *pbData, unsigned long u
 	/* try to detect flash */
 	uprintf(". Detecting SPI flash...\n");
 	tFlashDev.uiSlaveId = SPI_SLAVE_ID;
-	iResult = Drv_SpiInitializeFlash(&tFlashDev);
+	iResult = Drv_SpiInitializeFlash(0, 0, &tFlashDev);
 	if( iResult==0 )
 	{
 		/* failed to detect the spi flash */
@@ -305,7 +305,7 @@ NETX_CONSOLEAPP_RESULT_T spi_write_with_progress(const SPI_FLASH_T *ptFlashDev, 
 		memcpy(pucSpiBuffer+ulOffset, pucDC, ulSegSize);
 
 		/* write the modified buffer */
-		iResult = Drv_SpiWritePage(ptFlashDev, ulPageStartAdr, ulPageSize, pucSpiBuffer);
+		iResult = Drv_SpiWritePage(ptFlashDev, ulPageStartAdr, pucSpiBuffer, ulPageSize);
 //		iResult = Drv_SpiEraseAndWritePage(ptFlashDev, ulPageStartAdr, ulPageSize, pucSpiBuffer);
 		if( iResult==0 )
 		{
@@ -326,7 +326,7 @@ NETX_CONSOLEAPP_RESULT_T spi_write_with_progress(const SPI_FLASH_T *ptFlashDev, 
 	while( ulC+ulPageSize<ulE )
 	{
 		/* write one page */
-		iResult = Drv_SpiWritePage(ptFlashDev, ulC, ulPageSize, pucDC);
+		iResult = Drv_SpiWritePage(ptFlashDev, ulC, pucDC, ulPageSize);
 //		iResult = Drv_SpiEraseAndWritePage(ptFlashDev, ulC, ulPageSize, pucDC);
 		if( iResult==0 )
 		{
@@ -355,7 +355,7 @@ NETX_CONSOLEAPP_RESULT_T spi_write_with_progress(const SPI_FLASH_T *ptFlashDev, 
 		memset(pucSpiBuffer+ulSegSize, 0xff, ulPageSize-ulSegSize);
 
 		/* write the buffer */
-		iResult = Drv_SpiWritePage(ptFlashDev, ulC, ulPageSize, pucSpiBuffer);
+		iResult = Drv_SpiWritePage(ptFlashDev, ulC, pucSpiBuffer, ulPageSize);
 //		iResult = Drv_SpiEraseAndWritePage(ptFlashDev, ulC, ulPageSize, pucSpiBuffer);
 		if( iResult==0 )
 		{
@@ -578,7 +578,7 @@ NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	/* try to detect flash */
 	uprintf(". Detecting SPI flash on cs 0x$...\n", ulChipSelect);
 	ptFlashDescription->uiSlaveId = ulChipSelect;
-	iResult = Drv_SpiInitializeFlash(ptFlashDescription);
+	iResult = Drv_SpiInitializeFlash(0, 0, ptFlashDescription);
 	if( iResult==0 )
 	{
 		/* failed to detect the spi flash */

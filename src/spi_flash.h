@@ -38,7 +38,7 @@
 #ifndef __SPI_FLASH_H__
 #define __SPI_FLASH_H__
 
-#include "hal_spi.h"
+#include "spi.h"
 #include "spi_flash_types.h"
 
 /* ------------------------------------- */
@@ -46,7 +46,7 @@
 typedef struct SPI_FLASH_Ttag
 {
 	SPIFLASH_ATTRIBUTES_T tAttributes;	/* attributes of the flash      */
-	HAL_SPI_T tSpiDev;			/* spi device and it's settings */
+	SPI_CFG_T tSpiDev;			/* spi device and it's settings */
 	unsigned long ulSectorSize;		/* size of one sector in bytes  */
 	unsigned int uiSlaveId;			/* SPI Slave Id of the flash    */
 	unsigned int uiPageAdrShift;		/* bitshift for the page part of the address, 0 means no page / byte split  */
@@ -55,14 +55,14 @@ typedef struct SPI_FLASH_Ttag
 
 /*-----------------------------------*/
 
-int Drv_SpiInitializeFlash        (SPI_FLASH_T *ptFlash);
+int Drv_SpiInitializeFlash        (unsigned int uiUnit, unsigned int uiChipSelect, SPI_FLASH_T *ptFlash);
 int Drv_SpiEraseFlashPage         (const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress);
 int Drv_SpiEraseFlashSector       (const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress);
 int Drv_SpiEraseFlashMultiSectors (const SPI_FLASH_T *ptFlash, unsigned long ulLinearStartAddress, unsigned long ulLinearEndAddress);
 int Drv_SpiEraseFlashComplete     (const SPI_FLASH_T *ptFlash);
-int Drv_SpiWriteFlashPages        (const SPI_FLASH_T *ptFlash, unsigned long ulOffs,          const unsigned char *pabSrc,  unsigned long ulNum);
-int Drv_SpiReadFlash              (const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, unsigned char       *pabDest, unsigned long ulNum);
-int Drv_SpiEraseAndWritePage      (const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, unsigned long       ulLength, const unsigned char *pabBuffer);
-int Drv_SpiWritePage              (const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, unsigned long       ulLength, const unsigned char *pabBuffer);
+int Drv_SpiWriteFlashPages        (const SPI_FLASH_T *ptFlash, unsigned long ulOffs, const unsigned char *pabSrc, unsigned long ulNum);
+int Drv_SpiReadFlash              (const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, unsigned char       *pucData, size_t sizData);
+int Drv_SpiEraseAndWritePage      (const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pucData, size_t sizData);
+int Drv_SpiWritePage              (const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pucData, size_t sizData);
 
 #endif
