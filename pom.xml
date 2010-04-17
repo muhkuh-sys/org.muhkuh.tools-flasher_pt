@@ -23,14 +23,6 @@
 	<!-- TODO: Bootstrapping with just the pom would save the developers from typing the reository url.
 	     More: http://maven.apache.org/scm/plugins/examples/bootstrapping-with-pom.html
 	-->
-	<!-- TODO: Get path to python interpreter from settings.xml, but this must be optional! It must still
-	     be possible to have python on the path.
-	-->
-	<!-- TODO: Generate a scons.bat and scons.sh file in the project root which executes the depacked
-	     scons with the detected python environment.
-	-->
-	<!-- TODO: Add asciidoc to the repository/dependencies and call it from the SConscript.
-	-->
 
 	<!--**************************************************************-->
 	<!--*                                                            *-->
@@ -199,7 +191,7 @@
 				<executions>
 					<execution>
 						<id>filter_files</id>
-						<phase>validate</phase>
+						<phase>process-sources</phase>
 						<goals>
 							<goal>run</goal>
 						</goals>
@@ -218,6 +210,13 @@
 										<filter token="PYTHON"          value="${PYTHON}" />
 									</filterset>
 								</copy>
+								<copy file="templates/scons.sh" todir="${basedir}" filtering="true" overwrite="true">
+									<filterset id="filter">
+										<filter token="scons_dir"       value="${scons_dir}" />
+										<filter token="PYTHON"          value="${PYTHON}" />
+									</filterset>
+								</copy>
+								<chmod file="${basedir}/scons.sh" perm="ugo+rx"/>
 							</tasks>
 						</configuration>
 					</execution>
@@ -230,7 +229,7 @@
 				<executions>
 					<execution>
 						<id>unpack_tools</id>
-						<phase>initialize</phase>
+						<phase>validate</phase>
 						<goals>
 							<goal>unpack</goal>
 						</goals>
@@ -249,7 +248,7 @@
 								<artifactItem>
 									<groupId>org.gnu.gcc</groupId>
 									<artifactId>gcc-arm-elf_${os_family}_${os.arch}</artifactId>
-									<version>4.3.3_1</version>
+									<version>4.3.3_2</version>
 									<type>tar.bz2</type>
 									<overWrite>false</overWrite>
 									<outputDirectory>${gcc_dir}</outputDirectory>
