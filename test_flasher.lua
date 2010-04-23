@@ -8,8 +8,9 @@ require("romloader_usb")
 require("flasher")
 
 
--- strFlasherBin_nx500 = "flasher_netx500.bin"
-strFlasherBin_nx500 = "flasher_netx5_500.bin"
+strFlasherBin_nx500 = "flasher_netx500.bin"
+--strFlasherBin_nx50 = "flasher_netx50.bin"
+--strFlasherBin_nx10 = "flasher_netx10.bin"
 strDataFile = "/home/christoph/Compile/netx5/zpu_irq_sim/spi.bin"
 
 
@@ -131,8 +132,11 @@ else
 	-- download binary to 0x00008000
 	tPlugin:write_image(0x00008000, strBin, progress, string.len(strBin))
 
+	-- Use SPI Flash CS0.
 	strDevDesc = flasher.detect(tPlugin, 2, 1, ulDevDescAdr)
+	-- Use SPI Flash CS1.
 --	strDevDesc = flasher.detect(tPlugin, 2, 2, ulDevDescAdr)
+	-- Use SPI Flash CS2.
 --	strDevDesc = flasher.detect(tPlugin, 2, 4, ulDevDescAdr)
 	if not strDevDesc then
 		error("Failed to get a device description!")
