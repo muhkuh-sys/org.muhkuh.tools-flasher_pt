@@ -190,7 +190,7 @@ static int read_status(const SPI_FLASH_T *ptFlash, unsigned char *pucStatus)
 
 	/* send command */
 	iResult = ptSpiDev->pfnSendData(ptSpiDev, &(ptFlash->tAttributes.ucReadStatusOpcode), 1);
-	if( !iResult )
+	if( iResult!=0 )
 	{
 		DEBUGMSG(ZONE_ERROR, ("ERROR: read_status: HalSPI_ExchangeByte failed with %d.\n", iResult));
 	}
@@ -198,7 +198,7 @@ static int read_status(const SPI_FLASH_T *ptFlash, unsigned char *pucStatus)
 	{
 		/*  receive status byte */
 		iResult = ptSpiDev->pfnReceiveData(ptSpiDev, pucStatus, 1);
-		if( !iResult )
+		if( iResult!=0 )
 		{
 			DEBUGMSG(ZONE_ERROR, ("ERROR: read_status: Drv_SpiReceive failed with %d.\n", iResult));
 		}
@@ -206,13 +206,13 @@ static int read_status(const SPI_FLASH_T *ptFlash, unsigned char *pucStatus)
 
 	/*  deselect slave */
 	ptSpiDev->pfnSelect(ptSpiDev, 0);
-	if( iResult )
+	if( iResult==0 )
 	{
 		/* send 1 idlebyte */
 		iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
-		if( !iResult )
+		if( iResult!=0 )
 		{
-			DEBUGMSG(ZONE_ERROR, ("ERROR: read_status: HalSPI_SendIdles failed with %d.\n", iResult));
+			DEBUGMSG(ZONE_ERROR, ("ERROR: read_status: SendIdles failed with %d.\n", iResult));
 		}
 	}
 
@@ -231,8 +231,7 @@ static int print_status(const SPI_FLASH_T *ptFlash)
 
 	/*  read status and extract busy bit */
 	iResult = read_status(ptFlash, &ucStatus);
-
-	if( iResult )
+	if( iResult==0 )
 	{
 		uprintf(". Status: 0x%02x\n", ucStatus);
 	}
@@ -280,8 +279,9 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 		ptSpiDev->pfnSelect(ptSpiDev, 0);
 
 		/* send 8 idle bytes to clear the bus */
+		uprintf("send idles...\n");
 		iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 8);
-		if( !iResult )
+		if( iResult!=0 )
 		{
 			DEBUGMSG(ZONE_ERROR, ("ERROR: detect_flash: HalSPI_SendIdles failed with %d.\n", iResult));
 			break;
@@ -293,13 +293,14 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 		/* send id magic and receive response */
 		DEBUGMSG(ZONE_VERBOSE, ("detect_flash: probe for %s\n", ptSc->acName));
 
+		uprintf("exchange...\n");
 		iResult = ptSpiDev->pfnExchangeData(ptSpiDev, ptSc->aucIdSend, aucIdResp, ptSc->uiIdLength);
 
 		/* deselect slave */
 		ptSpiDev->pfnSelect(ptSpiDev, 0);
 
 		/* did the send and receive operation fail? */
-		if( !iResult )
+		if( iResult!=0 )
 		{
 			DEBUGMSG(ZONE_ERROR, ("ERROR: detect_flash: HalSPI_BlockIo failed with %d.\n", iResult));
 			break;
@@ -413,7 +414,7 @@ static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucC
 
 	/* send 1 idlebyte */
 	iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
-	if( !iResult )
+	if( iResult!=0 )
 	{
 		DEBUGMSG(ZONE_ERROR, ("ERROR: send_simple_cmd: HalSPI_SendIdles failed with %d.\n", iResult));
 	}
@@ -424,7 +425,7 @@ static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucC
 
 		/* send data and receive response */
 		iResult = ptSpiDev->pfnSendData(ptSpiDev, pucCmd, sizCmdLen);
-		if( !iResult )
+		if( iResult!=0 )
 		{
 			DEBUGMSG(ZONE_ERROR, ("ERROR: send_simple_cmd: HalSPI_BlockIo failed with %d.\n", iResult));
 		}
@@ -432,11 +433,11 @@ static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucC
 		/* deselect slave */
 		ptSpiDev->pfnSelect(ptSpiDev, 0);
 
-		if( iResult )
+		if( iResult==0 )
 		{
 			/* send 1 idlebyte */
 			iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
-			if( !iResult )
+			if( iResult!=0 )
 			{
 				DEBUGMSG(ZONE_ERROR, ("ERROR: send_simple_cmd: HalSPI_SendIdles failed with %d.\n", iResult));
 			}
@@ -469,7 +470,7 @@ static int write_enable(const SPI_FLASH_T *ptFlash)
 	{
 		/* send the 'write enable' command */
 		iResult = send_simple_cmd(ptFlash, &ucOpcode, 1);
-		if( !iResult )
+		if( iResult!=0 )
 		{
 			DEBUGMSG(ZONE_ERROR, ("ERROR: write_enable: send_simple_command failed with %d.\n", iResult));
 		}
@@ -500,7 +501,7 @@ static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 	{
 		/*  read status and extract busy bit */
 		iResult = read_status(ptFlash, &ucStatus);
-		if( !iResult )
+		if( iResult!=0 )
 		{
 			DEBUGMSG(ZONE_ERROR, ("ERROR: wait_for_ready: read_status failed with %d.\n", iResult));
 			break;
@@ -552,7 +553,7 @@ int Drv_SpiInitializeFlash(unsigned int uiUnit, unsigned int uiChipSelect, SPI_F
 	unsigned int uiCmdLen;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiInitializeFlash(): ptFlash=0x%08x\n", ptFlash));
+	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiInitializeFlash(): uiUnit=%d, uiChipSelect=%d, ptFlash=0x%08x\n", uiUnit, uiChipSelect, ptFlash));
 
 	/* no flash detected yet */
 	ptFlashAttr = NULL;
@@ -560,8 +561,8 @@ int Drv_SpiInitializeFlash(unsigned int uiUnit, unsigned int uiChipSelect, SPI_F
 	/* get device */
 	ptSpiDev = &ptFlash->tSpiDev;
 
-//	iResult = HalSPI_Init(ptSpiDev, 0);
-	if( iResult==0 )
+	iResult = boot_drv_sqi_init(ptSpiDev, &tSpiCfg, 0);
+	if( iResult!=0 )
 	{
 		DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: HalSPI_Init failed with %d.\n", iResult));
 	}
@@ -569,7 +570,7 @@ int Drv_SpiInitializeFlash(unsigned int uiUnit, unsigned int uiChipSelect, SPI_F
 	{
 		/* try to autodetect the flash */
 		iResult = detect_flash(ptFlash, &ptFlashAttr);
-		if( !iResult )
+		if( iResult!=0 )
 		{
 			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: detect_flash failed with %d.\n", iResult));
 		}
@@ -595,22 +596,22 @@ int Drv_SpiInitializeFlash(unsigned int uiUnit, unsigned int uiChipSelect, SPI_F
 				if( uiCmdLen!=0 )
 				{
 					iResult = send_simple_cmd(ptFlash, ptFlash->tAttributes.aucInitCmd0, uiCmdLen);
-					if( iResult==0 )
+					if( iResult!=0 )
 					{
 						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: send_simple_cmd failed with %d.\n", iResult));
 					}
 				}
 				uiCmdLen = ptFlash->tAttributes.uiInitCmd1_length;
-				if( iResult!=0 && uiCmdLen!=0 )
+				if( iResult==0 && uiCmdLen!=0 )
 				{
 					iResult = send_simple_cmd(ptFlash, ptFlash->tAttributes.aucInitCmd1, uiCmdLen);
-					if( iResult==0 )
+					if( iResult!=0 )
 					{
 						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: send_simple_cmd failed with %d.\n", iResult));
 					}
 				}
 
-				if( iResult!=0 )
+				if( iResult==0 )
 				{
 					ptFlash->ulSectorSize = ptFlash->tAttributes.ulPageSize * ptFlash->tAttributes.ulSectorPages;
 
@@ -630,7 +631,7 @@ int Drv_SpiInitializeFlash(unsigned int uiUnit, unsigned int uiChipSelect, SPI_F
 						/* unknown addressing mode! */
 						/* the flash configuration is invalid */
 						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: flash addressing mode is invalid: 0x%08x.\n", ptFlash->tAttributes.tAdrMode));
-						iResult = 0;
+						iResult = -1;
 					}
 				}
 			}
@@ -669,7 +670,7 @@ int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddr
                 if(ptFlash->tAttributes.ucEraseAndPageProgOpcode == 0x00)
                 {
                         /* the spi flash does not support erasing single pages */
-                        iResult = 0;
+                        iResult = -1;
                         DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: erase page is not supported.\n"));
                 }
                 else
@@ -677,7 +678,7 @@ int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddr
                         /* erase the page by writing 0xff */
 
                         /* not yet... */
-                        iResult = 0;
+                        iResult = -1;
                         DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: erase page is not supported.\n"));
                 }
         }
@@ -685,7 +686,7 @@ int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddr
         {
                 /* unlock write operations */
                 iResult = write_enable(ptFlash);
-                if( !iResult )
+                if( iResult!=0 )
                 {
                         DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: DrvSflWriteEnable failed with %d.\n", iResult));
                 }
@@ -705,7 +706,7 @@ int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddr
 
                         /* send command */
                         iResult = send_simple_cmd(ptFlash, abCmd, 4);
-                        if( !iResult )
+                        if( iResult!=0 )
                         {
                                 DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: send_simple_cmd failed with %d.\n", iResult));
                         }
@@ -713,7 +714,7 @@ int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddr
                         {
                                 /* wait for operation finish */
                                 iResult = wait_for_ready(ptFlash);
-                                if( !iResult )
+                                if( iResult!=0 )
                                 {
                                         DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: DrvSflWaitReady failed with %d.\n", iResult));
                                 }
@@ -747,7 +748,7 @@ int Drv_SpiEraseFlashSector(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 
         /* unlock write operations */
         iResult = write_enable(ptFlash);
-        if( !iResult )
+        if( iResult!=0 )
         {
                 DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashSector: DrvSflWriteEnable failed with %d.\n", iResult));
         }
@@ -756,7 +757,7 @@ int Drv_SpiEraseFlashSector(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 #if CFG_DEBUGMSG!=0
                 /* show initial status */
                 iResult = print_status(ptFlash);
-                if( iResult!=0 )
+                if( iResult==0 )
                 {
 #endif
                         /* convert linear address to device address */
@@ -774,7 +775,7 @@ int Drv_SpiEraseFlashSector(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 
                         /* send command */
                         iResult = send_simple_cmd(ptFlash, abCmd, 4);
-                        if( !iResult )
+                        if( iResult!=0 )
                         {
                                 DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: send_simple_cmd failed with %d.\n", iResult));
                         }
@@ -782,7 +783,7 @@ int Drv_SpiEraseFlashSector(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
                         {
                                 /* wait for operation finish */
                                 iResult = wait_for_ready(ptFlash);
-                                if( !iResult )
+                                if( iResult!=0 )
                                 {
                                         DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashSector: wait_for_ready failed with %d.\n", iResult));
                                 }
@@ -817,14 +818,14 @@ int Drv_SpiEraseFlashMultiSectors(const SPI_FLASH_T *ptFlash, unsigned long ulLi
         DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashMultiSectors(): ptFlash=0x%08x, ulLinearStartAddress=0x%08x, ulLinearEndAddress=0x%08x\n", ptFlash, ulLinearStartAddress, ulLinearEndAddress));
 
         /* init result, assume success */
-        iResult = 1;
+        iResult = 0;
 
         /* loop over all sectors */
         while(ulLinearStartAddress < ulLinearEndAddress)
         {
                 /* delete sector */
                 iResult = Drv_SpiEraseFlashSector(ptFlash, ulLinearStartAddress);
-                if( !iResult )
+                if( iResult!=0 )
                 {
                         DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashMultiSectors: Drv_SpiEraseFlashSector failed with %d.\n", iResult));
                         break;
@@ -860,7 +861,7 @@ int Drv_SpiEraseFlashComplete(const SPI_FLASH_T *ptFlash)
         {
                 /* unlock write operations */
                 iResult = write_enable(ptFlash);
-                if( !iResult )
+                if( iResult!=0 )
                 {
                         DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: write_enable failed with %d.\n", iResult));
                 }
@@ -868,7 +869,7 @@ int Drv_SpiEraseFlashComplete(const SPI_FLASH_T *ptFlash)
                 {
                         /* send command */
                         iResult = send_simple_cmd(ptFlash, ptFlash->tAttributes.aucEraseChipCmd, uiEraseChipCmdLen);
-                        if( !iResult )
+                        if( iResult!=0 )
                         {
                                 DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: send_simple_cmd failed with %d.\n", iResult));
                         }
@@ -876,7 +877,7 @@ int Drv_SpiEraseFlashComplete(const SPI_FLASH_T *ptFlash)
                         {
                                 /* wait for operation finish */
                                 iResult = wait_for_ready(ptFlash);
-                                if( !iResult )
+                                if( iResult!=0 )
                                 {
                                         DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: DrvSflWaitReady failed with %d.\n", iResult));
                                 }
@@ -887,7 +888,7 @@ int Drv_SpiEraseFlashComplete(const SPI_FLASH_T *ptFlash)
         {
                 /* the flash does not support erasing the whole device at once, delete it in sector steps */
                 iResult = Drv_SpiEraseFlashMultiSectors(ptFlash, 0, ptFlash->tAttributes.ulSize);
-                if( !iResult )
+                if( iResult!=0 )
                 {
                         DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: Drv_SpiEraseFlashMultiSectors failed with %d.\n", iResult));
                 }
@@ -938,7 +939,7 @@ int Drv_SpiWriteFlashPages(const SPI_FLASH_T *ptFlash, unsigned long ulOffs, con
         if(0 != (ulOffs % ulPageSize))
         {
                 DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiWriteFlashPages: startaddress is not page aligned.\n"));
-                iResult = 0;
+                iResult = -1;
         }
         else
         {
@@ -946,7 +947,7 @@ int Drv_SpiWriteFlashPages(const SPI_FLASH_T *ptFlash, unsigned long ulOffs, con
                 if(0 != (ulNum % ulPageSize))
                 {
                         DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiWriteFlashPages: endaddress is not page aligned.\n"));
-                        iResult = 0;
+                        iResult = -1;
                 }
                 else
                 {
@@ -955,7 +956,7 @@ int Drv_SpiWriteFlashPages(const SPI_FLASH_T *ptFlash, unsigned long ulOffs, con
                         {
                                 /*  write bytes to flash */
                                 iResult = Drv_SpiEraseAndWritePage(ptFlash, ulOffs, dc, ulPageSize);
-                                if( !iResult )
+                                if( iResult!=0 )
                                 {
                                         DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiWriteFlashPages: DrvSflWritePage failed with %d.\n", iResult));
                                         break;
@@ -1005,7 +1006,7 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 
 	/* send 1 idlebyte */
 	iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
-	if( !iResult )
+	if( iResult!=0 )
 	{
 		DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiReadFlash: HalSPI_SendIdles failed with %d.\n", iResult));
 	}
@@ -1026,7 +1027,7 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 
 		/* send data and receive response */
 		iResult = ptSpiDev->pfnSendData(ptSpiDev, abCmd, 4);
-		if( !iResult )
+		if( iResult!=0 )
 		{
 			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiReadFlash: HalSPI_BlockIo failed with %d.\n", iResult));
 		}
@@ -1034,7 +1035,7 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 		{
 			/* send some DC bytes */
 			iResult = ptSpiDev->pfnSendIdle(ptSpiDev, ptFlash->tAttributes.ucReadOpcodeDCBytes);
-			if( !iResult )
+			if( iResult!=0 )
 			{
 				DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiReadFlash: HalSPI_SendIdles failed with %d.\n", iResult));
 			}
@@ -1042,7 +1043,7 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 			{
 				/* receive the data */
 				iResult = ptSpiDev->pfnReceiveData(ptSpiDev, pucData, sizData);
-				if( !iResult )
+				if( iResult!=0 )
 				{
 					DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiReadFlash: HalSPI_BlockIo failed with %d.\n", iResult));
 				}
@@ -1053,10 +1054,10 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 		ptSpiDev->pfnSelect(ptSpiDev, 0);
 
 		/* send 1 idlebyte */
-		if( iResult )
+		if( iResult==0 )
 		{
 			iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
-			if( !iResult )
+			if( iResult!=0 )
 			{
 				DEBUGMSG(ZONE_ERROR, ("ERROR: send_simple_cmd: HalSPI_SendIdles failed with %d.\n", iResult));
 			}
@@ -1099,7 +1100,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 	if(0 != (ulLinearAddress % sizPage))
 	{
 		DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: startaddress is not page aligned.\n"));
-		iResult = 0;
+		iResult = -1;
 	}
 	else
 	{
@@ -1107,7 +1108,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 		if( sizData!=sizPage )
 		{
 			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: size is not page aligned.\n"));
-			iResult = 0;
+			iResult = -1;
 		}
 		else
 		{
@@ -1117,7 +1118,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 			{
 				/* no, eraseAndWrite is not supported. try page erase instead */
 				iResult = Drv_SpiEraseFlashPage(ptFlash, ulLinearAddress);
-				if( !iResult )
+				if( iResult!=0 )
 				{
 					DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: Drv_SpiEraseFlashPage failed with %d.\n", iResult));
 				}
@@ -1125,7 +1126,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 				{
 					/* write the page */
 					iResult = Drv_SpiWritePage(ptFlash, ulLinearAddress, pucData, sizData);
-					if( !iResult )
+					if( iResult!=0 )
 					{
 						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: Drv_SpiWritePage failed with %d.\n", iResult));
 					}
@@ -1137,7 +1138,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 
 				/* unlock write operations */
 				iResult = write_enable(ptFlash);
-				if( !iResult )
+				if( iResult!=0 )
 				{
 					DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: DrvSflWriteEnable failed with %d.\n", iResult));
 				}
@@ -1159,7 +1160,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 					aucCmd[3] = (unsigned char)( ulDeviceAddress      &0xffU);
 
 					iResult = ptSpiDev->pfnSendData(ptSpiDev, aucCmd, 4);
-					if( !iResult )
+					if( iResult!=0 )
 					{
 						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: HalSPI_BlockIo failed with %d.\n", iResult));
 					}
@@ -1167,7 +1168,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 					{
 						/* send data */
 						iResult = ptSpiDev->pfnSendData(ptSpiDev, pucData, sizData);
-						if( !iResult )
+						if( iResult!=0 )
 						{
 							DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: HalSPI_BlockIo failed with %d.\n", iResult));
 						}
@@ -1176,10 +1177,10 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 					/* deselect slave */
 					ptSpiDev->pfnSelect(ptSpiDev, 0);
 
-					if( iResult )
+					if( iResult==0 )
 					{
 						iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
-						if( !iResult )
+						if( iResult!=0 )
 						{
 							DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: Drv_SpiSendIdle failed with %d.\n", iResult));
 						}
@@ -1187,7 +1188,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 						{
 							/* wait until the write operation is finished */
 							iResult = wait_for_ready(ptFlash);
-							if( !iResult )
+							if( iResult!=0 )
 							{
 								DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: DrvSflWaitReady failed with %d.\n", iResult));
 							}
@@ -1219,7 +1220,7 @@ static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinea
 
 	/* unlock write operations */
 	iResult = write_enable(ptFlash);
-	if( !iResult )
+	if( iResult!=0 )
 	{
 		DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: write_enable failed with %d.\n", iResult));
 	}
@@ -1227,7 +1228,7 @@ static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinea
 	{
 #if CFG_DEBUGMSG!=0
 		iResult = print_status(ptFlash);
-		if( iResult!=0 )
+		if( iResult==0 )
 		{
 #endif
 			/* select slave */
@@ -1246,7 +1247,7 @@ static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinea
 			aucCmd[3] = (unsigned char)( ulDeviceAddress      &0xffU);
 
 			iResult = ptSpiDev->pfnSendData(ptSpiDev, aucCmd, 4);
-			if( !iResult )
+			if( iResult!=0 )
 			{
 				DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: HalSPI_BlockIo failed with %d.\n", iResult));
 			}
@@ -1254,7 +1255,7 @@ static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinea
 			{
 				/* send data */
 				iResult = ptSpiDev->pfnSendData(ptSpiDev, pabBuffer, ptFlash->tAttributes.ulPageSize);
-				if( !iResult )
+				if( iResult!=0 )
 				{
 					DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: HalSPI_BlockIo failed with %d.\n", iResult));
 				}
@@ -1263,10 +1264,10 @@ static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinea
 			/* deselect slave */
 			ptSpiDev->pfnSelect(ptSpiDev, 0);
 
-			if( iResult )
+			if( iResult==0 )
 			{
 				iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
-				if( !iResult )
+				if( iResult!=0 )
 				{
 					DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: HalSPI_SendIdles failed with %d.\n", iResult));
 				}
@@ -1274,7 +1275,7 @@ static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinea
 				{
 					/* wait until the write operation is finished */
 					iResult = wait_for_ready(ptFlash);
-					if( !iResult )
+					if( iResult!=0 )
 					{
 						DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: wait_for_ready failed with %d.\n", iResult));
 					}
@@ -1316,7 +1317,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 	aucCmd[3] = 0U;
 
 	iResult = ptSpiDev->pfnSendData(ptSpiDev, aucCmd, 4);
-	if( iResult==0 )
+	if( iResult!=0 )
 	{
 		DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_BlockIo failed with %d.\n", iResult));
 	}
@@ -1324,7 +1325,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 	{
 		/* send data */
 		iResult = ptSpiDev->pfnSendData(ptSpiDev, pabBuffer, ptFlash->tAttributes.ulPageSize);
-		if( iResult==0 )
+		if( iResult!=0 )
 		{
 			DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_BlockIo failed with %d.\n", iResult));
 		}
@@ -1333,10 +1334,10 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 	/* deselect slave */
 	ptSpiDev->pfnSelect(ptSpiDev, 0);
 
-	if( iResult!=0 )
+	if( iResult==0 )
 	{
 		iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
-		if( iResult==0 )
+		if( iResult!=0 )
 		{
 			DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_SendIdles failed with %d.\n", iResult));
 		}
@@ -1344,7 +1345,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 		{
 			/* unlock write operations */
 			iResult = write_enable(ptFlash);
-			if( iResult==0 )
+			if( iResult!=0 )
 			{
 				DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: write_enable failed with %d.\n", iResult));
 			}
@@ -1371,7 +1372,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 					aucCmd[3] = (unsigned char)( ulDeviceAddress      &0xffU);
 
 					iResult = ptSpiDev->pfnSendData(ptSpiDev, aucCmd, 4);
-					if( !iResult )
+					if( iResult!=0 )
 					{
 						DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_BlockIo failed with %d.\n", iResult));
 					}
@@ -1379,10 +1380,10 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 					/* deselect slave */
 					ptSpiDev->pfnSelect(ptSpiDev, 0);
 
-					if( iResult )
+					if( iResult==0 )
 					{
 						iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
-						if( !iResult )
+						if( iResult!=0 )
 						{
 							DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_SendIdles failed with %d.\n", iResult));
 						}
@@ -1390,7 +1391,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 						{
 							/* wait until the write operation is finished */
 							iResult = wait_for_ready(ptFlash);
-							if( !iResult )
+							if( iResult!=0 )
 							{
 								DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: wait_for_ready failed with %d.\n", iResult));
 							}
@@ -1439,7 +1440,7 @@ int Drv_SpiWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 	if(0 != (ulLinearAddress % sizPage))
 	{
 		DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiWritePage: startaddress is not page aligned.\n"));
-		iResult = 0;
+		iResult = -1;
 	}
 	else
 	{
@@ -1447,7 +1448,7 @@ int Drv_SpiWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 		if( sizData!=sizPage )
 		{
 			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiWritePage: size is not page aligned.\n"));
-			iResult = 0;
+			iResult = -1;
 		}
 		else
 		{
@@ -1463,7 +1464,7 @@ int Drv_SpiWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 			else
 			{
 				DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiWritePage: write without previous erase is not supported.\n"));
-				iResult = 0;
+				iResult = -1;
 			}
 		}
 	}
