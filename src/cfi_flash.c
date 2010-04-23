@@ -50,7 +50,7 @@
 #include <string.h>
 
 
-#ifdef DEBUG
+#if CFG_DEBUGMSG!=0
 	/* show all messages by default */
 	static unsigned long s_ulCurSettings = 0xffffffff;
 
@@ -143,7 +143,7 @@ static int CFIMemCmp(volatile void* pvFlash, const void* pvCmpBuf, unsigned long
 	unsigned char           ucCmpData;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+CFIMemCmp(): pvFlash=0x$8, pvCmpBuf=0x$8, ulLen=0x$\n", pvFlash, pvCmpBuf, ulLen));
+	DEBUGMSG(ZONE_FUNCTION, ("+CFIMemCmp(): pvFlash=0x%08x, pvCmpBuf=0x%08x, ulLen=%d\n", pvFlash, pvCmpBuf, ulLen));
 
 	iRet = 0;
 
@@ -155,7 +155,7 @@ static int CFIMemCmp(volatile void* pvFlash, const void* pvCmpBuf, unsigned long
 		ucCmpData   = *(pbCmpBuf++);
 		ucFlashData = *(pbFlash++);
 
-		DEBUGMSG(ZONE_VERBOSE, (".CFIMemCmp(): Pattern: 0x$2, Flash: 0x$2.\n", ucCmpData, ucFlashData));
+		DEBUGMSG(ZONE_VERBOSE, (".CFIMemCmp(): Pattern: 0x%02x, Flash: 0x%02x.\n", ucCmpData, ucFlashData));
 
 		if( ucCmpData!='?' && ucCmpData!=ucFlashData )
 		{
@@ -166,7 +166,7 @@ static int CFIMemCmp(volatile void* pvFlash, const void* pvCmpBuf, unsigned long
 		--ulLen;
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-CFIMemCmp(): iRet=0x$\n", iRet));
+	DEBUGMSG(ZONE_FUNCTION, ("-CFIMemCmp(): iRet=%d\n", iRet));
 
 	return iRet;
 }
@@ -189,7 +189,7 @@ static void CFI_FlashWriteCommand(unsigned char* pucFlashAddr, unsigned int uiWi
 	} uPtr;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+CFI_FlashWriteCommand(): pucFlashAddr=0x$8, uiWidth=0x$, fPaired=0x$, uiCommand=0x$\n", pucFlashAddr, uiWidth, fPaired, uiCommand));
+	DEBUGMSG(ZONE_FUNCTION, ("+CFI_FlashWriteCommand(): pucFlashAddr=0x%08x, uiWidth=%d, fPaired=%d, uiCommand=0x%08x\n", pucFlashAddr, uiWidth, fPaired, uiCommand));
 
 	/* set the address */
 	uPtr.pucPtr = pucFlashAddr;
@@ -236,7 +236,7 @@ static int CFI_QueryFlashLayout(FLASH_DEVICE *ptFlashDevice, PFN_FLASHSETUP pfnS
 	int fRet;
         int fPaired;
 
-	DEBUGMSG(ZONE_FUNCTION, ("+CFI_QueryFlashLayout(): ptFlashDevice=0x$8, pfnSetup=0x$8\n", ptFlashDevice, pfnSetup));
+	DEBUGMSG(ZONE_FUNCTION, ("+CFI_QueryFlashLayout(): ptFlashDevice=0x%08x, pfnSetup=0x%08x\n", ptFlashDevice, pfnSetup));
 
 	pbFlashBase = ptFlashDevice->pbFlashBase;
 	fPaired     = ptFlashDevice->fPaired;
@@ -255,7 +255,7 @@ static int CFI_QueryFlashLayout(FLASH_DEVICE *ptFlashDevice, PFN_FLASHSETUP pfnS
 	abCfiId[1] = pbFlashBase[CFI_QUERY_INFO_OFFSET+1];
 	abCfiId[2] = pbFlashBase[CFI_QUERY_INFO_OFFSET+2];
 
-	DEBUGMSG(ZONE_VERBOSE, (".CFI_QueryFlashLayout(): abCfiId=[$2, $2, $2]\n", abCfiId[0], abCfiId[1], abCfiId[2]));
+	DEBUGMSG(ZONE_VERBOSE, (".CFI_QueryFlashLayout(): abCfiId=[%02x, %02x, %02x]\n", abCfiId[0], abCfiId[1], abCfiId[2]));
 
 	if( abCfiId[0]=='Q' && abCfiId[1]=='R' && abCfiId[2]=='Y' )
 	{
@@ -323,7 +323,7 @@ static int CFI_QueryFlashLayout(FLASH_DEVICE *ptFlashDevice, PFN_FLASHSETUP pfnS
 
 	pfnSetup(ptFlashDevice->uiWidth);
 
-	DEBUGMSG(ZONE_FUNCTION, ("-CFI_QueryFlashLayout(): fRet=0x$\n", fRet));
+	DEBUGMSG(ZONE_FUNCTION, ("-CFI_QueryFlashLayout(): fRet=%d\n", fRet));
 
 	return fRet;
 }
@@ -348,7 +348,7 @@ int CFI_IdentifyFlash(FLASH_DEVICE* ptFlashDevice, PFN_FLASHSETUP pfnSetup)
 	unsigned long   ulDetectedTypes;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+CFI_IdentifyFlash(): ptFlashDevice=0x$8, pfnSetup=0x$\n", ptFlashDevice, pfnSetup));
+	DEBUGMSG(ZONE_FUNCTION, ("+CFI_IdentifyFlash(): ptFlashDevice=0x%08x, pfnSetup=0x%08x\n", ptFlashDevice, pfnSetup));
 
 	if( ptFlashDevice==NULL )
 	{
@@ -468,13 +468,13 @@ int CFI_IdentifyFlash(FLASH_DEVICE* ptFlashDevice, PFN_FLASHSETUP pfnSetup)
 			break;     
 
 		default:
-			DEBUGMSG(ZONE_ERROR, ("!CFI_IdentifyFlash(): Error, unknown vendor command set: 0x$.\n", uiCommandSet));
+			DEBUGMSG(ZONE_ERROR, ("!CFI_IdentifyFlash(): Error, unknown vendor command set: 0x%08x.\n", uiCommandSet));
 			fRet = FALSE;
 			break;
 		}
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-CFI_IdentifyFlash(): fRet=0x$\n", fRet));
+	DEBUGMSG(ZONE_FUNCTION, ("-CFI_IdentifyFlash(): fRet=%d\n", fRet));
 
 	return fRet;
 }

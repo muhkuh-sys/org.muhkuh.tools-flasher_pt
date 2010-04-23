@@ -46,13 +46,15 @@
 
 #include "spi_flash.h"
 
+#include "drv_sqi.h"
+
 
 /*
 ************************************************************
 *   Defines
 ************************************************************
 */
-#ifdef DEBUG
+#if CFG_DEBUGMSG!=0
 
 	/* show all messages by default */
 	static unsigned long s_ulCurSettings = 0xffffffff;
@@ -94,7 +96,7 @@ static unsigned int getMaskLength(unsigned long ulVal)
 	unsigned int  uiBitCnt = 0;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+getMaskLength(): ulVal=0x$8\n", ulVal));
+	DEBUGMSG(ZONE_FUNCTION, ("+getMaskLength(): ulVal=0x%08x\n", ulVal));
 
 	/*  generate mask and count used bits */
 	while(ulMask < ulVal)
@@ -106,7 +108,7 @@ static unsigned int getMaskLength(unsigned long ulVal)
 		++uiBitCnt;
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-getMaskLength(): uiBitCnt=0x$8\n", uiBitCnt));
+	DEBUGMSG(ZONE_FUNCTION, ("-getMaskLength(): uiBitCnt=0x%08x\n", uiBitCnt));
 	return uiBitCnt;
 }
 
@@ -127,7 +129,7 @@ static unsigned long getDeviceAddress(const SPI_FLASH_T *ptFlash, unsigned long 
 	unsigned long ulByteOffset;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+getDeviceAddress(): ptFlash=0x$8, ulLinearAddress=0x$8\n", ptFlash, ulLinearAddress));
+	DEBUGMSG(ZONE_FUNCTION, ("+getDeviceAddress(): ptFlash=0x%08x, ulLinearAddress=0x%08x\n", ptFlash, ulLinearAddress));
 
 	/* is the pagesize a multiple of 256? -> no page-byte split is needed */
 	switch(ptFlash->tAttributes.tAdrMode)
@@ -152,13 +154,13 @@ static unsigned long getDeviceAddress(const SPI_FLASH_T *ptFlash, unsigned long 
 
 	default:
 		/* unknown addressing mode! */
-		DEBUGMSG(ZONE_ERROR, ("ERROR: getDeviceAddress: unknown addressing mode: 0x$8. This check was already passed in Drv_SpiInitializeFlash, the memory seems to be corrupted!\n", ptFlash->tAttributes.tAdrMode));
+		DEBUGMSG(ZONE_ERROR, ("ERROR: getDeviceAddress: unknown addressing mode: 0x%08x. This check was already passed in Drv_SpiInitializeFlash, the memory seems to be corrupted!\n", ptFlash->tAttributes.tAdrMode));
 
 		/* TODO: throw some fatal error here */
 		break;
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-getDeviceAddress(): ulDeviceAddress=0x$8\n", ulDeviceAddress));
+	DEBUGMSG(ZONE_FUNCTION, ("-getDeviceAddress(): ulDeviceAddress=0x%08x\n", ulDeviceAddress));
 	return ulDeviceAddress;
 }
 
@@ -178,7 +180,7 @@ static int read_status(const SPI_FLASH_T *ptFlash, unsigned char *pucStatus)
 	const SPI_CFG_T *ptSpiDev;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+read_status(): ptFlash=0x$8, pbStatus=0x$8\n", ptFlash, puiStatus));
+	DEBUGMSG(ZONE_FUNCTION, ("+read_status(): ptFlash=0x%08x, pucStatus=0x%08x\n", ptFlash, pucStatus));
 
 	/* get spi device */
 	ptSpiDev = &ptFlash->tSpiDev;
@@ -190,7 +192,7 @@ static int read_status(const SPI_FLASH_T *ptFlash, unsigned char *pucStatus)
 	iResult = ptSpiDev->pfnSendData(ptSpiDev, &(ptFlash->tAttributes.ucReadStatusOpcode), 1);
 	if( !iResult )
 	{
-		DEBUGMSG(ZONE_ERROR, ("ERROR: read_status: HalSPI_ExchangeByte failed with 0x$.\n", iResult));
+		DEBUGMSG(ZONE_ERROR, ("ERROR: read_status: HalSPI_ExchangeByte failed with %d.\n", iResult));
 	}
 	else
 	{
@@ -198,7 +200,7 @@ static int read_status(const SPI_FLASH_T *ptFlash, unsigned char *pucStatus)
 		iResult = ptSpiDev->pfnReceiveData(ptSpiDev, pucStatus, 1);
 		if( !iResult )
 		{
-			DEBUGMSG(ZONE_ERROR, ("ERROR: read_status: Drv_SpiReceive failed with 0x$.\n", iResult));
+			DEBUGMSG(ZONE_ERROR, ("ERROR: read_status: Drv_SpiReceive failed with %d.\n", iResult));
 		}
 	}
 
@@ -210,32 +212,32 @@ static int read_status(const SPI_FLASH_T *ptFlash, unsigned char *pucStatus)
 		iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
 		if( !iResult )
 		{
-			DEBUGMSG(ZONE_ERROR, ("ERROR: read_status: HalSPI_SendIdles failed with 0x$.\n", iResult));
+			DEBUGMSG(ZONE_ERROR, ("ERROR: read_status: HalSPI_SendIdles failed with %d.\n", iResult));
 		}
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-read_status(): iResult=0x$, *puiStatus=0x$2\n", iResult, *puiStatus));
+	DEBUGMSG(ZONE_FUNCTION, ("-read_status(): iResult=%d, *pucStatus=0x%02x\n", iResult, *pucStatus));
 	return iResult;
 }
 
 
-#ifdef DEBUG
+#if CFG_DEBUGMSG!=0
 static int print_status(const SPI_FLASH_T *ptFlash)
 {
-	unsigned int uiStatus = 0;
+	unsigned char ucStatus = 0;
 	int iResult;
 
-	DEBUGMSG(ZONE_FUNCTION, ("+print_status(const ptFlash=0x$8\n", ptFlash));
+	DEBUGMSG(ZONE_FUNCTION, ("+print_status(const ptFlash=0x%08x\n", ptFlash));
 
 	/*  read status and extract busy bit */
-	iResult = read_status(ptFlash, &uiStatus);
+	iResult = read_status(ptFlash, &ucStatus);
 
 	if( iResult )
 	{
-		uprintf(". Status: 0x%02x\n", uiStatus);
+		uprintf(". Status: 0x%02x\n", ucStatus);
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-print_status(): iResult=0x$, uiStatus=0x$2\n", iResult, uiStatus));
+	DEBUGMSG(ZONE_FUNCTION, ("-print_status(): iResult=%d, ucStatus=0x%02x\n", iResult, ucStatus));
 	return iResult;
 }
 #endif
@@ -260,7 +262,7 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 	SPI_CFG_T *ptSpiDev;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+detect_flash(): ptFlash=0x$8\n", ptFlash));
+	DEBUGMSG(ZONE_FUNCTION, ("+detect_flash(): ptFlash=0x%08x\n", ptFlash));
 
 	/* get spi device */
 	ptSpiDev = &ptFlash->tSpiDev;
@@ -281,7 +283,7 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 		iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 8);
 		if( !iResult )
 		{
-			DEBUGMSG(ZONE_ERROR, ("ERROR: detect_flash: HalSPI_SendIdles failed with 0x$.\n", iResult));
+			DEBUGMSG(ZONE_ERROR, ("ERROR: detect_flash: HalSPI_SendIdles failed with %d.\n", iResult));
 			break;
 		}
 
@@ -299,40 +301,43 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 		/* did the send and receive operation fail? */
 		if( !iResult )
 		{
-			DEBUGMSG(ZONE_ERROR, ("ERROR: detect_flash: HalSPI_BlockIo failed with 0x$.\n", iResult));
+			DEBUGMSG(ZONE_ERROR, ("ERROR: detect_flash: HalSPI_BlockIo failed with %d.\n", iResult));
 			break;
 		}
 
-#ifdef DEBUG
-		DEBUGMSG(ZONE_VERBOSE, ("Send     : "));
-		uiCnt = 0;
-		while( uiCnt<ptSc->uiIdLength )
+#if CFG_DEBUGMSG!=0
+		if( ZONE_VERBOSE )
 		{
-			DEBUGMSG(ZONE_VERBOSE, ("$2 ", ptSc->abIdSend[uiCnt]));
-			++uiCnt;
+			uprintf("Send     : ");
+			uiCnt = 0;
+			while( uiCnt<ptSc->uiIdLength )
+			{
+				uprintf("%02x ", ptSc->aucIdSend[uiCnt]);
+				++uiCnt;
+			}
+			uprintf("\nReceived : ");
+			uiCnt = 0;
+			while( uiCnt<ptSc->uiIdLength )
+			{
+				uprintf("%02x ", aucIdResp[uiCnt]);
+				++uiCnt;
+			}
+			uprintf("\nMasked   : ");
+			uiCnt = 0;
+			while( uiCnt<ptSc->uiIdLength )
+			{
+				uprintf("%02x ", aucIdResp[uiCnt]&ptSc->aucIdMask[uiCnt]);
+				++uiCnt;
+			}
+			uprintf("\nMagic    : ");
+			uiCnt = 0;
+			while( uiCnt<ptSc->uiIdLength )
+			{
+				uprintf("%02x ", ptSc->aucIdMagic[uiCnt]);
+				++uiCnt;
+			}
+			uprintf("\n");
 		}
-		DEBUGMSG(ZONE_VERBOSE, ("\nReceived : "));
-		uiCnt = 0;
-		while( uiCnt<ptSc->uiIdLength )
-		{
-			DEBUGMSG(ZONE_VERBOSE, ("$2 ", abIdResp[uiCnt]));
-			++uiCnt;
-		}
-		DEBUGMSG(ZONE_VERBOSE, ("\nMasked   : "));
-		uiCnt = 0;
-		while( uiCnt<ptSc->uiIdLength )
-		{
-			DEBUGMSG(ZONE_VERBOSE, ("$2 ", abIdResp[uiCnt]&ptSc->abIdMask[uiCnt]));
-			++uiCnt;
-		}
-		DEBUGMSG(ZONE_VERBOSE, ("\nMagic    : "));
-		uiCnt = 0;
-		while( uiCnt<ptSc->uiIdLength )
-		{
-			DEBUGMSG(ZONE_VERBOSE, ("$2 ", ptSc->abIdMagic[uiCnt]));
-			++uiCnt;
-		}
-		DEBUGMSG(ZONE_VERBOSE, ("\n"));
 #endif
 
 		/* assume success */
@@ -371,7 +376,7 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 		*pptFlashAttr = ptSr;
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-detect_flash(): iResult=0x$  ptSr=0x$8.\n", iResult, ptSr));
+	DEBUGMSG(ZONE_FUNCTION, ("-detect_flash(): iResult=%d  ptSr=0x%08x.\n", iResult, ptSr));
 	return iResult;
 }
 
@@ -398,7 +403,7 @@ static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucC
 	const SPI_CFG_T *ptSpiDev;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+send_simple_cmd(): ptFlash=0x$8, pucCmd=0x$8, uiCmdLen=0x$8\n", ptFlash, pucCmd, uiCmdLen));
+	DEBUGMSG(ZONE_FUNCTION, ("+send_simple_cmd(): ptFlash=0x%08x, pucCmd=0x%08x, sizCmdLen=0x%08x\n", ptFlash, pucCmd, sizCmdLen));
 
 	/* get spi device */
 	ptSpiDev = &ptFlash->tSpiDev;
@@ -410,7 +415,7 @@ static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucC
 	iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
 	if( !iResult )
 	{
-		DEBUGMSG(ZONE_ERROR, ("ERROR: send_simple_cmd: HalSPI_SendIdles failed with 0x$.\n", iResult));
+		DEBUGMSG(ZONE_ERROR, ("ERROR: send_simple_cmd: HalSPI_SendIdles failed with %d.\n", iResult));
 	}
 	else
 	{
@@ -421,7 +426,7 @@ static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucC
 		iResult = ptSpiDev->pfnSendData(ptSpiDev, pucCmd, sizCmdLen);
 		if( !iResult )
 		{
-			DEBUGMSG(ZONE_ERROR, ("ERROR: send_simple_cmd: HalSPI_BlockIo failed with 0x$.\n", iResult));
+			DEBUGMSG(ZONE_ERROR, ("ERROR: send_simple_cmd: HalSPI_BlockIo failed with %d.\n", iResult));
 		}
 
 		/* deselect slave */
@@ -433,12 +438,12 @@ static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucC
 			iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
 			if( !iResult )
 			{
-				DEBUGMSG(ZONE_ERROR, ("ERROR: send_simple_cmd: HalSPI_SendIdles failed with 0x$.\n", iResult));
+				DEBUGMSG(ZONE_ERROR, ("ERROR: send_simple_cmd: HalSPI_SendIdles failed with %d.\n", iResult));
 			}
 		}
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-send_simple_cmd(): eResult=0x$8\n", iResult));
+	DEBUGMSG(ZONE_FUNCTION, ("-send_simple_cmd(): iResult=%d\n", iResult));
 	return iResult;
 }
 
@@ -456,7 +461,7 @@ static int write_enable(const SPI_FLASH_T *ptFlash)
 	unsigned char ucOpcode;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+write_enable(): ptFlash=0x$8\n", ptFlash));
+	DEBUGMSG(ZONE_FUNCTION, ("+write_enable(): ptFlash=0x%08x\n", ptFlash));
 
 	/*  does the device support write protection? */
 	ucOpcode = ptFlash->tAttributes.ucWriteEnableOpcode;
@@ -466,11 +471,11 @@ static int write_enable(const SPI_FLASH_T *ptFlash)
 		iResult = send_simple_cmd(ptFlash, &ucOpcode, 1);
 		if( !iResult )
 		{
-			DEBUGMSG(ZONE_ERROR, ("ERROR: write_enable: send_simple_command failed with 0x$.\n", iResult));
+			DEBUGMSG(ZONE_ERROR, ("ERROR: write_enable: send_simple_command failed with %d.\n", iResult));
 		}
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-write_enable(): iResult=0x$.\n", iResult));
+	DEBUGMSG(ZONE_FUNCTION, ("-write_enable(): iResult=%d.\n", iResult));
 	return iResult;
 }
 
@@ -489,7 +494,7 @@ static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 	int iResult;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+wait_for_ready(): ptFlash=0x$8\n", ptFlash));
+	DEBUGMSG(ZONE_FUNCTION, ("+wait_for_ready(): ptFlash=0x%08x\n", ptFlash));
 	
 	do
 	{
@@ -497,7 +502,7 @@ static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 		iResult = read_status(ptFlash, &ucStatus);
 		if( !iResult )
 		{
-			DEBUGMSG(ZONE_ERROR, ("ERROR: wait_for_ready: read_status failed with 0x$.\n", iResult));
+			DEBUGMSG(ZONE_ERROR, ("ERROR: wait_for_ready: read_status failed with %d.\n", iResult));
 			break;
 		}
 
@@ -507,7 +512,7 @@ static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 		/* wait until the remaining status bits match the expected value */
 	} while( ucStatus!=ptFlash->tAttributes.ucStatusReadyValue );
 	
-	DEBUGMSG(ZONE_FUNCTION, ("-wait_for_ready(): iResult=0x$.\n", iResult));
+	DEBUGMSG(ZONE_FUNCTION, ("-wait_for_ready(): iResult=%d.\n", iResult));
 	return iResult;
 }
 
@@ -547,7 +552,7 @@ int Drv_SpiInitializeFlash(unsigned int uiUnit, unsigned int uiChipSelect, SPI_F
 	unsigned int uiCmdLen;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiInitializeFlash(): ptFlash=0x$8\n", ptFlash));
+	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiInitializeFlash(): ptFlash=0x%08x\n", ptFlash));
 
 	/* no flash detected yet */
 	ptFlashAttr = NULL;
@@ -558,7 +563,7 @@ int Drv_SpiInitializeFlash(unsigned int uiUnit, unsigned int uiChipSelect, SPI_F
 //	iResult = HalSPI_Init(ptSpiDev, 0);
 	if( iResult==0 )
 	{
-		DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: HalSPI_Init failed with 0x$8.\n", iResult));
+		DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: HalSPI_Init failed with %d.\n", iResult));
 	}
 	else
 	{
@@ -566,7 +571,7 @@ int Drv_SpiInitializeFlash(unsigned int uiUnit, unsigned int uiChipSelect, SPI_F
 		iResult = detect_flash(ptFlash, &ptFlashAttr);
 		if( !iResult )
 		{
-			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: detect_flash failed with 0x$8.\n", iResult));
+			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: detect_flash failed with %d.\n", iResult));
 		}
 		else
 		{
@@ -592,7 +597,7 @@ int Drv_SpiInitializeFlash(unsigned int uiUnit, unsigned int uiChipSelect, SPI_F
 					iResult = send_simple_cmd(ptFlash, ptFlash->tAttributes.aucInitCmd0, uiCmdLen);
 					if( iResult==0 )
 					{
-						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: send_simple_cmd failed with 0x$8.\n", iResult));
+						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: send_simple_cmd failed with %d.\n", iResult));
 					}
 				}
 				uiCmdLen = ptFlash->tAttributes.uiInitCmd1_length;
@@ -601,7 +606,7 @@ int Drv_SpiInitializeFlash(unsigned int uiUnit, unsigned int uiChipSelect, SPI_F
 					iResult = send_simple_cmd(ptFlash, ptFlash->tAttributes.aucInitCmd1, uiCmdLen);
 					if( iResult==0 )
 					{
-						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: send_simple_cmd failed with 0x$8.\n", iResult));
+						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: send_simple_cmd failed with %d.\n", iResult));
 					}
 				}
 
@@ -624,7 +629,7 @@ int Drv_SpiInitializeFlash(unsigned int uiUnit, unsigned int uiChipSelect, SPI_F
 					default:
 						/* unknown addressing mode! */
 						/* the flash configuration is invalid */
-						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: flash addressing mode is invalid: 0x$8.\n", ptFlash->tAttributes.tAdrMode));
+						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: flash addressing mode is invalid: 0x%08x.\n", ptFlash->tAttributes.tAdrMode));
 						iResult = 0;
 					}
 				}
@@ -632,7 +637,7 @@ int Drv_SpiInitializeFlash(unsigned int uiUnit, unsigned int uiChipSelect, SPI_F
 		}
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiInitializeFlash(): iResult=0x$.\n", iResult));
+	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiInitializeFlash(): iResult=%d.\n", iResult));
 	return iResult;
 }
 
@@ -654,7 +659,7 @@ int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddr
         unsigned long ulDeviceAddress;
 
 
-        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashPage(): ptFlash=0x$8, ulLinearAddress=0x$8\n", ptFlash, ulLinearAddress));
+        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashPage(): ptFlash=0x%08x, ulLinearAddress=0x%08x\n", ptFlash, ulLinearAddress));
 
         /* NOTE: DrvSflEraseAndWritePage calls this function if the flash has no bEraseAndPageProgOpcode */
 
@@ -682,7 +687,7 @@ int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddr
                 iResult = write_enable(ptFlash);
                 if( !iResult )
                 {
-                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: DrvSflWriteEnable failed with 0x$.\n", iResult));
+                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: DrvSflWriteEnable failed with %d.\n", iResult));
                 }
                 else
                 {
@@ -702,7 +707,7 @@ int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddr
                         iResult = send_simple_cmd(ptFlash, abCmd, 4);
                         if( !iResult )
                         {
-                                DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: send_simple_cmd failed with 0x$.\n", iResult));
+                                DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: send_simple_cmd failed with %d.\n", iResult));
                         }
                         else
                         {
@@ -710,13 +715,13 @@ int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddr
                                 iResult = wait_for_ready(ptFlash);
                                 if( !iResult )
                                 {
-                                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: DrvSflWaitReady failed with 0x$.\n", iResult));
+                                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: DrvSflWaitReady failed with %d.\n", iResult));
                                 }
                         }
                 }
         }
 
-        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashPage(): iResult=0x$.\n", iResult));
+        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashPage(): iResult=%d.\n", iResult));
         return iResult;
 }
 
@@ -738,17 +743,17 @@ int Drv_SpiEraseFlashSector(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
         unsigned long ulDeviceAddress;
 
 
-        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashSector(): ptFlash=0x$8, ulLinearAddress=0x$8\n", ptFlash, ulLinearAddress));
+        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashSector(): ptFlash=0x%08x, ulLinearAddress=0x%08x\n", ptFlash, ulLinearAddress));
 
         /* unlock write operations */
         iResult = write_enable(ptFlash);
         if( !iResult )
         {
-                DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashSector: DrvSflWriteEnable failed with 0x$.\n", iResult));
+                DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashSector: DrvSflWriteEnable failed with %d.\n", iResult));
         }
         else
         {
-#ifdef DEBUG
+#if CFG_DEBUGMSG!=0
                 /* show initial status */
                 iResult = print_status(ptFlash);
                 if( iResult!=0 )
@@ -771,7 +776,7 @@ int Drv_SpiEraseFlashSector(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
                         iResult = send_simple_cmd(ptFlash, abCmd, 4);
                         if( !iResult )
                         {
-                                DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: send_simple_cmd failed with 0x$.\n", iResult));
+                                DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: send_simple_cmd failed with %d.\n", iResult));
                         }
                         else
                         {
@@ -779,15 +784,15 @@ int Drv_SpiEraseFlashSector(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
                                 iResult = wait_for_ready(ptFlash);
                                 if( !iResult )
                                 {
-                                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashSector: wait_for_ready failed with 0x$.\n", iResult));
+                                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashSector: wait_for_ready failed with %d.\n", iResult));
                                 }
                         }
-#ifdef DEBUG
+#if CFG_DEBUGMSG!=0
                 }
 #endif
         }
 
-        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashSector(): iResult=0x$.\n", iResult));
+        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashSector(): iResult=%d.\n", iResult));
         return iResult;
 }
 
@@ -809,7 +814,7 @@ int Drv_SpiEraseFlashMultiSectors(const SPI_FLASH_T *ptFlash, unsigned long ulLi
         int iResult;
 
 
-        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashMultiSectors(): ptFlash=0x$8, ulLinearStartAddress=0x$8, ulLinearEndAddress=0x$8\n", ptFlash, ulLinearStartAddress, ulLinearEndAddress));
+        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashMultiSectors(): ptFlash=0x%08x, ulLinearStartAddress=0x%08x, ulLinearEndAddress=0x%08x\n", ptFlash, ulLinearStartAddress, ulLinearEndAddress));
 
         /* init result, assume success */
         iResult = 1;
@@ -821,7 +826,7 @@ int Drv_SpiEraseFlashMultiSectors(const SPI_FLASH_T *ptFlash, unsigned long ulLi
                 iResult = Drv_SpiEraseFlashSector(ptFlash, ulLinearStartAddress);
                 if( !iResult )
                 {
-                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashMultiSectors: Drv_SpiEraseFlashSector failed with 0x$.\n", iResult));
+                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashMultiSectors: Drv_SpiEraseFlashSector failed with %d.\n", iResult));
                         break;
                 }
 
@@ -829,7 +834,7 @@ int Drv_SpiEraseFlashMultiSectors(const SPI_FLASH_T *ptFlash, unsigned long ulLi
                 ulLinearStartAddress += ptFlash->ulSectorSize;
         }
 
-        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashMultiSectors(): iResult=0x$.\n", iResult));
+        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashMultiSectors(): iResult=%d.\n", iResult));
         return iResult;
 }
 
@@ -848,7 +853,7 @@ int Drv_SpiEraseFlashComplete(const SPI_FLASH_T *ptFlash)
         unsigned int      uiEraseChipCmdLen;
 
 
-        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashComplete(): ptFlash=0x$8\n", ptFlash));
+        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashComplete(): ptFlash=0x%08x\n", ptFlash));
 
         uiEraseChipCmdLen = ptFlash->tAttributes.uiEraseChipCmdLen;
         if(0x00 != uiEraseChipCmdLen)
@@ -857,7 +862,7 @@ int Drv_SpiEraseFlashComplete(const SPI_FLASH_T *ptFlash)
                 iResult = write_enable(ptFlash);
                 if( !iResult )
                 {
-                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: write_enable failed with 0x$.\n", iResult));
+                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: write_enable failed with %d.\n", iResult));
                 }
                 else
                 {
@@ -865,7 +870,7 @@ int Drv_SpiEraseFlashComplete(const SPI_FLASH_T *ptFlash)
                         iResult = send_simple_cmd(ptFlash, ptFlash->tAttributes.aucEraseChipCmd, uiEraseChipCmdLen);
                         if( !iResult )
                         {
-                                DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: send_simple_cmd failed with 0x$.\n", iResult));
+                                DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: send_simple_cmd failed with %d.\n", iResult));
                         }
                         else
                         {
@@ -873,7 +878,7 @@ int Drv_SpiEraseFlashComplete(const SPI_FLASH_T *ptFlash)
                                 iResult = wait_for_ready(ptFlash);
                                 if( !iResult )
                                 {
-                                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: DrvSflWaitReady failed with 0x$.\n", iResult));
+                                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: DrvSflWaitReady failed with %d.\n", iResult));
                                 }
                         }
                 }
@@ -884,11 +889,11 @@ int Drv_SpiEraseFlashComplete(const SPI_FLASH_T *ptFlash)
                 iResult = Drv_SpiEraseFlashMultiSectors(ptFlash, 0, ptFlash->tAttributes.ulSize);
                 if( !iResult )
                 {
-                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: Drv_SpiEraseFlashMultiSectors failed with 0x$.\n", iResult));
+                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: Drv_SpiEraseFlashMultiSectors failed with %d.\n", iResult));
                 }
         }
 
-        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashComplete(): eResult=0x$.\n", iResult));
+        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashComplete(): iResult=%d.\n", iResult));
         return iResult;
 }
 
@@ -911,7 +916,7 @@ int Drv_SpiWriteFlashPages(const SPI_FLASH_T *ptFlash, unsigned long ulOffs, con
         const unsigned char *dc, *de;
 
 
-        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiWriteFlashPages(): ptFlash=0x$8, ulOffs=0x$8, pabSrc=0x$8, ulNum=0x$\n", ptFlash, ulOffs, pabSrc, ulNum));
+        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiWriteFlashPages(): ptFlash=0x%08x, ulOffs=0x%08x, pabSrc=0x%08x, ulNum=%d\n", ptFlash, ulOffs, pabSrc, ulNum));
 
         /* test parameters, is there data to write? */
         if( (0 == ulNum) || (NULL == pabSrc) )
@@ -952,7 +957,7 @@ int Drv_SpiWriteFlashPages(const SPI_FLASH_T *ptFlash, unsigned long ulOffs, con
                                 iResult = Drv_SpiEraseAndWritePage(ptFlash, ulOffs, dc, ulPageSize);
                                 if( !iResult )
                                 {
-                                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiWriteFlashPages: DrvSflWritePage failed with 0x$.\n", iResult));
+                                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiWriteFlashPages: DrvSflWritePage failed with %d.\n", iResult));
                                         break;
                                 }
 
@@ -965,7 +970,7 @@ int Drv_SpiWriteFlashPages(const SPI_FLASH_T *ptFlash, unsigned long ulOffs, con
                 }
         }
 
-        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiWriteFlashPages(): iResult=0x$.\n", iResult));
+        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiWriteFlashPages(): iResult=%d.\n", iResult));
         return iResult;
 }
 
@@ -990,7 +995,7 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 	const SPI_CFG_T *ptSpiDev;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiReadFlash(): ptFlash=0x$8, ulLinearAddress=0x$8, pabDest=0x$8, ulNum=0x$\n", ptFlash, ulLinearAddress, pabDest, ulNum));
+	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiReadFlash(): ptFlash=0x%08x, ulLinearAddress=0x%08x, pucData=0x%08x, sizData=%d\n", ptFlash, ulLinearAddress, pucData, sizData));
 
 	/* get spi device */
 	ptSpiDev = &ptFlash->tSpiDev;
@@ -1002,7 +1007,7 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 	iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
 	if( !iResult )
 	{
-		DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiReadFlash: HalSPI_SendIdles failed with 0x$.\n", iResult));
+		DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiReadFlash: HalSPI_SendIdles failed with %d.\n", iResult));
 	}
 	else
 	{
@@ -1023,7 +1028,7 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 		iResult = ptSpiDev->pfnSendData(ptSpiDev, abCmd, 4);
 		if( !iResult )
 		{
-			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiReadFlash: HalSPI_BlockIo failed with 0x$.\n", iResult));
+			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiReadFlash: HalSPI_BlockIo failed with %d.\n", iResult));
 		}
 		else
 		{
@@ -1031,7 +1036,7 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 			iResult = ptSpiDev->pfnSendIdle(ptSpiDev, ptFlash->tAttributes.ucReadOpcodeDCBytes);
 			if( !iResult )
 			{
-				DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiReadFlash: HalSPI_SendIdles failed with 0x$.\n", iResult));
+				DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiReadFlash: HalSPI_SendIdles failed with %d.\n", iResult));
 			}
 			else
 			{
@@ -1039,7 +1044,7 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 				iResult = ptSpiDev->pfnReceiveData(ptSpiDev, pucData, sizData);
 				if( !iResult )
 				{
-					DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiReadFlash: HalSPI_BlockIo failed with 0x$.\n", iResult));
+					DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiReadFlash: HalSPI_BlockIo failed with %d.\n", iResult));
 				}
 			}
 		}
@@ -1053,12 +1058,12 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 			iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
 			if( !iResult )
 			{
-				DEBUGMSG(ZONE_ERROR, ("ERROR: send_simple_cmd: HalSPI_SendIdles failed with 0x$.\n", iResult));
+				DEBUGMSG(ZONE_ERROR, ("ERROR: send_simple_cmd: HalSPI_SendIdles failed with %d.\n", iResult));
 			}
 		}
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiReadFlash(): iResult=0x$.\n", iResult));
+	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiReadFlash(): iResult=%d.\n", iResult));
 	return iResult;
 }
 
@@ -1084,7 +1089,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 	const SPI_CFG_T *ptSpiDev;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseAndWritePage(): ptFlash=0x$8, ulLinearAddress=0x$8, pucData=0x$8\, sizData=0x$n", ptFlash, ulLinearAddress, pucData, sizData));
+	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseAndWritePage(): ptFlash=0x%08x, ulLinearAddress=0x%08x, pucData=0x%08x, sizData=%d\n", ptFlash, ulLinearAddress, pucData, sizData));
 
 	/* get spi device */
 	ptSpiDev = &ptFlash->tSpiDev;
@@ -1114,7 +1119,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 				iResult = Drv_SpiEraseFlashPage(ptFlash, ulLinearAddress);
 				if( !iResult )
 				{
-					DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: Drv_SpiEraseFlashPage failed with 0x$.\n", iResult));
+					DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: Drv_SpiEraseFlashPage failed with %d.\n", iResult));
 				}
 				else
 				{
@@ -1122,7 +1127,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 					iResult = Drv_SpiWritePage(ptFlash, ulLinearAddress, pucData, sizData);
 					if( !iResult )
 					{
-						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: Drv_SpiWritePage failed with 0x$.\n", iResult));
+						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: Drv_SpiWritePage failed with %d.\n", iResult));
 					}
 				}
 			}
@@ -1134,7 +1139,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 				iResult = write_enable(ptFlash);
 				if( !iResult )
 				{
-					DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: DrvSflWriteEnable failed with 0x$.\n", iResult));
+					DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: DrvSflWriteEnable failed with %d.\n", iResult));
 				}
 				else
 				{
@@ -1156,7 +1161,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 					iResult = ptSpiDev->pfnSendData(ptSpiDev, aucCmd, 4);
 					if( !iResult )
 					{
-						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: HalSPI_BlockIo failed with 0x$.\n", iResult));
+						DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: HalSPI_BlockIo failed with %d.\n", iResult));
 					}
 					else
 					{
@@ -1164,7 +1169,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 						iResult = ptSpiDev->pfnSendData(ptSpiDev, pucData, sizData);
 						if( !iResult )
 						{
-							DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: HalSPI_BlockIo failed with 0x$.\n", iResult));
+							DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: HalSPI_BlockIo failed with %d.\n", iResult));
 						}
 					}
 
@@ -1176,7 +1181,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 						iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
 						if( !iResult )
 						{
-							DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: Drv_SpiSendIdle failed with 0x$.\n", iResult));
+							DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: Drv_SpiSendIdle failed with %d.\n", iResult));
 						}
 						else
 						{
@@ -1184,7 +1189,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 							iResult = wait_for_ready(ptFlash);
 							if( !iResult )
 							{
-								DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: DrvSflWaitReady failed with 0x$.\n", iResult));
+								DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseAndWritePage: DrvSflWaitReady failed with %d.\n", iResult));
 							}
 						}
 					}
@@ -1193,7 +1198,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 		}
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseAndWritePage(): iResult=0x$.\n", iResult));
+	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseAndWritePage(): iResult=%d.\n", iResult));
 	return iResult;
 }
 
@@ -1207,7 +1212,7 @@ static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinea
 	const SPI_CFG_T *ptSpiDev;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+write_single_opcode(): ptFlash=0x$8, ulLinearAddress=0x$8, pabBuffer=0x$8\n", ptFlash, ulLinearAddress, pabBuffer));
+	DEBUGMSG(ZONE_FUNCTION, ("+write_single_opcode(): ptFlash=0x%08x, ulLinearAddress=0x%08x, pabBuffer=0x%08x\n", ptFlash, ulLinearAddress, pabBuffer));
 
 	/* get spi device */
 	ptSpiDev = &ptFlash->tSpiDev;
@@ -1216,11 +1221,11 @@ static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinea
 	iResult = write_enable(ptFlash);
 	if( !iResult )
 	{
-		DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: write_enable failed with 0x$.\n", iResult));
+		DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: write_enable failed with %d.\n", iResult));
 	}
 	else
 	{
-#ifdef DEBUG
+#if CFG_DEBUGMSG!=0
 		iResult = print_status(ptFlash);
 		if( iResult!=0 )
 		{
@@ -1243,7 +1248,7 @@ static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinea
 			iResult = ptSpiDev->pfnSendData(ptSpiDev, aucCmd, 4);
 			if( !iResult )
 			{
-				DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: HalSPI_BlockIo failed with 0x$.\n", iResult));
+				DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: HalSPI_BlockIo failed with %d.\n", iResult));
 			}
 			else
 			{
@@ -1251,7 +1256,7 @@ static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinea
 				iResult = ptSpiDev->pfnSendData(ptSpiDev, pabBuffer, ptFlash->tAttributes.ulPageSize);
 				if( !iResult )
 				{
-					DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: HalSPI_BlockIo failed with 0x$.\n", iResult));
+					DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: HalSPI_BlockIo failed with %d.\n", iResult));
 				}
 			}
 
@@ -1263,7 +1268,7 @@ static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinea
 				iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
 				if( !iResult )
 				{
-					DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: HalSPI_SendIdles failed with 0x$.\n", iResult));
+					DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: HalSPI_SendIdles failed with %d.\n", iResult));
 				}
 				else
 				{
@@ -1271,16 +1276,16 @@ static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinea
 					iResult = wait_for_ready(ptFlash);
 					if( !iResult )
 					{
-						DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: wait_for_ready failed with 0x$.\n", iResult));
+						DEBUGMSG(ZONE_ERROR, ("ERROR: write_single_opcode: wait_for_ready failed with %d.\n", iResult));
 					}
 				}
 			}
-#ifdef DEBUG
+#if CFG_DEBUGMSG!=0
 		}
 #endif
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-write_single_opcode(): iResult=0x$.\n", iResult));
+	DEBUGMSG(ZONE_FUNCTION, ("-write_single_opcode(): iResult=%d.\n", iResult));
 	return iResult;
 }
 
@@ -1293,7 +1298,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 	const SPI_CFG_T *ptSpiDev;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+write_via_buffer(): ptFlash=0x$8, ulLinearAddress=0x$8, pabBuffer=0x$8\n", ptFlash, ulLinearAddress, pabBuffer));
+	DEBUGMSG(ZONE_FUNCTION, ("+write_via_buffer(): ptFlash=0x%08x, ulLinearAddress=0x%08x, pabBuffer=0x%08x\n", ptFlash, ulLinearAddress, pabBuffer));
 
 	/* get spi device */
 	ptSpiDev = &ptFlash->tSpiDev;
@@ -1313,7 +1318,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 	iResult = ptSpiDev->pfnSendData(ptSpiDev, aucCmd, 4);
 	if( iResult==0 )
 	{
-		DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_BlockIo failed with 0x$.\n", iResult));
+		DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_BlockIo failed with %d.\n", iResult));
 	}
 	else
 	{
@@ -1321,7 +1326,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 		iResult = ptSpiDev->pfnSendData(ptSpiDev, pabBuffer, ptFlash->tAttributes.ulPageSize);
 		if( iResult==0 )
 		{
-			DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_BlockIo failed with 0x$.\n", iResult));
+			DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_BlockIo failed with %d.\n", iResult));
 		}
 	}
 
@@ -1333,7 +1338,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 		iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
 		if( iResult==0 )
 		{
-			DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_SendIdles failed with 0x$.\n", iResult));
+			DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_SendIdles failed with %d.\n", iResult));
 		}
 		else
 		{
@@ -1341,7 +1346,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 			iResult = write_enable(ptFlash);
 			if( iResult==0 )
 			{
-				DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: write_enable failed with 0x$.\n", iResult));
+				DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: write_enable failed with %d.\n", iResult));
 			}
 			else
 			{
@@ -1368,7 +1373,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 					iResult = ptSpiDev->pfnSendData(ptSpiDev, aucCmd, 4);
 					if( !iResult )
 					{
-						DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_BlockIo failed with 0x$.\n", iResult));
+						DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_BlockIo failed with %d.\n", iResult));
 					}
 
 					/* deselect slave */
@@ -1379,7 +1384,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 						iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
 						if( !iResult )
 						{
-							DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_SendIdles failed with 0x$.\n", iResult));
+							DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: HalSPI_SendIdles failed with %d.\n", iResult));
 						}
 						else
 						{
@@ -1387,7 +1392,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 							iResult = wait_for_ready(ptFlash);
 							if( !iResult )
 							{
-								DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: wait_for_ready failed with 0x$.\n", iResult));
+								DEBUGMSG(ZONE_ERROR, ("ERROR: write_via_buffer: wait_for_ready failed with %d.\n", iResult));
 							}
 						}
 					}
@@ -1398,7 +1403,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 		}
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-write_via_buffer(): iResult=0x$.\n", iResult));
+	DEBUGMSG(ZONE_FUNCTION, ("-write_via_buffer(): iResult=%d.\n", iResult));
 	return iResult;
 }
 
@@ -1427,7 +1432,7 @@ int Drv_SpiWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 	size_t sizPage;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiWritePage(): ptFlash=0x$8, ulLinearAddress=0x$8, pucData=0x$, sizData=0x$8\n", ptFlash, ulLinearAddress, pucData, sizData));
+	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiWritePage(): ptFlash=0x%08x, ulLinearAddress=0x%08x, pucData=0x%08x, sizData=0x%08x\n", ptFlash, ulLinearAddress, pucData, sizData));
 
 	/* check startaddress and size for page alignment */
 	sizPage = ptFlash->tAttributes.ulPageSize;
@@ -1463,6 +1468,6 @@ int Drv_SpiWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 		}
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiWritePage(): iResult=0x$.\n", iResult));
+	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiWritePage(): iResult=%d.\n", iResult));
 	return iResult;
 }
