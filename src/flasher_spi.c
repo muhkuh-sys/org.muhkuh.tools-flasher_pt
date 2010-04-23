@@ -152,7 +152,7 @@ NETX_CONSOLEAPP_RESULT_T spi_read(unsigned char *pbData, unsigned long ulDataByt
 	uprintf(". Detecting SPI flash...\n");
 	tFlashDev.uiSlaveId = SPI_SLAVE_ID;
 	iResult = Drv_SpiInitializeFlash(0, 0, &tFlashDev);
-	if( iResult==0 )
+	if( iResult!=0 )
 	{
 		/* failed to detect the spi flash */
 		uprintf("! failed to detect flash\n");
@@ -204,7 +204,7 @@ NETX_CONSOLEAPP_RESULT_T spi_verify(const unsigned char *pbData, unsigned long u
 	uprintf(". Detecting SPI flash...\n");
 	tFlashDev.uiSlaveId = SPI_SLAVE_ID;
 	iResult = Drv_SpiInitializeFlash(0, 0, &tFlashDev);
-	if( iResult==0 )
+	if( iResult!=0 )
 	{
 		/* failed to detect the spi flash */
 		uprintf("! failed to detect flash\n");
@@ -303,7 +303,7 @@ NETX_CONSOLEAPP_RESULT_T spi_write_with_progress(const SPI_FLASH_T *ptFlashDev, 
 		/* write the modified buffer */
 		iResult = Drv_SpiWritePage(ptFlashDev, ulPageStartAdr, pucSpiBuffer, ulPageSize);
 //		iResult = Drv_SpiEraseAndWritePage(ptFlashDev, ulPageStartAdr, ulPageSize, pucSpiBuffer);
-		if( iResult==0 )
+		if( iResult!=0 )
 		{
 			uprintf("! write error\n");
 			return NETX_CONSOLEAPP_RESULT_ERROR;
@@ -324,7 +324,7 @@ NETX_CONSOLEAPP_RESULT_T spi_write_with_progress(const SPI_FLASH_T *ptFlashDev, 
 		/* write one page */
 		iResult = Drv_SpiWritePage(ptFlashDev, ulC, pucDC, ulPageSize);
 //		iResult = Drv_SpiEraseAndWritePage(ptFlashDev, ulC, ulPageSize, pucDC);
-		if( iResult==0 )
+		if( iResult!=0 )
 		{
 			uprintf("! write error\n");
 			return NETX_CONSOLEAPP_RESULT_ERROR;
@@ -353,7 +353,7 @@ NETX_CONSOLEAPP_RESULT_T spi_write_with_progress(const SPI_FLASH_T *ptFlashDev, 
 		/* write the buffer */
 		iResult = Drv_SpiWritePage(ptFlashDev, ulC, pucSpiBuffer, ulPageSize);
 //		iResult = Drv_SpiEraseAndWritePage(ptFlashDev, ulC, ulPageSize, pucSpiBuffer);
-		if( iResult==0 )
+		if( iResult!=0 )
 		{
 			uprintf("! write error\n");
 			return NETX_CONSOLEAPP_RESULT_ERROR;
@@ -403,7 +403,7 @@ NETX_CONSOLEAPP_RESULT_T spi_verify_with_progress(const SPI_FLASH_T *ptFlashDev,
 
 		/* read the segment */
 		iResult = Drv_SpiReadFlash(ptFlashDev, ulC, pucSpiBuffer, ulSegSize);
-		if( iResult==0 )
+		if( iResult!=0 )
 		{
 			return NETX_CONSOLEAPP_RESULT_ERROR;
 		}
@@ -470,7 +470,7 @@ NETX_CONSOLEAPP_RESULT_T spi_read_with_progress(const SPI_FLASH_T *ptFlashDev, u
 
 		/* read the segment */
 		iResult = Drv_SpiReadFlash(ptFlashDev, ulC, pucDC, ulSegSize);
-		if( iResult==0 )
+		if( iResult!=0 )
 		{
 			return NETX_CONSOLEAPP_RESULT_ERROR;
 		}
@@ -531,7 +531,7 @@ NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFlashDev, 
 		while( ulAddress<ulEndAdr )
 		{
 			iResult = Drv_SpiEraseFlashSector(ptFlashDev, ulAddress);
-			if( iResult==0 )
+			if( iResult!=0 )
 			{
 				uprintf("! erase failed at address 0x%08x\n", ulAddress);
 				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
@@ -575,7 +575,7 @@ NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	uprintf(". Detecting SPI flash on cs %d...\n", ulChipSelect);
 	ptFlashDescription->uiSlaveId = ulChipSelect;
 	iResult = Drv_SpiInitializeFlash(0, 0, ptFlashDescription);
-	if( iResult==0 )
+	if( iResult!=0 )
 	{
 		/* failed to detect the spi flash */
 		uprintf("! failed to detect flash!\n");
@@ -668,7 +668,7 @@ NETX_CONSOLEAPP_RESULT_T spi_isErased(CMD_PARAMETER_ISERASED_T *ptParameter, NET
 
 			/* read the segment */
 			iResult = Drv_SpiReadFlash(ptFlashDescription, ulCnt, pucSpiBuffer, ulSegSize);
-			if( iResult==0 )
+			if( iResult!=0 )
 			{
 				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 				break;
