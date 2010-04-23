@@ -189,6 +189,7 @@ static int qsi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 }
 
 
+#if 0
 static int qsi_send_idle(const SPI_CFG_T *ptCfg, size_t sizIdleChars)
 {
 	unsigned long ulValue;
@@ -199,6 +200,7 @@ static int qsi_send_idle(const SPI_CFG_T *ptCfg, size_t sizIdleChars)
 		/* convert the number of idle bytes to cycles */
 		sizIdleChars <<= 3U;
 		--sizIdleChars;
+		uprintf("send %d cycles\n", sizIdleChars);
 
 		/* set mode to "send dummy" */
 		ulValue  = ptCfg->ulTrcBase;
@@ -215,12 +217,25 @@ static int qsi_send_idle(const SPI_CFG_T *ptCfg, size_t sizIdleChars)
 			ulValue  = ptSqiArea->ulSqi_sr;
 			ulValue &= HOSTMSK(sqi_sr_busy);
 		} while( ulValue!=0 );
+		uprintf("done\n");
 	}
 
 	return 0;
 }
+#else
+static int qsi_send_idle(const SPI_CFG_T *ptCfg, size_t sizIdleChars)
+{
+	while( sizIdleChars>0 )
+	{
+		qsi_spi_exchange_byte(ptCfg, 0x00);
+		--sizIdleChars;
+	}
+	return 0;
+}
+#endif
 
 
+#if 0
 static int qsi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size_t sizData)
 {
 	unsigned long ulValue;
@@ -265,8 +280,20 @@ static int qsi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size
 
 	return 0;
 }
+#else
+static int qsi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size_t sizData)
+{
+	while( sizData>0 )
+	{
+		*(pucData++) = qsi_spi_exchange_byte(ptCfg, 0x00);
+		--sizData;
+	}
+	return 0;
+}
+#endif
 
 
+#if 0
 static int qsi_send_data(const SPI_CFG_T *ptCfg, const unsigned char *pucData, size_t sizData)
 {
 	unsigned long ulValue;
@@ -309,8 +336,20 @@ static int qsi_send_data(const SPI_CFG_T *ptCfg, const unsigned char *pucData, s
 
 	return 0;
 }
+#else
+static int qsi_send_data(const SPI_CFG_T *ptCfg, const unsigned char *pucData, size_t sizData)
+{
+	while( sizData>0 )
+	{
+		qsi_spi_exchange_byte(ptCfg, *(pucData++));
+		--sizData;
+	}
+	return 0;
+}
+#endif
 
 
+#if 0
 static int qsi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucDataOut, unsigned char *pucDataIn, size_t sizData)
 {
 	unsigned long ulValue;
@@ -361,12 +400,29 @@ static int qsi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucDat
 					*(pucInCnt++) = (unsigned char)(ptSqiArea->ulSqi_dr);
 				}
 			}
-		} while( pucOutCnt<pucOutEnd && pucInCnt<pucInCnt );
+		} while( pucOutCnt<pucOutEnd && pucInCnt<pucInEnd );
+
+		/* wait until the transfer is done */
+		do
+		{
+			ulValue  = ptSqiArea->ulSqi_sr;
+			ulValue &= HOSTMSK(sqi_sr_busy);
+		} while( ulValue!=0 );
 	}
 
 	return 0;
 }
-
+#else
+static int qsi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucDataOut, unsigned char *pucDataIn, size_t sizData)
+{
+	while( sizData>0 )
+	{
+		*(pucDataIn++) = qsi_spi_exchange_byte(ptCfg, *(pucDataOut++));
+		--sizData;
+	}
+	return 0;
+}
+#endif
 
 static void qsi_set_new_speed(unsigned long ulDeviceSpecificSpeed)
 {
