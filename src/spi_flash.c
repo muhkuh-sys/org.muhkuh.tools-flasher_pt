@@ -232,7 +232,7 @@ static int print_status(const SPI_FLASH_T *ptFlash)
 
 	if( iResult )
 	{
-		uprintf(". Status: 0x$2\n", uiStatus);
+		uprintf(". Status: 0x%02x\n", uiStatus);
 	}
 
 	DEBUGMSG(ZONE_FUNCTION, ("-print_status(): iResult=0x$, uiStatus=0x$2\n", iResult, uiStatus));

@@ -364,7 +364,7 @@ int CFI_IdentifyFlash(FLASH_DEVICE* ptFlashDevice, PFN_FLASHSETUP pfnSetup)
 		{
 			uiBits = s_atCFIChecks[uiCnt].uiWidth;
 			iPaired = s_atCFIChecks[uiCnt].fPaired;
-			uprintf(".Trying  bits: $2, paired: $1\n", uiBits, iPaired);
+			uprintf(".Trying  bits: %02d, paired: %d\n", uiBits, iPaired);
 
 			/* set bus width to query size */
 			pfnSetup(uiBits);
@@ -385,7 +385,7 @@ int CFI_IdentifyFlash(FLASH_DEVICE* ptFlashDevice, PFN_FLASHSETUP pfnSetup)
 			}
 		}
 
-		uprintf(".Detection state: $8\n", ulDetectedTypes);
+		uprintf(".Detection state: 0x%08x\n", ulDetectedTypes);
 
 		/* reset found flashes to read mode */
 		CFI_FlashWriteCommand(pbFlashBase,  8, FALSE, READ_ARRAY_CMD);
@@ -441,7 +441,7 @@ int CFI_IdentifyFlash(FLASH_DEVICE* ptFlashDevice, PFN_FLASHSETUP pfnSetup)
 			ptFlashDevice->uiWidth  = uiFlashWidth;
 			ptFlashDevice->fPaired = fPaired;
 
-			uprintf(".Found bits: $2, paired: $1\n", uiFlashWidth, fPaired);
+			uprintf(".Found bits: %02d, paired: %d\n", uiFlashWidth, fPaired);
 
 			fRet = CFI_QueryFlashLayout(ptFlashDevice, pfnSetup);
 		}

@@ -84,9 +84,9 @@ static NETX_CONSOLEAPP_RESULT_T parflash_check_size(PFLASH_DEVICE ptFlashDev, un
         ulOffsetSize  = ptFlashDev->ulFlashSize;
         ulOffsetSize -= ptFlashDev->atSectors[ulStartSector].ulOffset;
         uprintf(". Check size...\n");
-        uprintf(". data size:  0x$8\n", ulDataByteLen);
-        uprintf(". data offset: 0x$8\n", ulOffsetSize);
-        uprintf(". flash size: 0x$8\n", ptFlashDev->ulFlashSize);
+        uprintf(". data size:  0x%08x\n", ulDataByteLen);
+        uprintf(". data offset: 0x%08x\n", ulOffsetSize);
+        uprintf(". flash size: 0x%08x\n", ptFlashDev->ulFlashSize);
         if( ulOffsetSize<ulDataByteLen )
         {
                 /* the image does not fit */
@@ -158,7 +158,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_writeImage(PFLASH_DEVICE ptFlashDev, unsigned 
                                 if( tFlashError!=eFLASH_NO_ERROR )
                                 {
                                         /* failed to erase the sector */
-                                        uprintf(". failed to erase flash sector 0x$8\n", ulSectorCnt);
+                                        uprintf(". failed to erase flash sector %d\n", ulSectorCnt);
                                         showPflashError(tFlashError);
                                         tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                                         break;
@@ -173,7 +173,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_writeImage(PFLASH_DEVICE ptFlashDev, unsigned 
                                 if( tFlashError!=eFLASH_NO_ERROR )
                                 {
                                         /* failed to program the sector */
-                                        uprintf(". failed to program flash sector 0x$8\n", ulSectorCnt);
+                                        uprintf(". failed to program flash sector %d\n", ulSectorCnt);
                                         showPflashError(tFlashError);
                                         tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                                         break;
@@ -266,7 +266,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_erase(PFLASH_DEVICE ptFlashDev, unsigned long 
                                 if( tFlashError!=eFLASH_NO_ERROR )
                                 {
                                         /* failed to erase the sector */
-                                        uprintf(". failed to erase flash sector 0x$8\n", ulSectorCnt);
+                                        uprintf(". failed to erase flash sector %d\n", ulSectorCnt);
                                         showPflashError(tFlashError);
                                         tResult = NETX_CONSOLEAPP_RESULT_ERROR;
                                         break;

@@ -464,7 +464,7 @@ FLASH_ERRORS_E FlashUnlock(PFLASH_DEVICE ptFlashDev)
 		ulProtectionBit = *pbReadAddr;
 		if( ulProtectionBit==0 )
 		{
-			uprintf(". sector $ is protected\n", ulSector);
+			uprintf(". sector %d is protected\n", ulSector);
 		}
 		ulNotProtected &= ulProtectionBit;
 		

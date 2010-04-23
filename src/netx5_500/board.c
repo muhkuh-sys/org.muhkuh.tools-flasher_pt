@@ -263,7 +263,7 @@ NETX_CONSOLEAPP_RESULT_T board_init(void)
 	uprintf(". setting up extension bus to 8 bit.\n");
 
 	tResult = netx5_init_dpm(DPM_SIZE_08);
-	uprintf(". result=$\n", tResult);
+	uprintf(". result=%d\n", tResult);
 
 	return tResult;
 }

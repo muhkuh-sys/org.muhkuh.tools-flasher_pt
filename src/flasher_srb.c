@@ -74,7 +74,7 @@ NETX_CONSOLEAPP_RESULT_T srb_flash(const unsigned char *pbData, unsigned long ul
         tFlashDevice.pbFlashBase = (unsigned char*)HOSTADDR(extsram0);
 
         /*  try to detect flash */
-        uprintf(". Detecting CFI flash at 0x$...\n", tFlashDevice.pbFlashBase);
+        uprintf(". Detecting CFI flash at 0x%08x...\n", tFlashDevice.pbFlashBase);
         iRes = CFI_IdentifyFlash(&tFlashDevice, setup_flash_srb);
         if( iRes==0 )
         {
