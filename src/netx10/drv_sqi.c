@@ -1,11 +1,22 @@
-/*---------------------------------------------------------------------------
-  Author : Christoph Thelen
-
-           Hilscher GmbH, Copyright (c) 2006, All Rights Reserved
-
-           Redistribution or unauthorized use without expressed written 
-           agreement from the Hilscher GmbH is forbidden
----------------------------------------------------------------------------*/
+/***************************************************************************
+ *   Copyright (C) 2010 by Hilscher GmbH                                   *
+ *   cthelen@hilscher.com                                                  *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU Library General Public License as       *
+ *   published by the Free Software Foundation; either version 2 of the    *
+ *   License, or (at your option) any later version.                       *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU Library General Public     *
+ *   License along with this program; if not, write to the                 *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
 
 #include <string.h>
@@ -183,25 +194,28 @@ static int qsi_send_idle(const SPI_CFG_T *ptCfg, size_t sizIdleChars)
 	unsigned long ulValue;
 
 
-	/* convert the number of idle bytes to cycles */
-	sizIdleChars <<= 3U;
-	--sizIdleChars;
-
-	/* set mode to "send dummy" */
-	ulValue  = ptCfg->ulTrcBase;
-	ulValue |= 0 << HOSTSRT(sqi_tcr_duplex);
-	/* set the transfer size */
-	ulValue |= sizIdleChars << HOSTSRT(sqi_tcr_transfer_size);
-	/* start the transfer */
-	ulValue |= HOSTMSK(sqi_tcr_start_transfer);
-	ptSqiArea->ulSqi_tcr = ulValue;
-
-	/* wait until the transfer is done */
-	do
+	if( sizIdleChars>0 )
 	{
-		ulValue  = ptSqiArea->ulSqi_sr;
-		ulValue &= HOSTMSK(sqi_sr_busy);
-	} while( ulValue!=0 );
+		/* convert the number of idle bytes to cycles */
+		sizIdleChars <<= 3U;
+		--sizIdleChars;
+
+		/* set mode to "send dummy" */
+		ulValue  = ptCfg->ulTrcBase;
+		ulValue |= 0 << HOSTSRT(sqi_tcr_duplex);
+		/* set the transfer size */
+		ulValue |= sizIdleChars << HOSTSRT(sqi_tcr_transfer_size);
+		/* start the transfer */
+		ulValue |= HOSTMSK(sqi_tcr_start_transfer);
+		ptSqiArea->ulSqi_tcr = ulValue;
+
+		/* wait until the transfer is done */
+		do
+		{
+			ulValue  = ptSqiArea->ulSqi_sr;
+			ulValue &= HOSTMSK(sqi_sr_busy);
+		} while( ulValue!=0 );
+	}
 
 	return 0;
 }
@@ -213,38 +227,41 @@ static int qsi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size
 	unsigned char *pucDataEnd;
 
 
-	/* set mode to "half duplex receive" */
-	ulValue  = ptCfg->ulTrcBase;
-	ulValue |= 1 << HOSTSRT(sqi_tcr_duplex);
-	/* set the transfer size */
-	ulValue |= (sizData-1) << HOSTSRT(sqi_tcr_transfer_size);
-	/* start the transfer */
-	ulValue |= HOSTMSK(sqi_tcr_start_transfer);
-	ptSqiArea->ulSqi_tcr = ulValue;
-
-	/* get end address */
-	pucDataEnd = pucData + sizData;
-
-	while( pucData<pucDataEnd )
+	if( sizData>0 )
 	{
-		/* wait for one byte in the fifo */
+		/* set mode to "half duplex receive" */
+		ulValue  = ptCfg->ulTrcBase;
+		ulValue |= 1 << HOSTSRT(sqi_tcr_duplex);
+		/* set the transfer size */
+		ulValue |= (sizData-1) << HOSTSRT(sqi_tcr_transfer_size);
+		/* start the transfer */
+		ulValue |= HOSTMSK(sqi_tcr_start_transfer);
+		ptSqiArea->ulSqi_tcr = ulValue;
+
+		/* get end address */
+		pucDataEnd = pucData + sizData;
+
+		while( pucData<pucDataEnd )
+		{
+			/* wait for one byte in the fifo */
+			do
+			{
+				ulValue  = ptSqiArea->ulSqi_sr;
+				ulValue &= HOSTMSK(sqi_sr_rx_fifo_not_empty);
+			} while( ulValue==0 );
+
+			/* grab byte */
+			*pucData = (unsigned char)(ptSqiArea->ulSqi_dr);
+			++pucData;
+		}
+
+		/* wait until the transfer is done */
 		do
 		{
 			ulValue  = ptSqiArea->ulSqi_sr;
-			ulValue &= HOSTMSK(sqi_sr_rx_fifo_not_empty);
-		} while( ulValue==0 );
-
-		/* grab byte */
-		*pucData = (unsigned char)(ptSqiArea->ulSqi_dr);
-		++pucData;
+			ulValue &= HOSTMSK(sqi_sr_busy);
+		} while( ulValue!=0 );
 	}
-
-	/* wait until the transfer is done */
-	do
-	{
-		ulValue  = ptSqiArea->ulSqi_sr;
-		ulValue &= HOSTMSK(sqi_sr_busy);
-	} while( ulValue!=0 );
 
 	return 0;
 }
@@ -256,34 +273,96 @@ static int qsi_send_data(const SPI_CFG_T *ptCfg, const unsigned char *pucData, s
 	const unsigned char *pucDataEnd;
 
 
-	/* set mode to "half duplex transmit" */
-	ulValue  = ptCfg->ulTrcBase;
-	ulValue |= 2 << HOSTSRT(sqi_tcr_duplex);
-	/* start the transfer */
-	ulValue |= HOSTMSK(sqi_tcr_start_transfer);
-	ptSqiArea->ulSqi_tcr = ulValue;
-
-	pucDataEnd = pucData + sizData;
-
-	while( pucData<pucDataEnd )
+	if( sizData>0 )
 	{
-		/* wait for tx fifo not full */
+		/* set mode to "half duplex transmit" */
+		ulValue  = ptCfg->ulTrcBase;
+		ulValue |= 2 << HOSTSRT(sqi_tcr_duplex);
+		/* set the transfer size */
+		ulValue |= (sizData-1) << HOSTSRT(sqi_tcr_transfer_size);
+		/* start the transfer */
+		ulValue |= HOSTMSK(sqi_tcr_start_transfer);
+		ptSqiArea->ulSqi_tcr = ulValue;
+
+		pucDataEnd = pucData + sizData;
+
+		while( pucData<pucDataEnd )
+		{
+			/* wait for tx fifo not full */
+			do
+			{
+				ulValue  = ptSqiArea->ulSqi_sr;
+				ulValue &= HOSTMSK(sqi_sr_tx_fifo_not_full);
+			} while( ulValue==0 );
+
+			/* push byte into the fifo */
+			ptSqiArea->ulSqi_dr = *(pucData++);
+		}
+
+		/* wait until the transfer is done */
 		do
 		{
 			ulValue  = ptSqiArea->ulSqi_sr;
-			ulValue &= HOSTMSK(sqi_sr_tx_fifo_not_full);
-		} while( ulValue==0 );
-
-		/* push byte into the fifo */
-		ptSqiArea->ulSqi_dr = *(pucData++);
+			ulValue &= HOSTMSK(sqi_sr_busy);
+		} while( ulValue!=0 );
 	}
 
-	/* wait until the transfer is done */
-	do
+	return 0;
+}
+
+
+static int qsi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucDataOut, unsigned char *pucDataIn, size_t sizData)
+{
+	unsigned long ulValue;
+	const unsigned char *pucOutCnt;
+	const unsigned char *pucOutEnd;
+	unsigned char *pucInCnt;
+	unsigned char *pucInEnd;
+
+
+	if( sizData>0 )
 	{
-		ulValue  = ptSqiArea->ulSqi_sr;
-		ulValue &= HOSTMSK(sqi_sr_busy);
-	} while( ulValue!=0 );
+		/* set mode to "full duplex" */
+		ulValue  = ptCfg->ulTrcBase;
+		ulValue |= 3 << HOSTSRT(sqi_tcr_duplex);
+		/* set the transfer size */
+		ulValue |= (sizData-1) << HOSTSRT(sqi_tcr_transfer_size);
+		/* start the transfer */
+		ulValue |= HOSTMSK(sqi_tcr_start_transfer);
+		ptSqiArea->ulSqi_tcr = ulValue;
+
+		pucOutCnt = pucDataOut;
+		pucOutEnd = pucDataOut + sizData;
+		pucInCnt = pucDataIn;
+		pucInEnd = pucDataIn + sizData;
+
+		do
+		{
+			/* Some data left to send? */
+			if( pucOutCnt<pucOutEnd )
+			{
+				ulValue  = ptSqiArea->ulSqi_sr;
+				ulValue &= HOSTMSK(sqi_sr_tx_fifo_not_full);
+				if( ulValue!=0 )
+				{
+					/* push byte into the fifo */
+					ptSqiArea->ulSqi_dr = *(pucOutCnt++);
+				}
+			}
+
+			/* Still want data? */
+			if( pucInCnt<pucInEnd )
+			{
+				ulValue  = ptSqiArea->ulSqi_sr;
+				ulValue &= HOSTMSK(sqi_sr_rx_fifo_not_empty);
+				if( ulValue!=0 )
+				{
+					/* grab byte */
+					*(pucInCnt++) = (unsigned char)(ptSqiArea->ulSqi_dr);
+				}
+			}
+		} while( pucOutCnt<pucOutEnd && pucInCnt<pucInCnt );
+	}
 
 	return 0;
 }

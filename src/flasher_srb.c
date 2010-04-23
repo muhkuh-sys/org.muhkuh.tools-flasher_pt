@@ -31,6 +31,7 @@
 /*  ///////////////////////////////////////////////////// */
 static void setup_flash_srb(unsigned int uiWidth)
 {
+#if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
         unsigned long* pulFlashCtrl = (unsigned long*)(HOSTADR(extsram0_ctrl));
         unsigned long  ulRegValue   = ((DEFAULT_PREPAUSE   << HOSTSRT(extsram0_ctrl_WSPrePauseExtMem0))  & HOSTMSK(extsram0_ctrl_WSPrePauseExtMem0))  |
                                 ((DEFAULT_POSTPAUSE  << HOSTSRT(extsram0_ctrl_WSPostPauseExtMem0)) & HOSTMSK(extsram0_ctrl_WSPostPauseExtMem0)) |
@@ -52,6 +53,8 @@ static void setup_flash_srb(unsigned int uiWidth)
         }
 
         *pulFlashCtrl = ulRegValue;
+#elif ASIC_TYP==10
+#endif
 }
 
 

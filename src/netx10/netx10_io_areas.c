@@ -1,14 +1,22 @@
 /***************************************************************************
- *   Copyright (C) 2005, 2006, 2007, 2008, 2009 by Hilscher GmbH           *
+ *   Copyright (C) 2010 by Hilscher GmbH                                   *
+ *   cthelen@hilscher.com                                                  *
  *                                                                         *
- *   Author: Christoph Thelen (cthelen@hilscher.com)                       *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU Library General Public License as       *
+ *   published by the Free Software Foundation; either version 2 of the    *
+ *   License, or (at your option) any later version.                       *
  *                                                                         *
- *   Redistribution or unauthorized use without expressed written          *
- *   agreement from the Hilscher GmbH is forbidden.                        *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU Library General Public     *
+ *   License along with this program; if not, write to the                 *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-
-
-#if ASIC_TYP==10
 
 
 #include "netx10_io_areas.h"
@@ -110,5 +118,3 @@ NX10_USB_DEV_FIFO_AREA_T * const ptUsbDevFifoArea = (NX10_USB_DEV_FIFO_AREA_T * 
 NX10_HANDSHAKE_BLOCK_AREA_T * const ptHandshakeArea = (NX10_HANDSHAKE_BLOCK_AREA_T * const)Addr_NX10_intram5_mirror_dtcm;
 NX10_HANDSHAKE_BLOCK_AREA_T * const ptHandshakeDtcmArmMirrorArea = (NX10_HANDSHAKE_BLOCK_AREA_T * const)Addr_NX10_intram5_mirror_dtcm_arm_mirror;
 
-
-#endif	/* ASIC_TYP==10 */

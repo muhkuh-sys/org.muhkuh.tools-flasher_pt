@@ -1,11 +1,22 @@
-/*---------------------------------------------------------------------------
-  Author : Christoph Thelen
-
-           Hilscher GmbH, Copyright (c) 2010, All Rights Reserved
-
-           Redistribution or unauthorized use without expressed written 
-           agreement from the Hilscher GmbH is forbidden
----------------------------------------------------------------------------*/
+/***************************************************************************
+ *   Copyright (C) 2010 by Hilscher GmbH                                   *
+ *   cthelen@hilscher.com                                                  *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU Library General Public License as       *
+ *   published by the Free Software Foundation; either version 2 of the    *
+ *   License, or (at your option) any later version.                       *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU Library General Public     *
+ *   License along with this program; if not, write to the                 *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
 ENTRY(start)
 
@@ -23,6 +34,7 @@ SECTIONS
 	.code ORIGIN(INTRAM2_ITCM) :
 	{
 		*(.init_code)
+		*(.version_info)
 		*(.text)
 		*(.glue*)
 		*(.vfp11_veneer)
@@ -45,12 +57,6 @@ SECTIONS
 	__data_loadaddr__ = LOADADDR(.data) ;
 
 
-	.serial_vectors ORIGIN(INTRAM0_DTCM)+LENGTH(INTRAM0_DTCM)-0x10 :
-	{
-		tSerialVectors = . ;
-		. = . + 0x10;
-	} >INTRAM0_DTCM
-
 	.bss :
 	{
 		/* zero-initialized data */
@@ -62,6 +68,13 @@ SECTIONS
 
 		__bss_end__ = . ;
 	} >INTRAM3_DTCM
+
+
+	.serial_vectors ORIGIN(INTRAM0_DTCM)+LENGTH(INTRAM0_DTCM)-0x10 :
+	{
+		tSerialVectors = . ;
+		. = . + 0x10;
+	} >INTRAM0_DTCM
 
 
 	/* set the top of the stack to the end of INTRAM1 */

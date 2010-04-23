@@ -40,12 +40,13 @@ build_properties.GenerateHelp()
 # (i.e. spaces, tabs, newlines). The amount of whitespace does not matter.
 flasher_sources_common = """
 	src/cfi_flash.c
+	src/delay.c
 	src/spi_flash.c
 	src/flasher_ext.c
 	src/flasher_spi.c
 	src/flasher_srb.c
 	src/i2c_hifsta.c
-	src/init_netx_test.s
+	src/init_netx_test.S
 	src/main.c
 	src/netx_consoleapp.c
 	src/parflash_common.c
@@ -177,13 +178,13 @@ L 00020000
 	#
 	# build the files
 	#
-	flasher_sources_netx500 = [src.replace('src', 'targets/netx500') for src in Split(flasher_sources_common+flasher_sources_custom_netx500)]
-	flasher_netx500_elf = env_netx500.Elf('targets/flasher_netx500', flasher_sources_netx500)
-	flasher_netx500_bin = env_netx500.ObjCopy('targets/flasher_netx500', flasher_netx500_elf)
+#	flasher_sources_netx500 = [src.replace('src', 'targets/netx500') for src in Split(flasher_sources_common+flasher_sources_custom_netx500)]
+#	flasher_netx500_elf = env_netx500.Elf('targets/flasher_netx500', flasher_sources_netx500)
+#	flasher_netx500_bin = env_netx500.ObjCopy('targets/flasher_netx500', flasher_netx500_elf)
 	
-	flasher_sources_netx50  = [src.replace('src', 'targets/netx50')  for src in Split(flasher_sources_common+flasher_sources_custom_netx50)]
-	flasher_netx50_elf = env_netx50.Elf('targets/flasher_netx50', flasher_sources_netx50)
-	env_netx50.ObjCopy('targets/flasher_netx50', flasher_netx50_elf)
+#	flasher_sources_netx50  = [src.replace('src', 'targets/netx50')  for src in Split(flasher_sources_common+flasher_sources_custom_netx50)]
+#	flasher_netx50_elf = env_netx50.Elf('targets/flasher_netx50', flasher_sources_netx50)
+#	env_netx50.ObjCopy('targets/flasher_netx50', flasher_netx50_elf)
 	
 	flasher_sources_netx10  = [src.replace('src', 'targets/netx10')  for src in Split(flasher_sources_common+flasher_sources_custom_netx10)]
 	flasher_netx10_elf = env_netx10.Elf('targets/flasher_netx10', flasher_sources_netx10)
