@@ -532,7 +532,7 @@ static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 
 static const SPI_CONFIGURATION_T tSpiCfg =
 {
-	.ulInitialSpeedKhz = 10000,
+	.ulInitialSpeedKhz = 1000,
 	.ucIdleCfg = MSK_SQI_CFG_IDLE_IO1_OE,
 	.ucMode = 0,
 	.aucMmio =
