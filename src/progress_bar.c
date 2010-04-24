@@ -32,7 +32,7 @@ static unsigned long ulProgressBar_TimerHandle;
 
 static void progress_bar_show_progress(unsigned long ulPosition)
 {
-	uprintf("% %08x/%08x\n", ulPosition, ulProgressBar_MaxValue);
+	uprintf("%% %08x/%08x\n", ulPosition, ulProgressBar_MaxValue);
 }
 
 /* ------------------------------------- */

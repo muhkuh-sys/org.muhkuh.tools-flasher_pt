@@ -73,7 +73,7 @@ typedef struct
 
 typedef struct
 {
-	DEVICE_DESCRIPTION_T *ptDeviceDescription;
+	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	unsigned long ulStartAdr;
 	unsigned long ulDataByteSize;
 	unsigned char *pucData;
@@ -82,7 +82,7 @@ typedef struct
 
 typedef struct
 {
-	DEVICE_DESCRIPTION_T *ptDeviceDescription;
+	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	unsigned long ulStartAdr;
 	unsigned long ulEndAdr;
 } CMD_PARAMETER_ERASE_T;
@@ -90,25 +90,28 @@ typedef struct
 
 typedef struct
 {
-	unsigned char *pbData;
-	unsigned long ulDataByteSize;
-	unsigned long ulDstDeviceOffset;
+	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
+	unsigned char *pucData;
 } CMD_PARAMETER_READ_T;
 
 
 typedef struct
 {
-	unsigned char *pbData;
-	unsigned long ulDataByteSize;
-	unsigned long ulDstDeviceOffset;
+	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
+	unsigned char *pucData;
 } CMD_PARAMETER_VERIFY_T;
 
 
 typedef struct
 {
-	unsigned char *pbData;
-	unsigned long ulDataByteSize;
-	unsigned long ulDstDeviceOffset;
+	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
+	unsigned char *pucData;
 } CMD_PARAMETER_CHECKSUM_T;
 
 
@@ -122,7 +125,7 @@ typedef struct
 
 typedef struct
 {
-	DEVICE_DESCRIPTION_T *ptDeviceDescription;
+	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	unsigned long ulStartAdr;
 	unsigned long ulEndAdr;
 } CMD_PARAMETER_ISERASED_T;
@@ -130,7 +133,7 @@ typedef struct
 
 typedef struct
 {
-	DEVICE_DESCRIPTION_T *ptDeviceDescription;
+	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	unsigned long ulStartAdr;
 	unsigned long ulEndAdr;
 } CMD_PARAMETER_GETERASEAREA_T;
@@ -144,7 +147,7 @@ typedef struct
 	{
 		CMD_PARAMETER_FLASH_T tFlash;
 		CMD_PARAMETER_ERASE_T tErase;
-		CMD_PARAMETER_READ_T  tRead;
+		CMD_PARAMETER_READ_T tRead;
 		CMD_PARAMETER_VERIFY_T tVerify;
 		CMD_PARAMETER_CHECKSUM_T tChecksum;
 		CMD_PARAMETER_DETECT_T tDetect;
