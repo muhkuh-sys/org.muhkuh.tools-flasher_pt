@@ -15,6 +15,7 @@
 
 import scons_common
 import build_properties
+import svnversion
 import uuencode
 
 build_properties.Read()
@@ -119,20 +120,24 @@ if not GetOption('help'):
 	#
 	# import the compiler definitions
 	#
-	import gcc_arm_elf_4_3_3
+	# NOTE: it would be possible to use execfile instead of import here. This
+	gcc_arm_elf_4_3_3_3 = scons_common.get_compiler('gcc_arm_elf_4_3_3_3')
 	
 	
 	#----------------------------------------------------------------------------
 	#
 	# create the default environment
 	#
-	env_default = gcc_arm_elf_4_3_3.get_gcc_arm_elf_4_3_3()
-	env_default.Decider('timestamp-newer')
+	env_default = Environment()
+	gcc_arm_elf_4_3_3_3.ApplyToEnv(env_default)
+	env_default.Decider('MD5')
 	env_default.Append(CPPPATH = ['src'])
 	env_default.Replace(CCFLAGS = Split(default_ccflags))
 	env_default.Replace(LIBS = ['m', 'c', 'gcc'])
 	env_default.Replace(LINKFLAGS = ['-nostdlib', '-static', '-Map=${TARGET}.map'])
+	
 	build_properties.ApplyToEnv(env_default)
+	svnversion.ApplyToEnv(env_default)
 	uuencode.ApplyToEnv(env_default)
 	
 	
@@ -140,9 +145,7 @@ if not GetOption('help'):
 	#
 	# Create a special filter builder which includes the svnversion command.
 	#
-	import versionfilter
-	versionfilter.generate(env_default)
-	env_default.GenVersion('templates/flasher_version.h', 'src/flasher_version.h')
+	env_default.SVNVersion('src/flasher_version.h', 'templates/flasher_version.h')
 	
 	# create environments for all builds
 	env_netx500 = env_default.Clone()
@@ -189,5 +192,5 @@ L 00020000
 	flasher_sources_netx10  = [src.replace('src', 'targets/netx10')  for src in Split(flasher_sources_common+flasher_sources_custom_netx10)]
 	flasher_netx10_elf = env_netx10.Elf('targets/flasher_netx10', flasher_sources_netx10)
 	flasher_netx10_bin = env_netx10.ObjCopy('targets/flasher_netx10', flasher_netx10_elf)
-	flasher_netx10_uue = env_netx10.Uuencode('targets/flasher_netx10.uue', flasher_netx10_bin)
+	flasher_netx10_uue = env_netx10.UUEncode('targets/flasher_netx10.uue', flasher_netx10_bin)
 

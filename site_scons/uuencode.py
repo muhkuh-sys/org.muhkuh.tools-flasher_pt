@@ -2,11 +2,10 @@
 
 import uu
 
-import SCons.Node.FS
-import SCons.Scanner
+from SCons.Script import *
 
 
-def builder_uuencode(target, source, env):
+def uuencode_action(target, source, env):
 	file_source = open(source[0].get_path(), 'r')
 	file_target = open(target[0].get_path(), 'w')
 	
@@ -19,6 +18,18 @@ def builder_uuencode(target, source, env):
 	return 0
 
 
+def uuencode_emitter(target, source, env):
+	# Make the target depend on the parameter.
+	Depends(target, SCons.Node.Python.Value(env['UUE_PRE']))
+	Depends(target, SCons.Node.Python.Value(env['UUE_POST']))
+	
+	return target, source
+
+
+def uuencode_string(target, source, env):
+	return 'UUEncode %s' % target[0].get_path()
+
+
 def ApplyToEnv(env):
 	#----------------------------------------------------------------------------
 	#
@@ -27,9 +38,9 @@ def ApplyToEnv(env):
 	env['UUE_PRE'] = ''
 	env['UUE_POST'] = ''
 	
-	uuencode = SCons.Builder.Builder(action = builder_uuencode,
-	                               suffix = '.uue',
-	                               src_suffix = '.bin',
-	                               src_builder = 'ObjCopy',
-	                               single_source = 1)
-	env['BUILDERS']['Uuencode'] = uuencode
+	uuencode_act = SCons.Action.Action(uuencode_action, uuencode_string)
+	uuencode_bld = Builder(action=uuencode_act, emitter=uuencode_emitter, suffix='.uue', single_source=1, src_suffix='.bin')
+	env['BUILDERS']['UUEncode'] = uuencode_bld
+
+
+

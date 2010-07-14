@@ -248,7 +248,7 @@
 								<artifactItem>
 									<groupId>org.gnu.gcc</groupId>
 									<artifactId>gcc-arm-elf_${os_family}_${os.arch}</artifactId>
-									<version>4.3.3_2</version>
+									<version>4.3.3_3</version>
 									<type>tar.bz2</type>
 									<overWrite>false</overWrite>
 									<outputDirectory>${gcc_dir}</outputDirectory>
@@ -288,11 +288,11 @@
 						</goals>
 						<configuration>
 							<tasks>
-								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3/bin/*" perm="ugo+rx"/>
-								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3/arm-elf/bin/*" perm="ugo+rx"/>
-								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3/libexec/gcc/arm-elf/4.3.3/cc1" perm="ugo+rx"/>
-								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3/libexec/gcc/arm-elf/4.3.3/cc1plus" perm="ugo+rx"/>
-								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3/libexec/gcc/arm-elf/4.3.3/collect2" perm="ugo+rx"/>
+								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3_3/bin/*" perm="ugo+rx"/>
+								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3_3/arm-elf/bin/*" perm="ugo+rx"/>
+								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3_3/libexec/gcc/arm-elf/4.3.3/cc1" perm="ugo+rx"/>
+								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3_3/libexec/gcc/arm-elf/4.3.3/cc1plus" perm="ugo+rx"/>
+								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3_3/libexec/gcc/arm-elf/4.3.3/collect2" perm="ugo+rx"/>
 							</tasks>
 						</configuration>
 					</execution>

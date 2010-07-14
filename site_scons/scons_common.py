@@ -15,29 +15,6 @@ if 'clean' in COMMAND_LINE_TARGETS:
 
 #----------------------------------------------------------------------------
 #
-# Add the depack_gcc_dir define to the site directory.
-#
-
-# Get the depack directory for the gcc.
-global DEPACK_GCC_DIR
-try:
-	# Remove any strange escaping from the gcc dir.
-	gcc_dir = DEPACK_GCC_DIR.replace('\:', ':')
-	print "GCC dir: '" + gcc_dir + "'"
-except NameError:
-	print "No GCC directory specified!"
-	gcc_dir = None
-
-# Build something with a 'path' member to satisfy SCons.Script.Main._load_site_scons_dir .
-class tdc:
-	path=''
-topdir=tdc()
-
-if gcc_dir:
-	SCons.Script.Main._load_site_scons_dir(topdir, gcc_dir)
-
-#----------------------------------------------------------------------------
-#
 # Display the complete command line if any command failed.
 #
 def display_build_status():
@@ -57,3 +34,21 @@ def display_build_status():
 import atexit
 atexit.register(display_build_status)
 
+
+def get_compiler(name):
+	import imp
+	import sys
+	import os
+	global DEPACK_GCC_DIR
+	
+	pathname = DEPACK_GCC_DIR + os.pathsep + name
+	
+	mod = None
+	fp,pathname,description = imp.find_module(name, [DEPACK_GCC_DIR])
+	try:
+		mod = imp.load_module(name, fp, pathname, description)
+	finally:
+		# Since we may exit via an exception, close fp explicitly.
+		if fp:
+			fp.close()
+	return mod
