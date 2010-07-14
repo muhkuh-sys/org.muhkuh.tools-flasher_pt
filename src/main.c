@@ -37,18 +37,360 @@
 
 #include "main.h"
 
-/* ------------------------------------- */
-/*  local prototypes */
-
-NETX_CONSOLEAPP_RESULT_T opMode_detect(ptFlasherInputParameter ptAppParams);
-NETX_CONSOLEAPP_RESULT_T opMode_flash (ptFlasherInputParameter ptAppParams);
-NETX_CONSOLEAPP_RESULT_T opMode_erase (ptFlasherInputParameter ptAppParams);
-NETX_CONSOLEAPP_RESULT_T opMode_read  (ptFlasherInputParameter ptAppParams);
-NETX_CONSOLEAPP_RESULT_T opMode_verify(ptFlasherInputParameter ptAppParams);
-NETX_CONSOLEAPP_RESULT_T opMode_isErased(ptFlasherInputParameter ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams);
-NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(ptFlasherInputParameter ptAppParams);
 
 /* ------------------------------------- */
+
+
+static NETX_CONSOLEAPP_RESULT_T opMode_detect(ptFlasherInputParameter ptAppParams)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	tBootBlockSrcType tBBSrcType;
+
+
+	tBBSrcType = ptAppParams->uParameter.tDetect.tSourceTyp;
+
+	uprintf(". Device :");
+	switch(tBBSrcType)
+	{
+	case BootBlockSrcType_SPI:
+		/*  use SPI flash */
+		uprintf("SPI flash\n");
+		tResult = spi_detect(&(ptAppParams->uParameter.tDetect));
+		break;
+
+	default:
+		/*  unknown boot device */
+		uprintf("unknown\n");
+		uprintf("! illegal device id specified\n");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		break;
+	}
+
+	return tResult;
+}
+
+/* ------------------------------------- */
+
+static NETX_CONSOLEAPP_RESULT_T check_device_description(const DEVICE_DESCRIPTION_T *ptDeviceDescription)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+
+
+	/* expect error */
+	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
+	if( ptDeviceDescription==NULL )
+	{
+		uprintf("! Missing device description!\n");
+	}
+	else if( ptDeviceDescription->fIsValid==0 )
+	{
+		uprintf("! The device description is not valid!\n");
+	}
+	else if( ptDeviceDescription->sizThis!=sizeof(DEVICE_DESCRIPTION_T) )
+	{
+		uprintf("! The size of the device description differs from the internal representation!\n");
+	}
+	else if( ptDeviceDescription->ulVersion!=FLASHER_INTERFACE_VERSION )
+	{
+		uprintf("! The device description has an invalid version!\n");
+	}
+	else
+	{
+		uprintf(". The device description seems to be ok.\n");
+	}
+
+	return tResult;
+}
+
+/* ------------------------------------- */
+
+
+static NETX_CONSOLEAPP_RESULT_T opMode_flash(ptFlasherInputParameter ptAppParams)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
+	tBootBlockSrcType tSourceTyp;
+
+
+	/* check the device description */
+	ptDeviceDescription = ptAppParams->uParameter.tFlash.ptDeviceDescription;
+	tResult = check_device_description(ptDeviceDescription);
+
+	/* get the source typ */
+	tSourceTyp = ptDeviceDescription->tSourceTyp;
+
+	uprintf(". Device :");
+	switch(tSourceTyp)
+	{
+	case BootBlockSrcType_SPI:
+		/*  use SPI flash */
+		uprintf("SPI flash\n");
+		tResult = spi_flash(&(ptAppParams->uParameter.tFlash));
+		break;
+
+	default:
+		/*  unknown boot device */
+		uprintf("unknown\n");
+		uprintf("! illegal device id specified\n");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		break;
+	}
+
+	return tResult;
+}
+
+
+/* ------------------------------------- */
+
+
+static NETX_CONSOLEAPP_RESULT_T opMode_erase(ptFlasherInputParameter ptAppParams)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
+	tBootBlockSrcType tSourceTyp;
+
+
+	/* check the device description */
+	ptDeviceDescription = ptAppParams->uParameter.tFlash.ptDeviceDescription;
+	tResult = check_device_description(ptDeviceDescription);
+
+	/* get the source typ */
+	tSourceTyp = ptDeviceDescription->tSourceTyp;
+
+	uprintf(". Device :");
+	switch(tSourceTyp)
+	{
+	case BootBlockSrcType_SPI:
+		/*  use SPI flash */
+		uprintf("SPI flash\n");
+		tResult = spi_erase(&(ptAppParams->uParameter.tErase));
+		break;
+
+	default:
+		/*  unknown boot device */
+		uprintf("unknown\n");
+		uprintf("! illegal device id specified\n");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		break;
+	}
+
+	return tResult;
+}
+
+
+/* ------------------------------------- */
+
+
+static NETX_CONSOLEAPP_RESULT_T opMode_read(ptFlasherInputParameter ptAppParams)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
+	tBootBlockSrcType tSourceTyp;
+
+
+	/* check the device description */
+	ptDeviceDescription = ptAppParams->uParameter.tFlash.ptDeviceDescription;
+	tResult = check_device_description(ptDeviceDescription);
+
+	/* get the source typ */
+	tSourceTyp = ptDeviceDescription->tSourceTyp;
+
+	uprintf(". Device :");
+	switch(tSourceTyp)
+	{
+	case BootBlockSrcType_SPI:
+		/*  use SPI flash */
+		uprintf("SPI flash\n");
+		tResult = spi_read(&(ptAppParams->uParameter.tRead));
+		break;
+
+	default:
+		/*  unknown boot device */
+		uprintf("unknown\n");
+		uprintf("! illegal device id specified\n");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		break;
+	}
+
+	return tResult;
+}
+
+
+/* ------------------------------------- */
+
+#if 0
+static NETX_CONSOLEAPP_RESULT_T opMode_verify(ptFlasherInputParameter ptAppParams)
+{
+        NETX_CONSOLEAPP_RESULT_T tResult;
+        tBootBlockSrcType tBBSrcType;
+
+
+        tBBSrcType = (tBootBlockSrcType)ptAppParams->ulBootBlockSrcType;
+
+        uprintf(". Device :");
+        switch(tBBSrcType)
+        {
+        case BootBlockSrcType_OldStyle:
+                /*  old style bootblock, default to SPI */
+                uprintf("old style, fallback to SPI flash\n");
+                tResult = spi_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
+                break;
+
+        case BootBlockSrcType_SRamBus:
+                /*  use parallel flash on SRam bus */
+                uprintf("SRam Bus parflash\n");
+                tResult = srb_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
+                break;
+
+        case BootBlockSrcType_SPI:
+                /*  use SPI flash */
+                uprintf("SPI flash\n");
+                tResult = spi_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
+                break;
+
+        case BootBlockSrcType_I2C:
+                /*  use I2C eeprom */
+                uprintf("I2C eeprom\n");
+                tResult = i2c_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
+                break;
+
+        case BootBlockSrcType_MMC:
+                /*  use MMC/SD card */
+                uprintf("MMC / SD card\n");
+
+                /*  not yet... */
+                uprintf("! MMC / SD card is not supported yet...\n");
+                tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
+                break;
+
+        case BootBlockSrcType_DPM:
+                /*  DPM can't be flashed */
+                uprintf("DPM\n");
+
+                uprintf("! DPM is not supported\n");
+                tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+                break;
+
+        case BootBlockSrcType_DPE:
+                uprintf("DPM extended\n");
+
+                /*  DPM extended can't be flashed */
+                uprintf("! DPM extented not supported\n");
+                tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+                break;
+
+        case BootBlockSrcType_ExtBus:
+                /*  use parallel flash on Extension bus */
+                uprintf("extension bus parflash\n");
+                tResult = ext_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
+                break;
+
+        default:
+                /*  unknown boot device */
+                uprintf("unknown\n");
+                uprintf("! illegal device id specified\n");
+                tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+                break;
+        }
+
+        return tResult;
+}
+
+
+/* ------------------------------------- */
+
+#endif
+
+
+static NETX_CONSOLEAPP_RESULT_T opMode_isErased(ptFlasherInputParameter ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	tBootBlockSrcType tSrcType;
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
+
+
+	tSrcType = ptAppParams->uParameter.tIsErased.ptDeviceDescription->tSourceTyp;
+	ulStartAdr = ptAppParams->uParameter.tIsErased.ulStartAdr;
+	ulEndAdr = ptAppParams->uParameter.tIsErased.ulEndAdr;
+
+	if( ulStartAdr>=ulEndAdr )
+	{
+		uprintf("! first address is greater or equal than last address.");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else
+	{
+		uprintf(". Device :");
+		switch(tSrcType)
+		{
+		case BootBlockSrcType_SPI:
+			/*  use SPI flash */
+			uprintf("SPI flash\n");
+			tResult = spi_isErased(&(ptAppParams->uParameter.tIsErased), ptConsoleParams);
+			break;
+
+		default:
+			/*  unknown boot device */
+			uprintf("unknown\n");
+			uprintf("! illegal device id specified\n");
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+			break;
+		}
+	}
+
+	return tResult;
+}
+
+
+/* ------------------------------------- */
+
+
+static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(ptFlasherInputParameter ptAppParams)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	tBootBlockSrcType tSrcType;
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
+
+
+	tSrcType = ptAppParams->uParameter.tGetEraseArea.ptDeviceDescription->tSourceTyp;
+	ulStartAdr = ptAppParams->uParameter.tGetEraseArea.ulStartAdr;
+	ulEndAdr = ptAppParams->uParameter.tGetEraseArea.ulEndAdr;
+
+	if( ulStartAdr>=ulEndAdr )
+	{
+		uprintf("! first address is greater or equal than last address.");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else
+	{
+		uprintf(". Device :");
+		switch(tSrcType)
+		{
+		case BootBlockSrcType_SPI:
+			/*  use SPI flash */
+			uprintf("SPI flash\n");
+			tResult = spi_getEraseArea(&(ptAppParams->uParameter.tGetEraseArea));
+			break;
+
+		default:
+			/*  unknown boot device */
+			uprintf("unknown\n");
+			uprintf("! illegal device id specified\n");
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+			break;
+		}
+	}
+
+	return tResult;
+}
+
+
+/* ------------------------------------- */
+
 
 NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTestParam)
 {
@@ -171,354 +513,3 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 	return tResult;
 }
 
-/* ------------------------------------- */
-
-
-NETX_CONSOLEAPP_RESULT_T opMode_detect(ptFlasherInputParameter ptAppParams)
-{
-	NETX_CONSOLEAPP_RESULT_T tResult;
-	tBootBlockSrcType tBBSrcType;
-
-
-	tBBSrcType = ptAppParams->uParameter.tDetect.tSourceTyp;
-
-	uprintf(". Device :");
-	switch(tBBSrcType)
-	{
-	case BootBlockSrcType_SPI:
-		/*  use SPI flash */
-		uprintf("SPI flash\n");
-		tResult = spi_detect(&(ptAppParams->uParameter.tDetect));
-		break;
-
-	default:
-		/*  unknown boot device */
-		uprintf("unknown\n");
-		uprintf("! illegal device id specified\n");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-		break;
-	}
-
-	return tResult;
-}
-
-/* ------------------------------------- */
-
-static NETX_CONSOLEAPP_RESULT_T check_device_description(const DEVICE_DESCRIPTION_T *ptDeviceDescription)
-{
-	NETX_CONSOLEAPP_RESULT_T tResult;
-
-
-	/* expect error */
-	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-
-	if( ptDeviceDescription==NULL )
-	{
-		uprintf("! Missing device description!\n");
-	}
-	else if( ptDeviceDescription->fIsValid==0 )
-	{
-		uprintf("! The device description is not valid!\n");
-	}
-	else if( ptDeviceDescription->sizThis!=sizeof(DEVICE_DESCRIPTION_T) )
-	{
-		uprintf("! The size of the device description differs from the internal representation!\n");
-	}
-	else if( ptDeviceDescription->ulVersion!=FLASHER_INTERFACE_VERSION )
-	{
-		uprintf("! The device description has an invalid version!\n");
-	}
-	else
-	{
-		uprintf(". The device description seems to be ok.\n");
-	}
-
-	return tResult;
-}
-
-/* ------------------------------------- */
-
-
-NETX_CONSOLEAPP_RESULT_T opMode_flash(ptFlasherInputParameter ptAppParams)
-{
-	NETX_CONSOLEAPP_RESULT_T tResult;
-	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
-	tBootBlockSrcType tSourceTyp;
-
-
-	/* check the device description */
-	ptDeviceDescription = ptAppParams->uParameter.tFlash.ptDeviceDescription;
-	tResult = check_device_description(ptDeviceDescription);
-
-	/* get the source typ */
-	tSourceTyp = ptDeviceDescription->tSourceTyp;
-
-	uprintf(". Device :");
-	switch(tSourceTyp)
-	{
-	case BootBlockSrcType_SPI:
-		/*  use SPI flash */
-		uprintf("SPI flash\n");
-		tResult = spi_flash(&(ptAppParams->uParameter.tFlash));
-		break;
-
-	default:
-		/*  unknown boot device */
-		uprintf("unknown\n");
-		uprintf("! illegal device id specified\n");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-		break;
-	}
-
-	return tResult;
-}
-
-
-/* ------------------------------------- */
-
-
-NETX_CONSOLEAPP_RESULT_T opMode_erase(ptFlasherInputParameter ptAppParams)
-{
-	NETX_CONSOLEAPP_RESULT_T tResult;
-	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
-	tBootBlockSrcType tSourceTyp;
-
-
-	/* check the device description */
-	ptDeviceDescription = ptAppParams->uParameter.tFlash.ptDeviceDescription;
-	tResult = check_device_description(ptDeviceDescription);
-
-	/* get the source typ */
-	tSourceTyp = ptDeviceDescription->tSourceTyp;
-
-	uprintf(". Device :");
-	switch(tSourceTyp)
-	{
-	case BootBlockSrcType_SPI:
-		/*  use SPI flash */
-		uprintf("SPI flash\n");
-		tResult = spi_erase(&(ptAppParams->uParameter.tErase));
-		break;
-
-	default:
-		/*  unknown boot device */
-		uprintf("unknown\n");
-		uprintf("! illegal device id specified\n");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-		break;
-	}
-
-	return tResult;
-}
-
-
-/* ------------------------------------- */
-
-
-NETX_CONSOLEAPP_RESULT_T opMode_read(ptFlasherInputParameter ptAppParams)
-{
-	NETX_CONSOLEAPP_RESULT_T tResult;
-	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
-	tBootBlockSrcType tSourceTyp;
-
-
-	/* check the device description */
-	ptDeviceDescription = ptAppParams->uParameter.tFlash.ptDeviceDescription;
-	tResult = check_device_description(ptDeviceDescription);
-
-	/* get the source typ */
-	tSourceTyp = ptDeviceDescription->tSourceTyp;
-
-	uprintf(". Device :");
-	switch(tSourceTyp)
-	{
-	case BootBlockSrcType_SPI:
-		/*  use SPI flash */
-		uprintf("SPI flash\n");
-		tResult = spi_read(&(ptAppParams->uParameter.tRead));
-		break;
-
-	default:
-		/*  unknown boot device */
-		uprintf("unknown\n");
-		uprintf("! illegal device id specified\n");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-		break;
-	}
-
-	return tResult;
-}
-
-
-/* ------------------------------------- */
-
-#if 0
-NETX_CONSOLEAPP_RESULT_T opMode_verify(ptFlasherInputParameter ptAppParams)
-{
-        NETX_CONSOLEAPP_RESULT_T tResult;
-        tBootBlockSrcType tBBSrcType;
-
-
-        tBBSrcType = (tBootBlockSrcType)ptAppParams->ulBootBlockSrcType;
-
-        uprintf(". Device :");
-        switch(tBBSrcType)
-        {
-        case BootBlockSrcType_OldStyle:
-                /*  old style bootblock, default to SPI */
-                uprintf("old style, fallback to SPI flash\n");
-                tResult = spi_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
-                break;
-
-        case BootBlockSrcType_SRamBus:
-                /*  use parallel flash on SRam bus */
-                uprintf("SRam Bus parflash\n");
-                tResult = srb_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
-                break;
-
-        case BootBlockSrcType_SPI:
-                /*  use SPI flash */
-                uprintf("SPI flash\n");
-                tResult = spi_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
-                break;
-
-        case BootBlockSrcType_I2C:
-                /*  use I2C eeprom */
-                uprintf("I2C eeprom\n");
-                tResult = i2c_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
-                break;
-
-        case BootBlockSrcType_MMC:
-                /*  use MMC/SD card */
-                uprintf("MMC / SD card\n");
-
-                /*  not yet... */
-                uprintf("! MMC / SD card is not supported yet...\n");
-                tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-
-                break;
-
-        case BootBlockSrcType_DPM:
-                /*  DPM can't be flashed */
-                uprintf("DPM\n");
-
-                uprintf("! DPM is not supported\n");
-                tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-                break;
-
-        case BootBlockSrcType_DPE:
-                uprintf("DPM extended\n");
-
-                /*  DPM extended can't be flashed */
-                uprintf("! DPM extented not supported\n");
-                tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-                break;
-
-        case BootBlockSrcType_ExtBus:
-                /*  use parallel flash on Extension bus */
-                uprintf("extension bus parflash\n");
-                tResult = ext_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
-                break;
-
-        default:
-                /*  unknown boot device */
-                uprintf("unknown\n");
-                uprintf("! illegal device id specified\n");
-                tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-                break;
-        }
-
-        return tResult;
-}
-
-
-/* ------------------------------------- */
-
-#endif
-
-
-
-NETX_CONSOLEAPP_RESULT_T opMode_isErased(ptFlasherInputParameter ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
-{
-	NETX_CONSOLEAPP_RESULT_T tResult;
-	tBootBlockSrcType tSrcType;
-	unsigned long ulStartAdr;
-	unsigned long ulEndAdr;
-
-
-	tSrcType = ptAppParams->uParameter.tIsErased.ptDeviceDescription->tSourceTyp;
-	ulStartAdr = ptAppParams->uParameter.tIsErased.ulStartAdr;
-	ulEndAdr = ptAppParams->uParameter.tIsErased.ulEndAdr;
-
-	if( ulStartAdr>=ulEndAdr )
-	{
-		uprintf("! first address is greater or equal than last address.");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else
-	{
-		uprintf(". Device :");
-		switch(tSrcType)
-		{
-		case BootBlockSrcType_SPI:
-			/*  use SPI flash */
-			uprintf("SPI flash\n");
-			tResult = spi_isErased(&(ptAppParams->uParameter.tIsErased), ptConsoleParams);
-			break;
-
-		default:
-			/*  unknown boot device */
-			uprintf("unknown\n");
-			uprintf("! illegal device id specified\n");
-			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-			break;
-		}
-	}
-
-	return tResult;
-}
-
-
-
-NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(ptFlasherInputParameter ptAppParams)
-{
-	NETX_CONSOLEAPP_RESULT_T tResult;
-	tBootBlockSrcType tSrcType;
-	unsigned long ulStartAdr;
-	unsigned long ulEndAdr;
-
-
-	tSrcType = ptAppParams->uParameter.tGetEraseArea.ptDeviceDescription->tSourceTyp;
-	ulStartAdr = ptAppParams->uParameter.tGetEraseArea.ulStartAdr;
-	ulEndAdr = ptAppParams->uParameter.tGetEraseArea.ulEndAdr;
-
-	if( ulStartAdr>=ulEndAdr )
-	{
-		uprintf("! first address is greater or equal than last address.");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else
-	{
-		uprintf(". Device :");
-		switch(tSrcType)
-		{
-		case BootBlockSrcType_SPI:
-			/*  use SPI flash */
-			uprintf("SPI flash\n");
-			tResult = spi_getEraseArea(&(ptAppParams->uParameter.tGetEraseArea));
-			break;
-
-		default:
-			/*  unknown boot device */
-			uprintf("unknown\n");
-			uprintf("! illegal device id specified\n");
-			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-			break;
-		}
-	}
-
-	return tResult;
-}
-
-
-/* ------------------------------------- */
