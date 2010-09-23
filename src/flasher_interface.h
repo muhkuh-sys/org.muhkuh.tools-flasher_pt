@@ -118,7 +118,14 @@ typedef struct
 typedef struct
 {
 	tBootBlockSrcType tSourceTyp;
-	unsigned long ulChipSelect;
+	union
+	{
+		struct
+		{
+			unsigned long ulChipSelect;
+		} sSRamBus;
+		SPI_CONFIGURATION_T tSpi;
+	} uSourceParameter;
 	DEVICE_DESCRIPTION_T *ptDeviceDescription;
 } CMD_PARAMETER_DETECT_T;
 
