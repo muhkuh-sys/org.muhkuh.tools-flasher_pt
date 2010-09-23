@@ -46,8 +46,15 @@
 
 #include "spi_flash.h"
 
-#include "drv_sqi.h"
-
+#if ASIC_TYP==10
+/* netX10 has a SQI and a SPI unit. */
+#	include "drv_sqi.h"
+/*#	include "drv_spi.h" */
+#elif ASIC_TYP==50
+#	include "drv_spi.h"
+#elif ASIC_TYP==100 || ASIC_TYP==500
+#	include "drv_spi.h"
+#endif
 
 /*
 ************************************************************
@@ -84,11 +91,11 @@
 
 /*****************************************************************************/
 /*! getMaskLength
-*		Calculate the minimum mask for an input parameter and return the
+*   Calculate the minimum mask for an input parameter and return the
 *   number of bits used for this mask. The mask always starts at bit 0.
 *   \param ulVal   Value to get the masklength from
 *
-*		\return				 Number of bits used for the mask													 */
+*   \return        Number of bits used for the mask                          */
 /*****************************************************************************/
 static unsigned int getMaskLength(unsigned long ulVal)
 {
@@ -115,12 +122,12 @@ static unsigned int getMaskLength(unsigned long ulVal)
 
 /*****************************************************************************/
 /*! getDeviceAddress
-*		Convert the linear input address to the device's addressing mode
+*   Convert the linear input address to the device's addressing mode
 *               
-*   \param ptFls   					pointer to the instance of the spi flash
-*		\param ulLinearAddress	linear address                  
+*   \param ptFls            pointer to the instance of the spi flash
+*   \param ulLinearAddress  linear address                  
 *                                                                              
-*		\return				 					device specific address													 */
+*   \return                 device specific address                          */
 /*****************************************************************************/
 static unsigned long getDeviceAddress(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress)
 {
@@ -167,12 +174,12 @@ static unsigned long getDeviceAddress(const SPI_FLASH_T *ptFlash, unsigned long 
 
 /*****************************************************************************/
 /*! read_status
-*		read the status register
+*   read the status register
 *               
-*   \param 	ptFls   					Pointer to FLASH Control Block
-*		\param 	ulLinearAddress		linear address                  
+*   \param   ptFls              Pointer to FLASH Control Block
+*   \param   ulLinearAddress    linear address
 *                                                                              
-*		\return	RX_OK			 				status successfully returned									 */
+*   \return  RX_OK              status successfully returned                 */
 /*****************************************************************************/
 static int read_status(const SPI_FLASH_T *ptFlash, unsigned char *pucStatus)
 {
@@ -244,12 +251,12 @@ static int print_status(const SPI_FLASH_T *ptFlash)
 
 /*****************************************************************************/
 /*! detect_flash
-*		Convert the linear input address to the device's addressing mode
+*   Convert the linear input address to the device's addressing mode
 *               
-*   \param 	ptFls   					pointer to the instance of the spi flash
-*		\param 	ulLinearAddress		linear address                  
+*   \param   ptFls              pointer to the instance of the spi flash
+*   \param   ulLinearAddress    linear address                  
 *                                                                              
-*		\return	RX_OK			 				status successfully returned									 */
+*   \return  RX_OK              status successfully returned                 */
 /*****************************************************************************/
 static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptFlashAttr)
 {
@@ -384,19 +391,19 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 
 /*****************************************************************************/
 /*! send_simple_cmd
-*		Send a command which has no response. In detail it does this:
-*								deselect the slave,
+*   Send a command which has no response. In detail it does this:
+*               deselect the slave,
 *               send one idle byte,
 *               select the slave,
 *               send the command,
 *               deselect the slave,
 *               send one idle byte
 *               
-*   \param 	ptFls   					pointer to the instance of the spi flash
-*		\param  pbCmd							pointer to the byte array holding the command
-*		\param  uiCmdLen					command length in bytes
+*   \param   ptFls             pointer to the instance of the spi flash
+*   \param   pbCmd             pointer to the byte array holding the command
+*   \param   uiCmdLen          command length in bytes
 *                                                                              
-*		\return	RX_OK			 				status successfully returned									 */
+*   \return  RX_OK             status successfully returned                  */
 /*****************************************************************************/
 static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucCmd, size_t sizCmdLen)
 {
@@ -451,10 +458,10 @@ static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucC
 
 /*****************************************************************************/
 /*! write_enable
-*		unlock the flash's write protection
+*   unlock the flash's write protection
 *               
-*   \param 	ptFlash   				Pointer to flash Control Block
-*		\return	iResult			 			>=0 success, <0 error													 */
+*   \param   ptFlash           Pointer to flash Control Block
+*   \return  iResult           >=0 success, <0 error                         */
 /*****************************************************************************/
 static int write_enable(const SPI_FLASH_T *ptFlash)
 {
@@ -485,9 +492,8 @@ static int write_enable(const SPI_FLASH_T *ptFlash)
 /*! wait_for_ready
 *   wait for the flash to finish a write operation
 *               
-*   \param 	ptFls   					Pointer to FLASH Control Block
-*                                                                              
-*		\return	RX_OK			 				FLASH is idle and ready for next operation		 */
+*   \param   ptFls             Pointer to FLASH Control Block
+*   \return  RX_OK             FLASH is idle and ready for next operation    */
 /*****************************************************************************/
 static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 {
@@ -529,31 +535,16 @@ static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 *           Drv_SpiS_UNKNOWN_FLASH  detecting the serial FLASH automatically 
 *																		failed																	 */
 /*****************************************************************************/
-
-static const SPI_CONFIGURATION_T tSpiCfg =
-{
-	.ulInitialSpeedKhz = 1000,
-	.ucIdleCfg = MSK_SQI_CFG_IDLE_IO1_OE,
-	.ucMode = 0,
-	.aucMmio =
-	{
-		0xffU,          /* chip select */
-		0xffU,          /* clock */
-		0xffU,          /* miso */
-		0xffU           /* mosi */
-	}
-};
-
-
-int Drv_SpiInitializeFlash(unsigned int uiUnit, unsigned int uiChipSelect, SPI_FLASH_T *ptFlash)
+int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptFlash)
 {
 	int   iResult;
 	const SPIFLASH_ATTRIBUTES_T *ptFlashAttr;
 	SPI_CFG_T *ptSpiDev;
 	unsigned int uiCmdLen;
+	unsigned int uiChipSelect;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiInitializeFlash(): uiUnit=%d, uiChipSelect=%d, ptFlash=0x%08x\n", uiUnit, uiChipSelect, ptFlash));
+	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiInitializeFlash(): ptSpiCfg=%p, ptFlash=0x%08x\n", ptSpiCfg, ptFlash));
 
 	/* no flash detected yet */
 	ptFlashAttr = NULL;
@@ -561,7 +552,25 @@ int Drv_SpiInitializeFlash(unsigned int uiUnit, unsigned int uiChipSelect, SPI_F
 	/* get device */
 	ptSpiDev = &ptFlash->tSpiDev;
 
-	iResult = boot_drv_sqi_init(ptSpiDev, &tSpiCfg, 0);
+	/* Get the chipselect number. */
+	uiChipSelect = ptSpiCfg->uiChipSelect;
+
+	switch( ptSpiCfg->uiUnit )
+	{
+	case 0:
+		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg, uiChipSelect);
+		break;
+
+	case 1:
+		// NOTE: Support for unit 1 is not finished yet.
+//		iResult = boot_drv_spi_init(ptSpiDev, &tSpiCfg, uiChipSelect);
+//		break;
+
+	default:
+		iResult = -1;
+		break;
+	}
+
 	if( iResult!=0 )
 	{
 		DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: HalSPI_Init failed with %d.\n", iResult));

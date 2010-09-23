@@ -55,7 +55,7 @@ typedef struct SPI_FLASH_Ttag
 
 /*-----------------------------------*/
 
-int Drv_SpiInitializeFlash        (unsigned int uiUnit, unsigned int uiChipSelect, SPI_FLASH_T *ptFlash);
+int Drv_SpiInitializeFlash        (const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptFlash);
 int Drv_SpiEraseFlashPage         (const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress);
 int Drv_SpiEraseFlashSector       (const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress);
 int Drv_SpiEraseFlashMultiSectors (const SPI_FLASH_T *ptFlash, unsigned long ulLinearStartAddress, unsigned long ulLinearEndAddress);
