@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import imp
+import sys
+import os
+
 from SCons.Script import *
 
 
@@ -36,12 +40,7 @@ atexit.register(display_build_status)
 
 
 def get_compiler(name):
-	import imp
-	import sys
-	import os
 	global DEPACK_GCC_DIR
-	
-	pathname = DEPACK_GCC_DIR + os.pathsep + name
 	
 	mod = None
 	fp,pathname,description = imp.find_module(name, [DEPACK_GCC_DIR])
@@ -52,3 +51,24 @@ def get_compiler(name):
 		if fp:
 			fp.close()
 	return mod
+
+
+def get_asciidoc(name):
+	global DEPACK_ASCIIDOC_DIR
+	
+	mod = None
+	fp,pathname,description = imp.find_module(name, [DEPACK_ASCIIDOC_DIR])
+	
+	try:
+		mod = imp.load_module(name, fp, pathname, description)
+	finally:
+		# Since we may exit via an exception, close fp explicitly.
+		if fp:
+			fp.close()
+	return mod
+
+
+def set_build_path(env, build_path, source_path, sources):
+	env.VariantDir(build_path, source_path, duplicate=0)
+	return [src.replace(source_path, build_path) for src in sources]
+

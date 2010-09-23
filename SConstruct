@@ -43,12 +43,12 @@ flasher_sources_common = """
 	src/cfi_flash.c
 	src/delay.c
 	src/spi_flash.c
-	src/flasher_ext.c
+	src/flasher_parflash.c
 	src/flasher_spi.c
-	src/flasher_srb.c
 	src/i2c_hifsta.c
 	src/init_netx_test.S
 	src/main.c
+	src/mmio.c
 	src/netx_consoleapp.c
 	src/parflash_common.c
 	src/progress_bar.c
@@ -86,6 +86,10 @@ flasher_sources_custom_netx10 = """
 	src/netx10/spi.c
 	src/netx10/netx10_io_areas.c
 """
+
+src_netx500 = Split(flasher_sources_common + flasher_sources_custom_netx500)
+src_netx50  = Split(flasher_sources_common + flasher_sources_custom_netx50)
+src_netx10  = Split(flasher_sources_common + flasher_sources_custom_netx10)
 
 
 default_ccflags = """
@@ -154,7 +158,6 @@ if not GetOption('help'):
 	env_netx500.Replace(LIBPATH = ['${GCC_DIR}/arm-elf/lib/arm926ej-s', '${GCC_DIR}/lib/gcc/arm-elf/${GCC_VERSION}/arm926ej-s'])
 	env_netx500.Append(CPPDEFINES = [['ASIC_TYP', '500']])
 	env_netx500.Append(CPPPATH = ['src/netx500'])
-	env_netx500.VariantDir('targets/netx500', 'src', duplicate=0)
 	
 	env_netx50 = env_default.Clone()
 	env_netx50.Append(CCFLAGS = ['-mcpu=arm966e-s'])
@@ -162,7 +165,6 @@ if not GetOption('help'):
 	env_netx50.Replace(LIBPATH = ['${GCC_DIR}/arm-elf/lib/arm966e-s', '${GCC_DIR}/lib/gcc/arm-elf/${GCC_VERSION}/arm966e-s'])
 	env_netx50.Append(CPPDEFINES = [['ASIC_TYP', '50']])
 	env_netx50.Append(CPPPATH = ['src/netx50'])
-	env_netx50.VariantDir('targets/netx50', 'src', duplicate=0)
 	
 	env_netx10 = env_default.Clone()
 	env_netx10.Append(CCFLAGS = ['-mcpu=arm966e-s'])
@@ -170,11 +172,6 @@ if not GetOption('help'):
 	env_netx10.Replace(LIBPATH = ['${GCC_DIR}/arm-elf/lib/arm966e-s', '${GCC_DIR}/lib/gcc/arm-elf/${GCC_VERSION}/arm966e-s'])
 	env_netx10.Append(CPPDEFINES = [['ASIC_TYP', '10']])
 	env_netx10.Append(CPPPATH = ['src/netx10'])
-	env_netx10.VariantDir('targets/netx10', 'src', duplicate=0)
-	env_netx10.Replace(UUE_PRE = """
-L 00020000
-""")
-	env_netx10.Replace(UUE_POST = "")
 	
 	
 	#----------------------------------------------------------------------------
@@ -189,8 +186,12 @@ L 00020000
 #	flasher_netx50_elf = env_netx50.Elf('targets/flasher_netx50', flasher_sources_netx50)
 #	env_netx50.ObjCopy('targets/flasher_netx50', flasher_netx50_elf)
 	
-	flasher_sources_netx10  = [src.replace('src', 'targets/netx10')  for src in Split(flasher_sources_common+flasher_sources_custom_netx10)]
-	flasher_netx10_elf = env_netx10.Elf('targets/flasher_netx10', flasher_sources_netx10)
-	flasher_netx10_bin = env_netx10.ObjCopy('targets/flasher_netx10', flasher_netx10_elf)
-	flasher_netx10_uue = env_netx10.UUEncode('targets/flasher_netx10.uue', flasher_netx10_bin)
+	
+	env_netx10_intram = env_netx10.Clone()
+	src_netx10_intram = scons_common.set_build_path(env_netx10_intram, 'targets/netx10_intram', 'src', src_netx10)
+	elf_netx10_intram = env_netx10_intram.Elf('targets/flasher_netx10', src_netx10_intram)
+	bin_netx10_intram = env_netx10_intram.ObjCopy('targets/flasher_netx10', elf_netx10_intram)
+	uue_netx10_intram = env_netx10_intram.UUEncode('targets/flasher_netx10.uue', bin_netx10_intram, UUE_PRE = """
+L 00020000
+""", UUE_POST = "")
 
