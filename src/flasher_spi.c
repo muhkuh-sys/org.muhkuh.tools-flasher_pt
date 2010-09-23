@@ -568,27 +568,21 @@ NETX_CONSOLEAPP_RESULT_T spi_verify(CMD_PARAMETER_VERIFY_T *ptParameter)
 /*-----------------------------------*/
 
 
-
-/*-----------------------------------*/
-
-
 NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int iResult;
-	unsigned long ulChipSelect;
 	DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	SPI_FLASH_T              *ptFlashDescription;
 
 
-	ulChipSelect = ptParameter->ulChipSelect;
 	ptDeviceDescription = ptParameter->ptDeviceDescription;
 	ptFlashDescription = &(ptDeviceDescription->uInfo.tSpiInfo);
 
 	/* try to detect flash */
-	uprintf(". Detecting SPI flash on cs %d...\n", ulChipSelect);
-	ptFlashDescription->uiSlaveId = ulChipSelect;
-	iResult = Drv_SpiInitializeFlash(0, 0, ptFlashDescription);
+	uprintf(". Detecting SPI flash on unit %d, cs %d...\n", ptParameter->uSourceParameter.tSpi.uiUnit, ptParameter->uSourceParameter.tSpi.uiChipSelect);
+	ptFlashDescription->uiSlaveId = ptParameter->uSourceParameter.tSpi.uiChipSelect;
+	iResult = Drv_SpiInitializeFlash(&(ptParameter->uSourceParameter.tSpi), ptFlashDescription);
 	if( iResult!=0 )
 	{
 		/* failed to detect the spi flash */
@@ -601,9 +595,7 @@ NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	}
 	else
 	{
-		uprintf(". ok, found ");
-		uprintf(ptFlashDescription->tAttributes.acName);
-		uprintf("\n");
+		uprintf(". ok, found %s\n", ptFlashDescription->tAttributes.acName);
 
 		/* set the result data */
 		ptDeviceDescription->fIsValid = 1;
