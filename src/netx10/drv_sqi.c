@@ -23,6 +23,7 @@
 
 #include "drv_sqi.h"
 
+#include "mmio.h"
 #include "netx_io_areas.h"
 
 
@@ -473,7 +474,7 @@ static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 	ptSqiArea->aulSqi_cr[1] = 0;
 
 	/* activate the spi pins */
-	spi_deactivate_mmios(ptCfg, aatMmioValues[ptCfg->uiChipSelect]);
+	mmio_deactivate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[ptCfg->uiChipSelect]);
 }
 
 
@@ -488,8 +489,8 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 	iResult = 0;
 
 	ptCfg->ulSpeed = ptSpiCfg->ulInitialSpeedKhz;	/* initial device speed in kHz */
-	ptCfg->uiIdleCfg = ptSpiCfg->ucIdleCfg;		/* the idle configuration */
-	ptCfg->tMode = ptSpiCfg->ucMode;		/* bus mode */
+	ptCfg->uiIdleCfg = ptSpiCfg->uiIdleCfg;		/* the idle configuration */
+	ptCfg->tMode = ptSpiCfg->uiMode;		/* bus mode */
 	ptCfg->uiChipSelect = 1U<<uiChipSelect;		/* chip select */
 
 	/* set the function pointers */
@@ -606,7 +607,7 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 	ptCfg->ucIdleChar = ucIdleChar;
 
 	/* activate the spi pins */
-	spi_activate_mmios(ptCfg, aatMmioValues[uiChipSelect]);
+	mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[uiChipSelect]);
 
 	return iResult;
 }

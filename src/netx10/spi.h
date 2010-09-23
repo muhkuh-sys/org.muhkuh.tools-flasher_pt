@@ -1,10 +1,21 @@
 /***************************************************************************
- *   Copyright (C) 2005, 2006, 2007, 2008, 2009 by Hilscher GmbH           *
+ *   Copyright (C) 2010 by Hilscher GmbH                                   *
+ *   cthelen@hilscher.com                                                  *
  *                                                                         *
- *   Author: Christoph Thelen (cthelen@hilscher.com)                       *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU Library General Public License as       *
+ *   published by the Free Software Foundation; either version 2 of the    *
+ *   License, or (at your option) any later version.                       *
  *                                                                         *
- *   Redistribution or unauthorized use without expressed written          *
- *   agreement from the Hilscher GmbH is forbidden.                        *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU Library General Public     *
+ *   License along with this program; if not, write to the                 *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
 
@@ -41,9 +52,11 @@ typedef enum
 
 typedef struct
 {
+	unsigned int uiUnit;
+	unsigned int uiChipSelect;
 	unsigned long ulInitialSpeedKhz;
-	unsigned char ucIdleCfg;
-	unsigned char ucMode;
+	unsigned int uiIdleCfg;
+	unsigned int uiMode;
 	unsigned char aucMmio[4];
 } SPI_CONFIGURATION_T;
 
@@ -85,9 +98,6 @@ typedef struct SPI_CFG_Ttag
 	unsigned char aucMmio[4];	/* mmio pins */
 } SPI_CFG_T;
 
-
-void spi_activate_mmios(const SPI_CFG_T *ptCfg, const MMIO_CFG_T *ptMmioValues);
-void spi_deactivate_mmios(const SPI_CFG_T *ptCfg, const MMIO_CFG_T *ptMmioValues);
 
 #endif	/* __SPI_H__ */
 
