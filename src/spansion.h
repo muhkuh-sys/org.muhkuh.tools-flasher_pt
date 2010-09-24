@@ -111,7 +111,7 @@
   #define SPANSION_CMD_PPB_EXIT_CYCLE1          0x00U
 
 
-  int SpansionIdentifyFlash(PFLASH_DEVICE ptFlashDev);
+  int SpansionIdentifyFlash(FLASH_DEVICE *ptFlashDev);
 
 // ///////////////////////////////////////////////////// 
 //! \}
