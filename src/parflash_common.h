@@ -22,14 +22,14 @@
 #include "cfi_flash.h"
 
 
-#ifndef __parflash_common_h__
-#define __parflash_common_h__
+#ifndef __PARFLASH_COMMON_H__
+#define __PARFLASH_COMMON_H__
 
 
-NETX_CONSOLEAPP_RESULT_T parflash_writeImage(PFLASH_DEVICE ptFlashDev, unsigned long ulStartSector, const unsigned char *pbData, unsigned long ulDataByteLen);
-NETX_CONSOLEAPP_RESULT_T parflash_erase     (PFLASH_DEVICE ptFlashDev, unsigned long ulStartSector, unsigned long ulDataByteLen);
-NETX_CONSOLEAPP_RESULT_T parflash_read      (PFLASH_DEVICE ptFlashDev, unsigned long ulStartSector, unsigned char *pbData, unsigned long ulDataByteLen);
-NETX_CONSOLEAPP_RESULT_T parflash_verify    (PFLASH_DEVICE ptFlashDev, unsigned long ulStartSector, const unsigned char *pbData, unsigned long ulDataByteLen);
+NETX_CONSOLEAPP_RESULT_T parflash_writeImage(FLASH_DEVICE *ptFlashDev, unsigned long ulStartSector, const unsigned char *pbData, unsigned long ulDataByteLen);
+NETX_CONSOLEAPP_RESULT_T parflash_erase(FLASH_DEVICE *ptFlashDev, unsigned long ulStartSector, unsigned long ulDataByteLen);
+NETX_CONSOLEAPP_RESULT_T parflash_read(FLASH_DEVICE *ptFlashDev, unsigned long ulStartSector, unsigned char *pbData, unsigned long ulDataByteLen);
+NETX_CONSOLEAPP_RESULT_T parflash_verify(FLASH_DEVICE *ptFlashDev, unsigned long ulStartSector, const unsigned char *pbData, unsigned long ulDataByteLen);
 
 
-#endif	// __parflash_common_h__
+#endif	/* __PARFLASH_COMMON_H__ */
