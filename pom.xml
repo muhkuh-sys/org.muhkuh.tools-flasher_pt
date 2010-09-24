@@ -4,7 +4,7 @@
 	<groupId>net.sourceforge.muhkuh</groupId>
 	<artifactId>flasher</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0</version>
+	<version>1.1</version>
 	<name>Flasher</name>
 	<url>http://muhkuh.sourceforge.net/flasher</url>
 
