@@ -60,15 +60,24 @@ typedef enum
 
 /*-----------------------------------*/
 
+typedef unsigned long (*PFN_START)(unsigned long ulParameter);
+
 typedef struct
 {
 	const char    abMagic[4];
-	unsigned long aulChiptyp[2];
-	unsigned long aulIf[4];
 	unsigned long ulVersionMaj;
 	unsigned long ulVersionMin;
 	const char    acVersion[16];
+	unsigned long *pulLoadAddress;
+	PFN_START pfnExecutionAddress;
+	unsigned long aulChiptyp[2];
+	unsigned long aulIf[4];
 } tFlasherVersion;
+
+/*-----------------------------------*/
+
+extern unsigned long __LOAD_ADDRESS__[1];
+unsigned long start(unsigned long ulParameter);
 
 /*-----------------------------------*/
 

@@ -33,6 +33,7 @@ SECTIONS
 {
 	.code ORIGIN(INTRAM2_ITCM) :
 	{
+		__LOAD_ADDRESS__ = . ;
 		*(.init_code)
 		*(.version_info)
 		*(.text)
