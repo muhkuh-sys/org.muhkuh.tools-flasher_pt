@@ -63,7 +63,7 @@
   #define SET_BLOCK_LOCK_CONFIRM	0x01
   #define CLEAR_BLOCK_LOCK_CONFIRM	0xD0
 
-  int IntelIdentifyFlash(PFLASH_DEVICE ptFlashDev);
+  int IntelIdentifyFlash(FLASH_DEVICE *ptFlashDev);
 
 // ///////////////////////////////////////////////////// 
 //! \}
