@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "spi_flash.h"
+#include "parflash_common.h"
 
 /*-------------------------------------*/
 
@@ -33,27 +34,21 @@
 
 typedef enum
 {
-	BootBlockSrcType_OldStyle	= 0,	/*  old style bootblock, no source identifier */
-	BootBlockSrcType_SRamBus	= 1,	/*  parallel flash on sram bus                */
-	BootBlockSrcType_SPI		= 2,	/*  serial flash on spi bus                   */
-	BootBlockSrcType_I2C		= 3,	/*  serial eeprom on i2c bus                  */
-	BootBlockSrcType_MMC		= 4,	/*  boot image on mmc/sd card                 */
-	BootBlockSrcType_DPM		= 5,	/*  dpm boot mode                             */
-	BootBlockSrcType_DPE		= 6,	/*  extended dpm boot mode                    */
-	BootBlockSrcType_ExtBus		= 7	/*  parallel flash on extension bus           */
-} tBootBlockSrcType;
+	BUS_ParFlash                    = 0,    /*  Parallel flash */
+	BUS_SPI                         = 1     /*  Serial flash on spi bus. */
+} BUS_T;
 
 typedef enum
 {
-	OperationMode_Flash = 0,
-	OperationMode_Erase = 1,
-	OperationMode_Read = 2,
-	OperationMode_Verify = 3,
-	OperationMode_Checksum = 4,		/* build a checksum over the contents of a specified area of a device */
-	OperationMode_Detect = 5,		/* detect a device */
-	OperationMode_IsErased = 6,		/* check if the specified area of a device is erased */
-	OperationMode_GetEraseArea = 7		/* expand an area to the erase block borders */
-} tOperationMode;
+	OPERATION_MODE_Flash            = 0,
+	OPERATION_MODE_Erase            = 1,
+	OPERATION_MODE_Read             = 2,
+	OPERATION_MODE_Verify           = 3,
+	OPERATION_MODE_Checksum         = 4,    /* build a checksum over the contents of a specified area of a device */
+	OPERATION_MODE_Detect           = 5,    /* detect a device */
+	OPERATION_MODE_IsErased         = 6,    /* check if the specified area of a device is erased */
+	OPERATION_MODE_GetEraseArea     = 7     /* expand an area to the erase block borders */
+} OPERATION_MODE_T;
 
 
 typedef struct
@@ -62,9 +57,10 @@ typedef struct
 	size_t sizThis;			/* size of the complete structure in bytes */
 	unsigned long ulVersion;	/* interface version of this description (this is the same as the version in the input parameters) */
 
-	tBootBlockSrcType tSourceTyp;
+	BUS_T tSourceTyp;
 	union
 	{
+		PARFLASH_CONFIGURATION_T tParFlash;
 		SPI_FLASH_T tSpiInfo;
 	} uInfo;
 } DEVICE_DESCRIPTION_T;
@@ -117,13 +113,10 @@ typedef struct
 
 typedef struct
 {
-	tBootBlockSrcType tSourceTyp;
+	BUS_T tSourceTyp;
 	union
 	{
-		struct
-		{
-			unsigned long ulChipSelect;
-		} sSRamBus;
+		PARFLASH_CONFIGURATION_T tParFlash;
 		SPI_CONFIGURATION_T tSpi;
 	} uSourceParameter;
 	DEVICE_DESCRIPTION_T *ptDeviceDescription;
@@ -149,7 +142,7 @@ typedef struct
 typedef struct
 {
 	unsigned long ulParamVersion;
-	tOperationMode tOperationMode;
+	OPERATION_MODE_T tOperationMode;
 	union
 	{
 		CMD_PARAMETER_FLASH_T tFlash;

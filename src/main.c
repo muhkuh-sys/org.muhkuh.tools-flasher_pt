@@ -24,12 +24,10 @@
 
 #include "board.h"
 
-/*  parallel flash on extension bus */
-#include "flasher_ext.h"
-/*  serial flash on spi */
+/* Parallel flash routines. */
+#include "flasher_parflash.h"
+/* Serial flash on spi. */
 #include "flasher_spi.h"
-/*  parallel flash on sram bus */
-#include "flasher_srb.h"
 
 
 #include "flasher_interface.h"
@@ -44,7 +42,7 @@
 static NETX_CONSOLEAPP_RESULT_T opMode_detect(ptFlasherInputParameter ptAppParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	tBootBlockSrcType tBBSrcType;
+	BUS_T tBBSrcType;
 
 
 	tBBSrcType = ptAppParams->uParameter.tDetect.tSourceTyp;
@@ -52,7 +50,13 @@ static NETX_CONSOLEAPP_RESULT_T opMode_detect(ptFlasherInputParameter ptAppParam
 	uprintf(". Device :");
 	switch(tBBSrcType)
 	{
-	case BootBlockSrcType_SPI:
+	case BUS_ParFlash:
+		/*  use parallel flash */
+		uprintf("Parallel flash\n");
+		tResult = parflash_detect(&(ptAppParams->uParameter.tDetect));
+		break;
+
+	case BUS_SPI:
 		/*  use SPI flash */
 		uprintf("SPI flash\n");
 		tResult = spi_detect(&(ptAppParams->uParameter.tDetect));
@@ -110,7 +114,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_flash(ptFlasherInputParameter ptAppParams
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
-	tBootBlockSrcType tSourceTyp;
+	BUS_T tSourceTyp;
 
 
 	/* check the device description */
@@ -123,7 +127,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_flash(ptFlasherInputParameter ptAppParams
 	uprintf(". Device :");
 	switch(tSourceTyp)
 	{
-	case BootBlockSrcType_SPI:
+	case BUS_SPI:
 		/*  use SPI flash */
 		uprintf("SPI flash\n");
 		tResult = spi_flash(&(ptAppParams->uParameter.tFlash));
@@ -148,7 +152,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_erase(ptFlasherInputParameter ptAppParams
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
-	tBootBlockSrcType tSourceTyp;
+	BUS_T tSourceTyp;
 
 
 	/* check the device description */
@@ -161,7 +165,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_erase(ptFlasherInputParameter ptAppParams
 	uprintf(". Device :");
 	switch(tSourceTyp)
 	{
-	case BootBlockSrcType_SPI:
+	case BUS_SPI:
 		/*  use SPI flash */
 		uprintf("SPI flash\n");
 		tResult = spi_erase(&(ptAppParams->uParameter.tErase));
@@ -186,7 +190,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_read(ptFlasherInputParameter ptAppParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
-	tBootBlockSrcType tSourceTyp;
+	BUS_T tSourceTyp;
 
 
 	/* check the device description */
@@ -199,7 +203,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_read(ptFlasherInputParameter ptAppParams)
 	uprintf(". Device :");
 	switch(tSourceTyp)
 	{
-	case BootBlockSrcType_SPI:
+	case BUS_SPI:
 		/*  use SPI flash */
 		uprintf("SPI flash\n");
 		tResult = spi_read(&(ptAppParams->uParameter.tRead));
@@ -307,7 +311,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_verify(ptFlasherInputParameter ptAppParam
 static NETX_CONSOLEAPP_RESULT_T opMode_isErased(ptFlasherInputParameter ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	tBootBlockSrcType tSrcType;
+	BUS_T tSrcType;
 	unsigned long ulStartAdr;
 	unsigned long ulEndAdr;
 
@@ -326,7 +330,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_isErased(ptFlasherInputParameter ptAppPar
 		uprintf(". Device :");
 		switch(tSrcType)
 		{
-		case BootBlockSrcType_SPI:
+		case BUS_SPI:
 			/*  use SPI flash */
 			uprintf("SPI flash\n");
 			tResult = spi_isErased(&(ptAppParams->uParameter.tIsErased), ptConsoleParams);
@@ -351,7 +355,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_isErased(ptFlasherInputParameter ptAppPar
 static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(ptFlasherInputParameter ptAppParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	tBootBlockSrcType tSrcType;
+	BUS_T tSrcType;
 	unsigned long ulStartAdr;
 	unsigned long ulEndAdr;
 
@@ -370,7 +374,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(ptFlasherInputParameter ptAp
 		uprintf(". Device :");
 		switch(tSrcType)
 		{
-		case BootBlockSrcType_SPI:
+		case BUS_SPI:
 			/*  use SPI flash */
 			uprintf("SPI flash\n");
 			tResult = spi_getEraseArea(&(ptAppParams->uParameter.tGetEraseArea));
@@ -397,7 +401,7 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	ptFlasherInputParameter ptAppParams;
 	unsigned long ulParamVersion;
-	tOperationMode tOpMode;
+	OPERATION_MODE_T tOpMode;
 
 
 	/* init the board */
@@ -453,22 +457,22 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 			tOpMode = ptAppParams->tOperationMode;
 			switch( tOpMode )
 			{
-			case OperationMode_Detect:
+			case OPERATION_MODE_Detect:
 				uprintf(". Operation Mode: Detect\n");
 				tResult = opMode_detect(ptAppParams);
 				break;
 
-			case OperationMode_Flash:
+			case OPERATION_MODE_Flash:
 				uprintf(". Operation Mode: Flash\n");
 				tResult = opMode_flash(ptAppParams);
 				break;
 
-			case OperationMode_Erase:
+			case OPERATION_MODE_Erase:
 				uprintf(". Operation Mode: Erase\n");
 				tResult = opMode_erase(ptAppParams);
 				break;
 
-			case OperationMode_Read:
+			case OPERATION_MODE_Read:
 				uprintf(". Operation Mode: Read\n");
 				tResult = opMode_read(ptAppParams);
 				break;
@@ -478,12 +482,12 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 // //				tResult = opMode_verify(ptAppParams);
 // 				break;
 
-			case OperationMode_IsErased:
+			case OPERATION_MODE_IsErased:
 				uprintf(". Operation Mode: IsErased\n");
 				tResult = opMode_isErased(ptAppParams, ptTestParam);
 				break;
 
-			case OperationMode_GetEraseArea:
+			case OPERATION_MODE_GetEraseArea:
 				uprintf(". Operation Mode: Get Erase Area\n");
 				tResult = opMode_getEraseArea(ptAppParams);
 				break;

@@ -573,7 +573,7 @@ NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int iResult;
 	DEVICE_DESCRIPTION_T *ptDeviceDescription;
-	SPI_FLASH_T              *ptFlashDescription;
+	SPI_FLASH_T *ptFlashDescription;
 
 
 	ptDeviceDescription = ptParameter->ptDeviceDescription;
@@ -601,7 +601,7 @@ NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 		ptDeviceDescription->fIsValid = 1;
 		ptDeviceDescription->sizThis = sizeof(DEVICE_DESCRIPTION_T);
 		ptDeviceDescription->ulVersion = FLASHER_INTERFACE_VERSION;
-		ptDeviceDescription->tSourceTyp = BootBlockSrcType_SPI;
+		ptDeviceDescription->tSourceTyp = BUS_SPI;
 
 		tResult = NETX_CONSOLEAPP_RESULT_OK;
 	}
