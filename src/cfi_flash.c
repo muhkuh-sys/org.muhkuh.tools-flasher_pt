@@ -157,8 +157,8 @@ static const CFI_CHECK_CONDITIONS s_atCFIChecks[] =
 static int CFIMemCmp(volatile void* pvFlash, const void* pvCmpBuf, unsigned long ulLen)
 {
 	int iRet;
-	volatile unsigned char *pbFlash;
-	const unsigned char *pbCmpBuf;
+	volatile unsigned char *pucFlash;
+	const unsigned char *pucCmpBuf;
 	unsigned char ucFlashData;
 	unsigned char ucCmpData;
 
@@ -167,13 +167,13 @@ static int CFIMemCmp(volatile void* pvFlash, const void* pvCmpBuf, unsigned long
 
 	iRet = 0;
 
-	pbFlash  = (volatile unsigned char*)pvFlash;
-	pbCmpBuf = (const unsigned char*)pvCmpBuf;
+	pucFlash  = (volatile unsigned char*)pvFlash;
+	pucCmpBuf = (const unsigned char*)pvCmpBuf;
 
 	while( ulLen>0 )
 	{
-		ucCmpData = *(pbCmpBuf++);
-		ucFlashData = *(pbFlash++);
+		ucCmpData = *(pucCmpBuf++);
+		ucFlashData = *(pucFlash++);
 
 		DEBUGMSG(ZONE_VERBOSE, (".CFIMemCmp(): Pattern: 0x%02x, Flash: 0x%02x.\n", ucCmpData, ucFlashData));
 
