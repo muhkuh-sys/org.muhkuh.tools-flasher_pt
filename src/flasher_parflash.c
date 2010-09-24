@@ -53,7 +53,7 @@
 
 
 #if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
-static void setup_flash_srb(unsigned int uiWidth)
+static void setup_flash_srb(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits)
 {
 	unsigned long *pulFlashCtrl = (unsigned long*)(HOSTADR(extsram0_ctrl));
 	unsigned long  ulRegValue;
@@ -63,16 +63,16 @@ static void setup_flash_srb(unsigned int uiWidth)
 	ulRegValue |= (DEFAULT_POSTPAUSE  << HOSTSRT(extsram0_ctrl_WSPostPauseExtMem0);
 	ulRegValue |= (DEFAULT_WAITSTATES << HOSTSRT(extsram0_ctrl_WSExtMem0);
 
-	switch(uiWidth)
+	switch(tBits)
 	{
-	case 8:
+	case BUS_WIDTH_8Bit:
 		break;
 
-	case 16:
+	case BUS_WIDTH_16Bit:
 		ulRegValue |= 0x01 << HOSTSRT(extsram0_ctrl_WidthExtMem0);
 		break;
 
-	case 32:
+	case BUS_WIDTH_32Bit:
 		ulRegValue |= 0x02 << HOSTSRT(extsram0_ctrl_WidthExtMem0);
 		break;
 	}
@@ -80,20 +80,19 @@ static void setup_flash_srb(unsigned int uiWidth)
 	*pulFlashCtrl = ulRegValue;
 }
 #elif ASIC_TYP==10
-static void setup_flash(PARFLASH_CONFIGURATION_T *ptCfg, unsigned int uiWidth)
+static void setup_flash(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits)
 {
 	unsigned long ulValue;
 	unsigned int uiChipSelect;
-	unsigned int uiIs16Bit;
 
 
 	/* Get the chipselect. */
 	uiChipSelect = ptCfg->uiChipSelect;
 
 	/* Check the parameters. */
-	if( uiWidth!=8 && uiWidth!=16 )
+	if( tBits!=BUS_WIDTH_8Bit && tBits!=BUS_WIDTH_16Bit )
 	{
-		DEBUGMSG(ZONE_ERROR, ("Invalid width! Must be 8 or 16, but is %d.\n", uiWidth));
+		DEBUGMSG(ZONE_ERROR, ("Invalid bus width! Must be 0 or 1, but is %d.\n", tBits));
 	}
 	else if( uiChipSelect>3 )
 	{
@@ -101,11 +100,8 @@ static void setup_flash(PARFLASH_CONFIGURATION_T *ptCfg, unsigned int uiWidth)
 	}
 	else
 	{
-		/* Convert the width to 0 for 8bit and 1 for 16bit. */
-		uiIs16Bit = (uiWidth>>3) - 1;
-
 		/* Set the memory interface configuration. */
-		ulValue = uiIs16Bit << SRT_NX10_extsram0_ctrl_dwidth;
+		ulValue = tBits << SRT_NX10_extsram0_ctrl_dwidth;
 		/* unlock access key */
 		ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
 		/* configure the hif pins */
@@ -114,7 +110,7 @@ static void setup_flash(PARFLASH_CONFIGURATION_T *ptCfg, unsigned int uiWidth)
 		ulValue  = DFLT_VAL_NX10_extsram0_ctrl_ws << SRT_NX10_extsram0_ctrl_ws;
 		ulValue |= DFLT_VAL_NX10_extsram0_ctrl_p_pre << SRT_NX10_extsram0_ctrl_p_pre;
 		ulValue |= DFLT_VAL_NX10_extsram0_ctrl_p_post << SRT_NX10_extsram0_ctrl_p_post;
-		ulValue |= uiIs16Bit << SRT_NX10_extsram0_ctrl_dwidth;
+		ulValue |= tBits << SRT_NX10_extsram0_ctrl_dwidth;
 		ptExtAsyncmemCtrlArea->aulExtsram_ctrl[uiChipSelect] = ulValue;
 	}
 }

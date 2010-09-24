@@ -42,12 +42,14 @@
 ************************************************************
 */
 
+#include <string.h>
+
 #include "cfi_flash.h"
+
 #include "netx_io_areas.h"
 #include "strata.h"
 #include "spansion.h"
 #include "uprintf.h"
-#include <string.h>
 
 
 #if CFG_DEBUGMSG!=0
@@ -86,25 +88,40 @@
 
 typedef enum 
 {
-	CFISETUP_1x08		= 0x01,
-	CFISETUP_2x08		= 0x02,
-	CFISETUP_1x16		= 0x04,
-	CFISETUP_2x16		= 0x08,
-	CFISETUP_1x32		= 0x10
-} tCFISETUP;
+	CFI_SETUP_1x08		= 0x01,
+	CFI_SETUP_2x08		= 0x02,
+	CFI_SETUP_1x16		= 0x04,
+	CFI_SETUP_2x16		= 0x08,
+	CFI_SETUP_1x32		= 0x10
+} CFI_SETUP_T;
 
+
+typedef union
+{
+	unsigned char *puc;
+	unsigned short *pus;
+	unsigned long *pul;
+	unsigned long ul;
+} ADR_T;
+
+typedef union
+{
+	volatile unsigned char *puc;
+	volatile unsigned short *pus;
+	volatile unsigned long *pul;
+	volatile unsigned long ul;
+} VADR_T;
 
 // ///////////////////////////////////////////////////// 
 //! Structure definition for FLASH width and pairing test cases
 // ///////////////////////////////////////////////////// 
 typedef struct tagCFI_CHECK_CONDITIONS
 {
-  unsigned long ulOffset;   //!< offset the pattern is expected at
-  unsigned int  uiWidth;    //!< bus width for pattern (if detected)
-  int           fPaired;    //!< pairing of FLASHes for pattern (if detected)
-  unsigned char bQueryLen;  //!< length of the string to query (needed as there are 0-chars in the identification)
-  const char*   szQuery;    //!< pattern to look for in memory at given offset
-  tCFISETUP     tSetup;     //!< setup id of this config
+	BUS_WIDTH_T tBits;        /* Bus width for this pattern. */
+	int fPaired;              /* Pairing of FLASHes for pattern. */
+	unsigned int uiQueryLen;  /* Length of the pattern in bytes. */
+	const char *szQuery;      /* Pattern to look for in memory at given offset. */
+	CFI_SETUP_T tSetup;       /* Setup id of this config. */
 } CFI_CHECK_CONDITIONS;
 
 
@@ -114,14 +131,17 @@ typedef struct tagCFI_CHECK_CONDITIONS
 // ///////////////////////////////////////////////////// 
 static const CFI_CHECK_CONDITIONS s_atCFIChecks[] =
 {
-//	{0x40,	32,	FALSE,	12,	"Q\0\0\0R\0\0\0Y\0\0\0",	CFISETUP_1x32 },	/* 1x 32Bit Flash */
+/* Only netX500, netX100 and netX50 support a 32bit memory interface. */
+#if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
+//	{BUS_WIDTH_32Bit,  FALSE,  12,  "Q\0\0\0R\0\0\0Y\0\0\0",  CFI_SETUP_1x32 },  /* 1x 32Bit Flash */
 
-	{0x40,	32,	TRUE,	12,	"Q\0Q\0R\0R\0Y\0Y\0",		CFISETUP_2x16 },	/* 2x 16Bit Flash */
-//	{0x20,	16,	FALSE,	10,	"Q\0??R\0??Y\0",		CFISETUP_1x16 },	/* 1x 16Bit Flash */
-	{0x20,	16,	FALSE, 6,	"Q\0R\0Y\0",			CFISETUP_1x16 },	/* 1x 16Bit Flash */
+	{BUS_WIDTH_32Bit,  TRUE,   12,  "Q\0Q\0R\0R\0Y\0Y\0",     CFI_SETUP_2x16 },  /* 2x 16Bit Flash */
+#endif
+//	{BUS_WIDTH_16Bit,  FALSE,  10,  "Q\0??R\0??Y\0",          CFI_SETUP_1x16 },  /* 1x 16Bit Flash */
+	{BUS_WIDTH_16Bit,  FALSE,   6,  "Q\0R\0Y\0",              CFI_SETUP_1x16 },  /* 1x 16Bit Flash */
 
-	{0x20,	16,	TRUE,	 6,	"QQRRYY",			CFISETUP_2x08 },	/* 2x 8Bit Flash */
-	{0x10,	 8,	FALSE, 3,	"QRY",				CFISETUP_1x08 }		/* 8 Bit Flash   */
+	{BUS_WIDTH_16Bit,  TRUE,    6,  "QQRRYY",                 CFI_SETUP_2x08 },  /* 2x 8Bit Flash */
+	{ BUS_WIDTH_8Bit,  FALSE,   3,  "QRY",                    CFI_SETUP_1x08 }   /* 8 Bit Flash   */
 };
 
 #define ARRAY_SIZE(a)   (sizeof(a) / sizeof(a[0]))
@@ -138,9 +158,9 @@ static int CFIMemCmp(volatile void* pvFlash, const void* pvCmpBuf, unsigned long
 {
 	int iRet;
 	volatile unsigned char *pbFlash;
-	const unsigned char    *pbCmpBuf;
-	unsigned char           ucFlashData;
-	unsigned char           ucCmpData;
+	const unsigned char *pbCmpBuf;
+	unsigned char ucFlashData;
+	unsigned char ucCmpData;
 
 
 	DEBUGMSG(ZONE_FUNCTION, ("+CFIMemCmp(): pvFlash=0x%08x, pvCmpBuf=0x%08x, ulLen=%d\n", pvFlash, pvCmpBuf, ulLen));
@@ -152,7 +172,7 @@ static int CFIMemCmp(volatile void* pvFlash, const void* pvCmpBuf, unsigned long
 
 	while( ulLen>0 )
 	{
-		ucCmpData   = *(pbCmpBuf++);
+		ucCmpData = *(pbCmpBuf++);
 		ucFlashData = *(pbFlash++);
 
 		DEBUGMSG(ZONE_VERBOSE, (".CFIMemCmp(): Pattern: 0x%02x, Flash: 0x%02x.\n", ucCmpData, ucFlashData));
@@ -178,45 +198,40 @@ static int CFIMemCmp(volatile void* pvFlash, const void* pvCmpBuf, unsigned long
 //!  \param fPaired TRUE if two devices are paired to build one flash
 //!  \param bCommand Command to write to FLASH
 // ///////////////////////////////////////////////////// 
-static void CFI_FlashWriteCommand(unsigned char* pucFlashAddr, unsigned int uiWidth, int fPaired, unsigned int uiCommand)
+static void CFI_FlashWriteCommand(volatile unsigned char *pucFlashAddr, BUS_WIDTH_T tBits, int fPaired, unsigned int uiCommand)
 {
-	unsigned long  ulValue;
-	union
-	{
-		volatile unsigned char  *pucPtr;
-		volatile unsigned short *pusPtr;
-		volatile unsigned long  *pulPtr;
-	} uPtr;
+	unsigned long ulValue;
+	VADR_T tAdr;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+CFI_FlashWriteCommand(): pucFlashAddr=0x%08x, uiWidth=%d, fPaired=%d, uiCommand=0x%08x\n", pucFlashAddr, uiWidth, fPaired, uiCommand));
+	DEBUGMSG(ZONE_FUNCTION, ("+CFI_FlashWriteCommand(): pucFlashAddr=0x%08x, tBits=%d, fPaired=%d, uiCommand=0x%08x\n", pucFlashAddr, tBits, fPaired, uiCommand));
 
 	/* set the address */
-	uPtr.pucPtr = pucFlashAddr;
+	tAdr.puc = pucFlashAddr;
 
-	switch(uiWidth)
+	switch(tBits)
 	{
-	case 8:
+	case BUS_WIDTH_8Bit:
 		/* 8bits cannot be paired */
-		*(uPtr.pucPtr) = (unsigned char)uiCommand;
+		*(tAdr.puc) = (unsigned char)uiCommand;
 		break;
 
-	case 16:
+	case BUS_WIDTH_16Bit:
 		ulValue = (unsigned long)uiCommand;
 		if( fPaired!=0 )
 		{
 			ulValue |= ulValue << 8U;
 		}
-		*(uPtr.pusPtr) = (unsigned short)ulValue;
+		*(tAdr.pus) = (unsigned short)ulValue;
 		break;
 
-	case 32:
+	case BUS_WIDTH_32Bit:
 		ulValue = uiCommand;
 		if( fPaired!=0 )
 		{
 			ulValue |= ulValue << 16U;
 		}
-		*(uPtr.pulPtr) = ulValue;
+		*(tAdr.pul) = ulValue;
 		break;
 	}
 
@@ -224,104 +239,184 @@ static void CFI_FlashWriteCommand(unsigned char* pucFlashAddr, unsigned int uiWi
 }
 
 
-static int CFI_QueryFlashLayout(FLASH_DEVICE *ptFlashDevice, PFN_FLASHSETUP pfnSetup)
+static int get_query_information(FLASH_DEVICE *ptFlashDevice, CFI_QUERY_INFORMATION *ptQueryInformation)
 {
-	unsigned char *pbFlashBase;
-	PCFI_QUERY_INFORMATION ptQueryInformation;
-	unsigned char abCfiId[3];
+	int iResult;
+	BUS_WIDTH_T tBits;
+	VADR_T tVAdr;
+	unsigned char *pucCnt;
+	unsigned char *pucEnd;
+	int iPaired;
+	unsigned long ulValue;
+	unsigned char ucFlash0;
+	unsigned char ucFlash1;
+
+
+	/* Assume success. */
+	iResult = 0;
+
+	tBits = ptFlashDevice->tBits;
+
+	/* Get the source address. */
+	tVAdr.puc = ptFlashDevice->pbFlashBase + (CFI_QUERY_INFO_OFFSET<<tBits);
+
+	/* Get the destination start and end address. */
+	pucCnt = (unsigned char*)ptQueryInformation;
+	pucEnd = pucCnt + sizeof(CFI_QUERY_INFORMATION);
+
+	iPaired = ptFlashDevice->fPaired;
+
+	/* Copy the data and check paired information. */
+	switch(tBits)
+	{
+	case BUS_WIDTH_8Bit:
+		do
+		{
+			*(pucCnt++) = *(tVAdr.puc++);
+		} while( pucCnt<pucEnd );
+		break;
+
+	case BUS_WIDTH_16Bit:
+		do
+		{
+			ulValue = *(tVAdr.pus++);
+			ucFlash0 = (unsigned char)(ulValue&0xffU);
+			if( iPaired!=0 )
+			{
+				ucFlash1 = (unsigned char)((ulValue>>8)&0xffU);
+				if( ucFlash0!=ucFlash1 )
+				{
+					DEBUGMSG(ZONE_ERROR, ("The paired flashes do not match! This is not supported.\n"));
+					iResult = 1;
+					break;
+				}
+			}
+			*(pucCnt++) = ucFlash0;
+
+		} while( pucCnt<pucEnd );
+		break;
+
+	case BUS_WIDTH_32Bit:
+		do
+		{
+			ulValue = *(tVAdr.pul++);
+			ucFlash0 = (unsigned char)(ulValue&0xffU);
+			ucFlash1 = (unsigned char)((ulValue>>16)&0xffU);
+			if( iPaired!=0 )
+			{
+				if( ucFlash0!=ucFlash1 )
+				{
+					DEBUGMSG(ZONE_ERROR, ("The paired flashes do not match! This is not supported.\n"));
+					iResult = 1;
+					break;
+				}
+			}
+			*(pucCnt++) = ucFlash0;
+		} while( pucCnt<pucEnd );
+		break;
+	}
+
+	hexdump(ptQueryInformation, sizeof(CFI_QUERY_INFORMATION));
+
+	return iResult;
+}
+
+static int CFI_QueryFlashLayout(FLASH_DEVICE *ptFlashDevice, const PARFLASH_CONFIGURATION_T *ptCfg)
+{
+	volatile unsigned char *pucFlashBase;
+	CFI_QUERY_INFORMATION tQueryInformation;
 	unsigned long ulFlashSize = 0;
 	unsigned long ulCurSector = 0;
 	unsigned long ulCurOffset = 0;
 	unsigned int uiCnt;
 	int fRet;
-        int fPaired;
+	BUS_WIDTH_T tBits;
+	int fPaired;
 
-	DEBUGMSG(ZONE_FUNCTION, ("+CFI_QueryFlashLayout(): ptFlashDevice=0x%08x, pfnSetup=0x%08x\n", ptFlashDevice, pfnSetup));
 
-	pbFlashBase = ptFlashDevice->pbFlashBase;
-	fPaired     = ptFlashDevice->fPaired;
+	DEBUGMSG(ZONE_FUNCTION, ("+CFI_QueryFlashLayout(): ptFlashDevice=0x%08x\n", ptFlashDevice));
 
-	ptQueryInformation = (PCFI_QUERY_INFORMATION)&ptFlashDevice->pbFlashBase[CFI_QUERY_INFO_OFFSET];
+	pucFlashBase = ptFlashDevice->pbFlashBase;
+	tBits = ptFlashDevice->tBits;
+	fPaired = ptFlashDevice->fPaired;
 
-	/* if we are using paired flashes, we assume both are identical and only query the first one */
-	pfnSetup(8);
-	CFI_FlashWriteCommand(pbFlashBase, 8, FALSE, READ_ARRAY_CMD);
-	
+	ptFlashDevice->pfnSetup(ptCfg, tBits);
+	CFI_FlashWriteCommand(pucFlashBase, tBits, fPaired, READ_ARRAY_CMD);
+
 	/* Enter Query mode */
-	CFI_FlashWriteCommand(pbFlashBase + READ_QUERY_CMD_OFFSET, 8, FALSE, READ_QUERY_CMD);
+	CFI_FlashWriteCommand(pucFlashBase + (READ_QUERY_CMD_OFFSET<<tBits), tBits, fPaired, READ_QUERY_CMD);
 
-	/* check byte QRY pattern, to see if flash has entered valid CFI Query mode */
-	abCfiId[0] = pbFlashBase[CFI_QUERY_INFO_OFFSET];
-	abCfiId[1] = pbFlashBase[CFI_QUERY_INFO_OFFSET+1];
-	abCfiId[2] = pbFlashBase[CFI_QUERY_INFO_OFFSET+2];
-
-	DEBUGMSG(ZONE_VERBOSE, (".CFI_QueryFlashLayout(): abCfiId=[%02x, %02x, %02x]\n", abCfiId[0], abCfiId[1], abCfiId[2]));
-
-	if( abCfiId[0]=='Q' && abCfiId[1]=='R' && abCfiId[2]=='Y' )
+	/* Copy the query information to a local copy. */
+	fRet = get_query_information(ptFlashDevice, &tQueryInformation);
+	if( fRet==0 )
 	{
-		DEBUGMSG(ZONE_VERBOSE, (".CFI_QueryFlashLayout(): Ok, QRY magic found.\n"));
+		/* check byte QRY pattern, to see if flash has entered valid CFI Query mode */
+		DEBUGMSG(ZONE_VERBOSE, (".CFI_QueryFlashLayout(): abCfiId=[%02x, %02x, %02x]\n", tQueryInformation.abQueryIdent[0], tQueryInformation.abQueryIdent[1], tQueryInformation.abQueryIdent[2]));
 
-		int iCurRegion = 0;
-
-		ulFlashSize = 1U << ptQueryInformation->bDeviceSize;
-
-		if( fPaired )
+		if( tQueryInformation.abQueryIdent[0]=='Q' && tQueryInformation.abQueryIdent[1]=='R' && tQueryInformation.abQueryIdent[2]=='Y' )
 		{
-			ulFlashSize *= 2;
-		}
+			DEBUGMSG(ZONE_VERBOSE, (".CFI_QueryFlashLayout(): Ok, QRY magic found.\n"));
 
-		ptFlashDevice->ulFlashSize   = ulFlashSize;
+			int iCurRegion = 0;
 
-		/* cycle through geometry options, until all blocks are evaluated */
-		for(iCurRegion = 0; iCurRegion < ptQueryInformation->bEraseBlockRegions; iCurRegion++)
-		{
-			unsigned long  ulBlockInfo = ptQueryInformation->aulEraseBlockInformations[ulCurSector];
-			unsigned short usBlocks    = (unsigned short)(ulBlockInfo & 0x0000FFFF);
-			unsigned int   uiBlockSize = (ulBlockInfo & 0xFFFF0000U) >> 16U;
+			ulFlashSize = 1U << tQueryInformation.bDeviceSize;
 
 			if( fPaired )
 			{
-				uiBlockSize *= 2U;
+				ulFlashSize *= 2;
 			}
 
-			for(uiCnt = 0; uiCnt <= usBlocks; uiCnt++)
+			ptFlashDevice->ulFlashSize   = ulFlashSize;
+
+			/* cycle through geometry options, until all blocks are evaluated */
+			for(iCurRegion = 0; iCurRegion < tQueryInformation.bEraseBlockRegions; iCurRegion++)
 			{
-				unsigned long ulBlockByteSize = 0;
+				unsigned long  ulBlockInfo = tQueryInformation.aulEraseBlockInformations[ulCurSector];
+				unsigned short usBlocks    = (unsigned short)(ulBlockInfo & 0x0000FFFF);
+				unsigned int   uiBlockSize = (ulBlockInfo & 0xFFFF0000U) >> 16U;
 
-				if(0 == uiBlockSize)
+				if( fPaired )
 				{
-					ulBlockByteSize = 0x80;
-				}
-				else
-				{
-					ulBlockByteSize = uiBlockSize * 0x100U;
+					uiBlockSize *= 2U;
 				}
 
-				ptFlashDevice->atSectors[ulCurSector].ulOffset = ulCurOffset;
-				ptFlashDevice->atSectors[ulCurSector].ulSize   = ulBlockByteSize;
-				++ulCurSector;
+				for(uiCnt = 0; uiCnt <= usBlocks; uiCnt++)
+				{
+					unsigned long ulBlockByteSize = 0;
 
-				ulCurOffset += ulBlockByteSize;
+					if(0 == uiBlockSize)
+					{
+						ulBlockByteSize = 0x80;
+					}
+					else
+					{
+						ulBlockByteSize = uiBlockSize * 0x100U;
+					}
+
+					ptFlashDevice->atSectors[ulCurSector].ulOffset = ulCurOffset;
+					ptFlashDevice->atSectors[ulCurSector].ulSize   = ulBlockByteSize;
+					++ulCurSector;
+
+					ulCurOffset += ulBlockByteSize;
+				}
 			}
+
+			ptFlashDevice->ulSectorCnt = ulCurSector;
+
+			ptFlashDevice->usVendorCommandSet   = tQueryInformation.usVendorCommandSet;
+			ptFlashDevice->ulMaxBufferWriteSize = 1U << tQueryInformation.usMaxBufferWriteSize;
+
+			fRet = TRUE;
 		}
-
-		ptFlashDevice->ulSectorCnt = ulCurSector;
-
-		ptFlashDevice->usVendorCommandSet   = ptQueryInformation->usVendorCommandSet;
-		ptFlashDevice->ulMaxBufferWriteSize = 1U << ptQueryInformation->usMaxBufferWriteSize;
-
-		fRet = TRUE;
-	}
-	else
-	{
-		fRet = FALSE;
-		DEBUGMSG(ZONE_ERROR, ("!CFI_QueryFlashLayout(): Error, no QRY magic found.\n"));
+		else
+		{
+			fRet = FALSE;
+			DEBUGMSG(ZONE_ERROR, ("!CFI_QueryFlashLayout(): Error, no QRY magic found.\n"));
+		}
 	}
 
 	/* reset flash to read mode */
-	CFI_FlashWriteCommand(pbFlashBase, 8, FALSE, READ_ARRAY_CMD);
-
-	pfnSetup(ptFlashDevice->uiWidth);
+	CFI_FlashWriteCommand(pucFlashBase, tBits, fPaired, READ_ARRAY_CMD);
 
 	DEBUGMSG(ZONE_FUNCTION, ("-CFI_QueryFlashLayout(): fRet=%d\n", fRet));
 
@@ -336,23 +431,22 @@ static int CFI_QueryFlashLayout(FLASH_DEVICE *ptFlashDevice, PFN_FLASHSETUP pfnS
 //!  \param ptFlashDevice Returned FALSH info on success. Base address pointer must be inserted before calling this function
 //!  \return TRUE if identified successfully
 // ///////////////////////////////////////////////////// 
-int CFI_IdentifyFlash(FLASH_DEVICE* ptFlashDevice, PFN_FLASHSETUP pfnSetup)
+int CFI_IdentifyFlash(FLASH_DEVICE* ptFlashDevice, PARFLASH_CONFIGURATION_T *ptCfg)
 {
 	int             fRet         = FALSE;
-	unsigned int    uiFlashWidth;
-	int             fPaired      = FALSE;
-	unsigned int    uiBits;
+	int             fPaired;
+	BUS_WIDTH_T tBits;
 	int             iPaired;
 	unsigned int    uiCnt;
 	unsigned char   *pbFlashBase;
 	unsigned long   ulDetectedTypes;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+CFI_IdentifyFlash(): ptFlashDevice=0x%08x, pfnSetup=0x%08x\n", ptFlashDevice, pfnSetup));
+	DEBUGMSG(ZONE_FUNCTION, ("+CFI_IdentifyFlash(): ptFlashDevice=0x%08x\n", ptFlashDevice));
 
 	if( ptFlashDevice==NULL )
 	{
-    		fRet = FALSE;
+		fRet = FALSE;
 	}
 	else
 	{
@@ -362,115 +456,114 @@ int CFI_IdentifyFlash(FLASH_DEVICE* ptFlashDevice, PFN_FLASHSETUP pfnSetup)
 		ulDetectedTypes = 0;
 		for(uiCnt = 0; uiCnt < ARRAY_SIZE(s_atCFIChecks); ++uiCnt)
 		{
-			uiBits = s_atCFIChecks[uiCnt].uiWidth;
+			tBits = s_atCFIChecks[uiCnt].tBits;
 			iPaired = s_atCFIChecks[uiCnt].fPaired;
-			uprintf(".Trying  bits: %02d, paired: %d\n", uiBits, iPaired);
+			DEBUGMSG(ZONE_VERBOSE, (".Trying  bits: %02d, paired: %d\n", 8U<<tBits, iPaired));
 
 			/* set bus width to query size */
-			pfnSetup(uiBits);
+			ptFlashDevice->pfnSetup(ptCfg, tBits);
 
 			/* try to switch all possible combinations to array read mode */
-			CFI_FlashWriteCommand(pbFlashBase,  8, FALSE, READ_ARRAY_CMD);
-			CFI_FlashWriteCommand(pbFlashBase, 16, TRUE,  READ_ARRAY_CMD);
-			CFI_FlashWriteCommand(pbFlashBase, 32, TRUE,  READ_ARRAY_CMD);
+			CFI_FlashWriteCommand(pbFlashBase,  BUS_WIDTH_8Bit, FALSE, READ_ARRAY_CMD);
+			CFI_FlashWriteCommand(pbFlashBase, BUS_WIDTH_16Bit, TRUE,  READ_ARRAY_CMD);
+			CFI_FlashWriteCommand(pbFlashBase, BUS_WIDTH_32Bit, TRUE,  READ_ARRAY_CMD);
 
-			CFI_FlashWriteCommand(pbFlashBase + READ_QUERY_CMD_OFFSET * (uiBits>>3U), uiBits, iPaired, READ_QUERY_CMD);
+			CFI_FlashWriteCommand(pbFlashBase + (READ_QUERY_CMD_OFFSET<<tBits), tBits, iPaired, READ_QUERY_CMD);
 
-			if(CFIMemCmp(pbFlashBase + s_atCFIChecks[uiCnt].ulOffset,
-			              s_atCFIChecks[uiCnt].szQuery,
-			              s_atCFIChecks[uiCnt].bQueryLen) == 0)
+			if(CFIMemCmp(pbFlashBase + (CFI_QUERY_INFO_OFFSET<<tBits),
+			             s_atCFIChecks[uiCnt].szQuery,
+			             s_atCFIChecks[uiCnt].uiQueryLen) == 0)
 			{
 				ulDetectedTypes |= s_atCFIChecks[uiCnt].tSetup;
-				uprintf(".Ok, found magic!\n");
+				DEBUGMSG(ZONE_VERBOSE, (".Ok, found magic!\n"));
 			}
 		}
 
-		uprintf(".Detection state: 0x%08x\n", ulDetectedTypes);
+		DEBUGMSG(ZONE_VERBOSE, (".Detection state: 0x%08x\n", ulDetectedTypes));
 
 		/* reset found flashes to read mode */
-		CFI_FlashWriteCommand(pbFlashBase,  8, FALSE, READ_ARRAY_CMD);
-		CFI_FlashWriteCommand(pbFlashBase, 16, TRUE,  READ_ARRAY_CMD);
-		CFI_FlashWriteCommand(pbFlashBase, 32, TRUE,  READ_ARRAY_CMD);
+		CFI_FlashWriteCommand(pbFlashBase,  BUS_WIDTH_8Bit, FALSE, READ_ARRAY_CMD);
+		CFI_FlashWriteCommand(pbFlashBase, BUS_WIDTH_16Bit, TRUE,  READ_ARRAY_CMD);
+		CFI_FlashWriteCommand(pbFlashBase, BUS_WIDTH_32Bit, TRUE,  READ_ARRAY_CMD);
 
 		switch( ulDetectedTypes )
 		{
-		case CFISETUP_1x08:					/* NOTE: !!!untested!!! */
-			fRet		    = TRUE;
-			fPaired		  = FALSE;
-			uiFlashWidth	= 8;
+		case CFI_SETUP_1x08:                                    /* NOTE: !!!untested!!! */
+			fRet     = TRUE;
+			fPaired  = FALSE;
+			tBits    = BUS_WIDTH_8Bit;
 			break;
 
-		case CFISETUP_2x08:					            /* does this ever happen? */
-		case CFISETUP_1x08 | CFISETUP_2x08:			/* NOTE: !!!untested!!!   */
-			fRet		    = TRUE;
-			fPaired		  = TRUE;
-			uiFlashWidth	= 16;
+		case CFI_SETUP_2x08:                                    /* does this ever happen? */
+		case CFI_SETUP_1x08 | CFI_SETUP_2x08:                   /* NOTE: !!!untested!!!   */
+			fRet     = TRUE;
+			fPaired  = TRUE;
+			tBits    = BUS_WIDTH_16Bit;
 			break;
 
-		case CFISETUP_1x16:					            /* does this ever happen?             */
-		case CFISETUP_1x08 | CFISETUP_1x16:			/* single spansion16, single strata16 */
-			fRet		    = TRUE;
-			fPaired		  = FALSE;
-			uiFlashWidth	= 16;
+		case CFI_SETUP_1x16:                                    /* netx10 spansion16 */
+		case CFI_SETUP_1x08 | CFI_SETUP_1x16:                   /* single spansion16, single strata16 */
+			fRet     = TRUE;
+			fPaired  = FALSE;
+			tBits    = BUS_WIDTH_16Bit;
 			break;
 
-		case CFISETUP_2x16:					                        /* does this ever happen? */
-		case CFISETUP_1x08 | CFISETUP_2x16:			            /* paired strata16        */
-		case CFISETUP_1x08 | CFISETUP_1x16 | CFISETUP_2x16:	/* paired strata16        */
-			fRet		    = TRUE;
-			fPaired		  = TRUE;
-			uiFlashWidth	= 32;
+		case CFI_SETUP_2x16:                                    /* does this ever happen? */
+		case CFI_SETUP_1x08 | CFI_SETUP_2x16:                   /* paired strata16        */
+		case CFI_SETUP_1x08 | CFI_SETUP_1x16 | CFI_SETUP_2x16:  /* paired strata16        */
+			fRet     = TRUE;
+			fPaired  = TRUE;
+			tBits    = BUS_WIDTH_32Bit;
 			break;
 
-		case CFISETUP_1x32:					            /* does this ever happen? */
-		case CFISETUP_1x08 | CFISETUP_1x32:			/* NOTE: !!!untested!!!   */
-			fRet		    = TRUE;
-			fPaired		  = FALSE;
-			uiFlashWidth	= 32;
+		case CFI_SETUP_1x32:                                    /* does this ever happen? */
+		case CFI_SETUP_1x08 | CFI_SETUP_1x32:                   /* NOTE: !!!untested!!!   */
+			fRet     = TRUE;
+			fPaired  = FALSE;
+			tBits    = BUS_WIDTH_32Bit;
 			break;
 
 		default:
 			fRet = FALSE;
-			uprintf("!Unknown flash setup, please send this log to cthelen@hilscher.com with some info about your setup.\n");
+			DEBUGMSG(ZONE_VERBOSE, ("!Unknown flash setup!\n"));
 			break;
 		}
 
 		if( fRet==TRUE )
 		{
 			/* set flash parameters */
-			ptFlashDevice->uiWidth  = uiFlashWidth;
+			ptFlashDevice->tBits = tBits;
 			ptFlashDevice->fPaired = fPaired;
 
-			uprintf(".Found bits: %02d, paired: %d\n", uiFlashWidth, fPaired);
+			DEBUGMSG(ZONE_VERBOSE, (".Found bits: %02d, paired: %d\n", 8U<<tBits, fPaired));
 
-			fRet = CFI_QueryFlashLayout(ptFlashDevice, pfnSetup);
-		}
-	}
+			fRet = CFI_QueryFlashLayout(ptFlashDevice, ptCfg);
+			if( fRet==TRUE )
+			{
+				unsigned int uiCommandSet;
 
-	if( fRet==TRUE )
-	{
-		unsigned int uiCommandSet;
-		
-		/* Check if it is a supported type */
-		uiCommandSet = ptFlashDevice->usVendorCommandSet;
-		switch( uiCommandSet )
-		{
-		case CFI_FLASH_100_INTEL_STD:
-		case CFI_FLASH_100_INTEL_EXT:
-			DEBUGMSG(ZONE_VERBOSE, (".CFI_IdentifyFlash(): Intel command set detected.\n"));
-			fRet = IntelIdentifyFlash(ptFlashDevice);
-			break;
+				/* Check if it is a supported type */
+				uiCommandSet = ptFlashDevice->usVendorCommandSet;
+				switch( uiCommandSet )
+				{
+				case CFI_FLASH_100_INTEL_STD:
+				case CFI_FLASH_100_INTEL_EXT:
+					DEBUGMSG(ZONE_VERBOSE, (".CFI_IdentifyFlash(): Intel command set detected.\n"));
+					fRet = IntelIdentifyFlash(ptFlashDevice);
+					break;
 
-		case CFI_FLASH_100_AMD_STD:
-		case CFI_FLASH_100_AMD_EXT:
-			DEBUGMSG(ZONE_VERBOSE, (".CFI_IdentifyFlash(): AMD command set detected.\n"));
-			fRet = SpansionIdentifyFlash(ptFlashDevice);
-			break;     
+				case CFI_FLASH_100_AMD_STD:
+				case CFI_FLASH_100_AMD_EXT:
+					DEBUGMSG(ZONE_VERBOSE, (".CFI_IdentifyFlash(): AMD command set detected.\n"));
+					fRet = SpansionIdentifyFlash(ptFlashDevice);
+					break;     
 
-		default:
-			DEBUGMSG(ZONE_ERROR, ("!CFI_IdentifyFlash(): Error, unknown vendor command set: 0x%08x.\n", uiCommandSet));
-			fRet = FALSE;
-			break;
+				default:
+					DEBUGMSG(ZONE_ERROR, ("!CFI_IdentifyFlash(): Error, unknown vendor command set: 0x%08x.\n", uiCommandSet));
+					fRet = FALSE;
+					break;
+				}
+			}
 		}
 	}
 

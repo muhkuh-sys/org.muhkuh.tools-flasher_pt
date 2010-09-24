@@ -56,13 +56,13 @@ typedef unsigned short USHORT;
 #endif
 
 // NOR Commands.
-#define READ_QUERY_CMD			    0x98
+#define READ_QUERY_CMD          0x98
 #define READ_QUERY_CMD_OFFSET   0x55
 #define CFI_QUERY_INFO_OFFSET   0x10
 
-#define READ_IDENT_CMD			0x90
+#define READ_IDENT_CMD          0x90
 
-#define READ_ARRAY_CMD			0xFF
+#define READ_ARRAY_CMD          0xFF
 
 #define CFI_FLASH_100_INTEL_STD 0x0001
 #define CFI_FLASH_100_AMD_STD   0x0002
@@ -109,17 +109,25 @@ typedef enum FLASH_ERRORS_Etag
   eFLASH_DEVICE_FAILED
 } FLASH_ERRORS_E;
 
-typedef struct tagFLASH_DEVICE    FLASH_DEVICE, *PFLASH_DEVICE;
+typedef struct tagFLASH_DEVICE FLASH_DEVICE;
 
-typedef FLASH_ERRORS_E(*PFN_FLASH_RESET)(PFLASH_DEVICE ptFlashDev, unsigned long ulSector);
-typedef FLASH_ERRORS_E(*PFN_FLASH_ERASE)(PFLASH_DEVICE ptFlashDev, unsigned long ulSector);
-typedef FLASH_ERRORS_E(*PFN_FLASH_ERASEALL)(PFLASH_DEVICE ptFlashDev);
-typedef FLASH_ERRORS_E(*PFN_FLASH_PROGRAM)(PFLASH_DEVICE ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData);
-typedef FLASH_ERRORS_E(*PFN_FLASH_LOCK)(PFLASH_DEVICE ptFlashDev, unsigned long ulSector);
-typedef FLASH_ERRORS_E(*PFN_FLASH_UNLOCK)(PFLASH_DEVICE ptFlashDev);
+typedef FLASH_ERRORS_E(*PFN_FLASH_RESET)(FLASH_DEVICE *ptFlashDev, unsigned long ulSector);
+typedef FLASH_ERRORS_E(*PFN_FLASH_ERASE)(FLASH_DEVICE *ptFlashDev, unsigned long ulSector);
+typedef FLASH_ERRORS_E(*PFN_FLASH_ERASEALL)(FLASH_DEVICE *ptFlashDev);
+typedef FLASH_ERRORS_E(*PFN_FLASH_PROGRAM)(FLASH_DEVICE *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData);
+typedef FLASH_ERRORS_E(*PFN_FLASH_LOCK)(FLASH_DEVICE *ptFlashDev, unsigned long ulSector);
+typedef FLASH_ERRORS_E(*PFN_FLASH_UNLOCK)(FLASH_DEVICE *ptFlashDev);
 
 
-typedef void(*PFN_FLASHSETUP)(unsigned int uiWidth);
+
+typedef struct
+{
+	unsigned int uiUnit;
+	unsigned int uiChipSelect;
+	unsigned long ulAllowedBusWidths;
+} PARFLASH_CONFIGURATION_T;
+
+typedef void(*PFN_FLASHSETUP)(const PARFLASH_CONFIGURATION_T *ptParameter, unsigned int uiWidth);
 
 // ////////////////////////////////////////////////////
 //! Function pointer table for flash support
@@ -132,7 +140,16 @@ typedef struct FLASH_FUNCTIONS_Ttag
   PFN_FLASH_PROGRAM   pfnProgram;       /*! Function to program flash */
   PFN_FLASH_LOCK      pfnLock;          /*! Function to lock a block */
   PFN_FLASH_UNLOCK    pfnUnlock;        /*! Function to unlock a block */
-} FLASH_FUNCTIONS_T,*PFLASH_FUNCTIONS_T;
+} FLASH_FUNCTIONS_T;
+
+
+
+typedef enum
+{
+	BUS_WIDTH_8Bit          = 0,
+	BUS_WIDTH_16Bit         = 1,
+	BUS_WIDTH_32Bit         = 2
+} BUS_WIDTH_T;
 
 
 // ///////////////////////////////////////////////////// 
@@ -140,32 +157,31 @@ typedef struct FLASH_FUNCTIONS_Ttag
 // ///////////////////////////////////////////////////// 
 struct tagFLASH_DEVICE
 {
-  unsigned char       bManufacturer;            //!< Manufacturer code provided by flash
-  unsigned char       bDevice;                  //!< Device code provided by flash
-  unsigned short      usVendorCommandSet;       //!< Vendor Command Set
-  char                szIdent[16];              //!< Name of the device
-
-  unsigned int        uiWidth;                   //!< 8, 16, 32 Bit
-  int                 fPaired;                  //!< TRUE on 16/16 or 8/8 configurations
-  unsigned long       ulFlashSize;              //!< total size of flash in bytes
-  unsigned long       ulMaxBufferWriteSize;     //!< Buffered Write buffer length in Bytes
-  unsigned char*      pbFlashBase;              //!< Base address of flash device
-  unsigned long       ulSectorCnt;              //!< Total number of sectors
-  SECTOR_INFO         atSectors[MAX_SECTORS];   //!< Information for each sector
-  PFLASH_FUNCTIONS_T  ptFlashFuncs;             //!< Function pointer table for flash commands
-
+	unsigned char       bManufacturer;           /* Manufacturer code provided by flash. */
+	unsigned char       bDevice;                 /* Device code provided by flash. */
+	unsigned short      usVendorCommandSet;      /* Vendor Command Set. */
+	char                szIdent[16];             /* Name of the device. */
+	BUS_WIDTH_T         tBits;                   /* Bus width. */
+	int                 fPaired;                 /* TRUE on 16/16 or 8/8 configurations. */
+	unsigned long       ulFlashSize;             /* Total size of flash in bytes. */
+	unsigned long       ulMaxBufferWriteSize;    /* Buffered Write buffer length in Bytes. */
+	unsigned char*      pbFlashBase;             /* Base address of flash device. */
+	unsigned long       ulSectorCnt;             /* Total number of sectors. */
+	SECTOR_INFO         atSectors[MAX_SECTORS];  /* Information for each sector. */
+	FLASH_FUNCTIONS_T  *ptFlashFuncs;            /* Function pointer table for flash commands. */
+	PFN_FLASHSETUP      pfnSetup;                /* Function to setup the memory interface. */
 };
 
 
 
 
-#pragma pack(1)
 
 // ///////////////////////////////////////////////////// 
 //! CFI Query information structure located at byte offset 0x10
 //! when accessing device in byte mode
 // ///////////////////////////////////////////////////// 
-typedef struct tagCFI_QUERY_INFORMATION
+#pragma pack(1)
+typedef struct
 {
   char            abQueryIdent[3];        //!< identification (must be "QRY")
   unsigned short  usVendorCommandSet;     //!< vendor command set (see CFI Publication 100)
@@ -189,12 +205,11 @@ typedef struct tagCFI_QUERY_INFORMATION
   unsigned short  usMaxBufferWriteSize;   //!< Maximum number of bytes in buffer to write (in 2^n Bytes)
   unsigned char   bEraseBlockRegions;     //!< Number of regions in device
   unsigned long   aulEraseBlockInformations[MAX_SECTORS]; //!< information about each region (31-16: block size in 256 Byte increments, 15-0 number of cont. blocks -1)
-  
-} CFI_QUERY_INFORMATION, *PCFI_QUERY_INFORMATION;
-
+} CFI_QUERY_INFORMATION;
 #pragma pack()
 
-int  CFI_IdentifyFlash(FLASH_DEVICE* ptFlashDevice, PFN_FLASHSETUP pfnSetup);
+
+int  CFI_IdentifyFlash(FLASH_DEVICE* ptFlashDevice, PARFLASH_CONFIGURATION_T *ptCfg);
 
 #endif /* __CFI_FLASH_H__ */
 

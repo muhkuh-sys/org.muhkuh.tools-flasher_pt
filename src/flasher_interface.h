@@ -25,7 +25,7 @@
 #include <string.h>
 
 #include "spi_flash.h"
-#include "parflash_common.h"
+#include "cfi_flash.h"
 
 /*-------------------------------------*/
 

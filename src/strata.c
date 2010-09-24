@@ -189,17 +189,17 @@ static FLASH_ERRORS_E FlashProgram(FLASH_DEVICE *ptFlashDev, unsigned long ulSta
       ulWriteSize = ptFlashDev->atSectors[ulCurrentSector].ulSize - ulCurrentOffset;
     }
 
-    switch(ptFlashDev->uiWidth)
+    switch(ptFlashDev->tBits)
     {
-    case 8:
+    case BUS_WIDTH_8Bit:
       bWriteCountCmd = (unsigned char)(ulWriteSize - 1);
       break;
 
-    case 16:
+    case BUS_WIDTH_16Bit:
       bWriteCountCmd = (unsigned char)(ulWriteSize / 2 - 1);
       break;
 
-    case 32:
+    case BUS_WIDTH_32Bit:
       bWriteCountCmd = (unsigned char)(ulWriteSize / 4 - 1);
       break;
     }
@@ -217,22 +217,22 @@ static FLASH_ERRORS_E FlashProgram(FLASH_DEVICE *ptFlashDev, unsigned long ulSta
                                    ptFlashDev->atSectors[ulCurrentSector].ulOffset + 
                                    ulCurrentOffset;
 
-      switch(ptFlashDev->uiWidth)
+      switch(ptFlashDev->tBits)
       {
-      case 8:
+      case BUS_WIDTH_8Bit:
         *pbWriteAddr = *pbSource++;
         ++ulCurrentOffset;
         --ulWriteSize;
         break;
 
-      case 16:
+      case BUS_WIDTH_16Bit:
         *(volatile unsigned short*)pbWriteAddr = *(volatile unsigned short*)pbSource;
         pbSource += 2;
         ulCurrentOffset += 2;
         ulWriteSize -= 2;
         break;
 
-      case 32:
+      case BUS_WIDTH_32Bit:
         *(volatile unsigned long*)pbWriteAddr = *(volatile unsigned long*)pbSource;
         pbSource += 4;
         ulCurrentOffset += 4;
@@ -324,14 +324,14 @@ void FlashWriteCommand(FLASH_DEVICE *ptFlashDev, unsigned long ulSector, unsigne
 
 	uAdr.puc = ptFlashDev->pbFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset;
 
-	switch( ptFlashDev->uiWidth )
+	switch( ptFlashDev->tBits )
 	{
-	case 8:
+	case BUS_WIDTH_8Bit:
 		/* 8bits cannot be paired */
 		*(uAdr.puc) = (unsigned char)ulCmd;
 		break;
 
-	case 16:
+	case BUS_WIDTH_16Bit:
 		if( ptFlashDev->fPaired )
 		{
 			ulCmd |= ulCmd << 8;
@@ -340,7 +340,7 @@ void FlashWriteCommand(FLASH_DEVICE *ptFlashDev, unsigned long ulSector, unsigne
 		*(uAdr.pus) = (unsigned short)ulCmd;
 		break;
 
-	case 32:
+	case BUS_WIDTH_32Bit:
 		if( ptFlashDev->fPaired )
 		{
 			ulCmd |= ulCmd << 16;
@@ -364,14 +364,14 @@ int FlashIsset(FLASH_DEVICE *ptFlashDev, unsigned long ulSector, unsigned long u
   int            iRet       = FALSE;
   volatile unsigned char* pbReadAddr = ptFlashDev->pbFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset;
 
-  switch(ptFlashDev->uiWidth)
+  switch(ptFlashDev->tBits)
   {
-  case 8:
+  case BUS_WIDTH_8Bit:
     if(*pbReadAddr & ulCmd)
       iRet = TRUE;
     break;
 
-  case 16:
+  case BUS_WIDTH_16Bit:
     {
       unsigned short usValue    = *(volatile unsigned short*)pbReadAddr;
       unsigned short usCheckCmd = ulCmd;
@@ -384,7 +384,7 @@ int FlashIsset(FLASH_DEVICE *ptFlashDev, unsigned long ulSector, unsigned long u
     }
     break;
 
-  case 32:
+  case BUS_WIDTH_32Bit:
     {
       unsigned long ulValue    = *(volatile unsigned long*)pbReadAddr;
       unsigned long ulCheckCmd = ulCmd;
