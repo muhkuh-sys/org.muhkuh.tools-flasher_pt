@@ -120,7 +120,7 @@ static void setup_flash(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits
 
 NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 {
-	FLASH_DEVICE tFlashDevice;
+	FLASH_DEVICE_T tFlashDevice;
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int iRes;
 #if defined(DEBUG)
@@ -188,7 +188,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 		else
 		{
 #if defined(DEBUG)
-			/*  show some info */
+			/*  Show the device identifier. */
 			for(iCnt=0; iCnt<16; ++iCnt)
 			{
 				acCfiId[iCnt] = tFlashDevice.szIdent[iCnt];
@@ -197,7 +197,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 			DEBUGMSG(ZONE_VERBOSE, (". found device '%s'\n", acCfiId));
 #endif
 
-			/* set the result data */
+			/* Set the result data. */
 			ptDeviceDescription = ptParameter->ptDeviceDescription;
 			ptDeviceDescription->fIsValid = 1;
 			ptDeviceDescription->sizThis = sizeof(DEVICE_DESCRIPTION_T);

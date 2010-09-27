@@ -31,16 +31,16 @@
 #include "strata.h"
 #include <string.h>
 
-static FLASH_ERRORS_E FlashWaitStatusDone (FLASH_DEVICE *ptFlashDev, unsigned long ulSector);
-static void           FlashWriteCommand   (FLASH_DEVICE *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulCmd);
-static int            FlashIsset          (FLASH_DEVICE *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulCmd);
+static FLASH_ERRORS_E FlashWaitStatusDone (FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
+static void           FlashWriteCommand   (FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulCmd);
+static int            FlashIsset          (FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulCmd);
 
-static FLASH_ERRORS_E FlashReset(FLASH_DEVICE *ptFlashDev, unsigned long ulSector);
-static FLASH_ERRORS_E FlashErase(FLASH_DEVICE *ptFlashDev, unsigned long ulSector);
-static FLASH_ERRORS_E FlashEraseAll(FLASH_DEVICE *ptFlashDev);
-static FLASH_ERRORS_E FlashProgram(FLASH_DEVICE *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData);
-static FLASH_ERRORS_E FlashLock (FLASH_DEVICE *ptFlashDev, unsigned long ulSector);
-static FLASH_ERRORS_E FlashUnlock(FLASH_DEVICE *ptFlashDev);
+static FLASH_ERRORS_E FlashReset(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
+static FLASH_ERRORS_E FlashErase(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
+static FLASH_ERRORS_E FlashEraseAll(FLASH_DEVICE_T *ptFlashDev);
+static FLASH_ERRORS_E FlashProgram(FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData);
+static FLASH_ERRORS_E FlashLock (FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
+static FLASH_ERRORS_E FlashUnlock(FLASH_DEVICE_T *ptFlashDev);
 
 static FLASH_FUNCTIONS_T s_tIntelStrataFuncs =
 {
@@ -52,7 +52,7 @@ static FLASH_FUNCTIONS_T s_tIntelStrataFuncs =
   FlashUnlock
 };
 
-int IntelIdentifyFlash(FLASH_DEVICE *ptFlashDev)
+int IntelIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
 {
   int fRet = FALSE;
 
@@ -80,7 +80,7 @@ int IntelIdentifyFlash(FLASH_DEVICE *ptFlashDev)
 //!  \param ulSector    Sector to reset to read mode
 //!  \return eFLASH_NO_ERROR on success
 // ////////////////////////////////////////////////////
-static FLASH_ERRORS_E FlashReset(FLASH_DEVICE *ptFlashDev, unsigned long ulSector)
+static FLASH_ERRORS_E FlashReset(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
   FlashWriteCommand(ptFlashDev, ulSector, 0, READ_ARRAY);
 
@@ -93,7 +93,7 @@ static FLASH_ERRORS_E FlashReset(FLASH_DEVICE *ptFlashDev, unsigned long ulSecto
 //!  \param ulSector    Sector to erase
 //!  \return eFLASH_NO_ERROR on success
 // ////////////////////////////////////////////////////
-static FLASH_ERRORS_E FlashErase(FLASH_DEVICE *ptFlashDev, unsigned long ulSector)
+static FLASH_ERRORS_E FlashErase(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
   FLASH_ERRORS_E eRet = eFLASH_NO_ERROR;
 
@@ -115,7 +115,7 @@ static FLASH_ERRORS_E FlashErase(FLASH_DEVICE *ptFlashDev, unsigned long ulSecto
 //!  \param ptFlashDev  Pointer to the FLASH control Block
 //!  \return eFLASH_NO_ERROR on success
 // ////////////////////////////////////////////////////
-static FLASH_ERRORS_E FlashEraseAll(FLASH_DEVICE *ptFlashDev)
+static FLASH_ERRORS_E FlashEraseAll(FLASH_DEVICE_T *ptFlashDev)
 {
   FLASH_ERRORS_E eRet     = eFLASH_NO_ERROR;
   unsigned long  ulSector = 0;
@@ -140,7 +140,7 @@ static FLASH_ERRORS_E FlashEraseAll(FLASH_DEVICE *ptFlashDev)
 //!  \param pvData        Data pointer
 //!  \return eFLASH_NO_ERROR on success
 // ////////////////////////////////////////////////////
-static FLASH_ERRORS_E FlashProgram(FLASH_DEVICE *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData)
+static FLASH_ERRORS_E FlashProgram(FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData)
 {
   unsigned long  ulCurrentSector  = 0;
   unsigned long  ulCurrentOffset  = ulStartOffset; 
@@ -265,7 +265,7 @@ static FLASH_ERRORS_E FlashProgram(FLASH_DEVICE *ptFlashDev, unsigned long ulSta
 }
 
 
-FLASH_ERRORS_E FlashLock(FLASH_DEVICE *ptFlashDev, unsigned long ulSector)
+FLASH_ERRORS_E FlashLock(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
 	FLASH_ERRORS_E eRet = eFLASH_NO_ERROR;
 
@@ -285,7 +285,7 @@ FLASH_ERRORS_E FlashLock(FLASH_DEVICE *ptFlashDev, unsigned long ulSector)
 }
 
 
-FLASH_ERRORS_E FlashUnlock(FLASH_DEVICE *ptFlashDev)
+FLASH_ERRORS_E FlashUnlock(FLASH_DEVICE_T *ptFlashDev)
 {
 	FLASH_ERRORS_E eRet = eFLASH_NO_ERROR;
 
@@ -312,7 +312,7 @@ FLASH_ERRORS_E FlashUnlock(FLASH_DEVICE *ptFlashDev)
 //!  \param ulOffset Offset address in the actual FLASH sector
 //!  \param bCmd Command to execute
 // ////////////////////////////////////////////////////
-void FlashWriteCommand(FLASH_DEVICE *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulCmd)
+void FlashWriteCommand(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulCmd)
 {
 	union
 	{
@@ -359,7 +359,7 @@ void FlashWriteCommand(FLASH_DEVICE *ptFlashDev, unsigned long ulSector, unsigne
 //!  \param bCmd Flag value to be checked
 //!  \return TRUE on success
 // ////////////////////////////////////////////////////
-int FlashIsset(FLASH_DEVICE *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulCmd)
+int FlashIsset(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulCmd)
 {
   int            iRet       = FALSE;
   volatile unsigned char* pbReadAddr = ptFlashDev->pbFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset;
@@ -406,7 +406,7 @@ int FlashIsset(FLASH_DEVICE *ptFlashDev, unsigned long ulSector, unsigned long u
 //!  \param ptFlashDev Pointer to the FLASH control Block
 //!  \param ulSector FLASH sector number
 // ////////////////////////////////////////////////////
-static FLASH_ERRORS_E FlashWaitStatusDone(FLASH_DEVICE *ptFlashDev, unsigned long ulSector)
+static FLASH_ERRORS_E FlashWaitStatusDone(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
   FLASH_ERRORS_E eRet = eFLASH_NO_ERROR;
 

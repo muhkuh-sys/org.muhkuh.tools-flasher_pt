@@ -72,7 +72,7 @@ static void showPflashError(FLASH_ERRORS_E tFlashError)
 }
 
 
-static NETX_CONSOLEAPP_RESULT_T parflash_check_size(FLASH_DEVICE *ptFlashDev, unsigned long ulStartSector, unsigned long ulDataByteLen)
+static NETX_CONSOLEAPP_RESULT_T parflash_check_size(FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartSector, unsigned long ulDataByteLen)
 {
 	unsigned long ulOffsetSize;
 	NETX_CONSOLEAPP_RESULT_T tResult;
@@ -98,7 +98,7 @@ static NETX_CONSOLEAPP_RESULT_T parflash_check_size(FLASH_DEVICE *ptFlashDev, un
 }
 
 
-static NETX_CONSOLEAPP_RESULT_T parflash_unlock(FLASH_DEVICE *ptFlashDev)
+static NETX_CONSOLEAPP_RESULT_T parflash_unlock(FLASH_DEVICE_T *ptFlashDev)
 {
 	FLASH_ERRORS_E tFlashError;
 	NETX_CONSOLEAPP_RESULT_T tResult;
@@ -120,7 +120,7 @@ static NETX_CONSOLEAPP_RESULT_T parflash_unlock(FLASH_DEVICE *ptFlashDev)
 }
 
 
-NETX_CONSOLEAPP_RESULT_T parflash_writeImage(FLASH_DEVICE *ptFlashDev, unsigned long ulStartSector, const unsigned char *pbData, unsigned long ulDataByteLen)
+NETX_CONSOLEAPP_RESULT_T parflash_writeImage(FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartSector, const unsigned char *pbData, unsigned long ulDataByteLen)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	unsigned long       ulSectorCnt;
@@ -229,7 +229,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_writeImage(FLASH_DEVICE *ptFlashDev, unsigned 
 }
 
 
-NETX_CONSOLEAPP_RESULT_T parflash_erase(FLASH_DEVICE *ptFlashDev, unsigned long ulStartSector, unsigned long ulDataByteLen)
+NETX_CONSOLEAPP_RESULT_T parflash_erase(FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartSector, unsigned long ulDataByteLen)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	unsigned long            ulSectorCnt;
@@ -286,7 +286,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_erase(FLASH_DEVICE *ptFlashDev, unsigned long 
 }
 
 
-NETX_CONSOLEAPP_RESULT_T parflash_read(FLASH_DEVICE *ptFlashDev, unsigned long ulStartSector, unsigned char *pbData, unsigned long ulDataByteLen)
+NETX_CONSOLEAPP_RESULT_T parflash_read(FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartSector, unsigned char *pbData, unsigned long ulDataByteLen)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	unsigned char *pbDataCnt;
@@ -327,7 +327,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_read(FLASH_DEVICE *ptFlashDev, unsigned long u
 }
 
 
-NETX_CONSOLEAPP_RESULT_T parflash_verify(FLASH_DEVICE *ptFlashDev, unsigned long ulStartSector, const unsigned char *pbData, unsigned long ulDataByteLen)
+NETX_CONSOLEAPP_RESULT_T parflash_verify(FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartSector, const unsigned char *pbData, unsigned long ulDataByteLen)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	const unsigned char *pbDataCnt;

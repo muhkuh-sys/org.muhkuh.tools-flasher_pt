@@ -110,14 +110,14 @@ typedef enum FLASH_ERRORS_Etag
   eFLASH_DEVICE_FAILED
 } FLASH_ERRORS_E;
 
-typedef struct tagFLASH_DEVICE FLASH_DEVICE;
+typedef struct tagFLASH_DEVICE FLASH_DEVICE_T;
 
-typedef FLASH_ERRORS_E(*PFN_FLASH_RESET)(FLASH_DEVICE *ptFlashDev, unsigned long ulSector);
-typedef FLASH_ERRORS_E(*PFN_FLASH_ERASE)(FLASH_DEVICE *ptFlashDev, unsigned long ulSector);
-typedef FLASH_ERRORS_E(*PFN_FLASH_ERASEALL)(FLASH_DEVICE *ptFlashDev);
-typedef FLASH_ERRORS_E(*PFN_FLASH_PROGRAM)(FLASH_DEVICE *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData);
-typedef FLASH_ERRORS_E(*PFN_FLASH_LOCK)(FLASH_DEVICE *ptFlashDev, unsigned long ulSector);
-typedef FLASH_ERRORS_E(*PFN_FLASH_UNLOCK)(FLASH_DEVICE *ptFlashDev);
+typedef FLASH_ERRORS_E(*PFN_FLASH_RESET)(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
+typedef FLASH_ERRORS_E(*PFN_FLASH_ERASE)(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
+typedef FLASH_ERRORS_E(*PFN_FLASH_ERASEALL)(FLASH_DEVICE_T *ptFlashDev);
+typedef FLASH_ERRORS_E(*PFN_FLASH_PROGRAM)(FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData);
+typedef FLASH_ERRORS_E(*PFN_FLASH_LOCK)(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
+typedef FLASH_ERRORS_E(*PFN_FLASH_UNLOCK)(FLASH_DEVICE_T *ptFlashDev);
 
 
 
@@ -221,7 +221,7 @@ typedef struct
 #pragma pack()
 
 
-int  CFI_IdentifyFlash(FLASH_DEVICE* ptFlashDevice, PARFLASH_CONFIGURATION_T *ptCfg);
+int  CFI_IdentifyFlash(FLASH_DEVICE_T* ptFlashDevice, PARFLASH_CONFIGURATION_T *ptCfg);
 
 #endif /* __CFI_FLASH_H__ */
 

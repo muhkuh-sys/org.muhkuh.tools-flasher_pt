@@ -295,7 +295,7 @@ static const CFI_SETUP_CONDITION_T *get_setup_from_condition(unsigned long ulCon
 }
 
 
-static int get_query_information(FLASH_DEVICE *ptFlashDevice, CFI_QUERY_INFORMATION *ptQueryInformation)
+static int get_query_information(FLASH_DEVICE_T *ptFlashDevice, CFI_QUERY_INFORMATION *ptQueryInformation)
 {
 	volatile unsigned char *pucFlashBase;
 	CFI_SETUP_T tSetup;
@@ -390,7 +390,7 @@ static int get_query_information(FLASH_DEVICE *ptFlashDevice, CFI_QUERY_INFORMAT
 }
 
 
-static unsigned long detect_setup_condition(FLASH_DEVICE* ptFlashDevice, PARFLASH_CONFIGURATION_T *ptCfg)
+static unsigned long detect_setup_condition(FLASH_DEVICE_T* ptFlashDevice, PARFLASH_CONFIGURATION_T *ptCfg)
 {
 	unsigned char *pucFlashBase;
 	unsigned long ulDetectedTypes;
@@ -443,7 +443,7 @@ static unsigned long detect_setup_condition(FLASH_DEVICE* ptFlashDevice, PARFLAS
 }
 
 
-static int read_geometry(FLASH_DEVICE *ptFlashDevice, CFI_QUERY_INFORMATION *ptQueryInformation)
+static int read_geometry(FLASH_DEVICE_T *ptFlashDevice, CFI_QUERY_INFORMATION *ptQueryInformation)
 {
 	int iResult;
 	unsigned int uiPairedShift;
@@ -540,7 +540,7 @@ static int read_geometry(FLASH_DEVICE *ptFlashDevice, CFI_QUERY_INFORMATION *ptQ
 }
 
 
-static int query_flash_layout(FLASH_DEVICE *ptFlashDevice, const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits, int fPaired)
+static int query_flash_layout(FLASH_DEVICE_T *ptFlashDevice, const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits, int fPaired)
 {
 	CFI_QUERY_INFORMATION tQueryInformation;
 	unsigned long ulFlashSize;
@@ -593,7 +593,7 @@ static int query_flash_layout(FLASH_DEVICE *ptFlashDevice, const PARFLASH_CONFIG
 //!  \param ptFlashDevice Returned FALSH info on success. Base address pointer must be inserted before calling this function
 //!  \return TRUE if identified successfully
 // ///////////////////////////////////////////////////// 
-int CFI_IdentifyFlash(FLASH_DEVICE* ptFlashDevice, PARFLASH_CONFIGURATION_T *ptCfg)
+int CFI_IdentifyFlash(FLASH_DEVICE_T* ptFlashDevice, PARFLASH_CONFIGURATION_T *ptCfg)
 {
 	int iResult;
 	unsigned long ulSetupCondition;
