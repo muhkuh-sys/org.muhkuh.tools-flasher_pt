@@ -62,6 +62,7 @@ typedef unsigned short USHORT;
 
 #define READ_IDENT_CMD          0x90
 
+#define READ_ARRAY_OFFSET       0x00
 #define READ_ARRAY_CMD          0xFF
 
 #define CFI_FLASH_100_INTEL_STD 0x0001
@@ -152,6 +153,16 @@ typedef enum
 } BUS_WIDTH_T;
 
 
+typedef enum 
+{
+	CFI_SETUP_1x08		= 0x01,
+	CFI_SETUP_2x08		= 0x02,
+	CFI_SETUP_1x16		= 0x04,
+	CFI_SETUP_2x16		= 0x08,
+	CFI_SETUP_1x32		= 0x10
+} CFI_SETUP_T;
+
+
 // ///////////////////////////////////////////////////// 
 //! Structure describing a flash device
 // ///////////////////////////////////////////////////// 
@@ -163,6 +174,7 @@ struct tagFLASH_DEVICE
 	char                szIdent[16];             /* Name of the device. */
 	BUS_WIDTH_T         tBits;                   /* Bus width. */
 	int                 fPaired;                 /* TRUE on 16/16 or 8/8 configurations. */
+	CFI_SETUP_T         tSetup;                  /* Bus width and paired mode. */
 	unsigned long       ulFlashSize;             /* Total size of flash in bytes. */
 	unsigned long       ulMaxBufferWriteSize;    /* Buffered Write buffer length in Bytes. */
 	unsigned char*      pbFlashBase;             /* Base address of flash device. */
