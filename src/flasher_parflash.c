@@ -217,3 +217,80 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	return tResult;
 }
 
+
+NETX_CONSOLEAPP_RESULT_T parflash_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptParameter)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	const FLASH_DEVICE_T *ptFlashDescription;
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
+	unsigned long ulFlashSize;
+	const SECTOR_INFO_T *ptSectors;
+	unsigned long ulSectorMax;
+	unsigned long ulSectorCnt;
+	unsigned long ulBlockStartOffset;
+	unsigned long ulBlockEndOffset;
+	unsigned long ulEraseBlockStart;
+	unsigned long ulEraseBlockEnd;
+
+
+	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tParFlash);
+	ulStartAdr = ptParameter->ulStartAdr;
+	ulEndAdr  = ptParameter->ulEndAdr;
+
+	ulFlashSize = ptFlashDescription->ulFlashSize;
+
+	/* Test addresses. */
+	if( (ulStartAdr>=ulFlashSize) || (ulEndAdr>ulFlashSize) )
+	{
+		/* The requested area is larger than the flash. */
+		DEBUGMSG(ZONE_ERROR, ("! error, the specified area exceeds the flash size\n"));
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else if( ulStartAdr>ulEndAdr )
+	{
+		/* The start address of the area is larger than the end address. */
+		DEBUGMSG(ZONE_ERROR, ("! error, the start address is larger than the end address!\n"));
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else
+	{
+		DEBUGMSG(ZONE_VERBOSE, (". ok, the area fits into the flash\n"));
+
+		/* Look for the erase block which contains the start address. */
+		ptSectors = ptFlashDescription->atSectors;
+
+		ulEraseBlockStart = 0;
+		ulEraseBlockEnd = 0;
+
+		ulSectorCnt = 0;
+		ulSectorMax = ptFlashDescription->ulSectorCnt;
+		do
+		{
+			ulBlockStartOffset = ptSectors[ulSectorCnt].ulOffset;
+			ulBlockEndOffset = ulBlockStartOffset + ptSectors[ulSectorCnt].ulSize;
+			if( ulBlockStartOffset<=ulStartAdr && ulBlockEndOffset>ulStartAdr )
+			{
+				ulEraseBlockStart = ulBlockStartOffset;
+			}
+			if( ulBlockStartOffset<=ulEndAdr && ulBlockEndOffset>ulEndAdr )
+			{
+				ulEraseBlockEnd = ulBlockEndOffset - 1U;
+				break;
+			}
+			++ulSectorCnt;
+		} while( ulSectorCnt<MAX_SECTORS );
+
+		uprintf("requested area: 0x%08x - 0x%08x\n", ulStartAdr, ulEndAdr);
+		uprintf("erase ares: 0x%08x - 0x%08x\n", ulEraseBlockStart, ulEraseBlockEnd);
+
+		ptParameter->ulStartAdr = ulEraseBlockStart;
+		ptParameter->ulEndAdr = ulEraseBlockEnd;
+
+		tResult = NETX_CONSOLEAPP_RESULT_OK;
+	}
+
+	/* all ok */
+	return tResult;
+}
+

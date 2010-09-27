@@ -42,16 +42,16 @@
 static NETX_CONSOLEAPP_RESULT_T opMode_detect(ptFlasherInputParameter ptAppParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	BUS_T tBBSrcType;
+	BUS_T tSourceTyp;
 
 
-	tBBSrcType = ptAppParams->uParameter.tDetect.tSourceTyp;
+	tSourceTyp = ptAppParams->uParameter.tDetect.tSourceTyp;
 
 	/* Clear the result data. */
 	memset(ptAppParams->uParameter.tDetect.ptDeviceDescription, 0, sizeof(DEVICE_DESCRIPTION_T));
 
 	uprintf(". Device :");
-	switch(tBBSrcType)
+	switch(tSourceTyp)
 	{
 	case BUS_ParFlash:
 		/*  use parallel flash */
@@ -377,6 +377,12 @@ static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(ptFlasherInputParameter ptAp
 		uprintf(". Device :");
 		switch(tSrcType)
 		{
+		case BUS_ParFlash:
+			/*  use parallel flash */
+			uprintf("Parallel flash\n");
+			tResult = parflash_getEraseArea(&(ptAppParams->uParameter.tGetEraseArea));
+			break;
+
 		case BUS_SPI:
 			/*  use SPI flash */
 			uprintf("SPI flash\n");

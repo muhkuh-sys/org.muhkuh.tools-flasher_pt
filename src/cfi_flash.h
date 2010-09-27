@@ -89,10 +89,9 @@ typedef unsigned short USHORT;
 // ///////////////////////////////////////////////////// 
 typedef struct tagSECTOR_INFO
 {
-  unsigned long ulOffset;
-  unsigned long ulSize;
-  
-} SECTOR_INFO;
+	unsigned long ulOffset;
+	unsigned long ulSize;
+} SECTOR_INFO_T;
 
 // ////////////////////////////////////////////////////
 //! Error codes for generic flash access routines
@@ -181,7 +180,7 @@ struct tagFLASH_DEVICE
 	FLASH_FUNCTIONS_T   tFlashFunctions;         /* Function pointer table for flash commands. */
 	PFN_FLASHSETUP      pfnSetup;                /* Function to setup the memory interface. */
 	char                acIdent[16];             /* Name of the device. */
-	SECTOR_INFO         atSectors[MAX_SECTORS];  /* Information for each sector. */
+	SECTOR_INFO_T       atSectors[MAX_SECTORS];  /* Information for each sector. */
 };
 
 
