@@ -297,6 +297,8 @@ static const CFI_SETUP_CONDITION_T *get_setup_from_condition(unsigned long ulCon
 
 static int get_query_information(FLASH_DEVICE *ptFlashDevice, CFI_QUERY_INFORMATION *ptQueryInformation)
 {
+	volatile unsigned char *pucFlashBase;
+	CFI_SETUP_T tSetup;
 	int iResult;
 	BUS_WIDTH_T tBits;
 	VADR_T tVAdr;
@@ -310,6 +312,14 @@ static int get_query_information(FLASH_DEVICE *ptFlashDevice, CFI_QUERY_INFORMAT
 
 	/* Assume failure. */
 	iResult = FALSE;
+
+	pucFlashBase = ptFlashDevice->pbFlashBase;
+	tSetup = ptFlashDevice->tSetup;
+
+	CFI_FlashWriteCommand(pucFlashBase, READ_ARRAY_OFFSET, tSetup, READ_ARRAY_CMD);
+
+	/* Enter Query mode */
+	CFI_FlashWriteCommand(pucFlashBase, READ_QUERY_CMD_OFFSET, tSetup, READ_QUERY_CMD);
 
 	tBits = ptFlashDevice->tBits;
 
@@ -374,6 +384,8 @@ static int get_query_information(FLASH_DEVICE *ptFlashDevice, CFI_QUERY_INFORMAT
 		break;
 	}
 
+	/* reset flash to read mode */
+	CFI_FlashWriteCommand(pucFlashBase, READ_ARRAY_OFFSET, tSetup, READ_ARRAY_CMD);
 	return iResult;
 }
 
@@ -433,26 +445,22 @@ static unsigned long detect_setup_condition(FLASH_DEVICE* ptFlashDevice, PARFLAS
 
 static int CFI_QueryFlashLayout(FLASH_DEVICE *ptFlashDevice, const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits, int fPaired)
 {
-	volatile unsigned char *pucFlashBase;
 	CFI_QUERY_INFORMATION tQueryInformation;
-	unsigned long ulFlashSize = 0;
-	unsigned long ulCurSector = 0;
-	unsigned long ulCurOffset = 0;
+	unsigned long ulFlashSize;
+	unsigned long ulCurSector;
+	unsigned long ulCurOffset;
 	unsigned int uiCnt;
 	int iResult;
-	CFI_SETUP_T tSetup;
+	int iCurRegion;
+	unsigned long ulBlockByteSize;
+	unsigned long ulBlockInfo;
+	unsigned int uiBlockPages;
+	unsigned int uiBlocks;
 
 
 	DEBUGMSG(ZONE_FUNCTION, ("+CFI_QueryFlashLayout(): ptFlashDevice=0x%08x\n", ptFlashDevice));
 
-	pucFlashBase = ptFlashDevice->pbFlashBase;
-	tSetup = ptFlashDevice->tSetup;
-
 	ptFlashDevice->pfnSetup(ptCfg, tBits);
-	CFI_FlashWriteCommand(pucFlashBase, READ_ARRAY_OFFSET, tSetup, READ_ARRAY_CMD);
-
-	/* Enter Query mode */
-	CFI_FlashWriteCommand(pucFlashBase, READ_QUERY_CMD_OFFSET, tSetup, READ_QUERY_CMD);
 
 	/* Copy the query information to a local copy. */
 	iResult = get_query_information(ptFlashDevice, &tQueryInformation);
@@ -465,8 +473,6 @@ static int CFI_QueryFlashLayout(FLASH_DEVICE *ptFlashDevice, const PARFLASH_CONF
 		{
 			DEBUGMSG(ZONE_VERBOSE, (".CFI_QueryFlashLayout(): Ok, QRY magic found.\n"));
 
-			int iCurRegion = 0;
-
 			ulFlashSize = 1U << tQueryInformation.bDeviceSize;
 
 			if( fPaired )
@@ -477,30 +483,35 @@ static int CFI_QueryFlashLayout(FLASH_DEVICE *ptFlashDevice, const PARFLASH_CONF
 			ptFlashDevice->ulFlashSize   = ulFlashSize;
 
 			/* cycle through geometry options, until all blocks are evaluated */
-			for(iCurRegion = 0; iCurRegion < tQueryInformation.bEraseBlockRegions; iCurRegion++)
+			ulCurOffset = 0;
+			ulCurSector = 0;
+			for(iCurRegion=0; iCurRegion < tQueryInformation.bEraseBlockRegions; ++iCurRegion)
 			{
-				unsigned long  ulBlockInfo = tQueryInformation.aulEraseBlockInformations[ulCurSector];
-				unsigned short usBlocks    = (unsigned short)(ulBlockInfo & 0x0000FFFF);
-				unsigned int   uiBlockSize = (ulBlockInfo & 0xFFFF0000U) >> 16U;
+				/* The block info has a size and repeat information. */
+				ulBlockInfo = tQueryInformation.aulEraseBlockInformations[ulCurSector];
 
+				/* Extract the size information from the block info. */
+				uiBlockPages = (ulBlockInfo & 0xFFFF0000U) >> 16U;
 				if( fPaired )
 				{
-					uiBlockSize *= 2U;
+					uiBlockPages *= 2U;
 				}
 
-				for(uiCnt = 0; uiCnt <= usBlocks; uiCnt++)
+				/* Convert the number of 256 byte pages to a byte size. */
+				if(uiBlockPages==0)
 				{
-					unsigned long ulBlockByteSize = 0;
+					/* A size of 0 is special, it means 128 bytes. */
+					ulBlockByteSize = 0x80U;
+				}
+				else
+				{
+					ulBlockByteSize = uiBlockPages * 0x100U;
+				}
 
-					if(0 == uiBlockSize)
-					{
-						ulBlockByteSize = 0x80;
-					}
-					else
-					{
-						ulBlockByteSize = uiBlockSize * 0x100U;
-					}
-
+				/* Extract the repeat information from the block info. */
+				uiBlocks = ulBlockInfo & 0x0000FFFFU;
+				for(uiCnt=0; uiCnt<=uiBlocks; ++uiCnt)
+				{
 					ptFlashDevice->atSectors[ulCurSector].ulOffset = ulCurOffset;
 					ptFlashDevice->atSectors[ulCurSector].ulSize   = ulBlockByteSize;
 					++ulCurSector;
@@ -523,11 +534,7 @@ static int CFI_QueryFlashLayout(FLASH_DEVICE *ptFlashDevice, const PARFLASH_CONF
 		}
 	}
 
-	/* reset flash to read mode */
-	CFI_FlashWriteCommand(pucFlashBase, READ_ARRAY_OFFSET, tSetup, READ_ARRAY_CMD);
-
 	DEBUGMSG(ZONE_FUNCTION, ("-CFI_QueryFlashLayout(): iResult=%d\n", iResult));
-
 	return iResult;
 }
 
