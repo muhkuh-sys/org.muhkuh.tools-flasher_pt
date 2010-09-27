@@ -257,7 +257,7 @@
 								<artifactItem>
 									<groupId>nz.co.methods</groupId>
 									<artifactId>asciidoc</artifactId>
-									<version>8.5.2_1</version>
+									<version>8.5.3_1</version>
 									<type>tar.bz2</type>
 									<overWrite>false</overWrite>
 									<outputDirectory>${asciidoc_dir}</outputDirectory>
