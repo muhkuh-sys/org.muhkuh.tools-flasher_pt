@@ -443,22 +443,111 @@ static unsigned long detect_setup_condition(FLASH_DEVICE* ptFlashDevice, PARFLAS
 }
 
 
-static int CFI_QueryFlashLayout(FLASH_DEVICE *ptFlashDevice, const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits, int fPaired)
+static int read_geometry(FLASH_DEVICE *ptFlashDevice, CFI_QUERY_INFORMATION *ptQueryInformation)
+{
+	int iResult;
+	unsigned int uiPairedShift;
+	unsigned int uiEraseBlocks;
+	unsigned int uiEraseBlocksCnt;
+	unsigned long ulBlockInfo;
+	unsigned long ulBlocks;
+	unsigned long ulBlockSize;
+	unsigned long ulBlockByteSize;
+	unsigned long ulCurSector;
+	unsigned long ulCurOffset;
+
+
+	DEBUGMSG(ZONE_FUNCTION, ("+read_geometry(): ptFlashDevice=0x%08x, ptQueryInformation=0x%08x\n", ptFlashDevice, ptQueryInformation));
+
+	/* Be optimistic. */
+	iResult = TRUE;
+
+	/* Generate the size multiplier for paired flashes. */
+	if( ptFlashDevice->fPaired!=0 )
+	{
+		uiPairedShift = 1;
+	}
+	else
+	{
+		uiPairedShift = 0;
+	}
+
+	/* Get the number of erase blocks. */
+	uiEraseBlocks = ptQueryInformation->bEraseBlockRegions;
+	if( uiEraseBlocks>MAX_SECTORS )
+	{
+		iResult = FALSE;
+	}
+	else
+	{
+		/* Init the sector counter and offset. */
+		ulCurSector = 0;
+		ulCurOffset = 0;
+
+		/* Loop over all geometry infos. */
+		uiEraseBlocksCnt = 0;
+		while( uiEraseBlocksCnt<uiEraseBlocks )
+		{
+			/* Extract the number of blocks and their size from the info dword. */
+			ulBlockInfo = ptQueryInformation->aulEraseBlockInformations[uiEraseBlocksCnt];
+			++uiEraseBlocksCnt;
+
+			/* Get the number of blocks in this entry. */
+			ulBlocks = (ulBlockInfo & 0xFFFFU) + 1U;
+
+			/* Get the size of each block. */
+			ulBlockSize   = ulBlockInfo >> 16U;
+			ulBlockSize <<= uiPairedShift;
+			DEBUGMSG(ZONE_VERBOSE, (".read_geometry(): packed: 0x%08x, blocks: 0x%04x, pages: 0x%08x\n", ulBlockInfo, ulBlocks, ulBlockSize));
+
+			/* Loop over all blocks. NOTE: ulBlocks can not be 0 here. */
+			do
+			{
+				/* Is still enough space in the sector table? */
+				if( ulCurSector>MAX_SECTORS )
+				{
+					/* No -> do not process more sectors. */
+					iResult = FALSE;
+					break;
+				}
+
+				/* Get the size of the erase block in bytes. */
+				if( ulBlockSize==0 )
+				{
+					ulBlockByteSize = 0x80;
+				}
+				else
+				{
+					ulBlockByteSize = ulBlockSize * 0x100U;
+				}
+
+				ptFlashDevice->atSectors[ulCurSector].ulOffset = ulCurOffset;
+				ptFlashDevice->atSectors[ulCurSector].ulSize   = ulBlockByteSize;
+
+				DEBUGMSG(ZONE_VERBOSE, (".read_geometry(): sector %d, offset: 0x%08x, size: 0x%08x\n", ulCurSector, ulCurOffset, ulBlockByteSize));
+
+				++ulCurSector;
+
+				ulCurOffset += ulBlockByteSize;
+			} while( --ulBlocks>0 );
+		}
+
+		ptFlashDevice->ulSectorCnt = ulCurSector;
+	}
+
+	DEBUGMSG(ZONE_FUNCTION, ("-read_geometry(): iResult=%d\n", iResult));
+	return iResult;
+}
+
+
+static int query_flash_layout(FLASH_DEVICE *ptFlashDevice, const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits, int fPaired)
 {
 	CFI_QUERY_INFORMATION tQueryInformation;
 	unsigned long ulFlashSize;
-	unsigned long ulCurSector;
-	unsigned long ulCurOffset;
-	unsigned int uiCnt;
 	int iResult;
-	int iCurRegion;
-	unsigned long ulBlockByteSize;
-	unsigned long ulBlockInfo;
-	unsigned int uiBlockPages;
-	unsigned int uiBlocks;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+CFI_QueryFlashLayout(): ptFlashDevice=0x%08x\n", ptFlashDevice));
+	DEBUGMSG(ZONE_FUNCTION, ("+query_flash_layout(): ptFlashDevice=0x%08x\n", ptFlashDevice));
 
 	ptFlashDevice->pfnSetup(ptCfg, tBits);
 
@@ -467,74 +556,32 @@ static int CFI_QueryFlashLayout(FLASH_DEVICE *ptFlashDevice, const PARFLASH_CONF
 	if( iResult==TRUE )
 	{
 		/* check byte QRY pattern, to see if flash has entered valid CFI Query mode */
-		DEBUGMSG(ZONE_VERBOSE, (".CFI_QueryFlashLayout(): abCfiId=[%02x, %02x, %02x]\n", tQueryInformation.abQueryIdent[0], tQueryInformation.abQueryIdent[1], tQueryInformation.abQueryIdent[2]));
+		DEBUGMSG(ZONE_VERBOSE, (".query_flash_layout(): abCfiId=[%02x, %02x, %02x]\n", tQueryInformation.abQueryIdent[0], tQueryInformation.abQueryIdent[1], tQueryInformation.abQueryIdent[2]));
 
 		if( tQueryInformation.abQueryIdent[0]=='Q' && tQueryInformation.abQueryIdent[1]=='R' && tQueryInformation.abQueryIdent[2]=='Y' )
 		{
-			DEBUGMSG(ZONE_VERBOSE, (".CFI_QueryFlashLayout(): Ok, QRY magic found.\n"));
+			DEBUGMSG(ZONE_VERBOSE, (".query_flash_layout(): Ok, QRY magic found.\n"));
 
 			ulFlashSize = 1U << tQueryInformation.bDeviceSize;
-
 			if( fPaired )
 			{
 				ulFlashSize *= 2;
 			}
-
 			ptFlashDevice->ulFlashSize   = ulFlashSize;
-
-			/* cycle through geometry options, until all blocks are evaluated */
-			ulCurOffset = 0;
-			ulCurSector = 0;
-			for(iCurRegion=0; iCurRegion < tQueryInformation.bEraseBlockRegions; ++iCurRegion)
-			{
-				/* The block info has a size and repeat information. */
-				ulBlockInfo = tQueryInformation.aulEraseBlockInformations[ulCurSector];
-
-				/* Extract the size information from the block info. */
-				uiBlockPages = (ulBlockInfo & 0xFFFF0000U) >> 16U;
-				if( fPaired )
-				{
-					uiBlockPages *= 2U;
-				}
-
-				/* Convert the number of 256 byte pages to a byte size. */
-				if(uiBlockPages==0)
-				{
-					/* A size of 0 is special, it means 128 bytes. */
-					ulBlockByteSize = 0x80U;
-				}
-				else
-				{
-					ulBlockByteSize = uiBlockPages * 0x100U;
-				}
-
-				/* Extract the repeat information from the block info. */
-				uiBlocks = ulBlockInfo & 0x0000FFFFU;
-				for(uiCnt=0; uiCnt<=uiBlocks; ++uiCnt)
-				{
-					ptFlashDevice->atSectors[ulCurSector].ulOffset = ulCurOffset;
-					ptFlashDevice->atSectors[ulCurSector].ulSize   = ulBlockByteSize;
-					++ulCurSector;
-
-					ulCurOffset += ulBlockByteSize;
-				}
-			}
-
-			ptFlashDevice->ulSectorCnt = ulCurSector;
 
 			ptFlashDevice->usVendorCommandSet   = tQueryInformation.usVendorCommandSet;
 			ptFlashDevice->ulMaxBufferWriteSize = 1U << tQueryInformation.usMaxBufferWriteSize;
 
-			iResult = TRUE;
+			iResult = read_geometry(ptFlashDevice, &tQueryInformation);
 		}
 		else
 		{
 			iResult = FALSE;
-			DEBUGMSG(ZONE_ERROR, ("!CFI_QueryFlashLayout(): Error, no QRY magic found.\n"));
+			DEBUGMSG(ZONE_ERROR, ("!query_flash_layout(): Error, no QRY magic found.\n"));
 		}
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, ("-CFI_QueryFlashLayout(): iResult=%d\n", iResult));
+	DEBUGMSG(ZONE_FUNCTION, ("-query_flash_layout(): iResult=%d\n", iResult));
 	return iResult;
 }
 
@@ -583,7 +630,7 @@ int CFI_IdentifyFlash(FLASH_DEVICE* ptFlashDevice, PARFLASH_CONFIGURATION_T *ptC
 
 			DEBUGMSG(ZONE_VERBOSE, (".Found bits: %02d, paired: %d\n", 8U<<tBits, iPaired));
 
-			iResult = CFI_QueryFlashLayout(ptFlashDevice, ptCfg, tBits, iPaired);
+			iResult = query_flash_layout(ptFlashDevice, ptCfg, tBits, iPaired);
 			if( iResult==TRUE )
 			{
 				/* Check if it is a supported type */
