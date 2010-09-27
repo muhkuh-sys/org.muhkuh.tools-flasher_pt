@@ -110,7 +110,6 @@ default_ccflags = """
 	-gdwarf-2
 """
 
-
 #----------------------------------------------------------------------------
 # Only execute this part if the help text is not requested.
 # This keeps the help message functional even if no include path for the
@@ -122,10 +121,11 @@ if not GetOption('help'):
 	
 	#----------------------------------------------------------------------------
 	#
-	# import the compiler definitions
+	# Import the tool definitions.
 	#
 	# NOTE: it would be possible to use execfile instead of import here. This
 	gcc_arm_elf_4_3_3_3 = scons_common.get_compiler('gcc_arm_elf_4_3_3_3')
+	asciidoc_8_5_3_1 = scons_common.get_asciidoc('asciidoc_8_5_3_1')
 	
 	
 	#----------------------------------------------------------------------------
@@ -140,6 +140,7 @@ if not GetOption('help'):
 	env_default.Replace(LIBS = ['m', 'c', 'gcc'])
 	env_default.Replace(LINKFLAGS = ['-nostdlib', '-static', '-Map=${TARGET}.map'])
 	
+	asciidoc_8_5_3_1.ApplyToEnv(env_default)
 	build_properties.ApplyToEnv(env_default)
 	svnversion.ApplyToEnv(env_default)
 	uuencode.ApplyToEnv(env_default)
@@ -195,3 +196,9 @@ if not GetOption('help'):
 L 00020000
 """, UUE_POST = "")
 
+
+	#----------------------------------------------------------------------------
+	#
+	# Build the documentation.
+	#
+	env_default.Asciidoc('targets/doc/flasher.html', 'doc/flasher.txt')
