@@ -107,7 +107,7 @@ static NETX_CONSOLEAPP_RESULT_T parflash_unlock(FLASH_DEVICE_T *ptFlashDev)
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
 	/* unlock the complete flash */
-	tFlashError = ptFlashDev->ptFlashFuncs->pfnUnlock(ptFlashDev);
+	tFlashError = ptFlashDev->tFlashFunctions.pfnUnlock(ptFlashDev);
 	if( tFlashError!=eFLASH_NO_ERROR )
 	{
 		/* failed to unlock all sectors */
@@ -154,7 +154,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_writeImage(FLASH_DEVICE_T *ptFlashDev, unsigne
 			while( pbDataCnt<pbDataEnd )
 			{
 				/* try to erase the flash sector */
-				tFlashError = ptFlashDev->ptFlashFuncs->pfnErase(ptFlashDev, ulSectorCnt);
+				tFlashError = ptFlashDev->tFlashFunctions.pfnErase(ptFlashDev, ulSectorCnt);
 				if( tFlashError!=eFLASH_NO_ERROR )
 				{
 					/* failed to erase the sector */
@@ -169,7 +169,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_writeImage(FLASH_DEVICE_T *ptFlashDev, unsigne
 				ulSegmentLen = (ulSizeLeft>=ulMaxSegmentLen) ? ulMaxSegmentLen : ulSizeLeft;
 
 				ulSectorStartOffset = 0;
-				tFlashError = ptFlashDev->ptFlashFuncs->pfnProgram(ptFlashDev, ptFlashDev->atSectors[ulSectorCnt].ulOffset + ulSectorStartOffset, ulSegmentLen, pbDataCnt);
+				tFlashError = ptFlashDev->tFlashFunctions.pfnProgram(ptFlashDev, ptFlashDev->atSectors[ulSectorCnt].ulOffset + ulSectorStartOffset, ulSegmentLen, pbDataCnt);
 				if( tFlashError!=eFLASH_NO_ERROR )
 				{
 					/* failed to program the sector */
@@ -200,7 +200,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_writeImage(FLASH_DEVICE_T *ptFlashDev, unsigne
 			progress_bar_init( ulDataByteLen );
 
 			pbDataCnt = pbData;
-			pbDstCnt = ptFlashDev->pbFlashBase;
+			pbDstCnt = ptFlashDev->pucFlashBase;
 			while( *(pbDataCnt++)==*(pbDstCnt++) && pbDataCnt<pbDataEnd )
 			{
 				if( (((unsigned long)pbDataCnt)&0xffff)==0 )
@@ -262,7 +262,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_erase(FLASH_DEVICE_T *ptFlashDev, unsigned lon
 			while( ulSizeLeft!=0 )
 			{
 				/* try to erase the flash sector */
-				tFlashError = ptFlashDev->ptFlashFuncs->pfnErase(ptFlashDev, ulSectorCnt);
+				tFlashError = ptFlashDev->tFlashFunctions.pfnErase(ptFlashDev, ulSectorCnt);
 				if( tFlashError!=eFLASH_NO_ERROR )
 				{
 					/* failed to erase the sector */
@@ -307,7 +307,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_read(FLASH_DEVICE_T *ptFlashDev, unsigned long
 
 		pbDataCnt = pbData;
 		pbDataEnd = pbData + ulDataByteLen;
-		pbDstCnt = ptFlashDev->pbFlashBase;
+		pbDstCnt = ptFlashDev->pucFlashBase;
 		while( pbDataCnt<pbDataEnd )
 		{
 			*(pbDataCnt++) = *(pbDstCnt++);
@@ -348,7 +348,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_verify(FLASH_DEVICE_T *ptFlashDev, unsigned lo
 
 		pbDataCnt = pbData;
 		pbDataEnd = pbData + ulDataByteLen;
-		pbDstCnt = ptFlashDev->pbFlashBase;
+		pbDstCnt = ptFlashDev->pucFlashBase;
 		while( *(pbDataCnt++)==*(pbDstCnt++) && pbDataCnt<pbDataEnd )
 		{
 			if( (((unsigned long)pbDataCnt)&0xffff)==0 )

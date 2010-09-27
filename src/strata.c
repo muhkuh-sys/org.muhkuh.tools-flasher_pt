@@ -59,15 +59,15 @@ int IntelIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
   /* try to identify Strata Flash */
   FlashWriteCommand(ptFlashDev, 0, 0, READ_IDENT_CMD);
 
-  ptFlashDev->bManufacturer = ptFlashDev->pbFlashBase[0];
-  ptFlashDev->bDevice       = ptFlashDev->pbFlashBase[1];
+  ptFlashDev->ucManufacturer = ptFlashDev->pucFlashBase[0];
+  ptFlashDev->ucDevice       = ptFlashDev->pucFlashBase[1];
 
   FlashWriteCommand(ptFlashDev, 0 ,0, READ_ARRAY_CMD);
 
-  if(ptFlashDev->bManufacturer == MFGCODE_INTEL)
+  if(ptFlashDev->ucManufacturer == MFGCODE_INTEL)
   {
-    strcpy(ptFlashDev->szIdent, "Intel");
-    ptFlashDev->ptFlashFuncs = &s_tIntelStrataFuncs;
+    strcpy(ptFlashDev->acIdent, "Intel");
+    memcpy(&(ptFlashDev->tFlashFunctions), &s_tIntelStrataFuncs, sizeof(FLASH_FUNCTIONS_T));
     fRet = TRUE;  
   }
 
@@ -213,7 +213,7 @@ static FLASH_ERRORS_E FlashProgram(FLASH_DEVICE_T *ptFlashDev, unsigned long ulS
 
     while(ulWriteSize != 0)
     {
-      volatile unsigned char* pbWriteAddr = ptFlashDev->pbFlashBase + 
+      volatile unsigned char* pbWriteAddr = ptFlashDev->pucFlashBase + 
                                    ptFlashDev->atSectors[ulCurrentSector].ulOffset + 
                                    ulCurrentOffset;
 
@@ -322,7 +322,7 @@ void FlashWriteCommand(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsig
 	} uAdr;
 
 
-	uAdr.puc = ptFlashDev->pbFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset;
+	uAdr.puc = ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset;
 
 	switch( ptFlashDev->tBits )
 	{
@@ -362,7 +362,7 @@ void FlashWriteCommand(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsig
 int FlashIsset(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulCmd)
 {
   int            iRet       = FALSE;
-  volatile unsigned char* pbReadAddr = ptFlashDev->pbFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset;
+  volatile unsigned char* pbReadAddr = ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset;
 
   switch(ptFlashDev->tBits)
   {

@@ -60,7 +60,7 @@ typedef struct
 	BUS_T tSourceTyp;
 	union
 	{
-		PARFLASH_CONFIGURATION_T tParFlash;
+		FLASH_DEVICE_T tParFlash;
 		SPI_FLASH_T tSpiInfo;
 	} uInfo;
 } DEVICE_DESCRIPTION_T;

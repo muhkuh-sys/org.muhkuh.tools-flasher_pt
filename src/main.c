@@ -47,6 +47,9 @@ static NETX_CONSOLEAPP_RESULT_T opMode_detect(ptFlasherInputParameter ptAppParam
 
 	tBBSrcType = ptAppParams->uParameter.tDetect.tSourceTyp;
 
+	/* Clear the result data. */
+	memset(ptAppParams->uParameter.tDetect.ptDeviceDescription, 0, sizeof(DEVICE_DESCRIPTION_T));
+
 	uprintf(". Device :");
 	switch(tBBSrcType)
 	{

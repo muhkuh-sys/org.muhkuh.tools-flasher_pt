@@ -120,7 +120,7 @@ static void setup_flash(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits
 
 NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 {
-	FLASH_DEVICE_T tFlashDevice;
+	FLASH_DEVICE_T *ptFlashDevice;
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int iRes;
 #if defined(DEBUG)
@@ -139,9 +139,12 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	uiUnit = ptParameter->uSourceParameter.tParFlash.uiUnit;
 	uiChipSelect = ptParameter->uSourceParameter.tParFlash.uiChipSelect;
 
+	ptDeviceDescription = ptParameter->ptDeviceDescription;
+	ptFlashDevice = &(ptDeviceDescription->uInfo.tParFlash);
+
 #if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
-	tFlashDevice.pbFlashBase = (unsigned char*)HOSTADDR(extsram0);
-	tFlashDevice.pfnSetup = setup_flash_srb;
+	ptFlashDevice->pbFlashBase = (unsigned char*)HOSTADDR(extsram0);
+	ptFlashDevice->pfnSetup = setup_flash_srb;
 #elif ASIC_TYP==10
 	if( uiUnit!=0 )
 	{
@@ -158,31 +161,35 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 		switch(uiChipSelect)
 		{
 		case 0:
-			tFlashDevice.pbFlashBase = (unsigned char*)HOSTADDR(extsram0);
+			ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADDR(extsram0);
 			break;
 		case 1:
-			tFlashDevice.pbFlashBase = (unsigned char*)HOSTADDR(extsram1);
+			ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADDR(extsram1);
 			break;
 		case 2:
-			tFlashDevice.pbFlashBase = (unsigned char*)HOSTADDR(extsram2);
+			ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADDR(extsram2);
 			break;
 		case 3:
-			tFlashDevice.pbFlashBase = (unsigned char*)HOSTADDR(extsram3);
+			ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADDR(extsram3);
 			break;
 		}
-		tFlashDevice.pfnSetup = setup_flash;
+		ptFlashDevice->pfnSetup = setup_flash;
 	}
 #endif
 
 	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 	{
 		/* Try to detect the flash. */
-		DEBUGMSG(ZONE_VERBOSE, (". Detecting CFI flash at 0x%08x...\n", tFlashDevice.pbFlashBase));
-		iRes = CFI_IdentifyFlash(&tFlashDevice, &(ptParameter->uSourceParameter.tParFlash));
+		DEBUGMSG(ZONE_VERBOSE, (". Detecting CFI flash at 0x%08x...\n", ptFlashDevice->pucFlashBase));
+		iRes = CFI_IdentifyFlash(ptFlashDevice, &(ptParameter->uSourceParameter.tParFlash));
 		if( iRes==0 )
 		{
 			/*  failed to identify flash */
 			uprintf("! failed to detect CFI flash\n");
+
+			/* clear the result data */
+			memset(ptDeviceDescription, 0, sizeof(DEVICE_DESCRIPTION_T));
+
 			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 		}
 		else
@@ -191,14 +198,13 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 			/*  Show the device identifier. */
 			for(iCnt=0; iCnt<16; ++iCnt)
 			{
-				acCfiId[iCnt] = tFlashDevice.szIdent[iCnt];
+				acCfiId[iCnt] = ptFlashDevice->szIdent[iCnt];
 			}
 			acCfiId[16] = 0x00;
 			DEBUGMSG(ZONE_VERBOSE, (". found device '%s'\n", acCfiId));
 #endif
 
 			/* Set the result data. */
-			ptDeviceDescription = ptParameter->ptDeviceDescription;
 			ptDeviceDescription->fIsValid = 1;
 			ptDeviceDescription->sizThis = sizeof(DEVICE_DESCRIPTION_T);
 			ptDeviceDescription->ulVersion = FLASHER_INTERFACE_VERSION;

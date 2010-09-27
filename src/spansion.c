@@ -121,20 +121,20 @@ int SpansionIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
                             s_atAutoSelect, 
                             sizeof(s_atAutoSelect) / sizeof(s_atAutoSelect[0]));
 
-  ptFlashDev->bManufacturer = ptFlashDev->pbFlashBase[0];
+  ptFlashDev->ucManufacturer = ptFlashDev->pucFlashBase[0];
 
-  abDeviceId[0] = ptFlashDev->pbFlashBase[2];
-  abDeviceId[1] = ptFlashDev->pbFlashBase[2];
-  abDeviceId[2] = ptFlashDev->pbFlashBase[2]; 
+  abDeviceId[0] = ptFlashDev->pucFlashBase[2];
+  abDeviceId[1] = ptFlashDev->pucFlashBase[2];
+  abDeviceId[2] = ptFlashDev->pucFlashBase[2]; 
 
   FlashReset(ptFlashDev, 0);
 
-  if(MFGCODE_SPANSION == ptFlashDev->bManufacturer)
+  if(MFGCODE_SPANSION == ptFlashDev->ucManufacturer)
   {
     /* TODO: Check Device IDs */
 
-    strcpy(ptFlashDev->szIdent, "SPANSION");
-    ptFlashDev->ptFlashFuncs = &s_tSpansionFuncs;
+    strcpy(ptFlashDev->acIdent, "SPANSION");
+    memcpy(&(ptFlashDev->tFlashFunctions), &s_tSpansionFuncs, sizeof(FLASH_FUNCTIONS_T));
     fRet = TRUE;
   }
 
@@ -226,14 +226,14 @@ static FLASH_ERRORS_E FlashNormalWrite(FLASH_DEVICE_T *ptFlashDev, unsigned long
     if(ptFlashDev->fPaired)
     {
       const unsigned long*    pulBuffer = (const unsigned long*)pbData;
-      volatile unsigned long* pulFlash  = (volatile unsigned long*)(ptFlashDev->pbFlashBase + ulOffset);
+      volatile unsigned long* pulFlash  = (volatile unsigned long*)(ptFlashDev->pucFlashBase + ulOffset);
       ulLastData      = pulBuffer[ulIdx];
       pulFlash[ulIdx] = pulBuffer[ulIdx];
     }
     else 
     {
       const unsigned short*    pusBuffer = (const unsigned short*)pbData;
-      volatile unsigned short* pusFlash  = (volatile unsigned short*)(ptFlashDev->pbFlashBase + ulOffset);
+      volatile unsigned short* pusFlash  = (volatile unsigned short*)(ptFlashDev->pucFlashBase + ulOffset);
       ulLastData      = pusBuffer[ulIdx];
       pusFlash[ulIdx] = pusBuffer[ulIdx];
     }
@@ -363,7 +363,7 @@ static FLASH_ERRORS_E FlashProgram(FLASH_DEVICE_T *ptFlashDev, unsigned long ulS
 
     while(ulWriteSize != 0)
     {
-      volatile unsigned char* pbWriteAddr = ptFlashDev->pbFlashBase + 
+      volatile unsigned char* pbWriteAddr = ptFlashDev->pucFlashBase + 
                                    ptFlashDev->atSectors[ulCurrentSector].ulOffset + 
                                    ulCurrentOffset;
 
@@ -458,7 +458,7 @@ FLASH_ERRORS_E FlashUnlock(FLASH_DEVICE_T *ptFlashDev)
 	while( ulSector<ptFlashDev->ulSectorCnt )
 	{
 		/* get sector address */
-		pbReadAddr = ptFlashDev->pbFlashBase + ptFlashDev->atSectors[ulSector].ulOffset;
+		pbReadAddr = ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset;
 		
 		/* get protection info */
 		ulProtectionBit = *pbReadAddr;
@@ -504,7 +504,7 @@ FLASH_ERRORS_E FlashUnlock(FLASH_DEVICE_T *ptFlashDev)
 // ////////////////////////////////////////////////////
 void FlashWriteCommand(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned int uiCmd)
 {
-        volatile unsigned char* pbWriteAddr = ptFlashDev->pbFlashBase + ptFlashDev->atSectors[ulSector].ulOffset;
+        volatile unsigned char* pbWriteAddr = ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset;
         unsigned long ulValue;
 
 
@@ -546,7 +546,7 @@ void FlashWriteCommand(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsig
 static int FlashIsset(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulSet, unsigned long ulClear)
 {
   int            iRet       = FALSE;
-  volatile unsigned char* pbReadAddr = ptFlashDev->pbFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset;
+  volatile unsigned char* pbReadAddr = ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset;
 
   switch(ptFlashDev->tBits)
   {
@@ -730,7 +730,7 @@ static FLASH_ERRORS_E FlashWaitWriteDone(FLASH_DEVICE_T *ptFlashDev, unsigned lo
   DEVSTATUS       dev_status;
   unsigned int    polling_counter = 0xFFFFFFFF;
   unsigned long   ulActData       = 0;
-  unsigned long   ulBlockAddress  = (unsigned long)(ptFlashDev->pbFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset);
+  unsigned long   ulBlockAddress  = (unsigned long)(ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset);
   FLASH_ERRORS_E  eRet            = eFLASH_NO_ERROR;
 
   /* delay 4us */

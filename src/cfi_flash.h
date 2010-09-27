@@ -168,20 +168,20 @@ typedef enum
 // ///////////////////////////////////////////////////// 
 struct tagFLASH_DEVICE
 {
-	unsigned char       bManufacturer;           /* Manufacturer code provided by flash. */
-	unsigned char       bDevice;                 /* Device code provided by flash. */
+	unsigned char       ucManufacturer;          /* Manufacturer code provided by flash. */
+	unsigned char       ucDevice;                /* Device code provided by flash. */
 	unsigned short      usVendorCommandSet;      /* Vendor Command Set. */
-	char                szIdent[16];             /* Name of the device. */
 	BUS_WIDTH_T         tBits;                   /* Bus width. */
 	int                 fPaired;                 /* TRUE on 16/16 or 8/8 configurations. */
 	CFI_SETUP_T         tSetup;                  /* Bus width and paired mode. */
 	unsigned long       ulFlashSize;             /* Total size of flash in bytes. */
 	unsigned long       ulMaxBufferWriteSize;    /* Buffered Write buffer length in Bytes. */
-	unsigned char*      pbFlashBase;             /* Base address of flash device. */
+	unsigned char      *pucFlashBase;            /* Base address of flash device. */
 	unsigned long       ulSectorCnt;             /* Total number of sectors. */
-	SECTOR_INFO         atSectors[MAX_SECTORS];  /* Information for each sector. */
-	FLASH_FUNCTIONS_T  *ptFlashFuncs;            /* Function pointer table for flash commands. */
+	FLASH_FUNCTIONS_T   tFlashFunctions;         /* Function pointer table for flash commands. */
 	PFN_FLASHSETUP      pfnSetup;                /* Function to setup the memory interface. */
+	char                acIdent[16];             /* Name of the device. */
+	SECTOR_INFO         atSectors[MAX_SECTORS];  /* Information for each sector. */
 };
 
 

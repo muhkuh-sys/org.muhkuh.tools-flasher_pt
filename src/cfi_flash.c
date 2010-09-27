@@ -313,7 +313,7 @@ static int get_query_information(FLASH_DEVICE_T *ptFlashDevice, CFI_QUERY_INFORM
 	/* Assume failure. */
 	iResult = FALSE;
 
-	pucFlashBase = ptFlashDevice->pbFlashBase;
+	pucFlashBase = ptFlashDevice->pucFlashBase;
 	tSetup = ptFlashDevice->tSetup;
 
 	CFI_FlashWriteCommand(pucFlashBase, READ_ARRAY_OFFSET, tSetup, READ_ARRAY_CMD);
@@ -324,7 +324,7 @@ static int get_query_information(FLASH_DEVICE_T *ptFlashDevice, CFI_QUERY_INFORM
 	tBits = ptFlashDevice->tBits;
 
 	/* Get the source address. */
-	tVAdr.puc = ptFlashDevice->pbFlashBase + (CFI_QUERY_INFO_OFFSET<<tBits);
+	tVAdr.puc = ptFlashDevice->pucFlashBase + (CFI_QUERY_INFO_OFFSET<<tBits);
 
 	/* Get the destination start and end address. */
 	pucCnt = (unsigned char*)ptQueryInformation;
@@ -401,7 +401,7 @@ static unsigned long detect_setup_condition(FLASH_DEVICE_T* ptFlashDevice, PARFL
 	int iCmpResult;
 
 
-	pucFlashBase  = ptFlashDevice->pbFlashBase;
+	pucFlashBase  = ptFlashDevice->pucFlashBase;
 
 	/* check if we find patterns of QRY response to identify flash width and pairing */
 	ulDetectedTypes = 0;
