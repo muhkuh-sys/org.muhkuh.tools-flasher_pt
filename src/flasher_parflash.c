@@ -305,6 +305,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_isErased(CMD_PARAMETER_ISERASED_T *ptParameter
 	unsigned long ulFlashSize;
 	ADR_T tCnt;
 	ADR_T tEnd;
+	unsigned long ulProgressBarPosition;
 	unsigned long ulErased;
 
 
@@ -359,7 +360,9 @@ NETX_CONSOLEAPP_RESULT_T parflash_isErased(CMD_PARAMETER_ISERASED_T *ptParameter
 			/* Show progress every 64K bytes. */
 			if( (tCnt.ul&0xffff)==0 )
 			{
-				progress_bar_set_position(tCnt.ul-ulStartAdr);
+				ulProgressBarPosition  = (unsigned long)(tCnt.puc - ptFlashDescription->pucFlashBase);
+				ulProgressBarPosition -= ulStartAdr;
+				progress_bar_set_position(ulProgressBarPosition);
 			}
 		}
 
