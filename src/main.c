@@ -432,9 +432,7 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 		setRdyRunLed(RDYRUN_LED_OFF);
 
 		/* say hi */
-		uprintf("\f\n\n\n\nFlasher v");
-		uprintf(FLASHER_VERSION_ALL);
-		uprintf("\n\n");
+		uprintf("\f\n\n\n\nFlasher v" FLASHER_VERSION_ALL "\n\n");
 		uprintf("Copyright (C) 2005-2010 C.Thelen (cthelen@hilscher.com) and M.Trensch.\n");
 		uprintf("There is NO warranty.  You may redistribute this software\n");
 		uprintf("under the terms of the GNU Library General Public License.\n");
@@ -447,22 +445,12 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 
 		/*  get application parameters */
 		ptAppParams = (ptFlasherInputParameter)ptTestParam->pvInitParams;
-#if 0
-		/*  show application parameters */
-		uprintf(". Application parameters:\n");
-		uprintf(". parameter version: 0x%08x\n", ptAppParams->ulParamVersion);
-		uprintf(". operation mode:    %d\n", ptAppParams->ulOperationMode);
-		uprintf(". data start:        0x%08x\n", (unsigned long)ptAppParams->pbData);
-		uprintf(". data size:         0x%08x\n", ptAppParams->ulDataByteSize);
-		uprintf(". boot type:         %d\n", ptAppParams->ulBootBlockSrcType);
-		uprintf(". device offset:     0x%08x\n", ptAppParams->ulDstDeviceOffset);
-		uprintf("\n");
-#endif
+
 		/*  check parameter version */
 		ulParamVersion = ptAppParams->ulParamVersion;
 		if( ulParamVersion!=0x00020000 )
 		{
-			uprintf("! unknown parameter version: %4x.%4x. Expected 0002.0000!\n", ulParamVersion>>16, ulParamVersion&0xffff);
+			uprintf("! unknown parameter version: %04x.%04x. Expected 0002.0000!\n", ulParamVersion>>16, ulParamVersion&0xffff);
 			setRdyRunLed(RDYRUN_LED_RED);
 			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 		}
