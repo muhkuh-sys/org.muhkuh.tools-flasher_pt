@@ -20,6 +20,7 @@
 
 #include "flasher_parflash.h"
 
+#include "progress_bar.h"
 #include "uprintf.h"
 
 
@@ -275,14 +276,14 @@ NETX_CONSOLEAPP_RESULT_T parflash_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptP
 			}
 			if( ulBlockStartOffset<=ulEndAdr && ulBlockEndOffset>ulEndAdr )
 			{
-				ulEraseBlockEnd = ulBlockEndOffset - 1U;
+				ulEraseBlockEnd = ulBlockEndOffset;
 				break;
 			}
 			++ulSectorCnt;
 		} while( ulSectorCnt<MAX_SECTORS );
 
-		uprintf("requested area: 0x%08x - 0x%08x\n", ulStartAdr, ulEndAdr);
-		uprintf("erase ares: 0x%08x - 0x%08x\n", ulEraseBlockStart, ulEraseBlockEnd);
+		DEBUGMSG(ZONE_VERBOSE, ("requested area: [0x%08x, 0x%08x[\n", ulStartAdr, ulEndAdr));
+		DEBUGMSG(ZONE_VERBOSE, ("erase area:     [0x%08x, 0x%08x[\n", ulEraseBlockStart, ulEraseBlockEnd));
 
 		ptParameter->ulStartAdr = ulEraseBlockStart;
 		ptParameter->ulEndAdr = ulEraseBlockEnd;
@@ -291,6 +292,93 @@ NETX_CONSOLEAPP_RESULT_T parflash_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptP
 	}
 
 	/* all ok */
+	return tResult;
+}
+
+
+NETX_CONSOLEAPP_RESULT_T parflash_isErased(CMD_PARAMETER_ISERASED_T *ptParameter, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	const FLASH_DEVICE_T *ptFlashDescription;
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
+	unsigned long ulFlashSize;
+	ADR_T tCnt;
+	ADR_T tEnd;
+	unsigned long ulErased;
+
+
+	/* expect success */
+	tResult = NETX_CONSOLEAPP_RESULT_OK;
+
+	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tParFlash);
+	ulStartAdr = ptParameter->ulStartAdr;
+	ulEndAdr = ptParameter->ulEndAdr;
+
+	ulFlashSize = ptFlashDescription->ulFlashSize;
+	DEBUGMSG(ZONE_VERBOSE, ("flash size: 0x%08x\n", ulFlashSize));
+
+	/* test addresses */
+	if( (ulStartAdr>=ulFlashSize) || (ulEndAdr>ulFlashSize) )
+	{
+		/* data is larger than flash */
+		DEBUGMSG(ZONE_ERROR, ("! error, the specified area exceeds the flash size\n"));
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else if( ulStartAdr>ulEndAdr )
+	{
+		/* The start address of the area is larger than the end address. */
+		DEBUGMSG(ZONE_ERROR, ("! error, the start address is larger than the end address!\n"));
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else
+	{
+		DEBUGMSG(ZONE_VERBOSE, (". ok, the area fits into the flash\n"));
+		DEBUGMSG(ZONE_VERBOSE, ("# Checking data...\n"));
+
+		progress_bar_init(ulEndAdr-ulStartAdr);
+
+		/* Get the start address. */
+		tCnt.puc  = ptFlashDescription->pucFlashBase;
+		tCnt.puc += ulStartAdr;
+
+		/* Get the end address. */
+		tEnd.puc  = ptFlashDescription->pucFlashBase;
+		tEnd.puc += ulEndAdr;
+
+		/* Loop over the complete area. */
+		ulErased = 0xffU;
+		while( tCnt.puc<tEnd.puc )
+		{
+			ulErased &= *(tCnt.puc++);
+			if( ulErased!=0xff )
+			{
+				break;
+			}
+
+			/* Show progress every 64K bytes. */
+			if( (tCnt.ul&0xffff)==0 )
+			{
+				progress_bar_set_position(tCnt.ul-ulStartAdr);
+			}
+		}
+
+		progress_bar_finalize();
+	}
+
+	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+	{
+		if( ulErased==0xff )
+		{
+			DEBUGMSG(ZONE_VERBOSE, (". CLEAN! The area is erased.\n"));
+		}
+		else
+		{
+			DEBUGMSG(ZONE_VERBOSE, (". DIRTY! The area is not erased.\n"));
+		}
+		ptConsoleParams->pvReturnMessage = (void*)ulErased;
+	}
+
 	return tResult;
 }
 

@@ -333,6 +333,12 @@ static NETX_CONSOLEAPP_RESULT_T opMode_isErased(ptFlasherInputParameter ptAppPar
 		uprintf(". Device :");
 		switch(tSrcType)
 		{
+		case BUS_ParFlash:
+			/*  use parallel flash */
+			uprintf("Parallel flash\n");
+			tResult = parflash_isErased(&(ptAppParams->uParameter.tIsErased), ptConsoleParams);
+			break;
+
 		case BUS_SPI:
 			/*  use SPI flash */
 			uprintf("SPI flash\n");

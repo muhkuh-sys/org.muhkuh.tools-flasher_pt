@@ -84,6 +84,24 @@ typedef unsigned short USHORT;
   #define TRUE 1
 #endif
 
+
+typedef union
+{
+	unsigned char *puc;
+	unsigned short *pus;
+	unsigned long *pul;
+	unsigned long ul;
+} ADR_T;
+
+typedef union
+{
+	volatile unsigned char *puc;
+	volatile unsigned short *pus;
+	volatile unsigned long *pul;
+	volatile unsigned long ul;
+} VADR_T;
+
+
 // ///////////////////////////////////////////////////// 
 //! Structure containing information about a flash sector
 // ///////////////////////////////////////////////////// 

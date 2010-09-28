@@ -85,22 +85,6 @@
 // ////////////////////////////////////////////////////
 
 
-typedef union
-{
-	unsigned char *puc;
-	unsigned short *pus;
-	unsigned long *pul;
-	unsigned long ul;
-} ADR_T;
-
-typedef union
-{
-	volatile unsigned char *puc;
-	volatile unsigned short *pus;
-	volatile unsigned long *pul;
-	volatile unsigned long ul;
-} VADR_T;
-
 // ///////////////////////////////////////////////////// 
 //! Structure definition for FLASH width and pairing test cases
 // ///////////////////////////////////////////////////// 

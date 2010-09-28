@@ -230,7 +230,7 @@ end
 
 
 
-function getEraseArea(tPlugin, aAttr, ulStartAdr, ulLastAdr)
+function getEraseArea(tPlugin, aAttr, ulStartAdr, ulEndAdr)
 	local ulValue
 	local aulParameter
 	local ulEraseStart
@@ -247,7 +247,7 @@ function getEraseArea(tPlugin, aAttr, ulStartAdr, ulLastAdr)
 	aulParameter[5] = OPERATION_MODE_GetEraseArea		-- operation mode: get erase area
 	aulParameter[6] = aAttr.ulDeviceDesc			-- data block for the device description
 	aulParameter[7] = ulStartAdr
-	aulParameter[8] = ulLastAdr
+	aulParameter[8] = ulEndAdr
 
 
 	set_parameterblock(tPlugin, aAttr.ulParameter, aulParameter)
