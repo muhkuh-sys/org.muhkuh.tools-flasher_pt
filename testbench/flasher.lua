@@ -72,14 +72,20 @@ function download(tPlugin, strPrefix, fnCallback)
 		aAttr.strBinaryName = strPrefix .. "flasher_netx50.bin"
 		aAttr.ulParameter   = 0x00017000
 		aAttr.ulDeviceDesc  = 0x00017100
+		aAttr.ulBufferAdr   = 0x00017c00
+		aAttr.ulBufferLen   = 0x00000400
 	elseif tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX100 or tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX500 then
 		aAttr.strBinaryName = strPrefix .. "flasher_netx500.bin"
 		aAttr.ulParameter   = 0x00017000
 		aAttr.ulDeviceDesc  = 0x00017100
+		aAttr.ulBufferAdr   = 0x00018000
+		aAttr.ulBufferLen   = 0x00008000
 	elseif tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX10 then
 		aAttr.strBinaryName = strPrefix .. "flasher_netx10.bin"
 		aAttr.ulParameter   = 0x04038000
 		aAttr.ulDeviceDesc  = 0x04038100
+		aAttr.ulBufferAdr   = 0x04039000
+		aAttr.ulBufferLen   = 0x00007000
 	else
 		error("Unknown chiptyp!")
 	end
@@ -113,9 +119,9 @@ function flash(tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress)
 	aulParameter[2] = aAttr.ulParameter+0x0c
 	aulParameter[3] = 0x00000000
 	-- set the extended parameter
-	aulParameter[4] = 0x00020000					-- parameter version: 2.0
-	aulParameter[5] = OPERATION_MODE_Flash				-- operation mode: Flash
-	aulParameter[6] = aAttr.ulDeviceDesc				-- data block for the device description
+	aulParameter[4] = 0x00020000                                    -- parameter version: 2.0
+	aulParameter[5] = OPERATION_MODE_Flash                          -- operation mode: Flash
+	aulParameter[6] = aAttr.ulDeviceDesc                            -- data block for the device description
 	aulParameter[7] = ulStartAdr
 	aulParameter[8] = ulDataByteSize
 	aulParameter[9] = ulDataAddress
@@ -146,14 +152,13 @@ function erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
 	aulParameter[2] = aAttr.ulParameter+0x0c
 	aulParameter[3] = 0x00000000
 	-- set the extended parameter
-	aulParameter[4] = 0x00020000					-- parameter version: 2.0
-	aulParameter[5] = OPERATION_MODE_Erase				-- operation mode: erase
-	aulParameter[6] = aAttr.ulDeviceDesc				-- data block for the device description
+	aulParameter[4] = 0x00020000                                    -- parameter version: 2.0
+	aulParameter[5] = OPERATION_MODE_Erase                          -- operation mode: erase
+	aulParameter[6] = aAttr.ulDeviceDesc                            -- data block for the device description
 	aulParameter[7] = ulEraseStart
 	aulParameter[8] = ulEraseEnd
 
 	set_parameterblock(tPlugin, aAttr.ulParameter, aulParameter)
-
 
 	tPlugin:call(aAttr.ulExecAddress, aAttr.ulParameter, callback, 2)
 
@@ -179,16 +184,16 @@ function detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, ulDevDescAdr)
 	aulParameter[ 2] = aAttr.ulParameter+0x0c
 	aulParameter[ 3] = 0x00000000
 	-- set the extended parameter
-	aulParameter[ 4] = 0x00020000				-- parameter version: 2.0
-	aulParameter[ 5] = OPERATION_MODE_Detect			-- operation mode: detect
-	aulParameter[ 6] = tBus					-- device: spi flash
-	aulParameter[ 7] = ulUnit				-- unit
-	aulParameter[ 8] = ulChipSelect				-- chip select: 1
-	aulParameter[ 9] = 1000					-- initial speed in kHz (1000 -> 1MHz)
-	aulParameter[10] = 0					-- idle config
-	aulParameter[11] = 3					-- mode
-	aulParameter[12] = 0xffffffff				-- mmio config
-	aulParameter[13] = aAttr.ulDeviceDesc			-- data block for the device description
+	aulParameter[ 4] = 0x00020000                           -- parameter version: 2.0
+	aulParameter[ 5] = OPERATION_MODE_Detect                -- operation mode: detect
+	aulParameter[ 6] = tBus                                 -- device: spi flash
+	aulParameter[ 7] = ulUnit                               -- unit
+	aulParameter[ 8] = ulChipSelect                         -- chip select: 1
+	aulParameter[ 9] = 1000                                 -- initial speed in kHz (1000 -> 1MHz)
+	aulParameter[10] = 0                                    -- idle config
+	aulParameter[11] = 3                                    -- mode
+	aulParameter[12] = 0xffffffff                           -- mmio config
+	aulParameter[13] = aAttr.ulDeviceDesc                   -- data block for the device description
 
 	set_parameterblock(tPlugin, aAttr.ulParameter, aulParameter)
 
@@ -243,9 +248,9 @@ function getEraseArea(tPlugin, aAttr, ulStartAdr, ulEndAdr)
 	aulParameter[2] = aAttr.ulParameter+0x0c
 	aulParameter[3] = 0x00000000
 	-- set the extended parameter
-	aulParameter[4] = 0x00020000				-- parameter version: 2.0
-	aulParameter[5] = OPERATION_MODE_GetEraseArea		-- operation mode: get erase area
-	aulParameter[6] = aAttr.ulDeviceDesc			-- data block for the device description
+	aulParameter[4] = 0x00020000                            -- parameter version: 2.0
+	aulParameter[5] = OPERATION_MODE_GetEraseArea           -- operation mode: get erase area
+	aulParameter[6] = aAttr.ulDeviceDesc                    -- data block for the device description
 	aulParameter[7] = ulStartAdr
 	aulParameter[8] = ulEndAdr
 
@@ -285,9 +290,9 @@ function isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
 	aulParameter[2] = aAttr.ulParameter+0x0c
 	aulParameter[3] = 0x00000000
 	-- set the extended parameter
-	aulParameter[4] = 0x00020000					-- parameter version: 2.0
-	aulParameter[5] = OPERATION_MODE_IsErased			-- operation mode: isErased
-	aulParameter[6] = aAttr.ulDeviceDesc				-- data block for the device description
+	aulParameter[4] = 0x00020000                            -- parameter version: 2.0
+	aulParameter[5] = OPERATION_MODE_IsErased               -- operation mode: isErased
+	aulParameter[6] = aAttr.ulDeviceDesc                    -- data block for the device description
 	aulParameter[7] = ulEraseStart
 	aulParameter[8] = ulEraseEnd
 
