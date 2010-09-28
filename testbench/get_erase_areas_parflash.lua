@@ -103,9 +103,9 @@ else
 
 	local strDevDesc
 	local ulDataFirst
-	local ulDataLast
+	local ulDataEnd
 	local ulEraseFirst
-	local ulEraseLast
+	local ulEraseEnd
 
 
 	-- Download the binary.
@@ -119,10 +119,10 @@ else
 
 	-- Get erase area.
 	ulDataFirst = 0x00020080
-	ulDataLast = 0x00021000
-	ulEraseFirst,ulEraseLast = flasher.getEraseArea(tPlugin, aAttr, ulDataFirst, ulDataLast)
-	print(string.format("Area:  [0x%08x, 0x%08x]", ulDataFirst, ulDataLast))
-	print(string.format("Erase: [0x%08x, 0x%08x]", ulEraseFirst, ulEraseLast))
+	ulDataEnd = 0x00021000
+	ulEraseFirst,ulEraseEnd = flasher.getEraseArea(tPlugin, aAttr, ulDataFirst, ulDataEnd)
+	print(string.format("Area:  [0x%08x, 0x%08x[", ulDataFirst, ulDataEnd))
+	print(string.format("Erase: [0x%08x, 0x%08x[", ulEraseFirst, ulEraseEnd))
 
 	-- disconnect the plugin
 	tPlugin:Disconnect()
