@@ -102,11 +102,11 @@ static void setup_flash(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits
 	else
 	{
 		/* Set the memory interface configuration. */
-		ulValue = tBits << SRT_NX10_extsram0_ctrl_dwidth;
+		ulValue = tBits << SRT_NX10_hif_io_cfg_hif_mi_cfg;
 		/* unlock access key */
 		ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
 		/* configure the hif pins */
-		ptHifIoCtrlArea->ulHif_io_cfg = ulValue << SRT_NX10_hif_io_cfg_hif_mi_cfg;
+		ptHifIoCtrlArea->ulHif_io_cfg = ulValue;
 
 		ulValue  = DFLT_VAL_NX10_extsram0_ctrl_ws << SRT_NX10_extsram0_ctrl_ws;
 		ulValue |= DFLT_VAL_NX10_extsram0_ctrl_p_pre << SRT_NX10_extsram0_ctrl_p_pre;
@@ -379,7 +379,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_flash(const CMD_PARAMETER_FLASH_T *ptParameter
 	const unsigned char *pucDataStartAdr;
 	unsigned long ulFlashStartAdr;
 	unsigned long ulDataByteSize;
-	unsigned long ulFlashByteSize;
+	unsigned long ulFlashDeviceSize;
 	const FLASH_DEVICE_T *ptFlashDescription;
 	const SECTOR_INFO_T *ptSector;
 	unsigned long ulSectorOffset;
@@ -394,14 +394,15 @@ NETX_CONSOLEAPP_RESULT_T parflash_flash(const CMD_PARAMETER_FLASH_T *ptParameter
 	pucDataStartAdr = ptParameter->pucData;
 
 	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tParFlash);
-	ulFlashByteSize = ptFlashDescription->ulFlashSize;
+	ulFlashDeviceSize = ptFlashDescription->ulFlashSize;
 
 	/* test flash size */
 	DEBUGMSG(ZONE_VERBOSE, (". Check size...\n"));
-	DEBUGMSG(ZONE_VERBOSE, (". data start: 0x%08x\n", ulFlashStartAdr));
+	DEBUGMSG(ZONE_VERBOSE, (". data start address: 0x%08x\n", ulFlashStartAdr));
 	DEBUGMSG(ZONE_VERBOSE, (". data size:  0x%08x\n", ulDataByteSize));
-	DEBUGMSG(ZONE_VERBOSE, (". flash size: 0x%08x\n", ulFlashByteSize));
-	if( (ulFlashStartAdr>=ulFlashByteSize) || ((ulFlashStartAdr+ulDataByteSize)>ulFlashByteSize) )
+	DEBUGMSG(ZONE_VERBOSE, (". flash size: 0x%08x\n", ulFlashDeviceSize));
+	DEBUGMSG(ZONE_VERBOSE, (". data buffer: 0x%08x\n", pucDataStartAdr));
+	if( (ulFlashStartAdr>=ulFlashDeviceSize) || ((ulFlashStartAdr+ulDataByteSize)>ulFlashDeviceSize) )
 	{
 		/* data is larger than flash */
 		DEBUGMSG(ZONE_ERROR, ("! error, data size exceeds flash\n"));
@@ -411,7 +412,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_flash(const CMD_PARAMETER_FLASH_T *ptParameter
 	{
 		DEBUGMSG(ZONE_VERBOSE, (". ok, data fits into flash\n"));
 
-		while( ulFlashByteSize!=0 )
+		while( ulDataByteSize!=0 )
 		{
 			/* Split the data by erase sectors. */
 			ptSector = cfi_find_matching_sector(ptFlashDescription, ulFlashStartAdr);
@@ -423,7 +424,12 @@ NETX_CONSOLEAPP_RESULT_T parflash_flash(const CMD_PARAMETER_FLASH_T *ptParameter
 			}
 			ulSectorOffset = ulFlashStartAdr - ptSector->ulOffset;
 			ulChunkSize = ptSector->ulSize - ulSectorOffset;
+			if( ulChunkSize>ulDataByteSize )
+			{
+				ulChunkSize = ulDataByteSize;
+			}
 
+			DEBUGMSG(ZONE_VERBOSE, ("Flashing [0x%08x, 0x%08x[\n", ulFlashStartAdr, ulFlashStartAdr+ulChunkSize));
 			tFlashError = ptFlashDescription->tFlashFunctions.pfnProgram(ptFlashDescription, ulFlashStartAdr, ulChunkSize, pucDataStartAdr);
 			if( tFlashError!=eFLASH_NO_ERROR )
 			{
@@ -436,6 +442,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_flash(const CMD_PARAMETER_FLASH_T *ptParameter
 
 			ulFlashStartAdr += ulChunkSize;
 			pucDataStartAdr += ulChunkSize;
+			ulDataByteSize -= ulChunkSize;
 		}
 	}
 
