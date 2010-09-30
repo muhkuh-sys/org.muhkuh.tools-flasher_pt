@@ -58,19 +58,19 @@ typedef struct FLASH_COMMAND_BLOCK_Ttag
   unsigned char bCmd;
 } FLASH_COMMAND_BLOCK_T;
 
-static FLASH_ERRORS_E FlashWaitEraseDone(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
-static FLASH_ERRORS_E FlashWaitWriteDone(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulOffsetData, BOOL fBufferWrite);
-static int            FlashIsset        (FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulSet, unsigned long ulClear);
-static void           FlashWriteCommand (FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned int uiCmd);
-static void           FlashWriteCommandSequence(FLASH_DEVICE_T *ptFlashDev, FLASH_COMMAND_BLOCK_T* ptCmd, unsigned long ulCount);
+static FLASH_ERRORS_E FlashWaitEraseDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
+static FLASH_ERRORS_E FlashWaitWriteDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulOffsetData, BOOL fBufferWrite);
+static int            FlashIsset        (const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulSet, unsigned long ulClear);
+static void           FlashWriteCommand (const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned int uiCmd);
+static void           FlashWriteCommandSequence(const FLASH_DEVICE_T *ptFlashDev, FLASH_COMMAND_BLOCK_T* ptCmd, unsigned long ulCount);
+static FLASH_ERRORS_E FlashNormalWrite(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector,      unsigned long ulOffset, const unsigned char* pbData, unsigned long ulWriteSize);
 
-static FLASH_ERRORS_E FlashReset      (FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
-static FLASH_ERRORS_E FlashErase      (FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
-static FLASH_ERRORS_E FlashEraseAll   (FLASH_DEVICE_T *ptFlashDev);
-static FLASH_ERRORS_E FlashProgram    (FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData);
-static FLASH_ERRORS_E FlashNormalWrite(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector,      unsigned long ulOffset, const unsigned char* pbData, unsigned long ulWriteSize);
-static FLASH_ERRORS_E FlashLock       (FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
-static FLASH_ERRORS_E FlashUnlock     (FLASH_DEVICE_T *ptFlashDev);
+static FLASH_ERRORS_E FlashReset      (const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
+static FLASH_ERRORS_E FlashErase      (const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
+static FLASH_ERRORS_E FlashEraseAll   (const FLASH_DEVICE_T *ptFlashDev);
+static FLASH_ERRORS_E FlashProgram    (const FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData);
+static FLASH_ERRORS_E FlashLock       (const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
+static FLASH_ERRORS_E FlashUnlock     (const FLASH_DEVICE_T *ptFlashDev);
 
 static FLASH_FUNCTIONS_T s_tSpansionFuncs =
 {
@@ -147,11 +147,11 @@ int SpansionIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
 //!  \param ulSector    Sector to reset to read mode
 //!  \return eFLASH_NO_ERROR on success
 // ////////////////////////////////////////////////////
-static FLASH_ERRORS_E FlashReset(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
+static FLASH_ERRORS_E FlashReset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
-  FlashWriteCommand(ptFlashDev, 0, 0, SPANSION_CMD_RESET);
+	FlashWriteCommand(ptFlashDev, 0, 0, SPANSION_CMD_RESET);
 
-  return eFLASH_NO_ERROR;
+	return eFLASH_NO_ERROR;
 }
 
 // ////////////////////////////////////////////////////
@@ -160,7 +160,7 @@ static FLASH_ERRORS_E FlashReset(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSec
 //!  \param ulSector    Sector to erase
 //!  \return eFLASH_NO_ERROR on success
 // ////////////////////////////////////////////////////
-static FLASH_ERRORS_E FlashErase(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
+static FLASH_ERRORS_E FlashErase(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
   FLASH_ERRORS_E eRet = eFLASH_NO_ERROR;
 
@@ -182,7 +182,7 @@ static FLASH_ERRORS_E FlashErase(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSec
 //!  \param ptFlashDev  Pointer to the FLASH control Block
 //!  \return eFLASH_NO_ERROR on success
 // ////////////////////////////////////////////////////
-static FLASH_ERRORS_E FlashEraseAll(FLASH_DEVICE_T *ptFlashDev)
+static FLASH_ERRORS_E FlashEraseAll(const FLASH_DEVICE_T *ptFlashDev)
 {
   FLASH_ERRORS_E eRet = eFLASH_NO_ERROR;
 
@@ -207,7 +207,7 @@ static FLASH_ERRORS_E FlashEraseAll(FLASH_DEVICE_T *ptFlashDev)
 //!  \param pvData        Data pointer
 //!  \return eFLASH_NO_ERROR on success
 // ////////////////////////////////////////////////////
-static FLASH_ERRORS_E FlashNormalWrite(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, const unsigned char* pbData, unsigned long ulWriteSize)
+static FLASH_ERRORS_E FlashNormalWrite(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, const unsigned char* pbData, unsigned long ulWriteSize)
 {
   FLASH_ERRORS_E  eRet       = eFLASH_NO_ERROR;
   unsigned long   ulBusWidth = ptFlashDev->fPaired? sizeof(unsigned long) : sizeof(unsigned short);
@@ -257,7 +257,7 @@ static FLASH_ERRORS_E FlashNormalWrite(FLASH_DEVICE_T *ptFlashDev, unsigned long
 //!  \param pvData        Data pointer
 //!  \return eFLASH_NO_ERROR on success
 // ////////////////////////////////////////////////////
-static FLASH_ERRORS_E FlashProgram(FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData)
+static FLASH_ERRORS_E FlashProgram(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData)
 {
   unsigned long  ulCurrentSector  = 0;
   unsigned long  ulCurrentOffset  = ulStartOffset; 
@@ -431,14 +431,14 @@ static FLASH_ERRORS_E FlashProgram(FLASH_DEVICE_T *ptFlashDev, unsigned long ulS
 }
 
 
-FLASH_ERRORS_E FlashLock(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
+FLASH_ERRORS_E FlashLock(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
 	/* not yet */
 	return eFLASH_INVALID_PARAMETER;
 }
 
 
-FLASH_ERRORS_E FlashUnlock(FLASH_DEVICE_T *ptFlashDev)
+FLASH_ERRORS_E FlashUnlock(const FLASH_DEVICE_T *ptFlashDev)
 {
 	unsigned long ulNotProtected;
 	unsigned long ulProtectionBit;
@@ -502,7 +502,7 @@ FLASH_ERRORS_E FlashUnlock(FLASH_DEVICE_T *ptFlashDev)
 //!  \param ulOffset Offset address in the actual FLASH sector
 //!  \param bCmd Command to execute
 // ////////////////////////////////////////////////////
-void FlashWriteCommand(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned int uiCmd)
+void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned int uiCmd)
 {
         volatile unsigned char* pbWriteAddr = ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset;
         unsigned long ulValue;
@@ -543,7 +543,7 @@ void FlashWriteCommand(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsig
 //!  \param bCmd Flag value to be checked
 //!  \return TRUE on success
 // ////////////////////////////////////////////////////
-static int FlashIsset(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulSet, unsigned long ulClear)
+static int FlashIsset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulSet, unsigned long ulClear)
 {
   int            iRet       = FALSE;
   volatile unsigned char* pbReadAddr = ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset;
@@ -606,7 +606,7 @@ static int FlashIsset(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsign
 //!  \param ulSector   FLASH sector number
 //!  \return eFLASH_NO_ERROR on success
 // ////////////////////////////////////////////////////
-static FLASH_ERRORS_E FlashWaitEraseDone(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
+static FLASH_ERRORS_E FlashWaitEraseDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
 //  volatile unsigned long* pulFlash  = (unsigned long*)(ptFlashDev->pbFlashBase + ptFlashDev->atSectors[ulSector].ulOffset);
   BOOL                    fRunning  = TRUE;
@@ -640,7 +640,7 @@ static FLASH_ERRORS_E FlashWaitEraseDone(FLASH_DEVICE_T *ptFlashDev, unsigned lo
 //!  \param ulOffset   Offset to read status from
 //!  \return DEV_NOT_BUSY on success
 // ////////////////////////////////////////////////////
-static DEVSTATUS FlashGetStatus(FLASH_DEVICE_T *ptFlashDev, unsigned long ulAddress, BOOL fBufferWriteOp)
+static DEVSTATUS FlashGetStatus(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulAddress, BOOL fBufferWriteOp)
 {
   unsigned long ulDQ1Mask   = (ptFlashDev->fPaired)? (DQ1 | DQ1 << 16U) : DQ1;
   unsigned long ulDQ2Mask   = (ptFlashDev->fPaired)? (DQ2 | DQ2 << 16U) : DQ2;
@@ -725,7 +725,7 @@ static DEVSTATUS FlashGetStatus(FLASH_DEVICE_T *ptFlashDev, unsigned long ulAddr
 //!  \param fBufferWrite  TRUE if buffered write is used
 //!  \return eFLASH_NO_ERROR on success
 // ////////////////////////////////////////////////////
-static FLASH_ERRORS_E FlashWaitWriteDone(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulOffsetData, BOOL fBufferWrite)
+static FLASH_ERRORS_E FlashWaitWriteDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulOffsetData, BOOL fBufferWrite)
 {
   DEVSTATUS       dev_status;
   unsigned int    polling_counter = 0xFFFFFFFF;
@@ -788,7 +788,7 @@ static FLASH_ERRORS_E FlashWaitWriteDone(FLASH_DEVICE_T *ptFlashDev, unsigned lo
 //!  \param ptCmd         Array of command blocks
 //!  \param ulCount       Number of commands
 // ////////////////////////////////////////////////////
-static void  FlashWriteCommandSequence(FLASH_DEVICE_T *ptFlashDev, FLASH_COMMAND_BLOCK_T* ptCmd, unsigned long ulCount)
+static void  FlashWriteCommandSequence(const FLASH_DEVICE_T *ptFlashDev, FLASH_COMMAND_BLOCK_T* ptCmd, unsigned long ulCount)
 {
   while(ulCount-- > 0)
   {
