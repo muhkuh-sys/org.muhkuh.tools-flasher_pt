@@ -29,6 +29,7 @@
 NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter);
 NETX_CONSOLEAPP_RESULT_T parflash_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptParameter);
 NETX_CONSOLEAPP_RESULT_T parflash_isErased(CMD_PARAMETER_ISERASED_T *ptParameter, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams);
-
+NETX_CONSOLEAPP_RESULT_T parflash_flash(const CMD_PARAMETER_FLASH_T *ptParameter);
+NETX_CONSOLEAPP_RESULT_T parflash_erase(const CMD_PARAMETER_ERASE_T *ptParameter);
 
 #endif	/* __FLASHER_PARFLASH_H__ */

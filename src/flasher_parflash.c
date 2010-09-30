@@ -226,14 +226,10 @@ NETX_CONSOLEAPP_RESULT_T parflash_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptP
 	unsigned long ulStartAdr;
 	unsigned long ulEndAdr;
 	unsigned long ulFlashSize;
-	const SECTOR_INFO_T *ptSectors;
-	unsigned long ulSectorMax;
-	unsigned long ulSectorCnt;
-	unsigned long ulBlockStartOffset;
-	unsigned long ulBlockEndOffset;
+	const SECTOR_INFO_T *ptSectorStart;
+	const SECTOR_INFO_T *ptSectorEnd;
 	unsigned long ulEraseBlockStart;
 	unsigned long ulEraseBlockEnd;
-
 
 	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tParFlash);
 	ulStartAdr = ptParameter->ulStartAdr;
@@ -259,39 +255,30 @@ NETX_CONSOLEAPP_RESULT_T parflash_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptP
 		DEBUGMSG(ZONE_VERBOSE, (". ok, the area fits into the flash\n"));
 
 		/* Look for the erase block which contains the start address. */
-		ptSectors = ptFlashDescription->atSectors;
+		ptSectorStart = cfi_find_matching_sector(ptFlashDescription, ulStartAdr);
+		ptSectorEnd = cfi_find_matching_sector(ptFlashDescription, ulEndAdr);
 
-		ulEraseBlockStart = 0;
-		ulEraseBlockEnd = 0;
-
-		ulSectorCnt = 0;
-		ulSectorMax = ptFlashDescription->ulSectorCnt;
-		do
+		if( ptSectorStart!=NULL && ptSectorEnd!=NULL )
 		{
-			ulBlockStartOffset = ptSectors[ulSectorCnt].ulOffset;
-			ulBlockEndOffset = ulBlockStartOffset + ptSectors[ulSectorCnt].ulSize;
-			if( ulBlockStartOffset<=ulStartAdr && ulBlockEndOffset>ulStartAdr )
-			{
-				ulEraseBlockStart = ulBlockStartOffset;
-			}
-			if( ulBlockStartOffset<=ulEndAdr && ulBlockEndOffset>ulEndAdr )
-			{
-				ulEraseBlockEnd = ulBlockEndOffset;
-				break;
-			}
-			++ulSectorCnt;
-		} while( ulSectorCnt<MAX_SECTORS );
+			ulEraseBlockStart = ptSectorStart->ulOffset;
+			ulEraseBlockEnd   = ptSectorEnd->ulOffset + ptSectorEnd->ulSize;
 
-		DEBUGMSG(ZONE_VERBOSE, ("requested area: [0x%08x, 0x%08x[\n", ulStartAdr, ulEndAdr));
-		DEBUGMSG(ZONE_VERBOSE, ("erase area:     [0x%08x, 0x%08x[\n", ulEraseBlockStart, ulEraseBlockEnd));
+			DEBUGMSG(ZONE_VERBOSE, ("requested area: [0x%08x, 0x%08x[\n", ulStartAdr, ulEndAdr));
+			DEBUGMSG(ZONE_VERBOSE, ("erase area:     [0x%08x, 0x%08x[\n", ulEraseBlockStart, ulEraseBlockEnd));
 
-		ptParameter->ulStartAdr = ulEraseBlockStart;
-		ptParameter->ulEndAdr = ulEraseBlockEnd;
+			ptParameter->ulStartAdr = ulEraseBlockStart;
+			ptParameter->ulEndAdr = ulEraseBlockEnd;
 
-		tResult = NETX_CONSOLEAPP_RESULT_OK;
+			tResult = NETX_CONSOLEAPP_RESULT_OK;
+		}
+		else
+		{
+			DEBUGMSG(ZONE_ERROR, ("Can not find start/end address in sector table!\n"));
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		}
 	}
 
-	/* all ok */
+	/* All ok! */
 	return tResult;
 }
 
@@ -385,3 +372,141 @@ NETX_CONSOLEAPP_RESULT_T parflash_isErased(CMD_PARAMETER_ISERASED_T *ptParameter
 	return tResult;
 }
 
+
+NETX_CONSOLEAPP_RESULT_T parflash_flash(const CMD_PARAMETER_FLASH_T *ptParameter)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	const unsigned char *pucDataStartAdr;
+	unsigned long ulFlashStartAdr;
+	unsigned long ulDataByteSize;
+	unsigned long ulFlashByteSize;
+	const FLASH_DEVICE_T *ptFlashDescription;
+	const SECTOR_INFO_T *ptSector;
+	unsigned long ulSectorOffset;
+	unsigned long ulChunkSize;
+	FLASH_ERRORS_E tFlashError;
+
+
+	tResult = NETX_CONSOLEAPP_RESULT_OK;
+
+	ulFlashStartAdr = ptParameter->ulStartAdr;
+	ulDataByteSize  = ptParameter->ulDataByteSize;
+	pucDataStartAdr = ptParameter->pucData;
+
+	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tParFlash);
+	ulFlashByteSize = ptFlashDescription->ulFlashSize;
+
+	/* test flash size */
+	DEBUGMSG(ZONE_VERBOSE, (". Check size...\n"));
+	DEBUGMSG(ZONE_VERBOSE, (". data start: 0x%08x\n", ulFlashStartAdr));
+	DEBUGMSG(ZONE_VERBOSE, (". data size:  0x%08x\n", ulDataByteSize));
+	DEBUGMSG(ZONE_VERBOSE, (". flash size: 0x%08x\n", ulFlashByteSize));
+	if( (ulFlashStartAdr>=ulFlashByteSize) || ((ulFlashStartAdr+ulDataByteSize)>ulFlashByteSize) )
+	{
+		/* data is larger than flash */
+		DEBUGMSG(ZONE_ERROR, ("! error, data size exceeds flash\n"));
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else
+	{
+		DEBUGMSG(ZONE_VERBOSE, (". ok, data fits into flash\n"));
+
+		while( ulFlashByteSize!=0 )
+		{
+			/* Split the data by erase sectors. */
+			ptSector = cfi_find_matching_sector(ptFlashDescription, ulFlashStartAdr);
+			if( ptSector==NULL )
+			{
+				DEBUGMSG(ZONE_ERROR, ("Can not find sector in table!\n"));
+				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+				break;
+			}
+			ulSectorOffset = ulFlashStartAdr - ptSector->ulOffset;
+			ulChunkSize = ptSector->ulSize - ulSectorOffset;
+
+			tFlashError = ptFlashDescription->tFlashFunctions.pfnProgram(ptFlashDescription, ulFlashStartAdr, ulChunkSize, pucDataStartAdr);
+			if( tFlashError!=eFLASH_NO_ERROR )
+			{
+				/* failed to program the sector */
+				DEBUGMSG(ZONE_ERROR, ("Failed to program flash sector!\n"));
+/*				showPflashError(tFlashError); */
+				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+				break;
+			}
+
+			ulFlashStartAdr += ulChunkSize;
+			pucDataStartAdr += ulChunkSize;
+		}
+	}
+
+	return tResult;
+}
+
+
+NETX_CONSOLEAPP_RESULT_T parflash_erase(const CMD_PARAMETER_ERASE_T *ptParameter)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	unsigned long ulEraseStartAdr;
+	unsigned long ulEraseEndAdr;
+	unsigned long ulFlashDeviceSize;
+	const FLASH_DEVICE_T *ptFlashDescription;
+	const SECTOR_INFO_T *ptSectors;
+	FLASH_ERRORS_E tFlashError;
+	size_t sizCnt;
+
+
+	tResult = NETX_CONSOLEAPP_RESULT_OK;
+
+	ulEraseStartAdr = ptParameter->ulStartAdr;
+	ulEraseEndAdr   = ptParameter->ulEndAdr;
+
+	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tParFlash);
+	ulFlashDeviceSize = ptFlashDescription->ulFlashSize;
+
+	/* test flash size */
+	DEBUGMSG(ZONE_VERBOSE, (". Check size...\n"));
+	DEBUGMSG(ZONE_VERBOSE, (". erase start: 0x%08x\n", ulEraseStartAdr));
+	DEBUGMSG(ZONE_VERBOSE, (". erase end:   0x%08x\n", ulEraseEndAdr));
+	DEBUGMSG(ZONE_VERBOSE, (". flash size:  0x%08x\n", ulFlashDeviceSize));
+	if( (ulEraseStartAdr>=ulFlashDeviceSize) || (ulEraseEndAdr>ulFlashDeviceSize) )
+	{
+		/* data is larger than flash */
+		DEBUGMSG(ZONE_ERROR, ("! error, erase area exceeds flash\n"));
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else
+	{
+		DEBUGMSG(ZONE_VERBOSE, (". ok, data fits into flash\n"));
+
+		/* Split the data by erase sectors. */
+		sizCnt = cfi_find_matching_sector_index(ptFlashDescription, ulEraseStartAdr);
+		if( sizCnt==0xffffffffU )
+		{
+			DEBUGMSG(ZONE_ERROR, ("Can not find sector in table!\n"));
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		}
+		else
+		{
+			ptSectors = ptFlashDescription->atSectors;
+			do
+			{
+				DEBUGMSG(ZONE_VERBOSE, (". Erasing sector %d: [0x%08x, 0x%08x[\n", sizCnt, ptSectors[sizCnt].ulOffset, ptSectors[sizCnt].ulOffset+ptSectors[sizCnt].ulSize));
+
+				tFlashError = ptFlashDescription->tFlashFunctions.pfnErase(ptFlashDescription, sizCnt);
+				if( tFlashError!=eFLASH_NO_ERROR )
+				{
+					/* failed to erase the sector */
+					DEBUGMSG(ZONE_ERROR, (". failed to erase flash sector %d\n", sizCnt));
+/*					showPflashError(tFlashError); */
+					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					break;
+				}
+
+				/* Next sector. */
+				++sizCnt;
+			} while( sizCnt<ptFlashDescription->ulSectorCnt && ptSectors[sizCnt].ulOffset<ulEraseEndAdr );
+		}
+	}
+
+	return tResult;
+}

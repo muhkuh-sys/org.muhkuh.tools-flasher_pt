@@ -228,7 +228,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_writeImage(FLASH_DEVICE_T *ptFlashDev, unsigne
 	return tResult;
 }
 
-
+#if 0
 NETX_CONSOLEAPP_RESULT_T parflash_erase(FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartSector, unsigned long ulDataByteLen)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
@@ -284,7 +284,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_erase(FLASH_DEVICE_T *ptFlashDev, unsigned lon
 
 	return tResult;
 }
-
+#endif
 
 NETX_CONSOLEAPP_RESULT_T parflash_read(FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartSector, unsigned char *pbData, unsigned long ulDataByteLen)
 {

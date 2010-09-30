@@ -130,6 +130,12 @@ static NETX_CONSOLEAPP_RESULT_T opMode_flash(ptFlasherInputParameter ptAppParams
 	uprintf(". Device :");
 	switch(tSourceTyp)
 	{
+	case BUS_ParFlash:
+		/*  use parallel flash */
+		uprintf("Parallel flash\n");
+		tResult = parflash_flash(&(ptAppParams->uParameter.tFlash));
+		break;
+
 	case BUS_SPI:
 		/*  use SPI flash */
 		uprintf("SPI flash\n");
@@ -168,6 +174,12 @@ static NETX_CONSOLEAPP_RESULT_T opMode_erase(ptFlasherInputParameter ptAppParams
 	uprintf(". Device :");
 	switch(tSourceTyp)
 	{
+	case BUS_ParFlash:
+		/*  use parallel flash */
+		uprintf("Parallel flash\n");
+		tResult = parflash_erase(&(ptAppParams->uParameter.tErase));
+		break;
+
 	case BUS_SPI:
 		/*  use SPI flash */
 		uprintf("SPI flash\n");

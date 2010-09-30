@@ -40,6 +40,9 @@
 //!  Definitions for CFI compliant flash types
 // ////////////////////////////////////////////////////
 
+#include <stddef.h>
+
+
 #ifndef __CFI_FLASH_H__
 #define __CFI_FLASH_H__
 
@@ -129,12 +132,12 @@ typedef enum FLASH_ERRORS_Etag
 
 typedef struct tagFLASH_DEVICE FLASH_DEVICE_T;
 
-typedef FLASH_ERRORS_E(*PFN_FLASH_RESET)(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
-typedef FLASH_ERRORS_E(*PFN_FLASH_ERASE)(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
-typedef FLASH_ERRORS_E(*PFN_FLASH_ERASEALL)(FLASH_DEVICE_T *ptFlashDev);
-typedef FLASH_ERRORS_E(*PFN_FLASH_PROGRAM)(FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData);
-typedef FLASH_ERRORS_E(*PFN_FLASH_LOCK)(FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
-typedef FLASH_ERRORS_E(*PFN_FLASH_UNLOCK)(FLASH_DEVICE_T *ptFlashDev);
+typedef FLASH_ERRORS_E(*PFN_FLASH_RESET)(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
+typedef FLASH_ERRORS_E(*PFN_FLASH_ERASE)(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
+typedef FLASH_ERRORS_E(*PFN_FLASH_ERASEALL)(const FLASH_DEVICE_T *ptFlashDev);
+typedef FLASH_ERRORS_E(*PFN_FLASH_PROGRAM)(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData);
+typedef FLASH_ERRORS_E(*PFN_FLASH_LOCK)(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
+typedef FLASH_ERRORS_E(*PFN_FLASH_UNLOCK)(const FLASH_DEVICE_T *ptFlashDev);
 
 
 
@@ -238,7 +241,9 @@ typedef struct
 #pragma pack()
 
 
-int  CFI_IdentifyFlash(FLASH_DEVICE_T* ptFlashDevice, PARFLASH_CONFIGURATION_T *ptCfg);
+int CFI_IdentifyFlash(FLASH_DEVICE_T* ptFlashDevice, PARFLASH_CONFIGURATION_T *ptCfg);
+const SECTOR_INFO_T *cfi_find_matching_sector(const FLASH_DEVICE_T *ptFlashDescription, unsigned long ulAddress);
+size_t cfi_find_matching_sector_index(const FLASH_DEVICE_T *ptFlashDescription, unsigned long ulAddress);
 
-#endif /* __CFI_FLASH_H__ */
+#endif  /* __CFI_FLASH_H__ */
 

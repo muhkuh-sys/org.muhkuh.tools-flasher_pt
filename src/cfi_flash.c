@@ -646,3 +646,51 @@ int CFI_IdentifyFlash(FLASH_DEVICE_T* ptFlashDevice, PARFLASH_CONFIGURATION_T *p
 	return iResult;
 }
 
+
+const SECTOR_INFO_T *cfi_find_matching_sector(const FLASH_DEVICE_T *ptFlashDescription, unsigned long ulAddress)
+{
+	const SECTOR_INFO_T *ptCnt;
+	const SECTOR_INFO_T *ptEnd;
+	const SECTOR_INFO_T *ptHit;
+	unsigned long ulBlockStartOffset;
+	unsigned long ulBlockEndOffset;
+
+
+	ptCnt = ptFlashDescription->atSectors;
+	ptEnd = ptFlashDescription->atSectors + ptFlashDescription->ulSectorCnt;
+	ptHit = NULL;
+	while( ptCnt<ptEnd )
+	{
+		ulBlockStartOffset = ptCnt->ulOffset;
+		ulBlockEndOffset = ulBlockStartOffset + ptCnt->ulSize;
+		if( ulBlockStartOffset<=ulAddress && ulBlockEndOffset>ulAddress )
+		{
+			ptHit = ptCnt;
+			break;
+		}
+		++ptCnt;
+	}
+
+	return ptHit;
+}
+
+
+size_t cfi_find_matching_sector_index(const FLASH_DEVICE_T *ptFlashDescription, unsigned long ulAddress)
+{
+	const SECTOR_INFO_T *ptHit;
+	size_t sizIndex;
+
+
+	ptHit = cfi_find_matching_sector(ptFlashDescription, ulAddress);
+	if( ptHit==NULL )
+	{
+		sizIndex = 0xffffffffU;
+	}
+	else
+	{
+		sizIndex = (size_t)(ptHit - ptFlashDescription->atSectors);
+	}
+
+	return sizIndex;
+}
+
