@@ -46,9 +46,6 @@
 				<role>developer</role>
 			</roles>
 			<timezone>+1</timezone>
-			<properties>
-				<picUrl>http://tinyurl.com/prv4t</picUrl>
-			</properties>
 		</developer>
 		<developer>
 			<id>djangothebest</id>
@@ -117,6 +114,7 @@
 
 
 	<repositories>
+		<!-- This is the official repository at sourceforge. -->
 		<repository>
 			<id>muhkuh_at_sourceforge</id>
 			<url>http://downloads.sourceforge.net/project/muhkuh/maven2</url>
@@ -126,6 +124,18 @@
 			<snapshots>
 				<checksumPolicy>fail</checksumPolicy>
 			</snapshots>
+		</repository>
+
+		<!-- This is the hilscher internal mirror. -->
+		<repository>                                                                                                                                
+			<id>muhkuh_at_netx01</id>                                                                                                           
+			<url>http://netx01/maven2</url>                                                                                                     
+			<releases>                                                                                                                          
+				<checksumPolicy>fail</checksumPolicy>                                                                                       
+			</releases>                                                                                                                         
+			<snapshots>                                                                                                                         
+				<checksumPolicy>fail</checksumPolicy>                                                                                       
+			</snapshots>                                                                                                                        
 		</repository>
 	</repositories>
 
@@ -167,61 +177,24 @@
 	<build>
 		<defaultGoal>compile</defaultGoal>
 		<finalName>${artifactId}-${version}</finalName>
+		<resources>
+			<resource>
+				<directory>${basedir}/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
 		<plugins>
-			<!-- This pom does not use ressource filtering, but without these lines
-			     maven keeps japping about using platform encoding to copy ressources.
-			-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
 				<configuration>
 					<encoding>UTF-8</encoding>
+					<escapeWindowsPaths>false</escapeWindowsPaths>
+					<overwrite>true</overwrite>
+					<outputDirectory>${basedir}</outputDirectory>
 				</configuration>
 			</plugin>
 
-			<!-- This is a replacement for the ressource filtering. Maven can not
-			     resist to escape colons. This might be important for java
-			     properties, but it is pure evil for everything else: batch files,
-			     shell scripts, python includes... Whatever it is, it hates escaped
-			     colons. :-(((((
-			-->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>filter_files</id>
-						<phase>process-sources</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-							<tasks>
-								<copy file="templates/site_init.py" todir="${basedir}/site_scons" filtering="true" overwrite="true">
-									<filterset>
-										<filter token="asciidoc_dir"    value="${asciidoc_dir}" />
-										<filter token="gcc_dir"         value="${gcc_dir}" />
-										<filter token="project.version" value="${project.version}" />
-									</filterset>
-								</copy>
-								<copy file="templates/scons.bat" todir="${basedir}" filtering="true" overwrite="true">
-									<filterset id="filter">
-										<filter token="scons_dir"       value="${scons_dir}" />
-										<filter token="PYTHON"          value="${PYTHON}" />
-									</filterset>
-								</copy>
-								<copy file="templates/scons.sh" todir="${basedir}" filtering="true" overwrite="true">
-									<filterset id="filter">
-										<filter token="scons_dir"       value="${scons_dir}" />
-										<filter token="PYTHON"          value="${PYTHON}" />
-									</filterset>
-								</copy>
-								<chmod file="${basedir}/scons.sh" perm="ugo+rx"/>
-							</tasks>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -247,8 +220,8 @@
 								<!-- Unpack the compiler to a working folder. -->
 								<artifactItem>
 									<groupId>org.gnu.gcc</groupId>
-									<artifactId>gcc-arm-elf_${os_family}_${os.arch}</artifactId>
-									<version>4.3.3_3</version>
+									<artifactId>gcc-arm-elf-none-eabi_${os_family}_${os.arch}</artifactId>
+									<version>4.5.1_1</version>
 									<type>tar.bz2</type>
 									<overWrite>false</overWrite>
 									<outputDirectory>${gcc_dir}</outputDirectory>
@@ -287,13 +260,8 @@
 							<goal>run</goal>
 						</goals>
 						<configuration>
-							<tasks>
-								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3_3/bin/*" perm="ugo+rx"/>
-								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3_3/arm-elf/bin/*" perm="ugo+rx"/>
-								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3_3/libexec/gcc/arm-elf/4.3.3/cc1" perm="ugo+rx"/>
-								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3_3/libexec/gcc/arm-elf/4.3.3/cc1plus" perm="ugo+rx"/>
-								<chmod file="${gcc_dir}/gcc-arm-elf-4.3.3_3/libexec/gcc/arm-elf/4.3.3/collect2" perm="ugo+rx"/>
-							</tasks>
+							<property name="maven.gcc_dir" value="${gcc_dir}"/>
+							<ant antfile="${gcc_dir}/gcc-arm-elf-none-eabi_${os_family}_${os.arch}_4_5_1_1.xml" />
 						</configuration>
 					</execution>
 				</executions>
