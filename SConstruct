@@ -125,7 +125,8 @@ if not GetOption('help'):
 	# Import the tool definitions.
 	#
 	# NOTE: it would be possible to use execfile instead of import here. This
-	gcc_arm_elf_4_3_3_3 = scons_common.get_compiler('gcc_arm_elf_4_3_3_3')
+	#gcc_arm_elf_4_3_3_3 = scons_common.get_compiler('gcc_arm_elf_4_3_3_3')
+	gcc_arm_elf_none_eabi_4_5_1_1 = scons_common.get_compiler('gcc_arm_elf_none_eabi_4_5_1_1')
 	asciidoc_8_5_3_1 = scons_common.get_asciidoc('asciidoc_8_5_3_1')
 	
 	
@@ -134,8 +135,9 @@ if not GetOption('help'):
 	# create the default environment
 	#
 	env_default = Environment()
-	gcc_arm_elf_4_3_3_3.ApplyToEnv(env_default)
 	env_default.Decider('MD5')
+	#gcc_arm_elf_4_3_3_3.ApplyToEnv(env_default)
+	gcc_arm_elf_none_eabi_4_5_1_1.ApplyToEnv(env_default)
 	env_default.Append(CPPPATH = ['src'])
 	env_default.Replace(CCFLAGS = Split(default_ccflags))
 	env_default.Replace(LIBS = ['m', 'c', 'gcc'])
@@ -157,21 +159,24 @@ if not GetOption('help'):
 	env_netx500 = env_default.Clone()
 	env_netx500.Append(CCFLAGS = ['-mcpu=arm926ej-s'])
 	env_netx500.Replace(LDFILE = 'src/netx500/netx500.ld')
-	env_netx500.Replace(LIBPATH = ['${GCC_DIR}/arm-elf/lib/arm926ej-s', '${GCC_DIR}/lib/gcc/arm-elf/${GCC_VERSION}/arm926ej-s'])
+	#env_netx500.Replace(LIBPATH = ['${GCC_DIR}/arm-elf/lib/arm926ej-s', '${GCC_DIR}/lib/gcc/arm-elf/${GCC_VERSION}/arm926ej-s'])
+	env_netx500.Replace(LIBPATH = ['${GCC_DIR}/arm-none-eabi/lib/arm926ej-s', '${GCC_DIR}/lib/gcc/arm-none-eabi/${GCC_VERSION}/arm926ej-s'])
 	env_netx500.Append(CPPDEFINES = [['ASIC_TYP', '500']])
 	env_netx500.Append(CPPPATH = ['src/netx500'])
 	
 	env_netx50 = env_default.Clone()
 	env_netx50.Append(CCFLAGS = ['-mcpu=arm966e-s'])
 	env_netx50.Replace(LDFILE = 'src/netx50/netx50.ld')
-	env_netx50.Replace(LIBPATH = ['${GCC_DIR}/arm-elf/lib/arm966e-s', '${GCC_DIR}/lib/gcc/arm-elf/${GCC_VERSION}/arm966e-s'])
+	#env_netx50.Replace(LIBPATH = ['${GCC_DIR}/arm-elf/lib/arm966e-s', '${GCC_DIR}/lib/gcc/arm-elf/${GCC_VERSION}/arm966e-s'])
+	env_netx50.Replace(LIBPATH = ['${GCC_DIR}/arm-none-eabi/lib/arm966e-s', '${GCC_DIR}/lib/gcc/arm-none-eabi/${GCC_VERSION}/arm966e-s'])
 	env_netx50.Append(CPPDEFINES = [['ASIC_TYP', '50']])
 	env_netx50.Append(CPPPATH = ['src/netx50'])
 	
 	env_netx10 = env_default.Clone()
 	env_netx10.Append(CCFLAGS = ['-mcpu=arm966e-s'])
 	env_netx10.Replace(LDFILE = 'src/netx10/netx10.ld')
-	env_netx10.Replace(LIBPATH = ['${GCC_DIR}/arm-elf/lib/arm966e-s', '${GCC_DIR}/lib/gcc/arm-elf/${GCC_VERSION}/arm966e-s'])
+	#env_netx10.Replace(LIBPATH = ['${GCC_DIR}/arm-elf/lib/arm966e-s', '${GCC_DIR}/lib/gcc/arm-elf/${GCC_VERSION}/arm966e-s'])
+	env_netx10.Replace(LIBPATH = ['${GCC_DIR}/arm-none-eabi/lib/arm966e-s', '${GCC_DIR}/lib/gcc/arm-none-eabi/${GCC_VERSION}/arm966e-s'])
 	env_netx10.Append(CPPDEFINES = [['ASIC_TYP', '10']])
 	env_netx10.Append(CPPPATH = ['src/netx10'])
 	
