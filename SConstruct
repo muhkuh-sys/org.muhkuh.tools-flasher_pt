@@ -50,7 +50,6 @@ flasher_sources_common = """
 	src/main.c
 	src/mmio.c
 	src/netx_consoleapp.c
-	src/parflash_common.c
 	src/progress_bar.c
 	src/rdyrun.c
 	src/spansion.c
