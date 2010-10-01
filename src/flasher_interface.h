@@ -53,9 +53,9 @@ typedef enum
 
 typedef struct
 {
-	int fIsValid;			/* a value of !=0 means the description is valid */
-	size_t sizThis;			/* size of the complete structure in bytes */
-	unsigned long ulVersion;	/* interface version of this description (this is the same as the version in the input parameters) */
+	int fIsValid;                           /* a value of !=0 means the description is valid */
+	size_t sizThis;                         /* size of the complete structure in bytes */
+	unsigned long ulVersion;                /* interface version of this description (this is the same as the version in the input parameters) */
 
 	BUS_T tSourceTyp;
 	union
@@ -156,7 +156,7 @@ typedef struct
 	} uParameter;
 } tFlasherInputParameter, *ptFlasherInputParameter;
 
-//-------------------------------------
+/*-------------------------------------------------------------------------*/
 
-#endif	/*__FLASHER_INTERFACE_H__ */
+#endif  /*__FLASHER_INTERFACE_H__ */
 

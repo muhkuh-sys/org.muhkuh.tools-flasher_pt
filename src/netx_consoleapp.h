@@ -21,7 +21,7 @@
 #ifndef __NETX_CONSOLEAPP_H__
 #define __NETX_CONSOLEAPP_H__
 
-//-------------------------------------
+/*-------------------------------------------------------------------------*/
 
 typedef enum {
         NETX_CONSOLEAPP_RESULT_OK = 0,
@@ -34,12 +34,12 @@ typedef struct {
         void *pvReturnMessage;
 } NETX_CONSOLEAPP_PARAMETER_T;
 
-//-------------------------------------
+/*-------------------------------------------------------------------------*/
 
 void netx_consoleapp_init(void);
 NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTestParam);
 NETX_CONSOLEAPP_PARAMETER_T *netx_consoleapp_getParameters(void);
 
-//-------------------------------------
+/*-------------------------------------------------------------------------*/
 
 #endif  /* __NETX_TEST_H__ */

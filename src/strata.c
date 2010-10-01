@@ -18,17 +18,22 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-/* Data bits to read indicating the status of an FLASH operation. */
-#define DRV_INTEL_SR7_WRT     (0x80)  //!< write ready busy
-#define DRV_INTEL_SR6_ERS     (0x40)  //!< erase suspended
-#define DRV_INTEL_SR5_CLR_LCK (0x20)  //!< erase and clear lock
-#define DRV_INTEL_SR4_SET_LCK (0x10)  //!< Program and set lock
-#define DRV_INTEL_SR3_PRG_VLT (0x08)  //!< VPP low
-#define DRV_INTEL_SR2_PRG_SUS (0x04)  //!< Program suspended
-#define DRV_INTEL_SR1_DEV_PRT (0x02)  //!< Sector locked
-#define DRV_INTEL_SR0_RES     (0x01)  //!< reset
 
-#define MFGCODE_INTEL           0x89	// Intel's flash manufacturing code.
+#include "strata.h"
+#include <string.h>
+
+
+/* Data bits to read indicating the status of an FLASH operation. */
+#define DRV_INTEL_SR7_WRT     (0x80)  /* write ready busy */
+#define DRV_INTEL_SR6_ERS     (0x40)  /* erase suspended */
+#define DRV_INTEL_SR5_CLR_LCK (0x20)  /* erase and clear lock */
+#define DRV_INTEL_SR4_SET_LCK (0x10)  /* Program and set lock */
+#define DRV_INTEL_SR3_PRG_VLT (0x08)  /* VPP low */
+#define DRV_INTEL_SR2_PRG_SUS (0x04)  /* Program suspended */
+#define DRV_INTEL_SR1_DEV_PRT (0x02)  /* Sector locked */
+#define DRV_INTEL_SR0_RES     (0x01)  /* reset */
+
+#define MFGCODE_INTEL           0x89  /* Intel's flash manufacturing code. */
 
 /* Define flash memory command set (these are 8bit flash commands). */
 #define BLOCK_ERASE                   0x20
@@ -48,14 +53,6 @@
 #define SET_BLOCK_LOCK_CONFIRM	0x01
 #define CLEAR_BLOCK_LOCK_CONFIRM	0xD0
 
-
-// ///////////////////////////////////////////////////// 
-//! \addtogroup EBOOT_FLASH
-//! \{
-// ///////////////////////////////////////////////////// 
-
-#include "strata.h"
-#include <string.h>
 
 static FLASH_ERRORS_E FlashWaitStatusDone (const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
 static void           FlashWriteCommand   (const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulCmd);
@@ -101,12 +98,14 @@ int IntelIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
   return fRet;
 }
 
-// ////////////////////////////////////////////////////
-//! Reset the flash sector to read mode
-//!  \param ptFlashDev  Pointer to the FLASH control Block
-//!  \param ulSector    Sector to reset to read mode
-//!  \return eFLASH_NO_ERROR on success
-// ////////////////////////////////////////////////////
+
+/*! Reset the flash sector to read mode
+*
+*   \param   ptFlashDev       Pointer to the FLASH control Block
+*   \param   ulSector         Sector to reset to read mode
+*
+*   \return  eFLASH_NO_ERROR  on success
+*/
 static FLASH_ERRORS_E FlashReset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
   FlashWriteCommand(ptFlashDev, ulSector, 0, READ_ARRAY);
@@ -114,12 +113,14 @@ static FLASH_ERRORS_E FlashReset(const FLASH_DEVICE_T *ptFlashDev, unsigned long
   return eFLASH_NO_ERROR;
 }
 
-// ////////////////////////////////////////////////////
-//! Erase a flash sector
-//!  \param ptFlashDev  Pointer to the FLASH control Block
-//!  \param ulSector    Sector to erase
-//!  \return eFLASH_NO_ERROR on success
-// ////////////////////////////////////////////////////
+
+/*! Erase a flash sector
+*
+*   \param   ptFlashDev       Pointer to the FLASH control Block
+*   \param   ulSector         Sector to erase
+*
+*   \return  eFLASH_NO_ERROR  on success
+*/
 static FLASH_ERRORS_E FlashErase(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
   FLASH_ERRORS_E eRet = eFLASH_NO_ERROR;
@@ -137,11 +138,13 @@ static FLASH_ERRORS_E FlashErase(const FLASH_DEVICE_T *ptFlashDev, unsigned long
   return eRet;
 }
 
-// ////////////////////////////////////////////////////
-//! Erase whole flash
-//!  \param ptFlashDev  Pointer to the FLASH control Block
-//!  \return eFLASH_NO_ERROR on success
-// ////////////////////////////////////////////////////
+
+/*! Erase whole flash
+*
+*   \param   ptFlashDev       Pointer to the FLASH control Block
+*
+*   \return  eFLASH_NO_ERROR  on success
+*/
 static FLASH_ERRORS_E FlashEraseAll(const FLASH_DEVICE_T *ptFlashDev)
 {
   FLASH_ERRORS_E eRet     = eFLASH_NO_ERROR;
@@ -159,19 +162,20 @@ static FLASH_ERRORS_E FlashEraseAll(const FLASH_DEVICE_T *ptFlashDev)
   return eRet;
 }
 
-// ////////////////////////////////////////////////////
-//! Program flash
-//!  \param ptFlashDev    Pointer to the FLASH control Block
-//!  \param ulStartOffset Offset to start writing at
-//!  \param ulLength      Length of data to write
-//!  \param pvData        Data pointer
-//!  \return eFLASH_NO_ERROR on success
-// ////////////////////////////////////////////////////
+
+/*! Program flash
+*
+*   \param   ptFlashDev       Pointer to the FLASH control Block
+*   \param   ulStartOffset    Offset to start writing at
+*   \param   ulLength         Length of data to write
+*   \param   pvData           Data pointer
+*
+*   \return  eFLASH_NO_ERROR  on success
+*/
 static FLASH_ERRORS_E FlashProgram(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData)
 {
   unsigned long  ulCurrentSector  = 0;
   unsigned long  ulCurrentOffset  = ulStartOffset; 
-//  unsigned long  ulBufferWriteCnt = 0;
   const unsigned char* pbSource         = (const unsigned char*)pvData;
   unsigned long  ulCnt            = 0;
   BOOL           fFound           = FALSE;
@@ -199,7 +203,7 @@ static FLASH_ERRORS_E FlashProgram(const FLASH_DEVICE_T *ptFlashDev, unsigned lo
 
   while(ulLength > 0)
   {
-    unsigned long ulWriteSize    = 0; //Bufferwrite size this run
+    unsigned long ulWriteSize    = 0; /* Bufferwrite size this run */
     unsigned char bWriteCountCmd = 0;
     unsigned long ulMaxBuffer    = ptFlashDev->ulMaxBufferWriteSize;
 
@@ -276,7 +280,7 @@ static FLASH_ERRORS_E FlashProgram(const FLASH_DEVICE_T *ptFlashDev, unsigned lo
       break;
     }
 
-    //wrap around
+    /* wrap around */
     if(ulCurrentOffset == ptFlashDev->atSectors[ulCurrentSector].ulSize)    
     {
       FlashWriteCommand(ptFlashDev, ulCurrentSector, 0, READ_ARRAY);
@@ -332,13 +336,13 @@ FLASH_ERRORS_E FlashUnlock(const FLASH_DEVICE_T *ptFlashDev)
 }
 
 
-// ////////////////////////////////////////////////////
-//! Write a command to the FLASH
-//!  \param ptFlashDev Pointer to the FLASH control Block
-//!  \param ulSector FLASH sector number
-//!  \param ulOffset Offset address in the actual FLASH sector
-//!  \param bCmd Command to execute
-// ////////////////////////////////////////////////////
+/*! Write a command to the FLASH
+*
+*   \param   ptFlashDev  Pointer to the FLASH control Block
+*   \param   ulSector    FLASH sector number
+*   \param   ulOffset    Offset address in the actual FLASH sector
+*   \param   bCmd        Command to execute
+*/
 void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulCmd)
 {
 	union
@@ -378,14 +382,16 @@ void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector,
 	}
 }
 
-// ////////////////////////////////////////////////////
-//! Checks if a given flag (bCmd) is set on the FLASH device
-//!  \param ptFlashDev Pointer to the FLASH control Block
-//!  \param ulSector FLASH sector number
-//!  \param ulOffset Offset address in the actual FLASH sector
-//!  \param bCmd Flag value to be checked
-//!  \return TRUE on success
-// ////////////////////////////////////////////////////
+
+/*! Checks if a given flag (bCmd) is set on the FLASH device
+*
+*   \param   ptFlashDev  Pointer to the FLASH control Block
+*   \param   ulSector    FLASH sector number
+*   \param   ulOffset    Offset address in the actual FLASH sector
+*   \param   bCmd        Flag value to be checked
+*
+*   \return  TRUE        on success
+*/
 int FlashIsset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulCmd)
 {
   int            iRet       = FALSE;
@@ -428,11 +434,13 @@ int FlashIsset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigne
   return iRet;
 }
 
-// ////////////////////////////////////////////////////
-//! Wait until FLASH has accepted a state change
-//!  \param ptFlashDev Pointer to the FLASH control Block
-//!  \param ulSector FLASH sector number
-// ////////////////////////////////////////////////////
+
+/*! Wait until FLASH has accepted a state change
+*
+*   \param   ptFlashDev  Pointer to the FLASH control Block
+*   \param   ulSector    FLASH sector number
+*
+*/
 static FLASH_ERRORS_E FlashWaitStatusDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
   FLASH_ERRORS_E eRet = eFLASH_NO_ERROR;
@@ -443,38 +451,35 @@ static FLASH_ERRORS_E FlashWaitStatusDone(const FLASH_DEVICE_T *ptFlashDev, unsi
   if(FlashIsset(ptFlashDev, ulSector, 0, DRV_INTEL_SR6_ERS))
   {
     eRet = eFLASH_GENERAL_ERROR;
-//    EdbgOutputDebugString("ERROR: Status done. Erase suspended!\r\n");
+/*    EdbgOutputDebugString("ERROR: Status done. Erase suspended!\r\n"); */
 
   } else if(FlashIsset(ptFlashDev, ulSector, 0, DRV_INTEL_SR5_CLR_LCK))
   {
     eRet = eFLASH_LOCKED;
-//    EdbgOutputDebugString("ERROR: Status done. Erase and clear Lock!\r\n");
+/*    EdbgOutputDebugString("ERROR: Status done. Erase and clear Lock!\r\n"); */
   } else if(FlashIsset(ptFlashDev, ulSector, 0, DRV_INTEL_SR4_SET_LCK))
   {
 
     eRet = eFLASH_LOCKED;
-//    EdbgOutputDebugString("ERROR: Status done. Program and Set Lock!\r\n");
+/*    EdbgOutputDebugString("ERROR: Status done. Program and Set Lock!\r\n"); */
   } else if(FlashIsset(ptFlashDev, ulSector, 0, DRV_INTEL_SR3_PRG_VLT))
   {
     eRet = eFLASH_VPP_LOW;
-//    EdbgOutputDebugString("ERROR: Status done. VPP low!\r\n");
+/*    EdbgOutputDebugString("ERROR: Status done. VPP low!\r\n"); */
   } else if(FlashIsset(ptFlashDev, ulSector, 0, DRV_INTEL_SR2_PRG_SUS))
   {
     eRet = eFLASH_GENERAL_ERROR;
-//    EdbgOutputDebugString("ERROR: Status done. Program suspended!\r\n");
+/*    EdbgOutputDebugString("ERROR: Status done. Program suspended!\r\n"); */
   } else if(FlashIsset(ptFlashDev, ulSector, 0, DRV_INTEL_SR1_DEV_PRT))
   {
     eRet = eFLASH_LOCKED;
-//    EdbgOutputDebugString("ERROR: Status done. Sector locked!\r\n");
+/*    EdbgOutputDebugString("ERROR: Status done. Sector locked!\r\n"); */
   } else if(FlashIsset(ptFlashDev, ulSector, 0, DRV_INTEL_SR0_RES))
   {
     eRet = eFLASH_BUSY;
-//    EdbgOutputDebugString("ERROR: Status done. Reset!\r\n");
+/*    EdbgOutputDebugString("ERROR: Status done. Reset!\r\n"); */
   }
 
   return eRet;
 }
 
-// ///////////////////////////////////////////////////// 
-//! \}
-// ///////////////////////////////////////////////////// 

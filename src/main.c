@@ -491,12 +491,12 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 				uprintf(". Operation Mode: Read\n");
 				tResult = opMode_read(ptAppParams);
 				break;
-
-// 			case OperationMode_Verify:
-// 				uprintf(". Operation Mode: Verify\n");
-// //				tResult = opMode_verify(ptAppParams);
-// 				break;
-
+/*
+			case OperationMode_Verify:
+				uprintf(". Operation Mode: Verify\n");
+				tResult = opMode_verify(ptAppParams);
+				break;
+*/
 			case OPERATION_MODE_IsErased:
 				uprintf(". Operation Mode: IsErased\n");
 				tResult = opMode_isErased(ptAppParams, ptTestParam);

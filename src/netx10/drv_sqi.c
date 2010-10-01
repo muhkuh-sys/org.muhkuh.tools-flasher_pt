@@ -61,7 +61,7 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 };
 
 
-//-------------------------------------
+/*-------------------------------------------------------------------------*/
 
 /* BootSPI_ExchangeByte
  *
@@ -106,7 +106,8 @@ static unsigned char qsi_spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char
 	return ucByte;
 }
 
-//---------------------------------------------------------------------------
+
+/*-------------------------------------------------------------------------*/
 
 
 static unsigned long qsi_get_device_speed_representation(unsigned int uiSpeed)

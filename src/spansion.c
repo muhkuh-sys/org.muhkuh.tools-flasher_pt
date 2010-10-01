@@ -30,9 +30,7 @@
 
 	#define DEBUGZONE(n)  (s_ulCurSettings&(0x00000001<<(n)))
 
-	//
-	// These defines must match the ZONE_* defines
-	//
+	/* NOTE: These defines must match the ZONE_* defines. */
 	#define DBG_ZONE_ERROR      0
 	#define DBG_ZONE_WARNING    1
 	#define DBG_ZONE_FUNCTION   2
@@ -46,9 +44,9 @@
         #define ZONE_VERBOSE        DEBUGZONE(DBG_ZONE_VERBOSE)
 
         #define DEBUGMSG(cond,printf_exp) ((void)((cond)?(uprintf printf_exp),1:0))
-#else  // DEBUG
+#else  /* CFG_DEBUGMSG!=0 */
         #define DEBUGMSG(cond,printf_exp) ((void)0)
-#endif // DEBUG
+#endif /* CFG_DEBUGMSG!=0 */
 
 
 #define DQ0                                   0x01U
@@ -242,12 +240,14 @@ int SpansionIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
 	return fRet;
 }
 
-// ////////////////////////////////////////////////////
-//! Reset the flash sector to read mode
-//!  \param ptFlashDev  Pointer to the FLASH control Block
-//!  \param ulSector    Sector to reset to read mode
-//!  \return eFLASH_NO_ERROR on success
-// ////////////////////////////////////////////////////
+
+/*! Reset the flash sector to read mode
+*
+*  \param   ptFlashDev        Pointer to the FLASH control Block
+*  \param   ulSector          Sector to reset to read mode
+*
+*  \return  eFLASH_NO_ERROR   on success
+*/
 static FLASH_ERRORS_E FlashReset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
 	FLASH_ERRORS_E tResult;
@@ -262,12 +262,13 @@ static FLASH_ERRORS_E FlashReset(const FLASH_DEVICE_T *ptFlashDev, unsigned long
 	return tResult;
 }
 
-// ////////////////////////////////////////////////////
-//! Erase a flash sector
-//!  \param ptFlashDev  Pointer to the FLASH control Block
-//!  \param ulSector    Sector to erase
-//!  \return eFLASH_NO_ERROR on success
-// ////////////////////////////////////////////////////
+/*! Erase a flash sector
+*
+*   \param   ptFlashDev       Pointer to the FLASH control Block
+*   \param   ulSector         Sector to erase
+*
+*   \return  eFLASH_NO_ERROR  on success
+*/
 static FLASH_ERRORS_E FlashErase(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
 	FLASH_ERRORS_E tResult = eFLASH_NO_ERROR;
@@ -286,11 +287,12 @@ static FLASH_ERRORS_E FlashErase(const FLASH_DEVICE_T *ptFlashDev, unsigned long
 	return tResult;
 }
 
-// ////////////////////////////////////////////////////
-//! Erase whole flash
-//!  \param ptFlashDev  Pointer to the FLASH control Block
-//!  \return eFLASH_NO_ERROR on success
-// ////////////////////////////////////////////////////
+/*! Erase whole flash
+*
+*   \param   ptFlashDev       Pointer to the FLASH control Block
+*
+*   \return  eFLASH_NO_ERROR  on success
+*/
 static FLASH_ERRORS_E FlashEraseAll(const FLASH_DEVICE_T *ptFlashDev)
 {
 	FLASH_ERRORS_E tResult = eFLASH_NO_ERROR;
@@ -310,14 +312,15 @@ static FLASH_ERRORS_E FlashEraseAll(const FLASH_DEVICE_T *ptFlashDev)
 	return tResult;
 }
 
-// ////////////////////////////////////////////////////
-//! Programs flash using single word/dword accesses
-//!  \param ptFlashDev    Pointer to the FLASH control Block
-//!  \param ulStartOffset Offset to start writing at
-//!  \param ulLength      Length of data to write
-//!  \param pvData        Data pointer
-//!  \return eFLASH_NO_ERROR on success
-// ////////////////////////////////////////////////////
+/*! Programs flash using single word/dword accesses
+*
+*   \param   ptFlashDev       Pointer to the FLASH control Block
+*   \param   ulStartOffset    Offset to start writing at
+*   \param   ulLength         Length of data to write
+*   \param   pvData           Data pointer
+*
+*   \return  eFLASH_NO_ERROR  on success
+*/
 static FLASH_ERRORS_E FlashNormalWrite(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, const unsigned char *pucData, unsigned long ulWriteSize)
 {
 	FLASH_ERRORS_E  eRet       = eFLASH_NO_ERROR;
@@ -508,14 +511,15 @@ static FLASH_ERRORS_E FlashBufferedWrite(const FLASH_DEVICE_T *ptFlashDev, const
 }
 
 
-// ////////////////////////////////////////////////////
-//! Program flash (uses buffered writes whenever possible)
-//!  \param ptFlashDev    Pointer to the FLASH control Block
-//!  \param ulStartOffset Offset to start writing at
-//!  \param ulLength      Length of data to write
-//!  \param pvData        Data pointer
-//!  \return eFLASH_NO_ERROR on success
-// ////////////////////////////////////////////////////
+/*! Program flash (uses buffered writes whenever possible)
+*
+*  \param   ptFlashDev       Pointer to the FLASH control Block
+*  \param   ulStartOffset    Offset to start writing at
+*  \param   ulLength         Length of data to write
+*  \param   pvData           Data pointer
+*
+*  \return  eFLASH_NO_ERROR  on success
+*/
 static FLASH_ERRORS_E FlashProgram(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void *pvData)
 {
 	unsigned long  ulCurrentSector;
@@ -665,13 +669,13 @@ FLASH_ERRORS_E FlashUnlock(const FLASH_DEVICE_T *ptFlashDev)
 }
 
 
-// ////////////////////////////////////////////////////
-//! Write a command to the FLASH
-//!  \param ptFlashDev Pointer to the FLASH control Block
-//!  \param ulSector FLASH sector number
-//!  \param ulOffset Offset address in the actual FLASH sector
-//!  \param bCmd Command to execute
-// ////////////////////////////////////////////////////
+/*! Write a command to the FLASH
+*
+*   \param   ptFlashDev  Pointer to the FLASH control Block
+*   \param   ulSector    FLASH sector number
+*   \param   ulOffset    Offset address in the actual FLASH sector
+*   \param   bCmd        Command to execute
+*/
 void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned int uiCmd)
 {
 	volatile unsigned char* pbWriteAddr = ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset;
@@ -707,14 +711,15 @@ void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector,
 	DEBUGMSG(ZONE_FUNCTION, ("-FlashWriteCommand()\n"));
 }
 
-// ////////////////////////////////////////////////////
-//! Checks if a given flag (bCmd) is set on the FLASH device
-//!  \param ptFlashDev Pointer to the FLASH control Block
-//!  \param ulSector FLASH sector number
-//!  \param ulOffset Offset address in the actual FLASH sector
-//!  \param bCmd Flag value to be checked
-//!  \return TRUE on success
-// ////////////////////////////////////////////////////
+/*! Checks if a given flag (bCmd) is set on the FLASH device
+*
+*   \param   ptFlashDev  Pointer to the FLASH control Block
+*   \param   ulSector    FLASH sector number
+*   \param   ulOffset    Offset address in the actual FLASH sector
+*   \param   bCmd        Flag value to be checked
+*
+*   \return  TRUE        on success
+*/
 static int FlashIsset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulSet, unsigned long ulClear)
 {
 	int iRet = FALSE;
@@ -779,15 +784,16 @@ static int FlashIsset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, 
 	return iRet;
 }
 
-// ////////////////////////////////////////////////////
-//! Waitfs for an erase procedure to finish
-//!  \param ptFlashDev Pointer to the FLASH control Block
-//!  \param ulSector   FLASH sector number
-//!  \return eFLASH_NO_ERROR on success
-// ////////////////////////////////////////////////////
+
+/*! Waitfs for an erase procedure to finish
+*
+*   \param   ptFlashDev       Pointer to the FLASH control Block
+*   \param   ulSector         FLASH sector number
+*
+*   \return  eFLASH_NO_ERROR  on success
+*/
 static FLASH_ERRORS_E FlashWaitEraseDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
-//  volatile unsigned long* pulFlash  = (unsigned long*)(ptFlashDev->pbFlashBase + ptFlashDev->atSectors[ulSector].ulOffset);
 	BOOL fRunning = TRUE;
 	FLASH_ERRORS_E eRet = eFLASH_NO_ERROR;
 
@@ -818,13 +824,15 @@ static FLASH_ERRORS_E FlashWaitEraseDone(const FLASH_DEVICE_T *ptFlashDev, unsig
 	return eRet;
 }
 
-// ////////////////////////////////////////////////////
-//! Checks the state of the flash
-//!  \param ptFlashDev Pointer to the FLASH control Block
-//!  \param ulOffset   Offset to read status from
-//!  \param ulOffset   Offset to read status from
-//!  \return DEV_NOT_BUSY on success
-// ////////////////////////////////////////////////////
+
+/*! Checks the state of the flash
+*
+*   \param   ptFlashDev    Pointer to the FLASH control Block
+*   \param   ulOffset      Offset to read status from
+*   \param   ulOffset      Offset to read status from
+*
+*   \return  DEV_NOT_BUSY  on success
+*/
 static DEVSTATUS FlashGetStatus(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulAddress, BOOL fBufferWriteOp)
 {
         unsigned long ulDQ1Mask;
@@ -864,8 +872,8 @@ static DEVSTATUS FlashGetStatus(const FLASH_DEVICE_T *ptFlashDev, unsigned long 
 			ulRead2 = READ_FLASH(ulAddress);
 			ulDQ6Toggle = (ulRead1 ^ ulRead2) & ulDQ6Mask;
 
-			// Don't return WBA if other device DQ6 and DQ1 
-			// are not the same. They may still be busy.
+			/* Don't return WBA if other device DQ6 and DQ1 
+			   are not the same. They may still be busy. */
 			if( (ulDQ6Toggle && ((ulDQ6Toggle >> 5) & ulRead2)) && !((ulDQ6Toggle >> 5) ^ (ulRead2 & ulDQ1Mask)) )
 			{
 				tDevStatus = DEV_WRITE_BUFFER_ABORT;
@@ -884,8 +892,8 @@ static DEVSTATUS FlashGetStatus(const FLASH_DEVICE_T *ptFlashDev, unsigned long 
 			ulRead2 = READ_FLASH(ulAddress);
 			ulDQ6Toggle = (ulRead1 ^ ulRead2) & ulDQ6Mask;
 
-			// Don't return TimeOut if other device DQ6 and DQ5 
-			// are not the same. They may still be busy.
+			/* Don't return TimeOut if other device DQ6 and DQ5 
+			   are not the same. They may still be busy. */
 			if((ulDQ6Toggle && ((ulDQ6Toggle >> 1) & ulRead2)) && !( (ulDQ6Toggle >> 1) ^ (ulRead2 & ulDQ5Mask)) )
 			{
 				tDevStatus = DEV_EXCEEDED_TIME_LIMITS;
@@ -907,11 +915,11 @@ static DEVSTATUS FlashGetStatus(const FLASH_DEVICE_T *ptFlashDev, unsigned long 
 		ulRead1 = READ_FLASH(ulAddress);
 		ulRead2 = READ_FLASH(ulAddress);
 
-		if( ((ulRead1 ^ ulRead2) & ulDQ2Mask)==ulDQ2Mask )   // All devices DQ2 toggling
+		if( ((ulRead1 ^ ulRead2) & ulDQ2Mask)==ulDQ2Mask )   /* All devices DQ2 toggling. */
 		{
 			tDevStatus = DEV_SUSPEND;
 		}
-		else if( ((ulRead1 ^ ulRead2) & ulDQ2Mask) == 0 )   // All devices DQ2 not toggling
+		else if( ((ulRead1 ^ ulRead2) & ulDQ2Mask) == 0 )   /* All devices DQ2 not toggling. */
 		{
 			tDevStatus = DEV_NOT_BUSY;
 		}
@@ -927,15 +935,16 @@ static DEVSTATUS FlashGetStatus(const FLASH_DEVICE_T *ptFlashDev, unsigned long 
 }
 
 
-// ////////////////////////////////////////////////////
-//! Waits for a programming procedure to finish
-//!  \param ptFlashDev    Pointer to the FLASH control Block
-//!  \param ulSector      FLASH sector number
-//!  \param ulOffset      Last offset written
-//!  \param ulOffsetData  Data written to last offset
-//!  \param fBufferWrite  TRUE if buffered write is used
-//!  \return eFLASH_NO_ERROR on success
-// ////////////////////////////////////////////////////
+/*! Waits for a programming procedure to finish
+*
+*   \param   ptFlashDev       Pointer to the FLASH control Block
+*   \param   ulSector         FLASH sector number
+*   \param   ulOffset         Last offset written
+*   \param   ulOffsetData     Data written to last offset
+*   \param   fBufferWrite     TRUE if buffered write is used
+*
+*   \return  eFLASH_NO_ERROR  on success
+*/
 static FLASH_ERRORS_E FlashWaitWriteDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulOffsetData, BOOL fBufferWrite)
 {
         DEVSTATUS       dev_status;
@@ -1000,12 +1009,13 @@ static FLASH_ERRORS_E FlashWaitWriteDone(const FLASH_DEVICE_T *ptFlashDev, unsig
 	return eRet;
 }
 
-// ////////////////////////////////////////////////////
-//! Writes a sequence of flash commands
-//!  \param ptFlashDev    Pointer to the FLASH control Block
-//!  \param ptCmd         Array of command blocks
-//!  \param ulCount       Number of commands
-// ////////////////////////////////////////////////////
+
+/*! Writes a sequence of flash commands
+*
+*   \param   ptFlashDev    Pointer to the FLASH control Block
+*   \param   ptCmd         Array of command blocks
+*   \param   ulCount       Number of commands
+*/
 static void  FlashWriteCommandSequence(const FLASH_DEVICE_T *ptFlashDev, FLASH_COMMAND_BLOCK_T* ptCmd, unsigned long ulCount)
 {
 	DEBUGMSG(ZONE_FUNCTION, ("+FlashWriteCommandSequence(): ptFlashDev=0x%08x, ptCmd=0x%08x, ulCount=%d\n", ptFlashDev, ptCmd, ulCount));
@@ -1020,6 +1030,3 @@ static void  FlashWriteCommandSequence(const FLASH_DEVICE_T *ptFlashDev, FLASH_C
 	DEBUGMSG(ZONE_FUNCTION, ("-FlashWriteCommandSequence()\n"));
 }
 
-// ///////////////////////////////////////////////////// 
-//! \}
-// ///////////////////////////////////////////////////// 

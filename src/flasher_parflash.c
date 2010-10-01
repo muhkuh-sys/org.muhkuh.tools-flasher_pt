@@ -31,9 +31,7 @@
 
 	#define DEBUGZONE(n)  (s_ulCurSettings&(0x00000001<<(n)))
 
-	//
-	// These defines must match the ZONE_* defines
-	//
+	/* NOTE: These defines must match the ZONE_* defines. */
 	#define DBG_ZONE_ERROR      0
 	#define DBG_ZONE_WARNING    1
 	#define DBG_ZONE_FUNCTION   2
@@ -47,9 +45,9 @@
 	#define ZONE_VERBOSE        DEBUGZONE(DBG_ZONE_VERBOSE)
 
 	#define DEBUGMSG(cond,printf_exp) ((void)((cond)?(uprintf printf_exp),1:0))
-#else  // DEBUG
+#else  /* CFG_DEBUGMSG!=0 */
 	#define DEBUGMSG(cond,printf_exp) ((void)0)
-#endif // DEBUG
+#endif /* CFG_DEBUGMSG!=0 */
 
 
 

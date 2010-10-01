@@ -18,29 +18,6 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
  
-/***************************************************************************
-  File          : CFIFlash.c
- ----------------------------------------------------------------------------
-  Description:
-
-      CFIFlash.c : Implementation of CFI identification routines
- ----------------------------------------------------------------------------
-  Todo:
-
- ----------------------------------------------------------------------------
-  Known Problems:
-
-    -
-
- ----------------------------------------------------------------------------
- ***************************************************************************/
-
-
-/*
-************************************************************
-*   Inclusion Area
-************************************************************
-*/
 
 #include <string.h>
 
@@ -58,9 +35,7 @@
 
 	#define DEBUGZONE(n)  (s_ulCurSettings&(0x00000001<<(n)))
 
-	//
-	// These defines must match the ZONE_* defines
-	//
+	/* NOTE: These defines must match the ZONE_* defines. */
 	#define DBG_ZONE_ERROR      0
 	#define DBG_ZONE_WARNING    1
 	#define DBG_ZONE_FUNCTION   2
@@ -74,56 +49,43 @@
 	#define ZONE_VERBOSE        DEBUGZONE(DBG_ZONE_VERBOSE)
 
 	#define DEBUGMSG(cond,printf_exp) ((void)((cond)?(uprintf printf_exp),1:0))
-#else  // DEBUG
+#else  /* CFG_DEBUGMSG!=0 */
 	#define DEBUGMSG(cond,printf_exp) ((void)0)
-#endif // DEBUG
+#endif /* CFG_DEBUGMSG!=0 */
 
 
-// ///////////////////////////////////////////////////// 
-//! \file CFIFlash.c
-//!  Implementation of CFI identification routines
-// ////////////////////////////////////////////////////
-
-
-// ///////////////////////////////////////////////////// 
-//! Structure definition for FLASH width and pairing test cases
-// ///////////////////////////////////////////////////// 
 typedef struct tagCFI_CHECK_CONDITIONS
 {
-	BUS_WIDTH_T tBits;        /* Bus width for this pattern. */
-	int fPaired;              /* Pairing of FLASHes for pattern. */
-	unsigned int uiQueryLen;  /* Length of the pattern in bytes. */
-	const char *szQuery;      /* Pattern to look for in memory at given offset. */
-	CFI_SETUP_T tSetup;       /* Setup id of this config. */
+	BUS_WIDTH_T tBits;              /* Bus width for this pattern. */
+	int fPaired;                    /* Pairing of FLASHes for pattern. */
+	unsigned int uiQueryLen;        /* Length of the pattern in bytes. */
+	const char *szQuery;            /* Pattern to look for in memory at given offset. */
+	CFI_SETUP_T tSetup;             /* Setup id of this config. */
 } CFI_CHECK_CONDITION_T;
 
 
 typedef struct
 {
-	unsigned long ulCondition;    /* A combination of several CFI_SETUP_T values. */
-	int iPaired;                  /* TRUE if the setup is made of 2 flashes. */
-	BUS_WIDTH_T tBits;            /* Bus width of the flash connection. */
-	CFI_SETUP_T tSetup;           /* Bus width and paired information. */
+	unsigned long ulCondition;      /* A combination of several CFI_SETUP_T values. */
+	int iPaired;                    /* TRUE if the setup is made of 2 flashes. */
+	BUS_WIDTH_T tBits;              /* Bus width of the flash connection. */
+	CFI_SETUP_T tSetup;             /* Bus width and paired information. */
 } CFI_SETUP_CONDITION_T;
 
 
-// ///////////////////////////////////////////////////// 
-//! Structure used for identifying bus width and 
-//! pairing of CFI FLASHes
-// ///////////////////////////////////////////////////// 
 static const CFI_CHECK_CONDITION_T s_atCFIChecks[] =
 {
 /* Only netX500, netX100 and netX50 support a 32bit memory interface. */
 #if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
-//	{BUS_WIDTH_32Bit,  FALSE,  12,  "Q\0\0\0R\0\0\0Y\0\0\0",  CFI_SETUP_1x32 },  /* 1x 32Bit Flash */
+/*	{BUS_WIDTH_32Bit,  FALSE,  12,  "Q\0\0\0R\0\0\0Y\0\0\0",  CFI_SETUP_1x32 }, */
 
-	{BUS_WIDTH_32Bit,  TRUE,   12,  "Q\0Q\0R\0R\0Y\0Y\0",     CFI_SETUP_2x16 },  /* 2x 16Bit Flash */
+	{BUS_WIDTH_32Bit,  TRUE,   12,  "Q\0Q\0R\0R\0Y\0Y\0",     CFI_SETUP_2x16 },
 #endif
-//	{BUS_WIDTH_16Bit,  FALSE,  10,  "Q\0??R\0??Y\0",          CFI_SETUP_1x16 },  /* 1x 16Bit Flash */
-	{BUS_WIDTH_16Bit,  FALSE,   6,  "Q\0R\0Y\0",              CFI_SETUP_1x16 },  /* 1x 16Bit Flash */
+/*	{BUS_WIDTH_16Bit,  FALSE,  10,  "Q\0??R\0??Y\0",          CFI_SETUP_1x16 }, */
+	{BUS_WIDTH_16Bit,  FALSE,   6,  "Q\0R\0Y\0",              CFI_SETUP_1x16 },
 
-	{BUS_WIDTH_16Bit,  TRUE,    6,  "QQRRYY",                 CFI_SETUP_2x08 },  /* 2x 8Bit Flash */
-	{ BUS_WIDTH_8Bit,  FALSE,   3,  "QRY",                    CFI_SETUP_1x08 }   /* 8 Bit Flash   */
+	{BUS_WIDTH_16Bit,  TRUE,    6,  "QQRRYY",                 CFI_SETUP_2x08 },
+	{ BUS_WIDTH_8Bit,  FALSE,   3,  "QRY",                    CFI_SETUP_1x08 }
 };
 
 
@@ -163,14 +125,15 @@ static const CFI_SETUP_CONDITION_T s_atCFISetupConditions[] =
 
 #define ARRAY_SIZE(a)   (sizeof(a) / sizeof(a[0]))
 
-// ///////////////////////////////////////////////////// 
-//! Compares memory buffers for CFI detection routines.
-//! It uses '?' as wildcard
-//!  \param pvFlash Pointer to flash address to verify
-//!  \param pvCmpBuf Buffer containing expected flash content (This buffer may contain '?' placeholder)
-//!  \param ulLen Length of comparison
-//!  \return 0 if equal, -1 on mismatch
-// ///////////////////////////////////////////////////// 
+/*---------------------------------------------------------------------------
+   Compares memory buffers for CFI detection routines.
+   It uses '?' as wildcard
+     \param pvFlash Pointer to flash address to verify
+     \param pvCmpBuf Buffer containing expected flash content
+            (This buffer may contain '?' placeholder)
+     \param ulLen Length of comparison
+     \return 0 if equal, -1 on mismatch
+---------------------------------------------------------------------------*/
 static int CFIMemCmp(volatile void* pvFlash, const void* pvCmpBuf, unsigned long ulLen)
 {
 	int iRet;
@@ -208,13 +171,13 @@ static int CFIMemCmp(volatile void* pvFlash, const void* pvCmpBuf, unsigned long
 	return iRet;
 }
 
-// ///////////////////////////////////////////////////// 
-//! Writes a command to the given flash with the indicated width and pairing
-//!  \param pbFlashAddr Address inside flash, to write command to (ATTENTION: Alignment is not checked)
-//!  \param bWidth Width of the FLASH 
-//!  \param fPaired TRUE if two devices are paired to build one flash
-//!  \param bCommand Command to write to FLASH
-// ///////////////////////////////////////////////////// 
+/*---------------------------------------------------------------------------
+    Writes a command to the given flash with the indicated width and pairing
+     \param pbFlashAddr Address inside flash, to write command to (ATTENTION: Alignment is not checked)
+     \param bWidth Width of the FLASH 
+     \param fPaired TRUE if two devices are paired to build one flash
+     \param bCommand Command to write to FLASH
+---------------------------------------------------------------------------*/
 static void CFI_FlashWriteCommand(volatile unsigned char *pucFlashAddr, size_t sizOffset, CFI_SETUP_T tSetup, unsigned int uiCommand)
 {
 	VADR_T tAdr;
@@ -570,13 +533,13 @@ static int query_flash_layout(FLASH_DEVICE_T *ptFlashDevice, const PARFLASH_CONF
 }
 
 
-// ///////////////////////////////////////////////////// 
-//! Identifies a CFI compliant FLASH device
-//! This routine will enter all data into the ptFlashDevice structure
-//! that can be read from FLASH.
-//!  \param ptFlashDevice Returned FALSH info on success. Base address pointer must be inserted before calling this function
-//!  \return TRUE if identified successfully
-// ///////////////////////////////////////////////////// 
+/*---------------------------------------------------------------------------
+    Identifies a CFI compliant FLASH device
+    This routine will enter all data into the ptFlashDevice structure
+    that can be read from FLASH.
+     \param ptFlashDevice Returned FALSH info on success. Base address pointer must be inserted before calling this function
+     \return TRUE if identified successfully
+---------------------------------------------------------------------------*/
 int CFI_IdentifyFlash(FLASH_DEVICE_T* ptFlashDevice, PARFLASH_CONFIGURATION_T *ptCfg)
 {
 	int iResult;

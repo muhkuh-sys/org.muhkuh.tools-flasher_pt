@@ -18,29 +18,6 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-/***************************************************************************
-  File          : spi_flash.c
- ----------------------------------------------------------------------------
-  Description:
-
-      SPI Flash Functions
- ----------------------------------------------------------------------------
-  Todo:
-
- ----------------------------------------------------------------------------
-  Known Problems:
-
-    -
-
- ----------------------------------------------------------------------------
- ***************************************************************************/
-
-
-/*
-************************************************************
-*   Inclusion Area
-************************************************************
-*/
 #include <string.h>
 #include "uprintf.h"
 
@@ -56,11 +33,7 @@
 #	include "drv_spi.h"
 #endif
 
-/*
-************************************************************
-*   Defines
-************************************************************
-*/
+
 #if CFG_DEBUGMSG!=0
 
 	/* show all messages by default */
@@ -68,9 +41,7 @@
 
 	#define DEBUGZONE(n)  (s_ulCurSettings&(0x00000001<<(n)))
 
-	//
-	// These defines must match the ZONE_* defines
-	//
+	/* NOTE: These defines must match the ZONE_* defines. */
 	#define DBG_ZONE_ERROR      0
 	#define DBG_ZONE_WARNING    1
 	#define DBG_ZONE_FUNCTION   2
@@ -84,19 +55,18 @@
 	#define ZONE_VERBOSE        DEBUGZONE(DBG_ZONE_VERBOSE)
 
 	#define DEBUGMSG(cond,printf_exp) ((void)((cond)?(uprintf printf_exp),1:0))
-#else  // DEBUG
+#else  /* CFG_DEBUGMSG!=0 */
 	#define DEBUGMSG(cond,printf_exp) ((void)0)
-#endif // DEBUG
+#endif /* CFG_DEBUGMSG!=0 */
 
 
-/*****************************************************************************/
 /*! getMaskLength
-*   Calculate the minimum mask for an input parameter and return the
-*   number of bits used for this mask. The mask always starts at bit 0.
-*   \param ulVal   Value to get the masklength from
-*
-*   \return        Number of bits used for the mask                          */
-/*****************************************************************************/
+    Calculate the minimum mask for an input parameter and return the
+    number of bits used for this mask. The mask always starts at bit 0.
+    \param ulVal   Value to get the masklength from
+
+    \return        Number of bits used for the mask
+*/
 static unsigned int getMaskLength(unsigned long ulVal)
 {
 	unsigned long ulMask   = 0;
@@ -120,15 +90,14 @@ static unsigned int getMaskLength(unsigned long ulVal)
 }
 
 
-/*****************************************************************************/
 /*! getDeviceAddress
-*   Convert the linear input address to the device's addressing mode
-*               
-*   \param ptFls            pointer to the instance of the spi flash
-*   \param ulLinearAddress  linear address                  
-*                                                                              
-*   \return                 device specific address                          */
-/*****************************************************************************/
+    Convert the linear input address to the device's addressing mode
+
+    \param ptFls            pointer to the instance of the spi flash
+    \param ulLinearAddress  linear address
+
+    \return                 device specific address
+*/
 static unsigned long getDeviceAddress(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress)
 {
 	unsigned long ulDeviceAddress = 0;
@@ -172,15 +141,14 @@ static unsigned long getDeviceAddress(const SPI_FLASH_T *ptFlash, unsigned long 
 }
 
 
-/*****************************************************************************/
 /*! read_status
-*   read the status register
-*               
-*   \param   ptFls              Pointer to FLASH Control Block
-*   \param   ulLinearAddress    linear address
-*                                                                              
-*   \return  RX_OK              status successfully returned                 */
-/*****************************************************************************/
+    read the status register
+
+    \param   ptFls              Pointer to FLASH Control Block
+    \param   ulLinearAddress    linear address
+
+    \return  RX_OK              status successfully returned
+*/
 static int read_status(const SPI_FLASH_T *ptFlash, unsigned char *pucStatus)
 {
 	int iResult;
@@ -249,15 +217,14 @@ static int print_status(const SPI_FLASH_T *ptFlash)
 #endif
 
 
-/*****************************************************************************/
 /*! detect_flash
 *   Convert the linear input address to the device's addressing mode
-*               
+*
 *   \param   ptFls              pointer to the instance of the spi flash
 *   \param   ulLinearAddress    linear address                  
 *                                                                              
-*   \return  RX_OK              status successfully returned                 */
-/*****************************************************************************/
+*   \return  RX_OK              status successfully returned
+*/
 static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptFlashAttr)
 {
 	int           iResult = 1;
@@ -389,7 +356,6 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 }
 
 
-/*****************************************************************************/
 /*! send_simple_cmd
 *   Send a command which has no response. In detail it does this:
 *               deselect the slave,
@@ -404,7 +370,6 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 *   \param   uiCmdLen          command length in bytes
 *                                                                              
 *   \return  RX_OK             status successfully returned                  */
-/*****************************************************************************/
 static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucCmd, size_t sizCmdLen)
 {
 	int   iResult;
@@ -456,13 +421,11 @@ static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucC
 }
 
 
-/*****************************************************************************/
 /*! write_enable
 *   unlock the flash's write protection
 *               
 *   \param   ptFlash           Pointer to flash Control Block
 *   \return  iResult           >=0 success, <0 error                         */
-/*****************************************************************************/
 static int write_enable(const SPI_FLASH_T *ptFlash)
 {
 	int iResult = 1;
@@ -488,13 +451,11 @@ static int write_enable(const SPI_FLASH_T *ptFlash)
 }
 
 
-/*****************************************************************************/
 /*! wait_for_ready
 *   wait for the flash to finish a write operation
 *               
 *   \param   ptFls             Pointer to FLASH Control Block
 *   \return  RX_OK             FLASH is idle and ready for next operation    */
-/*****************************************************************************/
 static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 {
 	unsigned char ucStatus;
@@ -524,17 +485,15 @@ static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 }
 
 
-/*****************************************************************************/
 /*! Drv_SpiInitializeFlash
 *   Initializes the FLASH
 *               
-*   \param 	ptFls   					Pointer to FLASH Control Block
+*   \param  ptFls   Pointer to FLASH Control Block
 *                                                                              
-*		\return	RX_OK            				FLASH successcully initialized
-*           Drv_SpiS_INVALID 				Specified Flash Conrtol Block invalid
-*           Drv_SpiS_UNKNOWN_FLASH  detecting the serial FLASH automatically 
-*																		failed																	 */
-/*****************************************************************************/
+*   \return  RX_OK                   FLASH successcully initialized
+*            Drv_SpiS_INVALID        Specified Flash Conrtol Block invalid
+*            Drv_SpiS_UNKNOWN_FLASH  failed to detect the serial FLASH
+*/
 int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptFlash)
 {
 	int   iResult;
@@ -562,10 +521,11 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 		break;
 
 	case 1:
-		// NOTE: Support for unit 1 is not finished yet.
-//		iResult = boot_drv_spi_init(ptSpiDev, &tSpiCfg, uiChipSelect);
-//		break;
-
+		/* NOTE: Support for unit 1 is not finished yet. */
+#if 0
+		iResult = boot_drv_spi_init(ptSpiDev, &tSpiCfg, uiChipSelect);
+		break;
+#endif
 	default:
 		iResult = -1;
 		break;
@@ -652,351 +612,341 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 }
 
 
-/*****************************************************************************/
 /*! Drv_SpiEraseFlashPage
-*		Erases a Page in the specified serial FLASH
-*               
-*   \param 	ptFls   					Pointer to FLASH Control Block
-*                                                                              
-*		\return	RX_OK            								Erasure successful
-*           Drv_SpiS_ERASURE_NOT_SUPPORTED  Erase function not supported or 
-*																						configured  										 */
-/*****************************************************************************/
+*   Erases a Page in the specified serial FLASH
+*
+*   \param   ptFls                           Pointer to FLASH Control Block
+*
+*   \return  RX_OK                           Erasure successful
+*            Drv_SpiS_ERASURE_NOT_SUPPORTED  Erase function not supported or configured
+*/
 int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress)
 {
-        int iResult;
-        unsigned char abCmd[4];
-        unsigned long ulDeviceAddress;
+	int iResult;
+	unsigned char abCmd[4];
+	unsigned long ulDeviceAddress;
 
 
-        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashPage(): ptFlash=0x%08x, ulLinearAddress=0x%08x\n", ptFlash, ulLinearAddress));
+	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashPage(): ptFlash=0x%08x, ulLinearAddress=0x%08x\n", ptFlash, ulLinearAddress));
 
-        /* NOTE: DrvSflEraseAndWritePage calls this function if the flash has no bEraseAndPageProgOpcode */
+	/* NOTE: DrvSflEraseAndWritePage calls this function if the flash has no bEraseAndPageProgOpcode */
 
-        if(ptFlash->tAttributes.ucErasePageOpcode == 0x00)
-        {
-                /* the device has no direct opcode to erase a page, but maybe it has the bEraseAndPageProgOpcode opcode */
-                if(ptFlash->tAttributes.ucEraseAndPageProgOpcode == 0x00)
-                {
-                        /* the spi flash does not support erasing single pages */
-                        iResult = -1;
-                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: erase page is not supported.\n"));
-                }
-                else
-                {
-                        /* erase the page by writing 0xff */
+	if(ptFlash->tAttributes.ucErasePageOpcode == 0x00)
+	{
+		/* the device has no direct opcode to erase a page, but maybe it has the bEraseAndPageProgOpcode opcode */
+		if(ptFlash->tAttributes.ucEraseAndPageProgOpcode == 0x00)
+		{
+			/* the spi flash does not support erasing single pages */
+			iResult = -1;
+			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: erase page is not supported.\n"));
+		}
+		else
+		{
+			/* erase the page by writing 0xff */
 
-                        /* not yet... */
-                        iResult = -1;
-                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: erase page is not supported.\n"));
-                }
-        }
-        else
-        {
-                /* unlock write operations */
-                iResult = write_enable(ptFlash);
-                if( iResult!=0 )
-                {
-                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: DrvSflWriteEnable failed with %d.\n", iResult));
-                }
-                else
-                {
-                        /* convert linear address to device address */
-                        ulDeviceAddress = getDeviceAddress(ptFlash, ulLinearAddress);
-                        /* cut off the byteoffset */
-                        ulDeviceAddress &= ~((1<<ptFlash->uiPageAdrShift)-1);
+			/* not yet... */
+			iResult = -1;
+			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: erase page is not supported.\n"));
+		}
+	}
+	else
+	{
+		/* unlock write operations */
+		iResult = write_enable(ptFlash);
+		if( iResult!=0 )
+		{
+			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: DrvSflWriteEnable failed with %d.\n", iResult));
+		}
+		else
+		{
+			/* convert linear address to device address */
+			ulDeviceAddress = getDeviceAddress(ptFlash, ulLinearAddress);
+			/* cut off the byteoffset */
+			ulDeviceAddress &= ~((1<<ptFlash->uiPageAdrShift)-1);
 
-                        /* set the page erase opcode */
-                        abCmd[0] = ptFlash->tAttributes.ucErasePageOpcode;
-                        /*  byte 1-3 is the page address */
-                        abCmd[1] = (unsigned char)((ulDeviceAddress>>16)&0xff);
-                        abCmd[2] = (unsigned char)((ulDeviceAddress>>8 )&0xff);
-                        abCmd[3] = (unsigned char)( ulDeviceAddress     &0xff);
+			/* set the page erase opcode */
+			abCmd[0] = ptFlash->tAttributes.ucErasePageOpcode;
+			/*  byte 1-3 is the page address */
+			abCmd[1] = (unsigned char)((ulDeviceAddress>>16)&0xff);
+			abCmd[2] = (unsigned char)((ulDeviceAddress>>8 )&0xff);
+			abCmd[3] = (unsigned char)( ulDeviceAddress     &0xff);
 
-                        /* send command */
-                        iResult = send_simple_cmd(ptFlash, abCmd, 4);
-                        if( iResult!=0 )
-                        {
-                                DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: send_simple_cmd failed with %d.\n", iResult));
-                        }
-                        else
-                        {
-                                /* wait for operation finish */
-                                iResult = wait_for_ready(ptFlash);
-                                if( iResult!=0 )
-                                {
-                                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: DrvSflWaitReady failed with %d.\n", iResult));
-                                }
-                        }
-                }
-        }
+			/* send command */
+			iResult = send_simple_cmd(ptFlash, abCmd, 4);
+			if( iResult!=0 )
+			{
+				DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: send_simple_cmd failed with %d.\n", iResult));
+			}
+			else
+			{
+				/* wait for operation finish */
+				iResult = wait_for_ready(ptFlash);
+				if( iResult!=0 )
+				{
+					DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: DrvSflWaitReady failed with %d.\n", iResult));
+				}
+			}
+		}
+	}
 
-        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashPage(): iResult=%d.\n", iResult));
-        return iResult;
+	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashPage(): iResult=%d.\n", iResult));
+	return iResult;
 }
 
-/*****************************************************************************/
 /*! Drv_SpiEraseFlashSector
-*		Erases a Sector in the specified serial FLASH
-*               
-*   \param 	ptFls   					Pointer to FLASH Control Block
-*		\param  ulLinearAddress		linear address of the sector to be erased
-*                                                                              
-*		\return	RX_OK            								Erasure successful
-*           Drv_SpiS_ERASURE_NOT_SUPPORTED  Erase function not supported or 
-*																						configured  										 */
-/*****************************************************************************/
+*   Erases a Sector in the specified serial FLASH
+*
+*   \param      ptFls                           Pointer to FLASH Control Block
+*   \param      ulLinearAddress                 linear address of the sector to be erased
+*
+*   \return     RX_OK                           Erasure successful
+*               Drv_SpiS_ERASURE_NOT_SUPPORTED  Erase function not supported or configured
+*/
 int Drv_SpiEraseFlashSector(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress)
 {
-        int iResult;
-        unsigned char abCmd[4];
-        unsigned long ulDeviceAddress;
+	int iResult;
+	unsigned char abCmd[4];
+	unsigned long ulDeviceAddress;
 
 
-        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashSector(): ptFlash=0x%08x, ulLinearAddress=0x%08x\n", ptFlash, ulLinearAddress));
+	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashSector(): ptFlash=0x%08x, ulLinearAddress=0x%08x\n", ptFlash, ulLinearAddress));
 
-        /* unlock write operations */
-        iResult = write_enable(ptFlash);
-        if( iResult!=0 )
-        {
-                DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashSector: DrvSflWriteEnable failed with %d.\n", iResult));
-        }
-        else
-        {
+	/* unlock write operations */
+	iResult = write_enable(ptFlash);
+	if( iResult!=0 )
+	{
+		DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashSector: DrvSflWriteEnable failed with %d.\n", iResult));
+	}
+	else
+	{
 #if CFG_DEBUGMSG!=0
-                /* show initial status */
-                iResult = print_status(ptFlash);
-                if( iResult==0 )
-                {
+		/* show initial status */
+		iResult = print_status(ptFlash);
+		if( iResult==0 )
+		{
 #endif
-                        /* convert linear address to device address */
-                        ulDeviceAddress = getDeviceAddress(ptFlash, ulLinearAddress);
+			/* convert linear address to device address */
+			ulDeviceAddress = getDeviceAddress(ptFlash, ulLinearAddress);
 
-                        /* cut off the byteoffset */
-                        ulDeviceAddress &= ~((1<<ptFlash->uiSectorAdrShift)-1);
+			/* cut off the byteoffset */
+			ulDeviceAddress &= ~((1<<ptFlash->uiSectorAdrShift)-1);
 
-                        /* set the sector erase opcode */
-                        abCmd[0] = ptFlash->tAttributes.ucEraseSectorOpcode;
-                        /* byte 1-3 is the sector address */
-                        abCmd[1] = (unsigned char)((ulDeviceAddress>>16)&0xff);
-                        abCmd[2] = (unsigned char)((ulDeviceAddress>>8 )&0xff);
-                        abCmd[3] = (unsigned char)( ulDeviceAddress     &0xff);
+			/* set the sector erase opcode */
+			abCmd[0] = ptFlash->tAttributes.ucEraseSectorOpcode;
+			/* byte 1-3 is the sector address */
+			abCmd[1] = (unsigned char)((ulDeviceAddress>>16)&0xff);
+			abCmd[2] = (unsigned char)((ulDeviceAddress>>8 )&0xff);
+			abCmd[3] = (unsigned char)( ulDeviceAddress     &0xff);
 
-                        /* send command */
-                        iResult = send_simple_cmd(ptFlash, abCmd, 4);
-                        if( iResult!=0 )
-                        {
-                                DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: send_simple_cmd failed with %d.\n", iResult));
-                        }
-                        else
-                        {
-                                /* wait for operation finish */
-                                iResult = wait_for_ready(ptFlash);
-                                if( iResult!=0 )
-                                {
-                                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashSector: wait_for_ready failed with %d.\n", iResult));
-                                }
-                        }
+			/* send command */
+			iResult = send_simple_cmd(ptFlash, abCmd, 4);
+			if( iResult!=0 )
+			{
+				DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashPage: send_simple_cmd failed with %d.\n", iResult));
+			}
+			else
+			{
+				/* wait for operation finish */
+				iResult = wait_for_ready(ptFlash);
+				if( iResult!=0 )
+				{
+					DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashSector: wait_for_ready failed with %d.\n", iResult));
+				}
+			}
 #if CFG_DEBUGMSG!=0
-                }
+		}
 #endif
-        }
+	}
 
-        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashSector(): iResult=%d.\n", iResult));
-        return iResult;
+	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashSector(): iResult=%d.\n", iResult));
+	return iResult;
 }
 
 
-/*****************************************************************************/
 /*! Drv_SpiEraseFlashMultiSectors
-*		Erases a sequence of sectors in the flash
-*               
-*   \param 	ptFls   							Pointer to FLASH Control Block
-*		\param  ulLinearStartAddress	linear start address of the sectors to be erased
-*		\param	ulLinearEndAddress		linear end address of the sectors to be erased
-*                                                                              
-*		\return	RX_OK            								Erasure successful
-*           Drv_SpiS_ERASURE_NOT_SUPPORTED  Erase function not supported or 
-*																						configured  										 */
-/*****************************************************************************/
+*   Erases a sequence of sectors in the flash
+*
+*   \param   ptFls                           Pointer to FLASH Control Block
+*   \param   ulLinearStartAddress            linear start address of the sectors to be erased
+*   \param   ulLinearEndAddress              linear end address of the sectors to be erased
+*
+*   \return  RX_OK                           Erasure successful
+*            Drv_SpiS_ERASURE_NOT_SUPPORTED  Erase function not supported or configured
+*/
 int Drv_SpiEraseFlashMultiSectors(const SPI_FLASH_T *ptFlash, unsigned long ulLinearStartAddress, unsigned long ulLinearEndAddress)
 {
-        int iResult;
+	int iResult;
 
 
-        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashMultiSectors(): ptFlash=0x%08x, ulLinearStartAddress=0x%08x, ulLinearEndAddress=0x%08x\n", ptFlash, ulLinearStartAddress, ulLinearEndAddress));
+	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashMultiSectors(): ptFlash=0x%08x, ulLinearStartAddress=0x%08x, ulLinearEndAddress=0x%08x\n", ptFlash, ulLinearStartAddress, ulLinearEndAddress));
 
-        /* init result, assume success */
-        iResult = 0;
+	/* init result, assume success */
+	iResult = 0;
 
-        /* loop over all sectors */
-        while(ulLinearStartAddress < ulLinearEndAddress)
-        {
-                /* delete sector */
-                iResult = Drv_SpiEraseFlashSector(ptFlash, ulLinearStartAddress);
-                if( iResult!=0 )
-                {
-                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashMultiSectors: Drv_SpiEraseFlashSector failed with %d.\n", iResult));
-                        break;
-                }
+	/* loop over all sectors */
+	while(ulLinearStartAddress < ulLinearEndAddress)
+	{
+		/* delete sector */
+		iResult = Drv_SpiEraseFlashSector(ptFlash, ulLinearStartAddress);
+		if( iResult!=0 )
+		{
+			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashMultiSectors: Drv_SpiEraseFlashSector failed with %d.\n", iResult));
+			break;
+		}
 
-                /* next sector */
-                ulLinearStartAddress += ptFlash->ulSectorSize;
-        }
+		/* next sector */
+		ulLinearStartAddress += ptFlash->ulSectorSize;
+	}
 
-        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashMultiSectors(): iResult=%d.\n", iResult));
-        return iResult;
+	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashMultiSectors(): iResult=%d.\n", iResult));
+	return iResult;
 }
 
 
-/*****************************************************************************/
 /*! Drv_SpiEraseFlashComplete
-*		Erases the complete flash
-*               
-*   \param 	ptFls   							Pointer to FLASH Control Block
-*                                                                              
-*		\return	RX_OK            								Erasure successful							 */
-/*****************************************************************************/
+*   Erases the complete flash
+*
+*   \param   ptFls   Pointer to FLASH Control Block
+*
+*   \return  RX_OK   Erasure successful
+*/
 int Drv_SpiEraseFlashComplete(const SPI_FLASH_T *ptFlash)
 {
-        int iResult;
-        unsigned int      uiEraseChipCmdLen;
+	int iResult;
+	unsigned int      uiEraseChipCmdLen;
 
 
-        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashComplete(): ptFlash=0x%08x\n", ptFlash));
+	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseFlashComplete(): ptFlash=0x%08x\n", ptFlash));
 
-        uiEraseChipCmdLen = ptFlash->tAttributes.uiEraseChipCmdLen;
-        if(0x00 != uiEraseChipCmdLen)
-        {
-                /* unlock write operations */
-                iResult = write_enable(ptFlash);
-                if( iResult!=0 )
-                {
-                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: write_enable failed with %d.\n", iResult));
-                }
-                else
-                {
-                        /* send command */
-                        iResult = send_simple_cmd(ptFlash, ptFlash->tAttributes.aucEraseChipCmd, uiEraseChipCmdLen);
-                        if( iResult!=0 )
-                        {
-                                DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: send_simple_cmd failed with %d.\n", iResult));
-                        }
-                        else
-                        {
-                                /* wait for operation finish */
-                                iResult = wait_for_ready(ptFlash);
-                                if( iResult!=0 )
-                                {
-                                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: DrvSflWaitReady failed with %d.\n", iResult));
-                                }
-                        }
-                }
-        }
-        else
-        {
-                /* the flash does not support erasing the whole device at once, delete it in sector steps */
-                iResult = Drv_SpiEraseFlashMultiSectors(ptFlash, 0, ptFlash->tAttributes.ulSize);
-                if( iResult!=0 )
-                {
-                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: Drv_SpiEraseFlashMultiSectors failed with %d.\n", iResult));
-                }
-        }
+	uiEraseChipCmdLen = ptFlash->tAttributes.uiEraseChipCmdLen;
+	if(0x00 != uiEraseChipCmdLen)
+	{
+		/* unlock write operations */
+		iResult = write_enable(ptFlash);
+		if( iResult!=0 )
+		{
+			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: write_enable failed with %d.\n", iResult));
+		}
+		else
+		{
+			/* send command */
+			iResult = send_simple_cmd(ptFlash, ptFlash->tAttributes.aucEraseChipCmd, uiEraseChipCmdLen);
+			if( iResult!=0 )
+			{
+				DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: send_simple_cmd failed with %d.\n", iResult));
+			}
+			else
+			{
+				/* wait for operation finish */
+				iResult = wait_for_ready(ptFlash);
+				if( iResult!=0 )
+				{
+					DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: DrvSflWaitReady failed with %d.\n", iResult));
+				}
+			}
+		}
+	}
+	else
+	{
+		/* the flash does not support erasing the whole device at once, delete it in sector steps */
+		iResult = Drv_SpiEraseFlashMultiSectors(ptFlash, 0, ptFlash->tAttributes.ulSize);
+		if( iResult!=0 )
+		{
+			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiEraseFlashComplete: Drv_SpiEraseFlashMultiSectors failed with %d.\n", iResult));
+		}
+	}
 
-        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashComplete(): iResult=%d.\n", iResult));
-        return iResult;
+	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashComplete(): iResult=%d.\n", iResult));
+	return iResult;
 }
 
 
-/*****************************************************************************/
 /*! Drv_SpiWriteFlashPages
-*		write 1 or more pages to the flash
-*               
-*   \param 	ptFls   							Pointer to FLASH Control Block
-*		\param  ulOffs                Offset within the FLASH to write data to
-*		\param	pabSrc             		Pointer to Source data that shall be written
-*		\param	ulNum                 Number of data in multiples of bytes to write
-*                                                                              
-*		\return	RX_OK            								Erasure successful							 */
-/*****************************************************************************/
+*   write 1 or more pages to the flash
+*
+*   \param   ptFls   Pointer to FLASH Control Block
+*   \param   ulOffs  Offset within the FLASH to write data to
+*   \param   pabSrc  Pointer to Source data that shall be written
+*   \param   ulNum   Number of data in multiples of bytes to write
+*
+*   \return  RX_OK   Erasure successful
+*/
 int Drv_SpiWriteFlashPages(const SPI_FLASH_T *ptFlash, unsigned long ulOffs, const unsigned char *pabSrc, unsigned long ulNum)
 {
-        int iResult      = 1;
-        unsigned long    ulPageSize;
-        const unsigned char *dc, *de;
+	int iResult      = 1;
+	unsigned long    ulPageSize;
+	const unsigned char *dc, *de;
 
 
-        DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiWriteFlashPages(): ptFlash=0x%08x, ulOffs=0x%08x, pabSrc=0x%08x, ulNum=%d\n", ptFlash, ulOffs, pabSrc, ulNum));
+	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiWriteFlashPages(): ptFlash=0x%08x, ulOffs=0x%08x, pabSrc=0x%08x, ulNum=%d\n", ptFlash, ulOffs, pabSrc, ulNum));
 
-        /* test parameters, is there data to write? */
-        if( (0 == ulNum) || (NULL == pabSrc) )
-        {
-                return 1;
-        }
+	/* test parameters, is there data to write? */
+	if( (0 == ulNum) || (NULL == pabSrc) )
+	{
+		return 1;
+	}
 
-        /* set pointers to start and end of data */
-        /* dc is the startpointer */
-        dc           = pabSrc;
+	/* set pointers to start and end of data */
+	/* dc is the startpointer */
+	dc           = pabSrc;
 
-        /* de is the endpointer */
-        de           = dc + ulNum;
+	/* de is the endpointer */
+	de           = dc + ulNum;
 
-        /* get pagesize */
-        ulPageSize   = ptFlash->tAttributes.ulPageSize;
+	/* get pagesize */
+	ulPageSize   = ptFlash->tAttributes.ulPageSize;
 
-        /* the startaddress must be page aligned */
-        if(0 != (ulOffs % ulPageSize))
-        {
-                DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiWriteFlashPages: startaddress is not page aligned.\n"));
-                iResult = -1;
-        }
-        else
-        {
-                /* check size for alignment */
-                if(0 != (ulNum % ulPageSize))
-                {
-                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiWriteFlashPages: endaddress is not page aligned.\n"));
-                        iResult = -1;
-                }
-                else
-                {
-                        /*  transfer complete pages */
-                        while(dc < de)
-                        {
-                                /*  write bytes to flash */
-                                iResult = Drv_SpiEraseAndWritePage(ptFlash, ulOffs, dc, ulPageSize);
-                                if( iResult!=0 )
-                                {
-                                        DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiWriteFlashPages: DrvSflWritePage failed with %d.\n", iResult));
-                                        break;
-                                }
+	/* the startaddress must be page aligned */
+	if(0 != (ulOffs % ulPageSize))
+	{
+		DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiWriteFlashPages: startaddress is not page aligned.\n"));
+		iResult = -1;
+	}
+	else
+	{
+		/* check size for alignment */
+		if(0 != (ulNum % ulPageSize))
+		{
+			DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiWriteFlashPages: endaddress is not page aligned.\n"));
+			iResult = -1;
+		}
+		else
+		{
+			/*  transfer complete pages */
+			while(dc < de)
+			{
+				/*  write bytes to flash */
+				iResult = Drv_SpiEraseAndWritePage(ptFlash, ulOffs, dc, ulPageSize);
+				if( iResult!=0 )
+				{
+					DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiWriteFlashPages: DrvSflWritePage failed with %d.\n", iResult));
+					break;
+				}
 
-                                /*  advance data pointer */
-                                dc += ulPageSize;
+				/*  advance data pointer */
+				dc += ulPageSize;
 
-                                /*  advance address */
-                                ulOffs += ulPageSize;
-                        }
-                }
-        }
+				/*  advance address */
+				ulOffs += ulPageSize;
+			}
+		}
+	}
 
-        DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiWriteFlashPages(): iResult=%d.\n", iResult));
-        return iResult;
+	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiWriteFlashPages(): iResult=%d.\n", iResult));
+	return iResult;
 }
 
 
-/*****************************************************************************/
 /*! Drv_SpiReadFlash
-*		Reads a byte block from a FLASH
-*               
-*   \param 	ptFls   							Pointer to FLASH Control Block
-*		\param  ulOffs                Offset within the FLASH to write data from
-*		\param	pabDest           		Pointer to Destination the read data that shall 
-*																	be written to
-*		\param	ulNum                 Number of data in multiples of bytes to write
-*                                                                              
-*		\return	RX_OK            			Programming successful      							 */
-/*****************************************************************************/
+*   Reads a byte block from a FLASH
+*
+*   \param   ptFls    Pointer to FLASH Control Block
+*   \param   ulOffs   Offset within the FLASH to write data from
+*   \param   pabDest  Pointer to Destination the read data that shall be written to
+*   \param   ulNum    Number of data in multiples of bytes to write
+*
+*   \return  RX_OK    Programming successful
+*/
 int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, unsigned char *pucData, size_t sizData)
 {
 	int           iResult;
@@ -1078,17 +1028,16 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 }
 
 
-/*****************************************************************************/
 /*! DrvSflEraseAndWritePage
-*		erase a page and write new data
-*               
-*   \param 	ptFls   							Pointer to FLASH Control Block
-*		\param  ulAddress 						Address offset where to write data to
-*		\param	ulLength 							Number of bytes to be written
-*		\param  pabBuffer 						Pointer to source buffer containing the data to write
-*                                                                              
-*		\return	RX_OK            			if write operation succeeded 							 */
-/*****************************************************************************/
+*   erase a page and write new data
+*
+*   \param   ptFls      Pointer to FLASH Control Block
+*   \param   ulAddress  Address offset where to write data to
+*   \param   ulLength   Number of bytes to be written
+*   \param   pabBuffer  Pointer to source buffer containing the data to write
+*
+*   \return  RX_OK      if write operation succeeded
+*/
 int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pucData, size_t sizData)
 {
 	int             iResult;
@@ -1418,24 +1367,6 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 }
 
 
-/*  =====================================================================================
-
-  Function: Drv_SpiWritePage
-
-            - write new data to a page without previous erase
-
-  ---------------------------------------------------------------------------------------
-
-  Input   : (RX_SERIALFLASH_T *) ptFls - Pointer to FLASH Control Block
-            (unsigned long) ulAddress - Address offset where to write data to
-            (unsigned long) ulLength - Number of bytes to be written
-            (const unsigned char *) pabBuffer - Pointer to source buffer containing the data to write
-
-  Output  : -
-
-  Return  : (RX_RESULT)  - RX_OK if write operation succeeded
-
-  ======================================================================================= */
 int Drv_SpiWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pucData, size_t sizData)
 {
 	int iResult;
