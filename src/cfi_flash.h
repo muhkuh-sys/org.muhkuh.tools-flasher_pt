@@ -90,6 +90,14 @@ typedef unsigned short USHORT;
 
 typedef union
 {
+	const unsigned char *puc;
+	const unsigned short *pus;
+	const unsigned long *pul;
+	unsigned long ul;
+} CADR_T;
+
+typedef union
+{
 	unsigned char *puc;
 	unsigned short *pus;
 	unsigned long *pul;
