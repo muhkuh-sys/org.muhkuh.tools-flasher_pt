@@ -8,6 +8,7 @@
 	<name>Flasher</name>
 	<url>http://muhkuh.sourceforge.net/flasher</url>
 
+
 	<description>
 		The "flasher" is an in-system programmer for parallel and serial flash devices connected to a netX chip.
 	</description>
@@ -23,6 +24,15 @@
 	<!-- TODO: Bootstrapping with just the pom would save the developers from typing the reository url.
 	     More: http://maven.apache.org/scm/plugins/examples/bootstrapping-with-pom.html
 	-->
+
+	<properties>
+		<scons.version>2.0.1_1</scons.version>
+
+		<gcc.name>gcc-arm-elf-none-eabi</gcc.name>
+		<gcc.version>4.5.1_1</gcc.version>
+
+		<asciidoc.version>8.5.3_1</asciidoc.version>
+	</properties>
 
 	<!--**************************************************************-->
 	<!--*                                                            *-->
@@ -125,169 +135,11 @@
 				<checksumPolicy>fail</checksumPolicy>
 			</snapshots>
 		</repository>
-
-		<!-- This is the hilscher internal mirror. -->
-		<repository>                                                                                                                                
-			<id>muhkuh_at_netx01</id>                                                                                                           
-			<url>http://netx01/maven2</url>                                                                                                     
-			<releases>                                                                                                                          
-				<checksumPolicy>fail</checksumPolicy>                                                                                       
-			</releases>                                                                                                                         
-			<snapshots>                                                                                                                         
-				<checksumPolicy>fail</checksumPolicy>                                                                                       
-			</snapshots>                                                                                                                        
-		</repository>
 	</repositories>
 
-
-	<properties>
-		<depack_markers_dir>${user.home}/.m2/depack</depack_markers_dir>
-		<scons_dir>${user.home}/.m2/depack/scons</scons_dir>
-		<gcc_dir>${user.home}/.m2/depack/gcc</gcc_dir>
-		<asciidoc_dir>${user.home}/.m2/depack/asciidoc</asciidoc_dir>
-		<PYTHON>python</PYTHON>
-	</properties>
-
-	<!-- This is just an emulation for the missing os.family . Argh! -->
-	<profiles>
-		<profile>
-			<id>Windows</id>
-			<activation>
-				<os>
-					<family>windows</family>
-				</os>
-			</activation>
-			<properties>
-				<os_family>windows</os_family>
-			</properties>
-		</profile>
-		<profile>
-			<id>Linux</id>
-			<activation>
-				<os>
-					<family>unix</family>
-				</os>
-			</activation>
-			<properties>
-				<os_family>linux</os_family>
-			</properties>
-		</profile>
-	</profiles>
-
-	<build>
-		<defaultGoal>compile</defaultGoal>
-		<finalName>${artifactId}-${version}</finalName>
-		<resources>
-			<resource>
-				<directory>${basedir}/resources</directory>
-				<filtering>true</filtering>
-			</resource>
-		</resources>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<configuration>
-					<encoding>UTF-8</encoding>
-					<escapeWindowsPaths>false</escapeWindowsPaths>
-					<overwrite>true</overwrite>
-					<outputDirectory>${basedir}</outputDirectory>
-				</configuration>
-			</plugin>
-
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>unpack_tools</id>
-						<phase>validate</phase>
-						<goals>
-							<goal>unpack</goal>
-						</goals>
-						<configuration>
-							<artifactItems>
-								<!-- Unpack the scons build system to a working folder. -->
-								<artifactItem>
-									<groupId>org.scons</groupId>
-									<artifactId>scons-local</artifactId>
-									<version>1.2.0.d20091224_1</version>
-									<type>tar.bz2</type>
-									<overWrite>false</overWrite>
-									<outputDirectory>${scons_dir}</outputDirectory>
-								</artifactItem>
-								<!-- Unpack the compiler to a working folder. -->
-								<artifactItem>
-									<groupId>org.gnu.gcc</groupId>
-									<artifactId>gcc-arm-elf-none-eabi_${os_family}_${os.arch}</artifactId>
-									<version>4.5.1_1</version>
-									<type>tar.bz2</type>
-									<overWrite>false</overWrite>
-									<outputDirectory>${gcc_dir}</outputDirectory>
-								</artifactItem>
-								<!-- Unpack the Asciidoc system to a working folder. -->
-								<artifactItem>
-									<groupId>nz.co.methods</groupId>
-									<artifactId>asciidoc</artifactId>
-									<version>8.5.3_1</version>
-									<type>tar.bz2</type>
-									<overWrite>false</overWrite>
-									<outputDirectory>${asciidoc_dir}</outputDirectory>
-								</artifactItem>
-							</artifactItems>
-							<markersDirectory>${depack_markers_dir}</markersDirectory>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-			<!-- This is a fix for Maven 2.x Dependency Plugin bug MDEP-109 .
-			     See <http://jira.codehaus.org/browse/MDEP-109> for details. It seems
-			     to be quite hard to fix. The bug was filed in 2004 and it is still open. %-(
-			     
-			     Find all executable files and write them to list.txt:
-			         find . -executable -type f | sed 's/^\.\///' >list.txt
-			-->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>fix_gcc_filemodes</id>
-						<phase>initialize</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-							<property name="maven.gcc_dir" value="${gcc_dir}"/>
-							<ant antfile="${gcc_dir}/gcc-arm-elf-none-eabi_${os_family}_${os.arch}_4_5_1_1.xml" />
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-			<!-- Run scons -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.1</version>
-				<executions>
-					<execution>
-						<id>run_scons</id>
-						<phase>compile</phase>
-						<goals>
-							<goal>exec</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<executable>${PYTHON}</executable>
-					<arguments>
-						<argument>${scons_dir}/scons.py</argument>
-					</arguments>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+	<parent>
+		<groupId>net.sourceforge.muhkuh</groupId>
+		<artifactId>netx-project</artifactId>
+		<version>1.0</version>
+	</parent>
 </project>
