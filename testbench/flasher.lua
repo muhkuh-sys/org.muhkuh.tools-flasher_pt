@@ -85,7 +85,7 @@ function download(tPlugin, strPrefix, fnCallback)
 		aAttr.ulParameter   = 0x04038000
 		aAttr.ulDeviceDesc  = 0x04038100
 		aAttr.ulBufferAdr   = 0x04039000
-		aAttr.ulBufferLen   = 0x00007000
+		aAttr.ulBufferLen   = 0x00006000
 	else
 		error("Unknown chiptyp!")
 	end
