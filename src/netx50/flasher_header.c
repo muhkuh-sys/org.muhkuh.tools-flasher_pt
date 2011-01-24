@@ -30,6 +30,14 @@ const tFlasherVersion flasher_version __attribute__ ((section (".version_info"))
 const tFlasherVersion flasher_version =
 {
 	.abMagic = { FLASHER_MAGIC0, FLASHER_MAGIC1, FLASHER_MAGIC2, FLASHER_MAGIC3 },
+
+	.ulVersionMaj = FLASHER_VERSION_MAJ,
+	.ulVersionMin = FLASHER_VERSION_MIN,
+	.acVersion    = FLASHER_VERSION_ALL,
+
+	.pulLoadAddress = __LOAD_ADDRESS__,
+	.pfnExecutionAddress = start,
+
 	.aulChiptyp =
 	{
 		FLASHER_CHIPTYP0_NETX50,
@@ -47,10 +55,7 @@ const tFlasherVersion flasher_version =
 		0,
 
 		0
-	},
-	.ulVersionMaj = FLASHER_VERSION_MAJ,
-	.ulVersionMin = FLASHER_VERSION_MIN,
-	.acVersion    = FLASHER_VERSION_ALL
+	}
 };
 
 /*-----------------------------------*/
