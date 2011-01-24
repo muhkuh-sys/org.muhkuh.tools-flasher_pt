@@ -50,7 +50,7 @@ void setRdyRunLed(RDYRUN_LED_T tMode)
 		break;
 	}
 	
-	ptNetXGlobalRegBlock1Area->ulSta_netx = ulBlinki;
+	ptNetxControlledGlobalRegisterBlock1Area->ulSta_netx = ulBlinki;
 #elif ASIC_TYP==50 || ASIC_TYP==10
 	switch(tMode)
 	{
