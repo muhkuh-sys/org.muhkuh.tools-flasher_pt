@@ -40,7 +40,6 @@ flasher_sources_common = """
 	src/i2c_hifsta.c
 	src/init_netx_test.S
 	src/main.c
-	src/mmio.c
 	src/netx_consoleapp.c
 	src/progress_bar.c
 	src/rdyrun.c
@@ -56,26 +55,27 @@ flasher_sources_common = """
 flasher_sources_custom_netx500 = """
 	src/netx500/board.c
 	src/netx500/flasher_header.c
-	src/netx500/hal_spi.c
 	src/netx500/netx500_io_areas.c
+	src/drv_spi_hsoc_v1.c
 """
 
 
 flasher_sources_custom_netx50 = """
 	src/netx50/board.c
 	src/netx50/flasher_header.c
-	src/netx50/hal_spi.c
 	src/netx50/netx50_io_areas.c
+	src/drv_spi_hsoc_v2.c
+	src/mmio.c
 """
 
 
 flasher_sources_custom_netx10 = """
 	src/netx10/board.c
-	src/netx10/drv_spi.c
-	src/netx10/drv_sqi.c
 	src/netx10/flasher_header.c
-	src/netx10/spi.c
 	src/netx10/netx10_io_areas.c
+	src/drv_spi_hsoc_v2.c
+	src/drv_sqi.c
+	src/mmio.c
 """
 
 src_netx500 = Split(flasher_sources_common + flasher_sources_custom_netx500)
@@ -94,21 +94,29 @@ env_default.SVNVersion('src/flasher_version.h', 'templates/flasher_version.h')
 #
 # build the files
 #
-#flasher_sources_netx500 = [src.replace('src', 'targets/netx500') for src in Split(flasher_sources_common+flasher_sources_custom_netx500)]
-#flasher_netx500_elf = env_netx500.Elf('targets/flasher_netx500', flasher_sources_netx500)
-#flasher_netx500_bin = env_netx500.ObjCopy('targets/flasher_netx500', flasher_netx500_elf)
+env_netx500_intram = env_netx500_default.Clone()
+env_netx500_intram.Replace(LDFILE = File('src/netx500/netx500.ld'))
+env_netx500_intram.Append(CPPPATH = ['src', 'src/netx500'])
+src_netx500_intram = env_netx500_intram.SetBuildPath('targets/netx500_intram', 'src', src_netx500)
+elf_netx500_intram = env_netx500_intram.Elf('targets/flasher_netx500.elf', src_netx500_intram)
+bin_netx500_intram = env_netx500_intram.ObjCopy('targets/flasher_netx500.bin', elf_netx500_intram)
 
-#flasher_sources_netx50  = [src.replace('src', 'targets/netx50')  for src in Split(flasher_sources_common+flasher_sources_custom_netx50)]
-#flasher_netx50_elf = env_netx50.Elf('targets/flasher_netx50', flasher_sources_netx50)
-#env_netx50.ObjCopy('targets/flasher_netx50', flasher_netx50_elf)
-
+env_netx50_intram = env_netx50_default.Clone()
+env_netx50_intram.Replace(LDFILE = File('src/netx50/netx50.ld'))
+env_netx50_intram.Append(CPPPATH = ['src', 'src/netx50'])
+src_netx50_intram = env_netx50_intram.SetBuildPath('targets/netx50_intram', 'src', src_netx50)
+elf_netx50_intram = env_netx50_intram.Elf('targets/flasher_netx50.elf', src_netx50_intram)
+bin_netx50_intram = env_netx50_intram.ObjCopy('targets/flasher_netx50.bin', elf_netx50_intram)
+uue_netx50_intram = env_netx50_intram.UUEncode('targets/flasher_netx50.uue', bin_netx50_intram, UUE_PRE = """
+LUUE 00008000
+""", UUE_POST = "")
 
 env_netx10_intram = env_netx10_default.Clone()
 env_netx10_intram.Replace(LDFILE = File('src/netx10/netx10.ld'))
 env_netx10_intram.Append(CPPPATH = ['src', 'src/netx10'])
 src_netx10_intram = env_netx10_intram.SetBuildPath('targets/netx10_intram', 'src', src_netx10)
-elf_netx10_intram = env_netx10_intram.Elf('targets/flasher_netx10', src_netx10_intram)
-bin_netx10_intram = env_netx10_intram.ObjCopy('targets/flasher_netx10', elf_netx10_intram)
+elf_netx10_intram = env_netx10_intram.Elf('targets/flasher_netx10.elf', src_netx10_intram)
+bin_netx10_intram = env_netx10_intram.ObjCopy('targets/flasher_netx10.bin', elf_netx10_intram)
 uue_netx10_intram = env_netx10_intram.UUEncode('targets/flasher_netx10.uue', bin_netx10_intram, UUE_PRE = """
 L 00020000
 """, UUE_POST = "")
