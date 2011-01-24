@@ -26,11 +26,11 @@
 #if ASIC_TYP==10
 /* netX10 has a SQI and a SPI unit. */
 #	include "drv_sqi.h"
-/*#	include "drv_spi.h" */
+#	include "drv_spi_hsoc_v2.h"
 #elif ASIC_TYP==50
-#	include "drv_spi.h"
+#	include "drv_spi_hsoc_v2.h"
 #elif ASIC_TYP==100 || ASIC_TYP==500
-#	include "drv_spi.h"
+#	include "drv_spi_hsoc_v1.h"
 #endif
 
 
@@ -500,7 +500,6 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 	const SPIFLASH_ATTRIBUTES_T *ptFlashAttr;
 	SPI_CFG_T *ptSpiDev;
 	unsigned int uiCmdLen;
-	unsigned int uiChipSelect;
 
 
 	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiInitializeFlash(): ptSpiCfg=%p, ptFlash=0x%08x\n", ptSpiCfg, ptFlash));
@@ -511,25 +510,58 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 	/* get device */
 	ptSpiDev = &ptFlash->tSpiDev;
 
-	/* Get the chipselect number. */
-	uiChipSelect = ptSpiCfg->uiChipSelect;
 
+#if ASIC_TYP==500 || ASIC_TYP==100
 	switch( ptSpiCfg->uiUnit )
 	{
 	case 0:
-		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg, uiChipSelect);
+		ptSpiDev->ptUnit = ptSpiArea;
+		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
-	case 1:
-		/* NOTE: Support for unit 1 is not finished yet. */
-#if 0
-		iResult = boot_drv_spi_init(ptSpiDev, &tSpiCfg, uiChipSelect);
-		break;
-#endif
 	default:
 		iResult = -1;
 		break;
 	}
+#elif ASIC_TYP==50
+	switch( ptSpiCfg->uiUnit )
+	{
+	case 0:
+		ptSpiDev->ptUnit = ptSpi0Area;
+		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		break;
+
+	case 1:
+		ptSpiDev->ptUnit = ptSpi1Area;
+		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		break;
+
+	default:
+		iResult = -1;
+		break;
+	}
+#elif ASIC_TYP==10
+	switch( ptSpiCfg->uiUnit )
+	{
+	case 0:
+		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg);
+		break;
+
+	case 1:
+		/* NOTE: Support for unit 1 is not finished yet. */
+#	if 0
+		iResult = boot_drv_spi_init(ptSpiDev, &tSpiCfg, uiChipSelect);
+		break;
+#	endif
+	default:
+		iResult = -1;
+		break;
+	}
+#else
+	DEBUGMSG(ZONE_ERROR, ("ERROR: Drv_SpiInitializeFlash: unknown asic type %d. Forgot to extend this function for a new asic?\n", ASIC_TYP));
+	iResult = -1;
+#endif
+
 
 	if( iResult!=0 )
 	{
@@ -558,7 +590,7 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 
 				/* set higher speed for the device */
 				ptSpiDev->ulSpeed = ptSpiDev->pfnGetDeviceSpeedRepresentation(ptFlash->tAttributes.ulClock);
-				ptSpiDev->pfnSetNewSpeed(ptSpiDev->ulSpeed);
+				ptSpiDev->pfnSetNewSpeed(ptSpiDev, ptSpiDev->ulSpeed);
 
 				/* send the init commands */
 				uiCmdLen = ptFlash->tAttributes.uiInitCmd0_length;
@@ -662,7 +694,7 @@ int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddr
 			/* convert linear address to device address */
 			ulDeviceAddress = getDeviceAddress(ptFlash, ulLinearAddress);
 			/* cut off the byteoffset */
-			ulDeviceAddress &= ~((1<<ptFlash->uiPageAdrShift)-1);
+			ulDeviceAddress &= ~((1U<<ptFlash->uiPageAdrShift)-1U);
 
 			/* set the page erase opcode */
 			abCmd[0] = ptFlash->tAttributes.ucErasePageOpcode;
@@ -729,7 +761,7 @@ int Drv_SpiEraseFlashSector(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 			ulDeviceAddress = getDeviceAddress(ptFlash, ulLinearAddress);
 
 			/* cut off the byteoffset */
-			ulDeviceAddress &= ~((1<<ptFlash->uiSectorAdrShift)-1);
+			ulDeviceAddress &= ~((1U<<ptFlash->uiSectorAdrShift)-1U);
 
 			/* set the sector erase opcode */
 			abCmd[0] = ptFlash->tAttributes.ucEraseSectorOpcode;

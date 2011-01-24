@@ -479,20 +479,24 @@ static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 }
 
 
-int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiChipSelect)
+int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 {
 	unsigned long ulValue;
 	int iResult;
 	unsigned int uiIdleCfg;
 	unsigned char ucIdleChar;
+	unsigned int uiChipSelect;
 
 
 	iResult = 0;
 
-	ptCfg->ulSpeed = ptSpiCfg->ulInitialSpeedKhz;	/* initial device speed in kHz */
-	ptCfg->uiIdleCfg = ptSpiCfg->uiIdleCfg;		/* the idle configuration */
-	ptCfg->tMode = ptSpiCfg->uiMode;		/* bus mode */
-	ptCfg->uiChipSelect = 1U<<uiChipSelect;		/* chip select */
+	/* Get the chip select value. */
+	uiChipSelect = ptSpiCfg->uiChipSelect;
+
+	ptCfg->ulSpeed = ptSpiCfg->ulInitialSpeedKhz;   /* initial device speed in kHz */
+	ptCfg->uiIdleCfg = ptSpiCfg->uiIdleCfg;         /* the idle configuration */
+	ptCfg->tMode = ptSpiCfg->uiMode;                /* bus mode */
+	ptCfg->uiChipSelect = 1U<<uiChipSelect;         /* chip select */
 
 	/* set the function pointers */
 	ptCfg->pfnSelect = qsi_slave_select;

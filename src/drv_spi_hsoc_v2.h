@@ -31,7 +31,7 @@
 /*-------------------------------------*/
 
 
-int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiChipSelect);
+int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg);
 
 
 /*-------------------------------------*/

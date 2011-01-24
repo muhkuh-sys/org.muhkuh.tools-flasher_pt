@@ -22,8 +22,8 @@
 #include <stddef.h>
 
 
-#ifndef __DRV_SQI_H__
-#define __DRV_SQI_H__
+#ifndef __DRV_SPI_H__
+#define __DRV_SPI_H__
 
 #include "spi.h"
 
@@ -31,11 +31,11 @@
 /*-------------------------------------*/
 
 
-int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiChipSelect);
+int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg);
 
 
 /*-------------------------------------*/
 
 
-#endif	/* __DRV_SQI_H__ */
+#endif  /* __DRV_SPI_H__ */
 

@@ -21,7 +21,7 @@
 
 #include <string.h>
 
-#include "drv_spi.h"
+#include "drv_spi_hsoc_v2.h"
 
 #include "mmio.h"
 #include "netx_io_areas.h"
@@ -62,23 +62,27 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 };
 
 
-static unsigned char spi_exchange_byte(const SPI_CFG_T *ptCfg __attribute__ ((unused)), unsigned char ucByte)
+static unsigned char spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char ucByte)
 {
+	HOSTADEF(SPI) *ptSpiUnit;
 	unsigned long ulValue;
 
 
+	/* Get the pointer to the registers. */
+	ptSpiUnit = ptCfg->ptUnit;
+
 	/* send byte */
-	ptSpiArea->ulSpi_dr = ucByte;
+	ptSpiUnit->ulSpi_dr = ucByte;
 
 	/* wait for one byte in the fifo */
 	do
 	{
-		ulValue  = ptSpiArea->ulSpi_sr;
+		ulValue  = ptSpiUnit->ulSpi_sr;
 		ulValue &= HOSTMSK(spi_sr_RNE);
 	} while( ulValue==0 );
 
 	/* grab byte */
-	ucByte = (unsigned char)(ptSpiArea->ulSpi_dr);
+	ucByte = (unsigned char)(ptSpiUnit->ulSpi_dr);
 	return ucByte;
 }
 
@@ -124,15 +128,16 @@ static unsigned long spi_get_device_speed_representation(unsigned int uiSpeed)
 
 static int spi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 {
-	int iResult;
+	HOSTADEF(SPI) *ptSpiUnit;
 	unsigned long uiChipSelect;
 	unsigned long ulValue;
 
 
-	iResult = 0;
+	/* Get the pointer to the registers. */
+	ptSpiUnit = ptCfg->ptUnit;
 
 	/* get the chipselect value */
-	uiChipSelect  = 0;
+	uiChipSelect = 0;
 	if( fIsSelected!=0 )
 	{
 		uiChipSelect  = ptCfg->uiChipSelect << HOSTSRT(spi_cr1_fss);
@@ -140,29 +145,18 @@ static int spi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 	}
 
 	/* get control register contents */
-	ulValue  = ptSpiArea->aulSpi_cr[1];
+	ulValue = ptSpiUnit->aulSpi_cr[1];
 
-	/* compare the active selection with the requested one */
-	if( (ulValue&HOSTMSK(spi_cr1_fss))==uiChipSelect )
-	{
-		/* the slave is already selected */
-		/* NOTE: of course it does not hurt to select it again, but
-		   the chip select is also used to reset the buffer counter */
-		iResult = -1;
-	}
-	else
-	{
-		/* mask out the slave select bits */
-		ulValue &= ~HOSTMSK(spi_cr1_fss);
+	/* mask out the slave select bits */
+	ulValue &= ~HOSTMSK(spi_cr1_fss);
 
-		/* mask in the new slave id */
-		ulValue |= uiChipSelect;
+	/* mask in the new slave id */
+	ulValue |= uiChipSelect;
 
-		/* write back new value */
-		ptSpiArea->aulSpi_cr[1] = ulValue;
-	}
+	/* write back new value */
+	ptSpiUnit->aulSpi_cr[1] = ulValue;
 
-	return iResult;
+	return 0;
 }
 
 
@@ -173,6 +167,7 @@ static int spi_send_idle(const SPI_CFG_T *ptCfg, size_t sizBytes)
 
 	/* get the idle byte */
 	ucIdleChar = ptCfg->ucIdleChar;
+
 	while( sizBytes>0 )
 	{
 		spi_exchange_byte(ptCfg, ucIdleChar);
@@ -222,9 +217,13 @@ static int spi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size
 
 static int spi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucOutData, unsigned char *pucInData, size_t sizData)
 {
+	HOSTADEF(SPI) *ptSpiUnit;
 	unsigned char ucIdleChar;
 	unsigned char *pucInDataEnd;
 
+
+	/* Get the pointer to the registers. */
+	ptSpiUnit = ptCfg->ptUnit;
 
 	/* get the idle byte */
 	ucIdleChar = ptCfg->ucIdleChar;
@@ -241,28 +240,36 @@ static int spi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucOut
 }
 
 
-static void spi_set_new_speed(unsigned long ulDeviceSpecificSpeed)
+static void spi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpecificSpeed)
 {
+	HOSTADEF(SPI) *ptSpiUnit;
 	unsigned long ulValue;
 
 
+	/* Get the pointer to the registers. */
+	ptSpiUnit = ptCfg->ptUnit;
+
 	ulDeviceSpecificSpeed &= HOSTMSK(spi_cr0_sck_muladd) | HOSTMSK(spi_cr0_filter_in);
 
-	ulValue  = ptSpiArea->aulSpi_cr[0];
+	ulValue  = ptSpiUnit->aulSpi_cr[0];
 	ulValue &= ~(HOSTMSK(spi_cr0_sck_muladd)|HOSTMSK(spi_cr0_filter_in));
 	ulValue |= ulDeviceSpecificSpeed;
-	ptSpiArea->aulSpi_cr[0] = ulValue;
+	ptSpiUnit->aulSpi_cr[0] = ulValue;
 }
 
 
 static void spi_deactivate(const SPI_CFG_T *ptCfg)
 {
+	HOSTADEF(SPI) *ptSpiUnit;
 	unsigned long ulValue;
 
 
-	/* deactivate irqs */
-	ptSpiArea->ulSpi_imsc = 0;
-	/* clear all pending irqs */
+	/* Get the pointer to the registers. */
+	ptSpiUnit = ptCfg->ptUnit;
+
+	/* Deactivate irqs. */
+	ptSpiUnit->ulSpi_imsc = 0;
+	/* Clear all pending irqs. */
 	ulValue  = HOSTMSK(spi_icr_RORIC);
 	ulValue |= HOSTMSK(spi_icr_RTIC);
 	ulValue |= HOSTMSK(spi_icr_RXIC);
@@ -270,36 +277,50 @@ static void spi_deactivate(const SPI_CFG_T *ptCfg)
 	ulValue |= HOSTMSK(spi_icr_rxneic);
 	ulValue |= HOSTMSK(spi_icr_rxfic);
 	ulValue |= HOSTMSK(spi_icr_txeic);
-	ptSpiArea->ulSpi_icr = ulValue;
-	/* deactivate irq routing to the cpus */
-	ptSpiArea->ulSpi_irq_cpu_sel = 0;
+	ptSpiUnit->ulSpi_icr = ulValue;
+	/* Deactivate IRQ routing to the CPUs. */
+#if ASIC_TYP==500 || ASIC_TYP==100
+	ptSpiUnit->ulSpi_irq_cpu_sel = 0;
+#elif ASIC_TYP==50
+	ptSpiUnit->ulSpi_imsc = 0;
+#elif ASIC_TYP==10
+	ptSpiUnit->ulSpi_imsc = 0;
+	ptSpiUnit->ulSpi_irq_cpu_sel = 0;
+#endif
 
-	/* deactivate dmas */
-	ptSpiArea->ulSpi_dmacr = 0;
+	/* Deactivate DMAs. */
+	ptSpiUnit->ulSpi_dmacr = 0;
 
-	/* deactivate the unit */
-	ptSpiArea->aulSpi_cr[0] = 0;
-	ptSpiArea->aulSpi_cr[1] = 0;
+	/* Deactivate the unit. */
+	ptSpiUnit->aulSpi_cr[0] = 0;
+	ptSpiUnit->aulSpi_cr[1] = 0;
 
-	/* activate the spi pins */
+	/* Activate the spi pins. */
 	mmio_deactivate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[ptCfg->uiChipSelect]);
 }
 
 
-int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiChipSelect)
+int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 {
 	unsigned long ulValue;
 	int iResult;
 	unsigned int uiIdleCfg;
 	unsigned char ucIdleChar;
+	HOSTADEF(SPI) *ptSpiUnit;
+	unsigned int uiChipSelect;
 
 
 	iResult = 0;
 
-	ptCfg->ulSpeed = ptSpiCfg->ulInitialSpeedKhz;	/* initial device speed in kHz */
-	ptCfg->uiIdleCfg = ptSpiCfg->uiIdleCfg;		/* the idle configuration */
-	ptCfg->tMode = ptSpiCfg->uiMode;		/* bus mode */
-	ptCfg->uiChipSelect = 1U<<uiChipSelect;		/* chip select */
+	/* Get the pointer to the registers. */
+	ptSpiUnit = ptCfg->ptUnit;
+
+	/* Get the chip select value. */
+	uiChipSelect = ptSpiCfg->uiChipSelect;
+	ptCfg->ulSpeed = ptSpiCfg->ulInitialSpeedKhz;   /* initial device speed in kHz */
+	ptCfg->uiIdleCfg = ptSpiCfg->uiIdleCfg;         /* the idle configuration */
+	ptCfg->tMode = ptSpiCfg->uiMode;                /* bus mode */
+	ptCfg->uiChipSelect = 1U<<uiChipSelect;         /* chip select */
 
 	/* set the function pointers */
 	ptCfg->pfnSelect = spi_slave_select;
@@ -316,7 +337,7 @@ int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 	memcpy(ptCfg->aucMmio, ptSpiCfg->aucMmio, sizeof(ptSpiCfg->aucMmio));
 
 	/* do not use irqs in bootloader */
-	ptSpiArea->ulSpi_imsc = 0;
+	ptSpiUnit->ulSpi_imsc = 0;
 	/* clear all pending irqs */
 	ulValue  = HOSTMSK(spi_icr_RORIC);
 	ulValue |= HOSTMSK(spi_icr_RTIC);
@@ -325,12 +346,19 @@ int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 	ulValue |= HOSTMSK(spi_icr_rxneic);
 	ulValue |= HOSTMSK(spi_icr_rxfic);
 	ulValue |= HOSTMSK(spi_icr_txeic);
-	ptSpiArea->ulSpi_icr = ulValue;
-	/* do not route the irqs to a cpu */
-	ptSpiArea->ulSpi_irq_cpu_sel = 0;
+	ptSpiUnit->ulSpi_icr = ulValue;
+	/* Do not route the irqs to a cpu. */
+#if ASIC_TYP==500 || ASIC_TYP==100
+	ptSpiUnit->keineahnungwas = 0;
+#elif ASIC_TYP==50
+	ptSpiUnit->ulSpi_imsc = 0;
+#elif ASIC_TYP==10
+	ptSpiUnit->ulSpi_imsc = 0;
+	ptSpiUnit->ulSpi_irq_cpu_sel = 0;
+#endif
 
 	/* do not use dmas */
-	ptSpiArea->ulSpi_dmacr = 0;
+	ptSpiUnit->ulSpi_dmacr = 0;
 
 	/* set 8 bits */
 	ulValue  = 7 << HOSTSRT(spi_cr0_datasize);
@@ -346,7 +374,7 @@ int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 	{
 		ulValue |= HOSTMSK(spi_cr0_SPH);
 	}
-	ptSpiArea->aulSpi_cr[0] = ulValue;
+	ptSpiUnit->aulSpi_cr[0] = ulValue;
 
 
 	/* manual chipselect */
@@ -355,7 +383,7 @@ int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 	ulValue |= HOSTMSK(spi_cr1_SSE);
 	/* clear both fifos */
 	ulValue |= HOSTMSK(spi_cr1_rx_fifo_clr)|HOSTMSK(spi_cr1_tx_fifo_clr);
-	ptSpiArea->aulSpi_cr[1] = ulValue;
+	ptSpiUnit->aulSpi_cr[1] = ulValue;
 
 	/* transfer control base is unused in this driver */
 	ptCfg->ulTrcBase = 0;
