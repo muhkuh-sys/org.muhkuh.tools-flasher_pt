@@ -58,9 +58,9 @@ static void setup_flash_srb(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T t
 	unsigned long  ulRegValue;
 
 
-	ulRegValue  = (DEFAULT_PREPAUSE   << HOSTSRT(extsram0_ctrl_WSPrePauseExtMem0);
-	ulRegValue |= (DEFAULT_POSTPAUSE  << HOSTSRT(extsram0_ctrl_WSPostPauseExtMem0);
-	ulRegValue |= (DEFAULT_WAITSTATES << HOSTSRT(extsram0_ctrl_WSExtMem0);
+	ulRegValue  = DEFAULT_PREPAUSE   << HOSTSRT(extsram0_ctrl_WSPrePauseExtMem0);
+	ulRegValue |= DEFAULT_POSTPAUSE  << HOSTSRT(extsram0_ctrl_WSPostPauseExtMem0);
+	ulRegValue |= DEFAULT_WAITSTATES << HOSTSRT(extsram0_ctrl_WSExtMem0);
 
 	switch(tBits)
 	{
@@ -142,7 +142,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	ptFlashDevice = &(ptDeviceDescription->uInfo.tParFlash);
 
 #if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
-	ptFlashDevice->pbFlashBase = (unsigned char*)HOSTADDR(extsram0);
+	ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADDR(extsram0);
 	ptFlashDevice->pfnSetup = setup_flash_srb;
 #elif ASIC_TYP==10
 	if( uiUnit!=0 )
