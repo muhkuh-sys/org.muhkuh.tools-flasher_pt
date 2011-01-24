@@ -1,10 +1,29 @@
+/***************************************************************************
+ *   Copyright (C) 2010 by Hilscher GmbH                                   *
+ *   cthelen@hilscher.com                                                  *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU Library General Public License as       *
+ *   published by the Free Software Foundation; either version 2 of the    *
+ *   License, or (at your option) any later version.                       *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU Library General Public     *
+ *   License along with this program; if not, write to the                 *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+ENTRY(start)
 
 MEMORY
 {
-	INTRAM(rwx)		: ORIGIN = 0x00000004, LENGTH = 0x0001fffc
-	INTKERNELROM(rwx)	: ORIGIN = 0x00202000, LENGTH = 0x6000
+	INTRAM(rwx)		: ORIGIN = 0x00000000, LENGTH = 0x00020000
 	DATATCM(rw)		: ORIGIN = 0x10000000, LENGTH = 0x00002000
-	SDRAM(rwx)		: ORIGIN = 0x80000000, LENGTH = 0x00020000
 }
 
 
@@ -18,19 +37,15 @@ SECTIONS
 	} >INTRAM
 
 
-	.startvector :
+	.code :
 	{
+		__LOAD_ADDRESS__ = . ;
 		*(.init_code)
 		*(.version_info)
-	}
-
-
-	.sec0 :
-	{
 		*(.text)
-
-		*(.glue_7t)
-		*(.glue_7)
+		*(.glue*)
+		*(.vfp11_veneer)
+		*(.v4_bx)
 
 		/* .rodata section which is used for read-only data (constants) */
 		*(.rodata*)
@@ -44,7 +59,7 @@ SECTIONS
 	} >INTRAM
 
 
-	.sec1 :
+	.bss :
 	{
 		/* .bss section which is used for uninitialized data */
 		__bss_start__ = . ;
@@ -56,22 +71,16 @@ SECTIONS
 	} >INTRAM
 
 
-	.testparameter 0x00018000 :
-	{
-		. = . + 0x0100;
-	} >INTRAM
-
-
 	.stack 0x00018100 :
 	{
 		. = . + 0x7f00;
-		PROVIDE (top_of_ownstack = .);
+		PROVIDE (stack_top = .);
 	} >INTRAM
 
 
 	.serialvectors 0x10001ff0 (NOLOAD) :
 	{
-		PROVIDE ( serial_vectors = . );
+		PROVIDE ( tSerialVectors = . );
 		. = . + 0x10;
 	} >DATATCM
 

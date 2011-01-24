@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+ENTRY(start)
+
 MEMORY
 {
 	ROMVECTOR(rx)	: ORIGIN = 0x00000000, LENGTH = 0x00000004
@@ -39,32 +41,24 @@ SECTIONS
 	} >INTRAM
 
 
-	.startvector 0x00008000 :
+	.code 0x00008000 :
 	{
+		__LOAD_ADDRESS__ = . ;
 		*(.init_code)
 		*(.version_info)
-	} >INTRAM
-
-
-	.sec0 :
-	{
-		*(.init_code)
 		*(.text)
-
-		*(.glue_7t) *(.glue_7)
+		*(.glue*)
+		*(.vfp11_veneer)
+		*(.v4_bx)
 
 		/* .rodata section which is used for read-only data (constants) */
 		*(.rodata*)
-	} >INTRAM
 
-
-	.data :
-	{
 		*(.data)
 	} >INTRAM
 
 
-	.sec1 :
+	.bss :
 	{
 		__bss_start__ = . ;
 
@@ -78,7 +72,7 @@ SECTIONS
 	.stack 0x00014000 :
 	{
 		. = . + 0x3000;
-		PROVIDE (top_of_ownstack = .);
+		PROVIDE (stack_top = .);
 	} >INTRAM
 
 
@@ -88,9 +82,9 @@ SECTIONS
 	} >INTRAM
 
 
-	.serialvectors 0x04000ff0 :
+	.serialvectors ORIGIN(DATATCM)+LENGTH(DATATCM)-0x10 :
 	{
-		PROVIDE ( serial_vectors = . );
+		PROVIDE ( tSerialVectors = . );
 		. = . + 0x10;
 	} >DATATCM
 
