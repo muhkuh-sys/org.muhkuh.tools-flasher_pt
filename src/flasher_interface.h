@@ -154,7 +154,8 @@ typedef struct
 		CMD_PARAMETER_ISERASED_T tIsErased;
 		CMD_PARAMETER_GETERASEAREA_T tGetEraseArea;
 	} uParameter;
-} tFlasherInputParameter, *ptFlasherInputParameter;
+} tFlasherInputParameter;
+
 
 /*-------------------------------------------------------------------------*/
 

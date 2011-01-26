@@ -21,7 +21,9 @@
 
 #include "flasher_header.h"
 
+#include "flasher_interface.h"
 #include "flasher_version.h"
+#include "netx_consoleapp.h"
 
 
 const tFlasherVersion flasher_version __attribute__ ((section (".version_info")));
@@ -37,6 +39,11 @@ const tFlasherVersion flasher_version =
 
 	.pulLoadAddress = __LOAD_ADDRESS__,
 	.pfnExecutionAddress = start,
+
+	.pucBuffer_Parameter = __BUFFER_START__,
+	.pucBuffer_DeviceDescription = __BUFFER_START__ + sizeof(NETX_CONSOLEAPP_PARAMETER_T) + sizeof(tFlasherInputParameter),
+	.pucBuffer_Data = __BUFFER_START__ + sizeof(NETX_CONSOLEAPP_PARAMETER_T) + sizeof(tFlasherInputParameter) + sizeof(DEVICE_DESCRIPTION_T),
+	.pucBuffer_End = __BUFFER_END__,
 
 	.aulChiptyp =
 	{

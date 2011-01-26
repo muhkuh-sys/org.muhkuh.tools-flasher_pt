@@ -65,11 +65,19 @@ typedef unsigned long (*PFN_START)(unsigned long ulParameter);
 typedef struct
 {
 	const char    abMagic[4];
+
 	unsigned long ulVersionMaj;
 	unsigned long ulVersionMin;
 	const char    acVersion[16];
+
 	unsigned long *pulLoadAddress;
 	PFN_START pfnExecutionAddress;
+
+	unsigned char *pucBuffer_Parameter;
+	unsigned char *pucBuffer_DeviceDescription;
+	unsigned char *pucBuffer_Data;
+	unsigned char *pucBuffer_End;
+
 	unsigned long aulChiptyp[2];
 	unsigned long aulIf[4];
 } tFlasherVersion;
@@ -78,6 +86,8 @@ typedef struct
 
 extern unsigned long __LOAD_ADDRESS__[1];
 unsigned long start(unsigned long ulParameter);
+extern unsigned char __BUFFER_START__[1];
+extern unsigned char __BUFFER_END__[1];
 
 /*-----------------------------------*/
 
