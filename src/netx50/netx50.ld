@@ -22,12 +22,8 @@ ENTRY(start)
 
 MEMORY
 {
-	ROMVECTOR(rx)	: ORIGIN = 0x00000000, LENGTH = 0x00000004
-	INTRAM(rwx)	: ORIGIN = 0x00000004, LENGTH = 0x00017ffc
-	INTROM(rx)	: ORIGIN = 0x08200000, LENGTH = 0x00010000
-	INTROM_HI(rx)	: ORIGIN = 0xff200000, LENGTH = 0x00010000
-	DATATCM(rw)	: ORIGIN = 0x04000000, LENGTH = 0x00001000
-	SDRAM(rwx)	: ORIGIN = 0x80000000, LENGTH = 0x00020000
+	INTRAM(rwx)     : ORIGIN = 0x00000000, LENGTH = 0x00018000
+	DATATCM(rw)     : ORIGIN = 0x04000000, LENGTH = 0x00001000
 }
 
 
@@ -66,19 +62,15 @@ SECTIONS
 		*(COMMON)
 
 		__bss_end__ = . ;
+		__BUFFER_START__ = .;
 	} >INTRAM
 
 
-	.stack 0x00014000 :
+	.stack ORIGIN(INTRAM)+LENGTH(INTRAM)-0x1000 :
 	{
-		. = . + 0x3000;
+		__BUFFER_END__ = .;
+		. = . + 0x1000;
 		PROVIDE (stack_top = .);
-	} >INTRAM
-
-
-	.testparameter 0x00017000 :
-	{
-		. = . + 0x0100;
 	} >INTRAM
 
 

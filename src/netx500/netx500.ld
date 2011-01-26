@@ -33,7 +33,7 @@ SECTIONS
 	/* bootloader reserved area */
 	.bootloader 0x00000000 :
 	{
-		. = . + 0x8000;
+		. = . + 0x2000;
 	} >INTRAM
 
 
@@ -68,12 +68,15 @@ SECTIONS
 		*(COMMON)
 
 		__bss_end__ = . ;
+		__BUFFER_START__ = .;
 	} >INTRAM
 
+	/* NOTE: do not put anything between the bss and the stack section. Here goes the buffer. */
 
-	.stack 0x00018100 :
+	.stack ORIGIN(INTRAM)+LENGTH(INTRAM)-0x1000 :
 	{
-		. = . + 0x7f00;
+		__BUFFER_END__ = .;
+		. = . + 0x1000;
 		PROVIDE (stack_top = .);
 	} >INTRAM
 

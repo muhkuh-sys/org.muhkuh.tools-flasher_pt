@@ -22,7 +22,7 @@ ENTRY(start)
 
 MEMORY
 {
-	INTRAM2_ITCM(rwx)	: ORIGIN = 0x00020000, LENGTH = 0x00010000
+	INTRAM(rwx)	: ORIGIN = 0x08000000, LENGTH = 0x00040000
 	INTRAM0_DTCM(rwx)	: ORIGIN = 0x04000000, LENGTH = 0x00010000
 	INTRAM3_DTCM(rwx)	: ORIGIN = 0x04030000, LENGTH = 0x00010000
 }
@@ -31,7 +31,24 @@ MEMORY
 /* Section Definitions */
 SECTIONS
 {
-	.code ORIGIN(INTRAM2_ITCM) :
+	.system ORIGIN(INTRAM) :
+	{
+		. = . + 0x100;
+	} >INTRAM
+
+	.serial_vectors ORIGIN(INTRAM)+SIZEOF(.system) :
+	{
+		tSerialVectors = . ;
+		. = . + 0x10;
+	} >INTRAM
+
+	.mon :
+	{
+		. = . + 0x3ff0;
+	} >INTRAM
+
+
+	.code :
 	{
 		__LOAD_ADDRESS__ = . ;
 		*(.init_code)
@@ -40,22 +57,17 @@ SECTIONS
 		*(.glue*)
 		*(.vfp11_veneer)
 		*(.v4_bx)
-	} >INTRAM2_ITCM
+	} >INTRAM
 
 
-	.data ORIGIN(INTRAM3_DTCM) : AT(ORIGIN(INTRAM2_ITCM)+SIZEOF(.code))
+	.data :
 	{
-		__data_start__ = . ;
-
 		/* ro data */
 		*(.rodata*)
 
 		/* rw data */
 		*(.data)
-
-		__data_end__ = . ;
-	} >INTRAM3_DTCM
-	__data_loadaddr__ = LOADADDR(.data) ;
+	} >INTRAM
 
 
 	.bss :
@@ -68,18 +80,16 @@ SECTIONS
 		*(COMMON)
 
 		__bss_end__ = . ;
-	} >INTRAM3_DTCM
+		__BUFFER_START__ = .;
+	} >INTRAM
 
 
-	.serial_vectors ORIGIN(INTRAM0_DTCM)+LENGTH(INTRAM0_DTCM)-0x10 :
+	.stack ORIGIN(INTRAM)+LENGTH(INTRAM)-0x1000 :
 	{
-		tSerialVectors = . ;
-		. = . + 0x10;
-	} >INTRAM0_DTCM
-
-
-	/* set the top of the stack to the end of INTRAM1 */
-	stack_top = ORIGIN(INTRAM3_DTCM) + LENGTH(INTRAM3_DTCM) ;
+		__BUFFER_END__ = .;
+		. = . + 0x1000;
+		PROVIDE (stack_top = .);
+	} >INTRAM
 
 
 	/* Stabs debugging sections.  */
