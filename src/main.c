@@ -39,7 +39,7 @@
 /* ------------------------------------- */
 
 
-static NETX_CONSOLEAPP_RESULT_T opMode_detect(ptFlasherInputParameter ptAppParams)
+static NETX_CONSOLEAPP_RESULT_T opMode_detect(tFlasherInputParameter *ptAppParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
@@ -113,7 +113,7 @@ static NETX_CONSOLEAPP_RESULT_T check_device_description(const DEVICE_DESCRIPTIO
 /* ------------------------------------- */
 
 
-static NETX_CONSOLEAPP_RESULT_T opMode_flash(ptFlasherInputParameter ptAppParams)
+static NETX_CONSOLEAPP_RESULT_T opMode_flash(tFlasherInputParameter *ptAppParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
@@ -157,7 +157,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_flash(ptFlasherInputParameter ptAppParams
 /* ------------------------------------- */
 
 
-static NETX_CONSOLEAPP_RESULT_T opMode_erase(ptFlasherInputParameter ptAppParams)
+static NETX_CONSOLEAPP_RESULT_T opMode_erase(tFlasherInputParameter *ptAppParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
@@ -201,7 +201,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_erase(ptFlasherInputParameter ptAppParams
 /* ------------------------------------- */
 
 
-static NETX_CONSOLEAPP_RESULT_T opMode_read(ptFlasherInputParameter ptAppParams)
+static NETX_CONSOLEAPP_RESULT_T opMode_read(tFlasherInputParameter *ptAppParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
@@ -323,7 +323,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_verify(ptFlasherInputParameter ptAppParam
 #endif
 
 
-static NETX_CONSOLEAPP_RESULT_T opMode_isErased(ptFlasherInputParameter ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+static NETX_CONSOLEAPP_RESULT_T opMode_isErased(tFlasherInputParameter *ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSrcType;
@@ -373,7 +373,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_isErased(ptFlasherInputParameter ptAppPar
 /* ------------------------------------- */
 
 
-static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(ptFlasherInputParameter ptAppParams)
+static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(tFlasherInputParameter *ptAppParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSrcType;
@@ -426,7 +426,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(ptFlasherInputParameter ptAp
 NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTestParam)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	ptFlasherInputParameter ptAppParams;
+	tFlasherInputParameter *ptAppParams;
 	unsigned long ulParamVersion;
 	OPERATION_MODE_T tOpMode;
 
@@ -456,7 +456,7 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 		uprintf("\n");
 
 		/*  get application parameters */
-		ptAppParams = (ptFlasherInputParameter)ptTestParam->pvInitParams;
+		ptAppParams = (tFlasherInputParameter*)ptTestParam->pvInitParams;
 
 		/*  check parameter version */
 		ulParamVersion = ptAppParams->ulParamVersion;
