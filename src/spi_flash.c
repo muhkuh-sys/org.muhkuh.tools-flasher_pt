@@ -253,7 +253,6 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 		ptSpiDev->pfnSelect(ptSpiDev, 0);
 
 		/* send 8 idle bytes to clear the bus */
-		uprintf("send idles...\n");
 		iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 8);
 		if( iResult!=0 )
 		{
@@ -267,7 +266,6 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 		/* send id magic and receive response */
 		DEBUGMSG(ZONE_VERBOSE, ("detect_flash: probe for %s\n", ptSc->acName));
 
-		uprintf("exchange...\n");
 		iResult = ptSpiDev->pfnExchangeData(ptSpiDev, ptSc->aucIdSend, aucIdResp, ptSc->uiIdLength);
 
 		/* deselect slave */
@@ -581,7 +579,7 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 			if(NULL == ptFlashAttr)
 			{
 				/* failed to detect flash */
-				iResult = 0;
+				iResult = -1;
 			}
 			else
 			{
