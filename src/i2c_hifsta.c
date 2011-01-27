@@ -59,6 +59,8 @@ typedef enum
 
 #define TRIGGER_ROM_WATCHDOG(a) __asm("nop\n")
 
+
+#if ASIC_TYP==10 || ASIC_TYP==50
 static void i2c_hifsta_clock(void)
 {
 	/* trigger rom watchdog */
@@ -76,6 +78,8 @@ static void i2c_hifsta_clock(void)
 	TRIGGER_ROM_WATCHDOG(0);
 	TRIGGER_ROM_WATCHDOG(0);
 }
+#endif
+
 
 #if ASIC_TYP==10
 void i2c_hifsta_rdy_on_run_off(void)
