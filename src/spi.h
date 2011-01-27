@@ -27,18 +27,18 @@
 #include "netx_io_areas.h"
 
 
-#define MSK_SQI_CFG_IDLE_IO1_OE		0x01U
-#define SRT_SQI_CFG_IDLE_IO1_OE		0
-#define MSK_SQI_CFG_IDLE_IO1_OUT	0x02U
-#define SRT_SQI_CFG_IDLE_IO1_OUT	1
-#define MSK_SQI_CFG_IDLE_IO2_OE		0x04U
-#define SRT_SQI_CFG_IDLE_IO2_OE		2
-#define MSK_SQI_CFG_IDLE_IO2_OUT	0x08U
-#define SRT_SQI_CFG_IDLE_IO2_OUT	3
-#define MSK_SQI_CFG_IDLE_IO3_OE		0x10U
-#define SRT_SQI_CFG_IDLE_IO3_OE		4
-#define MSK_SQI_CFG_IDLE_IO3_OUT	0x20U
-#define SRT_SQI_CFG_IDLE_IO3_OUT	5
+#define MSK_SQI_CFG_IDLE_IO1_OE         0x01U
+#define SRT_SQI_CFG_IDLE_IO1_OE         0
+#define MSK_SQI_CFG_IDLE_IO1_OUT        0x02U
+#define SRT_SQI_CFG_IDLE_IO1_OUT        1
+#define MSK_SQI_CFG_IDLE_IO2_OE         0x04U
+#define SRT_SQI_CFG_IDLE_IO2_OE         2
+#define MSK_SQI_CFG_IDLE_IO2_OUT        0x08U
+#define SRT_SQI_CFG_IDLE_IO2_OUT        3
+#define MSK_SQI_CFG_IDLE_IO3_OE         0x10U
+#define SRT_SQI_CFG_IDLE_IO3_OE         4
+#define MSK_SQI_CFG_IDLE_IO3_OUT        0x20U
+#define SRT_SQI_CFG_IDLE_IO3_OUT        5
 
 
 typedef enum
