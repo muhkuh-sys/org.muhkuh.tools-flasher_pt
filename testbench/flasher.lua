@@ -61,31 +61,15 @@ end
 function download(tPlugin, strPrefix, fnCallback)
 	-- Get the chiptyp.
 	local tAsicTyp = tPlugin:GetChiptyp()
-	print(tAsicTyp)
-	print(romloader_usb.ROMLOADER_CHIPTYP_NETX50)
-	print(romloader_usb.ROMLOADER_CHIPTYP_NETX100)
-	print(romloader_usb.ROMLOADER_CHIPTYP_NETX500)
 	local aAttr = {}
 
 	-- Get the binary for the ASIC.
 	if tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX50 then
 		aAttr.strBinaryName = strPrefix .. "flasher_netx50.bin"
-		aAttr.ulParameter   = 0x00017000
-		aAttr.ulDeviceDesc  = 0x00017100
-		aAttr.ulBufferAdr   = 0x00017c00
-		aAttr.ulBufferLen   = 0x00000400
 	elseif tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX100 or tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX500 then
 		aAttr.strBinaryName = strPrefix .. "flasher_netx500.bin"
-		aAttr.ulParameter   = 0x00017000
-		aAttr.ulDeviceDesc  = 0x00017100
-		aAttr.ulBufferAdr   = 0x00018000
-		aAttr.ulBufferLen   = 0x00008000
 	elseif tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX10 then
 		aAttr.strBinaryName = strPrefix .. "flasher_netx10.bin"
-		aAttr.ulParameter   = 0x04038000
-		aAttr.ulDeviceDesc  = 0x04038100
-		aAttr.ulBufferAdr   = 0x04039000
-		aAttr.ulBufferLen   = 0x00006000
 	else
 		error("Unknown chiptyp!")
 	end
@@ -98,6 +82,18 @@ function download(tPlugin, strPrefix, fnCallback)
 		-- Get the load and exec address from the binary.
 		aAttr.ulLoadAddress = strData:byte(33) + strData:byte(34)*0x00000100 + strData:byte(35)*0x00010000 + strData:byte(36)*0x01000000
 		aAttr.ulExecAddress = strData:byte(37) + strData:byte(38)*0x00000100 + strData:byte(39)*0x00010000 + strData:byte(40)*0x01000000
+
+		aAttr.ulParameter   = strData:byte(41) + strData:byte(42)*0x00000100 + strData:byte(43)*0x00010000 + strData:byte(44)*0x01000000
+		aAttr.ulDeviceDesc  = strData:byte(45) + strData:byte(46)*0x00000100 + strData:byte(47)*0x00010000 + strData:byte(48)*0x01000000
+		aAttr.ulBufferAdr   = strData:byte(49) + strData:byte(50)*0x00000100 + strData:byte(51)*0x00010000 + strData:byte(52)*0x01000000
+		aAttr.ulBufferEnd   = strData:byte(53) + strData:byte(54)*0x00000100 + strData:byte(55)*0x00010000 + strData:byte(56)*0x01000000
+		aAttr.ulBufferLen   = aAttr.ulBufferEnd - aAttr.ulBufferAdr
+
+		-- Show the information:
+		print(string.format("parameter:          0x%08x\n", aAttr.ulParameter))
+		print(string.format("device description: 0x%08x\n", aAttr.ulDeviceDesc))
+		print(string.format("buffer start:       0x%08x\n", aAttr.ulBufferAdr))
+		print(string.format("buffer end:         0x%08x\n", aAttr.ulBufferEnd))
 
 		-- download binary
 		print(string.format("downloading %s to 0x%08x", aAttr.strBinaryName, aAttr.ulLoadAddress))
