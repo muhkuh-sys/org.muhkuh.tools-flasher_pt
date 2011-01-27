@@ -28,18 +28,6 @@ init:
 	ldr	r0, =stack_top
 	mov	sp, r0
 
-#if ASIC_TYP==10
-	@ copy the data section
-	ldr	r0, =__data_loadaddr__
-	ldr	r1, =__data_start__
-	ldr	r2, =__data_end__
-copy_data:
-	cmp	r1, r2
-	ldrlo	r3, [r0], #4
-	strlo	r3, [r1], #4
-	blo	copy_data
-#endif
-
 	@ clear .bss section (zero init)
 	mov	r0, #0
 	ldr	r1, =__bss_start__
