@@ -426,7 +426,7 @@ static int qsi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucDat
 }
 #endif
 
-static void qsi_set_new_speed(unsigned long ulDeviceSpecificSpeed)
+static void qsi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpecificSpeed)
 {
 	unsigned long ulValue;
 
