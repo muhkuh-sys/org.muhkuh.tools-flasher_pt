@@ -500,7 +500,7 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 	unsigned int uiCmdLen;
 
 
-	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiInitializeFlash(): ptSpiCfg=%p, ptFlash=0x%08x\n", ptSpiCfg, ptFlash));
+	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiInitializeFlash(): ptSpiCfg=%08x, ptFlash=0x%08x\n", ptSpiCfg, ptFlash));
 
 	/* no flash detected yet */
 	ptFlashAttr = NULL;
@@ -546,11 +546,10 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 		break;
 
 	case 1:
-		/* NOTE: Support for unit 1 is not finished yet. */
-#	if 0
-		iResult = boot_drv_spi_init(ptSpiDev, &tSpiCfg, uiChipSelect);
+		ptSpiDev->ptUnit = ptSpiArea;
+		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
-#	endif
+
 	default:
 		iResult = -1;
 		break;
