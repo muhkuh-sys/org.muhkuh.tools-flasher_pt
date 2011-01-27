@@ -22,45 +22,31 @@
 #ifndef __SERIAL_VECTORS_H__
 #define __SERIAL_VECTORS_H__
 
-#if ASIC_TYP==10
-typedef unsigned char	(*pfnSerialGet_t)	(unsigned int uiHandle);
-typedef void		(*pfnSerialPut_t)	(unsigned int uiHandle, unsigned int iChar);
-typedef unsigned int	(*pfnSerialPeek_t)	(unsigned int uiHandle);
-typedef void		(*pfnSerialFlush_t)	(unsigned int uiHandle);
-
-#define SERIAL_GET() tSerialVectors.fn.fnGet(0)
-#define SERIAL_PUT(c) tSerialVectors.fn.fnPut(0,c)
-#define SERIAL_PEEK() tSerialVectors.fn.fnPeek(0)
-#define SERIAL_FLUSH() tSerialVectors.fn.fnFlush(0)
-
-#else
-typedef unsigned char	(*pfnSerialGet_t)	(void);
-typedef void		(*pfnSerialPut_t)	(unsigned int iChar);
-typedef unsigned int	(*pfnSerialPeek_t)	(void);
-typedef void		(*pfnSerialFlush_t)	(void);
+typedef unsigned char (*PFN_SERIAL_GET_T) (void);
+typedef void (*PFN_SERIAL_PUT_T) (unsigned int iChar);
+typedef unsigned int (*PFN_SERIAL_PEEK_T) (void);
+typedef void (*PFN_SERIAL_FLUSH_T) (void);
 
 #define SERIAL_GET() tSerialVectors.fn.fnGet()
 #define SERIAL_PUT(c) tSerialVectors.fn.fnPut(c)
 #define SERIAL_PEEK() tSerialVectors.fn.fnPeek()
 #define SERIAL_FLUSH() tSerialVectors.fn.fnFlush()
 
-#endif
-
 typedef struct
 {
-	pfnSerialGet_t fnGet;
-	pfnSerialPut_t fnPut;
-	pfnSerialPeek_t fnPeek;
-	pfnSerialFlush_t fnFlush;
-} SerialCommFn_t;
+	PFN_SERIAL_GET_T fnGet;
+	PFN_SERIAL_PUT_T fnPut;
+	PFN_SERIAL_PEEK_T fnPeek;
+	PFN_SERIAL_FLUSH_T fnFlush;
+} SERIAL_COMM_FN_T;
 
 typedef union
 {
-	SerialCommFn_t fn;
+	SERIAL_COMM_FN_T fn;
 	unsigned long aul[4];
-} SerialCommUiFn_t;
+} SERIAL_COMM_UI_FN_T;
 
-extern SerialCommUiFn_t tSerialVectors;
+extern SERIAL_COMM_UI_FN_T tSerialVectors;
 
 #endif	/* __SERIAL_VECTORS_H__ */
 

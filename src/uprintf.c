@@ -252,10 +252,10 @@ void uprintf(const char *pcFmt, ...)
 			 * NOTE: all routines are thumb-code, bit #0 of the address must be set
 			 * to switch the mode.
 			 */
-			tSerialVectors.fn.fnGet   = (pfnSerialGet_t)(0x00201664|1);
-			tSerialVectors.fn.fnPut   = (pfnSerialPut_t)(0x00201646|1);
-			tSerialVectors.fn.fnPeek  = (pfnSerialPeek_t)(0x002016b0|1);
-			tSerialVectors.fn.fnFlush = (pfnSerialFlush_t)(0x002016ba|1);
+			tSerialVectors.fn.fnGet   = (PFN_SERIAL_GET_T)(0x00201664|1);
+			tSerialVectors.fn.fnPut   = (PFN_SERIAL_PUT_T)(0x00201646|1);
+			tSerialVectors.fn.fnPeek  = (PFN_SERIAL_PEEK_T)(0x002016b0|1);
+			tSerialVectors.fn.fnFlush = (PFN_SERIAL_FLUSH_T)(0x002016ba|1);
 		}
 	}
 
