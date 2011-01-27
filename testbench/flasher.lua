@@ -36,6 +36,20 @@ OPERATION_MODE_IsErased          = 6     -- Check if the specified area of a dev
 OPERATION_MODE_GetEraseArea      = 7
 
 
+MSK_SQI_CFG_IDLE_IO1_OE          = 0x01
+SRT_SQI_CFG_IDLE_IO1_OE          = 0
+MSK_SQI_CFG_IDLE_IO1_OUT         = 0x02
+SRT_SQI_CFG_IDLE_IO1_OUT         = 1
+MSK_SQI_CFG_IDLE_IO2_OE          = 0x04
+SRT_SQI_CFG_IDLE_IO2_OE          = 2
+MSK_SQI_CFG_IDLE_IO2_OUT         = 0x08
+SRT_SQI_CFG_IDLE_IO2_OUT         = 3
+MSK_SQI_CFG_IDLE_IO3_OE          = 0x10
+SRT_SQI_CFG_IDLE_IO3_OE          = 4
+MSK_SQI_CFG_IDLE_IO3_OUT         = 0x20
+SRT_SQI_CFG_IDLE_IO3_OUT         = 5
+
+
 local function progress(cnt,max)
 	print(string.format("%d%% (%d/%d)", cnt*100/max, cnt, max))
 	return true
@@ -172,7 +186,10 @@ function detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, ulDevDescAdr)
 	local ulValue
 	local aulParameter
 	local strDevDesc = nil
+	local ulIdleCfg
 
+
+	ulIdleCfg = MSK_SQI_CFG_IDLE_IO1_OE + MSK_SQI_CFG_IDLE_IO1_OUT + MSK_SQI_CFG_IDLE_IO2_OE + MSK_SQI_CFG_IDLE_IO2_OUT + MSK_SQI_CFG_IDLE_IO3_OE + MSK_SQI_CFG_IDLE_IO3_OUT
 
 	aulParameter = {}
 	-- set the parameter
@@ -186,7 +203,7 @@ function detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, ulDevDescAdr)
 	aulParameter[ 7] = ulUnit                               -- unit
 	aulParameter[ 8] = ulChipSelect                         -- chip select: 1
 	aulParameter[ 9] = 1000                                 -- initial speed in kHz (1000 -> 1MHz)
-	aulParameter[10] = 0                                    -- idle config
+	aulParameter[10] = ulIdleCfg                            -- idle config
 	aulParameter[11] = 3                                    -- mode
 	aulParameter[12] = 0xffffffff                           -- mmio config
 	aulParameter[13] = aAttr.ulDeviceDesc                   -- data block for the device description
