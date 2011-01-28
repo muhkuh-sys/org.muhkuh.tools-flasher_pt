@@ -22,29 +22,19 @@ ENTRY(start)
 
 MEMORY
 {
-	INTRAM(rwx) : ORIGIN = 0x08000000, LENGTH = 0x00040000
+	IOVECTORS(rx) : ORIGIN = 0x08000100, LENGTH = 0x00000100
+	INTRAM(rwx)   : ORIGIN = 0x08004000, LENGTH = 0x0003c000
 }
 
 
 /* Section Definitions */
 SECTIONS
 {
-	.system ORIGIN(INTRAM) :
-	{
-		. = . + 0x100;
-	} >INTRAM
-
-	.serial_vectors ORIGIN(INTRAM)+SIZEOF(.system) :
+	.serial_vectors ORIGIN(IOVECTORS) :
 	{
 		tSerialVectors = . ;
 		. = . + 0x10;
-	} >INTRAM
-
-	.mon :
-	{
-		. = . + 0x3ff0;
-	} >INTRAM
-
+	} >IOVECTORS
 
 	.code :
 	{
