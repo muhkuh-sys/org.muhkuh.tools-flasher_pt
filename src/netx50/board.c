@@ -21,6 +21,37 @@
 
 #include "board.h"
 
+#include "units.h"
+
+
+/*-------------------------------------------------------------------------*/
+
+
+static const UNIT_TABLE_T tUnitTable_BusSPI =
+{
+	.sizEntries = 2,
+	.atEntries =
+	{
+		{ 0,  "SPI0",   (void * const)HOSTADDR(spi0) },
+		{ 1,  "SPI1",   (void * const)HOSTADDR(spi1) }
+	}
+};
+
+
+const BUS_TABLE_T tBusTable =
+{
+	.sizEntries = 2,
+	.atEntries =
+	{
+		{ BUS_ParFlash,  "Parallel Flash",      NULL },
+		{ BUS_SPI,       "Serial Flash",        &tUnitTable_BusSPI }
+	}
+};
+
+
+/*-------------------------------------------------------------------------*/
+
+
 NETX_CONSOLEAPP_RESULT_T board_init(void)
 {
 	return NETX_CONSOLEAPP_RESULT_OK;

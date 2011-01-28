@@ -48,6 +48,7 @@ flasher_sources_common = """
 	src/startvector.s
 	src/strata.c
 	src/systime.c
+	src/units.c
 	src/uprintf.c
 """
 
@@ -107,9 +108,9 @@ env_netx50_intram.Append(CPPPATH = ['src', 'src/netx50'])
 src_netx50_intram = env_netx50_intram.SetBuildPath('targets/netx50_intram', 'src', src_netx50)
 elf_netx50_intram = env_netx50_intram.Elf('targets/flasher_netx50.elf', src_netx50_intram)
 bin_netx50_intram = env_netx50_intram.ObjCopy('targets/flasher_netx50.bin', elf_netx50_intram)
-uue_netx50_intram = env_netx50_intram.UUEncode('targets/flasher_netx50.uue', bin_netx50_intram, UUE_PRE = """
-LUUE 00008000
-""", UUE_POST = "")
+uue_netx50_intram = env_netx50_intram.UUEncode('targets/flasher_netx50.uue', bin_netx50_intram, UUE_ELF=elf_netx50_intram, UUE_PRE = """
+LUUE ${LOAD_HEX}
+""", UUE_POST = "CALL ${EXEC_HEX}")
 
 env_netx10_intram = env_netx10_default.Clone()
 env_netx10_intram.Replace(LDFILE = File('src/netx10/netx10.ld'))
@@ -117,9 +118,9 @@ env_netx10_intram.Append(CPPPATH = ['src', 'src/netx10'])
 src_netx10_intram = env_netx10_intram.SetBuildPath('targets/netx10_intram', 'src', src_netx10)
 elf_netx10_intram = env_netx10_intram.Elf('targets/flasher_netx10.elf', src_netx10_intram)
 bin_netx10_intram = env_netx10_intram.ObjCopy('targets/flasher_netx10.bin', elf_netx10_intram)
-uue_netx10_intram = env_netx10_intram.UUEncode('targets/flasher_netx10.uue', bin_netx10_intram, UUE_PRE = """
-L 00020000
-""", UUE_POST = "")
+uue_netx10_intram = env_netx10_intram.UUEncode('targets/flasher_netx10.uue', bin_netx10_intram, UUE_ELF=elf_netx10_intram, UUE_PRE = """
+l ${LOAD_HEX}
+""", UUE_POST = "g ${EXEC_HEX} 0")
 
 
 #----------------------------------------------------------------------------

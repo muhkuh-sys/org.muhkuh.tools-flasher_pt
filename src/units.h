@@ -1,5 +1,5 @@
 /*************************************************************************** 
- *   Copyright (C) 2009 by Hilscher GmbH                                   * 
+ *   Copyright (C) 2011 by Hilscher GmbH                                   * 
  *   cthelen@hilscher.com                                                  * 
  *                                                                         * 
  *   This program is free software; you can redistribute it and/or modify  * 
@@ -18,40 +18,52 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             * 
  ***************************************************************************/
 
-#include "board.h"
 
-#include "units.h"
+#include "flasher_interface.h"
+
+#ifndef __UNITS_H__
+#define __UNITS_H__
+
+
+typedef struct
+{
+	unsigned int uiUnitIndex;
+	const char *pcName;
+	void * const pvUnit;
+} UNIT_TABLE_ENTRY_T;
+
+#define UNIT_TABLE_MAX_ENTRIES 4
+
+typedef struct
+{
+	size_t sizEntries;
+	const UNIT_TABLE_ENTRY_T atEntries[UNIT_TABLE_MAX_ENTRIES];
+} UNIT_TABLE_T;
+
+
+
+typedef struct
+{
+	BUS_T tBusId;
+	const char *pcName;
+	const UNIT_TABLE_T *ptUnits;
+} BUS_TABLE_ENTRY_T;
+
+
+#define BUS_TABLE_MAX_ENTRIES 4
+
+typedef struct
+{
+	size_t sizEntries;
+	const BUS_TABLE_ENTRY_T atEntries[BUS_TABLE_MAX_ENTRIES];
+} BUS_TABLE_T;
 
 
 /*-------------------------------------------------------------------------*/
 
-
-static const UNIT_TABLE_T tUnitTable_BusSPI =
-{
-	.sizEntries = 1,
-	.atEntries =
-	{
-		{ 0,  "SPI",    (void * const)HOSTADDR(spi) }
-	}
-};
+size_t units_make_bus_table(unsigned char *pucBuffer, size_t sizBufferMaxSize);
+size_t units_make_unit_table(BUS_T tBusId, unsigned char *pucBuffer, size_t sizBufferMaxSize);
 
 
-const BUS_TABLE_T tBusTable =
-{
-	.sizEntries = 2,
-	.atEntries =
-	{
-		{ BUS_ParFlash,  "Parallel Flash",      NULL },
-		{ BUS_SPI,       "Serial Flash",        &tUnitTable_BusSPI }
-	}
-};
-
-
-/*-------------------------------------------------------------------------*/
-
-
-NETX_CONSOLEAPP_RESULT_T board_init(void)
-{
-	return NETX_CONSOLEAPP_RESULT_OK;
-}
+#endif  /* __UNITS_H__ */
 

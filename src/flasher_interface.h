@@ -47,7 +47,8 @@ typedef enum
 	OPERATION_MODE_Checksum         = 4,    /* build a checksum over the contents of a specified area of a device */
 	OPERATION_MODE_Detect           = 5,    /* detect a device */
 	OPERATION_MODE_IsErased         = 6,    /* check if the specified area of a device is erased */
-	OPERATION_MODE_GetEraseArea     = 7     /* expand an area to the erase block borders */
+	OPERATION_MODE_GetEraseArea     = 7,    /* expand an area to the erase block borders */
+	OPERATION_MODE_GetBoardInfo     = 8     /* get bus and unit information */
 } OPERATION_MODE_T;
 
 
@@ -141,6 +142,15 @@ typedef struct
 
 typedef struct
 {
+	unsigned long ulBusId;
+	unsigned long ulUnitId;
+	unsigned char *pucBuffer;
+	size_t sizBuffer;
+} CMD_PARAMETER_GETBOARDINFO_T;
+
+
+typedef struct
+{
 	unsigned long ulParamVersion;
 	OPERATION_MODE_T tOperationMode;
 	union
@@ -153,6 +163,7 @@ typedef struct
 		CMD_PARAMETER_DETECT_T tDetect;
 		CMD_PARAMETER_ISERASED_T tIsErased;
 		CMD_PARAMETER_GETERASEAREA_T tGetEraseArea;
+		CMD_PARAMETER_GETBOARDINFO_T tGetBoardInfo;
 	} uParameter;
 } tFlasherInputParameter;
 

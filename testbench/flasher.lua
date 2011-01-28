@@ -33,7 +33,8 @@ OPERATION_MODE_Verify            = 3
 OPERATION_MODE_Checksum          = 4     -- Build a checksum over the contents of a specified area of a device.
 OPERATION_MODE_Detect            = 5     -- Detect a device.
 OPERATION_MODE_IsErased          = 6     -- Check if the specified area of a device is erased.
-OPERATION_MODE_GetEraseArea      = 7
+OPERATION_MODE_GetEraseArea      = 7     -- Expand an area to the erase block borders.
+OPERATION_MODE_GetBoardInfo      = 8     -- Get bus and unit information.
 
 
 MSK_SQI_CFG_IDLE_IO1_OE          = 0x01
@@ -288,8 +289,6 @@ end
 
 
 function isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
-	local parameter_block = 0x00018000
-	local dev_desc_adr = 0x00018080
 	local ulValue
 	local aulParameter
 	local ulEraseStart
@@ -325,4 +324,66 @@ function isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
 
 	return fIsErased
 end
+
+
+local function getInfoBlock(tPlugin, aAttr, ulBusIdx, ulUnitIdx)
+	local aResult = nil
+
+	local aulParameter = {}
+	-- set the parameter
+	aulParameter[1] = 0xffffffff
+	aulParameter[2] = aAttr.ulParameter+0x0c
+	aulParameter[3] = 0x00000000
+	-- set the extended parameter
+	aulParameter[4] = 0x00020000                            -- parameter version: 2.0
+	aulParameter[5] = OPERATION_MODE_GetBoardInfo           -- operation mode: get board info
+	aulParameter[6] = ulBusIdx
+	aulParameter[7] = ulUnitIdx
+	aulParameter[8] = aAttr.ulBufferAdr
+	aulParameter[9] = aAttr.ulBufferLen
+
+	set_parameterblock(tPlugin, aAttr.ulParameter, aulParameter)
+
+
+	tPlugin:call(aAttr.ulExecAddress, aAttr.ulParameter, callback, 2)
+
+	-- get the result
+	local ulValue = tPlugin:read_data32(aAttr.ulParameter+0x00)
+	print(string.format("call finished with result 0x%08x", ulValue))
+	if ulValue==0 then
+		-- Get the size of the board description.
+		local sizInfoMax = tPlugin:read_data32(aAttr.ulParameter+0x08)
+		if sizInfoMax>0 then
+			-- Get the board information.
+			strInfo = tPlugin:read_image(aAttr.ulBufferAdr, sizInfoMax, progress, sizInfoMax)
+
+			-- Get the number of entries.
+			local sizEntryNum = strInfo:byte(1)
+
+			aResult = {}
+
+			-- Loop over all entries.
+			strNames = strInfo:sub(2)
+			for strIdx,strName in string.gmatch(strNames, "(.)([^%z]+)%z") do
+				table.insert(aResult, { iIdx=strIdx:byte(1), strName=strName })
+			end
+		end
+	end
+
+	return aResult
+end
+
+
+function getBoardInfo(tPlugin, aAttr)
+	-- Get the bus infos.
+	local aBoardInfo = getInfoBlock(tPlugin, aAttr, 0xffffffff, 0xffffffff)
+	for iCnt,aBusInfo in ipairs(aBoardInfo) do
+		-- Get the unit info.
+		local aUnitInfo = getInfoBlock(tPlugin, aAttr, aBusInfo.iIdx, 0xffffffff)
+		aBusInfo.aUnitInfo = aUnitInfo
+	end
+
+	return aBoardInfo
+end
+
 

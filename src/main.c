@@ -31,6 +31,7 @@
 
 
 #include "flasher_interface.h"
+#include "units.h"
 #include "uprintf.h"
 
 #include "main.h"
@@ -423,6 +424,54 @@ static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(tFlasherInputParameter *ptAp
 /* ------------------------------------- */
 
 
+static NETX_CONSOLEAPP_RESULT_T opMode_getBoardInfo(tFlasherInputParameter *ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	unsigned long ulBusId;
+	unsigned long ulUnitId;
+	unsigned char *pucBuffer;
+	size_t sizBuffer;
+	BUS_T tBusId;
+	size_t sizData;
+
+
+
+	ulBusId = ptAppParams->uParameter.tGetBoardInfo.ulBusId;
+	ulUnitId = ptAppParams->uParameter.tGetBoardInfo.ulUnitId;
+
+	pucBuffer = ptAppParams->uParameter.tGetBoardInfo.pucBuffer;
+	sizBuffer = ptAppParams->uParameter.tGetBoardInfo.sizBuffer;
+
+	if( ulBusId==0xffffffffU )
+	{
+		sizData = units_make_bus_table(pucBuffer, sizBuffer);
+		ptConsoleParams->pvReturnMessage = (void*)sizData;
+
+		tResult = NETX_CONSOLEAPP_RESULT_OK;
+	}
+	else if( ulUnitId==0xffffffffU )
+	{
+		tBusId = (BUS_T)ulBusId;
+		sizData = units_make_unit_table(tBusId, pucBuffer, sizBuffer);
+		ptConsoleParams->pvReturnMessage = (void*)sizData;
+
+		tResult = NETX_CONSOLEAPP_RESULT_OK;
+	}
+	else
+	{
+		/* No unit info yet. */
+		ptConsoleParams->pvReturnMessage = NULL;
+
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+
+	return tResult;
+}
+
+
+/* ------------------------------------- */
+
+
 NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTestParam)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
@@ -505,6 +554,11 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 			case OPERATION_MODE_GetEraseArea:
 				uprintf(". Operation Mode: Get Erase Area\n");
 				tResult = opMode_getEraseArea(ptAppParams);
+				break;
+
+			case OPERATION_MODE_GetBoardInfo:
+				uprintf(". Operation Mode: Get Board Info\n");
+				tResult = opMode_getBoardInfo(ptAppParams, ptTestParam);
 				break;
 
 			default:
