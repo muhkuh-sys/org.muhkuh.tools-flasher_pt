@@ -26,7 +26,40 @@
 
 const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
 {
-        /* Atmel AT26DF161A */
+
+       /* Atmel AT25DF161, tested by customer */ /* from 1.0.434.1 */
+        {
+                                 .acName = "AT25DF161\0",                               /* name                       */
+                                 .ulSize = 2097152,                                     /* size                       */
+                                .ulClock = 50000,                                       /* minClock                   */
+                             .ulPageSize = 256,                                         /* pageSize                   */
+                          .ulSectorPages = 16,                                          /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_LINEAR,                         /* address mode               */
+                           .ucReadOpcode = 0x03,                                        /* readOpcode                 */
+                    .ucReadOpcodeDCBytes = 0,                                           /* readOpcodeDCBytes          */
+                    .ucWriteEnableOpcode = 0x06,                                        /* writeEnableOpcode          */
+                      .ucErasePageOpcode = 0x00,                                        /* erase page                 */
+                    .ucEraseSectorOpcode = 0x20,                                        /* eraseSectorOpcode          */
+                      .uiEraseChipCmdLen = 1,                                           /* erase chip command length  */
+                        .aucEraseChipCmd = {0x60},                                      /* erase chip command         */
+                       .ucPageProgOpcode = 0x02,                                        /* pageProgOpcode             */
+                           .ucBufferFill = 0x00,                                        /* buffer fill opcode         */
+                    .ucBufferWriteOpcode = 0x00,                                        /* buffer write opcode        */
+               .ucEraseAndPageProgOpcode = 0x00,                                        /* eraseAndPageProgOpcode     */
+                     .ucReadStatusOpcode = 0x05,                                        /* readStatusOpcode           */
+                      .ucStatusReadyMask = 0x01,                                        /* statusReadyMask            */
+                     .ucStatusReadyValue = 0x00,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 1,                                           /* initCmd0_length            */
+                            .aucInitCmd0 = {0x06},                                      /* initCmd0                   */
+                      .uiInitCmd1_length = 2,                                           /* initCmd1_length            */
+                            .aucInitCmd1 = {0x01, 0x00},                                /* initCmd1                   */
+                             .uiIdLength = 5,                                           /* id_length                  */
+                              .aucIdSend = {0x9f, 0x00, 0x00, 0x00, 0x00},              /* id_send                    */
+                              .aucIdMask = {0x00, 0xff, 0xff, 0xff, 0xff},              /* id_mask                    */
+                             .aucIdMagic = {0x00, 0x1f, 0x46, 0x02, 0x00}               /* id_magic                   */
+        },
+
+        /* Atmel AT26DF161A */ 
         {
                                  .acName = "AT26DF161A\0",                              /* name                       */
                                  .ulSize = 2097152,                                     /* size                       */
@@ -480,7 +513,7 @@ const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
         {
                                  .acName = "SST25VF010\0",                              /* name                       */
                                  .ulSize = 131072,                                      /* size                       */
-                                .ulClock = 200000,                                      /* minClock                   */
+                                .ulClock = 20000,                                       /* minClock                   */
                              .ulPageSize = 1,                                           /* pageSize                   */
                           .ulSectorPages = 4096,                                        /* sectorSize                 */
                                .tAdrMode = SPIFLASH_ADR_LINEAR,                         /* address mode               */
@@ -636,6 +669,47 @@ const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
                              .aucIdMagic = {0x00, 0x00, 0x00, 0x00, 0x05}               /* id_magic                   */
         },
 
+        /* ST M25P10VP (tested), Numonyx M25P10-A */ /* from 1.0.434.1 */
+        /* NOTE: This entry must precede the Saifun SA25F010 entry to avoid confusion. */
+        {
+                                 .acName = "M25P10VP\0",                                /* name                       */
+                                 .ulSize = 131072,                                      /* size                       */
+                                .ulClock = 25000,                                       /* minClock                   */
+                             .ulPageSize = 256,                                         /* pageSize                   */
+                          .ulSectorPages = 128,                                         /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_LINEAR,                         /* address mode               */
+                           .ucReadOpcode = 0x03,                                        /* readOpcode                 */
+                    .ucReadOpcodeDCBytes = 0,                                           /* readOpcodeDCBytes          */
+                    .ucWriteEnableOpcode = 0x06,                                        /* writeEnableOpcode          */
+                      .ucErasePageOpcode = 0,                                           /* erase page                 */
+                    .ucEraseSectorOpcode = 0xd8,                                        /* eraseSectorOpcode          */
+                      .uiEraseChipCmdLen = 1,                                           /* erase chip command length  */
+                        .aucEraseChipCmd = {0xc7},                                      /* erase chip command         */
+                       .ucPageProgOpcode = 0x02,                                        /* pageProgOpcode             */
+                           .ucBufferFill = 0x00,                                        /* buffer fill opcode         */
+                    .ucBufferWriteOpcode = 0x00,                                        /* buffer write opcode        */
+               .ucEraseAndPageProgOpcode = 0x00,                                        /* eraseAndPageProgOpcode     */
+                     .ucReadStatusOpcode = 0x05,                                        /* readStatusOpcode           */
+                      .ucStatusReadyMask = 0x01,                                        /* statusReadyMask            */
+                     .ucStatusReadyValue = 0x00,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
+                            .aucInitCmd0 = {0},                                         /* initCmd0                   */
+                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
+                            .aucInitCmd1 = {0},                                         /* initCmd1                   */
+                             .uiIdLength = 4,                                           /* id_length                  */
+                              .aucIdSend = {0x9f, 0x00, 0x00, 0x00},                    /* id_send                    */
+                              .aucIdMask = {0x00, 0xff, 0xff, 0xff},                    /* id_mask                    */
+                             .aucIdMagic = {0x00, 0x20, 0x20, 0x11}                     /* id_magic                   */
+                              
+        /* alternative id - Saifun SA25F010 and ST M25P10 will also match this one.*/
+#if 0                             
+                             .uiIdLength = 5,                                           /* id_length                  */
+                              .aucIdSend = {0xab, 0x00, 0x00, 0x00, 0x00},              /* id_send                    */
+                              .aucIdMask = {0x00, 0x00, 0x00, 0x00, 0xff},              /* id_mask                    */
+                             .aucIdMagic = {0x00, 0x00, 0x00, 0x00, 0x10}               /* id_magic                   */
+#endif                              
+        },
+        
         /* Saifun SA25F010 */
         /* NOTE: the obsolete ST M25P10 will also match, it is not recommended (has no page erase) */
         {
@@ -1279,6 +1353,40 @@ const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
                               .aucIdMask = {0x00, 0xff, 0xff, 0xff},                    /* id_mask                    */
                              .aucIdMagic = {0x00, 0xef, 0x30, 0x16}                     /* id_magic                   */
         },
+
+#if 0
+        /* Atmel AT25DF321A - new, not tested*/
+        {
+                                 .acName = "AT25DF321A\0",                              /* name                       */
+                                 .ulSize = 0x400000,                                    /* size                       */
+                                .ulClock = 20000,                                       /* minClock                   */
+                             .ulPageSize = 256,                                         /* pageSize                   */
+                          .ulSectorPages = 16,                                          /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_LINEAR,                         /* address mode               */
+                           .ucReadOpcode = 0x03,                                        /* readOpcode                 */
+                    .ucReadOpcodeDCBytes = 0,                                           /* readOpcodeDCBytes          */
+                    .ucWriteEnableOpcode = 0x06,                                        /* writeEnableOpcode          */
+                      .ucErasePageOpcode = 0x00,                                        /* erase page                 */
+                    .ucEraseSectorOpcode = 0x20,                                        /* eraseSectorOpcode          */
+                      .uiEraseChipCmdLen = 1,                                           /* erase chip command length  */
+                        .aucEraseChipCmd = {0x60},                                      /* erase chip command         */
+                       .ucPageProgOpcode = 0x02,                                        /* pageProgOpcode             */
+                           .ucBufferFill = 0x00,                                        /* buffer fill opcode         */
+                    .ucBufferWriteOpcode = 0x00,                                        /* buffer write opcode        */
+               .ucEraseAndPageProgOpcode = 0x00,                                        /* eraseAndPageProgOpcode     */
+                     .ucReadStatusOpcode = 0x05,                                        /* readStatusOpcode           */
+                      .ucStatusReadyMask = 0x01,                                        /* statusReadyMask            */
+                     .ucStatusReadyValue = 0x00,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 1,                                           /* initCmd0_length            */
+                            .aucInitCmd0 = { 0x06 },                                    /* initCmd0                   */
+                      .uiInitCmd1_length = 2,                                           /* initCmd1_length            */
+                            .aucInitCmd1 = { 0x01, 0x02 },                              /* initCmd1                   */
+                             .uiIdLength = 4,                                           /* id_length                  */
+                              .aucIdSend = {0x9f, 0x00, 0x00, 0x00},                    /* id_send                    */
+                              .aucIdMask = {0x00, 0xff, 0xff, 0xff},                    /* id_mask                    */
+                             .aucIdMagic = {0x00, 0x1f, 0x47, 0x01}                     /* id_magic                   */
+        },
+#endif       
 
         /* Atmel AT25F1024A */
         {
