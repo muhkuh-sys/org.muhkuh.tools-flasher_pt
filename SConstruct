@@ -26,7 +26,7 @@
 #
 
 SConscript('mbs/SConscript')
-Import('env_default', 'env_netx500_default', 'env_netx50_default', 'env_netx10_default')
+Import('env_default')
 
 #----------------------------------------------------------------------------
 # This is the list of sources. The elements must be separated with whitespace
@@ -95,6 +95,12 @@ env_default.SVNVersion('src/flasher_version.h', 'templates/flasher_version.h')
 #
 # build the files
 #
+
+env_netx500_default = env_default.CreateCompilerEnv('500', 'arm926ej-s')
+env_netx50_default  = env_default.CreateCompilerEnv('50',  'arm966e-s')
+env_netx10_default  = env_default.CreateCompilerEnv('10',  'arm966e-s')
+
+
 env_netx500_intram = env_netx500_default.Clone()
 env_netx500_intram.Replace(LDFILE = File('src/netx500/netx500.ld'))
 env_netx500_intram.Append(CPPPATH = ['src', 'src/netx500'])
