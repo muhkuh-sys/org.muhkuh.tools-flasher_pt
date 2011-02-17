@@ -93,40 +93,67 @@ env_default.SVNVersion('src/flasher_version.h', 'templates/flasher_version.h')
 
 #----------------------------------------------------------------------------
 #
-# build the files
+# Create the compiler environments.
 #
 
 env_netx500_default = env_default.CreateCompilerEnv('500', 'arm926ej-s')
+env_netx500_default.Replace(LDFILE = File('src/netx500/netx500.ld'))
+env_netx500_default.Append(CPPPATH = ['src', 'src/netx500'])
+
 env_netx50_default  = env_default.CreateCompilerEnv('50',  'arm966e-s')
+env_netx50_default.Replace(LDFILE = File('src/netx50/netx50.ld'))
+env_netx50_default.Append(CPPPATH = ['src', 'src/netx50'])
+
 env_netx10_default  = env_default.CreateCompilerEnv('10',  'arm966e-s')
+env_netx10_default.Replace(LDFILE = File('src/netx10/netx10.ld'))
+env_netx10_default.Append(CPPPATH = ['src', 'src/netx10'])
 
 
-env_netx500_intram = env_netx500_default.Clone()
-env_netx500_intram.Replace(LDFILE = File('src/netx500/netx500.ld'))
-env_netx500_intram.Append(CPPPATH = ['src', 'src/netx500'])
-src_netx500_intram = env_netx500_intram.SetBuildPath('targets/netx500_intram', 'src', src_netx500)
-elf_netx500_intram = env_netx500_intram.Elf('targets/flasher_netx500.elf', src_netx500_intram)
-bin_netx500_intram = env_netx500_intram.ObjCopy('targets/flasher_netx500.bin', elf_netx500_intram)
+#----------------------------------------------------------------------------
+#
+# Build the flasher without debug messages.
+#
+env_netx500_nodbg = env_netx500_default.Clone()
+env_netx500_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+src_netx500_nodbg = env_netx500_nodbg.SetBuildPath('targets/netx500_nodbg', 'src', src_netx500)
+elf_netx500_nodbg = env_netx500_nodbg.Elf('targets/flasher_netx500.elf', src_netx500_nodbg)
+bin_netx500_nodbg = env_netx500_nodbg.ObjCopy('targets/flasher_netx500.bin', elf_netx500_nodbg)
 
-env_netx50_intram = env_netx50_default.Clone()
-env_netx50_intram.Replace(LDFILE = File('src/netx50/netx50.ld'))
-env_netx50_intram.Append(CPPPATH = ['src', 'src/netx50'])
-src_netx50_intram = env_netx50_intram.SetBuildPath('targets/netx50_intram', 'src', src_netx50)
-elf_netx50_intram = env_netx50_intram.Elf('targets/flasher_netx50.elf', src_netx50_intram)
-bin_netx50_intram = env_netx50_intram.ObjCopy('targets/flasher_netx50.bin', elf_netx50_intram)
-uue_netx50_intram = env_netx50_intram.UUEncode('targets/flasher_netx50.uue', bin_netx50_intram, UUE_ELF=elf_netx50_intram, UUE_PRE = """
-LUUE ${LOAD_HEX}
-""", UUE_POST = "CALL ${EXEC_HEX}")
+env_netx50_nodbg = env_netx50_default.Clone()
+env_netx50_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+src_netx50_nodbg = env_netx50_nodbg.SetBuildPath('targets/netx50_nodbg', 'src', src_netx50)
+elf_netx50_nodbg = env_netx50_nodbg.Elf('targets/flasher_netx50.elf', src_netx50_nodbg)
+bin_netx50_nodbg = env_netx50_nodbg.ObjCopy('targets/flasher_netx50.bin', elf_netx50_nodbg)
 
-env_netx10_intram = env_netx10_default.Clone()
-env_netx10_intram.Replace(LDFILE = File('src/netx10/netx10.ld'))
-env_netx10_intram.Append(CPPPATH = ['src', 'src/netx10'])
-src_netx10_intram = env_netx10_intram.SetBuildPath('targets/netx10_intram', 'src', src_netx10)
-elf_netx10_intram = env_netx10_intram.Elf('targets/flasher_netx10.elf', src_netx10_intram)
-bin_netx10_intram = env_netx10_intram.ObjCopy('targets/flasher_netx10.bin', elf_netx10_intram)
-uue_netx10_intram = env_netx10_intram.UUEncode('targets/flasher_netx10.uue', bin_netx10_intram, UUE_ELF=elf_netx10_intram, UUE_PRE = """
-l ${LOAD_HEX}
-""", UUE_POST = "g ${EXEC_HEX} 0")
+env_netx10_nodbg = env_netx10_default.Clone()
+env_netx10_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+src_netx10_nodbg = env_netx10_nodbg.SetBuildPath('targets/netx10_nodbg', 'src', src_netx10)
+elf_netx10_nodbg = env_netx10_nodbg.Elf('targets/flasher_netx10.elf', src_netx10_nodbg)
+bin_netx10_nodbg = env_netx10_nodbg.ObjCopy('targets/flasher_netx10.bin', elf_netx10_nodbg)
+
+
+#----------------------------------------------------------------------------
+#
+# Build the flasher with debug messages.
+#
+
+env_netx500_dbg = env_netx500_default.Clone()
+env_netx500_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+src_netx500_dbg = env_netx500_dbg.SetBuildPath('targets/netx500_dbg', 'src', src_netx500)
+elf_netx500_dbg = env_netx500_dbg.Elf('targets/flasher_netx500_debug.elf', src_netx500_dbg)
+bin_netx500_dbg = env_netx500_dbg.ObjCopy('targets/flasher_netx500_debug.bin', elf_netx500_dbg)
+
+env_netx50_dbg = env_netx50_default.Clone()
+env_netx50_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+src_netx50_dbg = env_netx50_dbg.SetBuildPath('targets/netx50_dbg', 'src', src_netx50)
+elf_netx50_dbg = env_netx50_dbg.Elf('targets/flasher_netx50_debug.elf', src_netx50_dbg)
+bin_netx50_dbg = env_netx50_dbg.ObjCopy('targets/flasher_netx50_debug.bin', elf_netx50_dbg)
+
+env_netx10_dbg = env_netx10_default.Clone()
+env_netx10_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+src_netx10_dbg = env_netx10_dbg.SetBuildPath('targets/netx10_dbg', 'src', src_netx10)
+elf_netx10_dbg = env_netx10_dbg.Elf('targets/flasher_netx10_debug.elf', src_netx10_dbg)
+bin_netx10_dbg = env_netx10_dbg.ObjCopy('targets/flasher_netx10_debug.bin', elf_netx10_dbg)
 
 
 #----------------------------------------------------------------------------
