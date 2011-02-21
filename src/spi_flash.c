@@ -423,17 +423,18 @@ static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucC
 *   unlock the flash's write protection
 *               
 *   \param   ptFlash           Pointer to flash Control Block
-*   \return  iResult           >=0 success, <0 error                         */
+*   \return  iResult           =0 success, <>0 error                         */
+
 static int write_enable(const SPI_FLASH_T *ptFlash)
 {
-	int iResult = 1;
+	int iResult;
 	unsigned char ucOpcode;
 
-
 	DEBUGMSG(ZONE_FUNCTION, ("+write_enable(): ptFlash=0x%08x\n", ptFlash));
-
+	
 	/*  does the device support write protection? */
 	ucOpcode = ptFlash->tAttributes.ucWriteEnableOpcode;
+	
 	if( ucOpcode!=0 )
 	{
 		/* send the 'write enable' command */
@@ -442,6 +443,10 @@ static int write_enable(const SPI_FLASH_T *ptFlash)
 		{
 			DEBUGMSG(ZONE_ERROR, ("ERROR: write_enable: send_simple_command failed with %d.\n", iResult));
 		}
+	} 
+	else 
+	{
+		iResult = 0;
 	}
 
 	DEBUGMSG(ZONE_FUNCTION, ("-write_enable(): iResult=%d.\n", iResult));

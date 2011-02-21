@@ -38,12 +38,21 @@ static const UNIT_TABLE_T tUnitTable_BusSPI =
 };
 
 
+static const UNIT_TABLE_T tUnitTable_BusParFlash =
+{
+	.sizEntries = 1,
+	.atEntries =
+	{
+		{ 0,  "SRamBus",    NULL }
+	}
+};
+
 const BUS_TABLE_T tBusTable =
 {
 	.sizEntries = 2,
 	.atEntries =
 	{
-		{ BUS_ParFlash,  "Parallel Flash",      NULL },
+		{ BUS_ParFlash,  "Parallel Flash",      &tUnitTable_BusParFlash },
 		{ BUS_SPI,       "Serial Flash",        &tUnitTable_BusSPI }
 	}
 };

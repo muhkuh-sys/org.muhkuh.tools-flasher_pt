@@ -21,6 +21,10 @@
 module("flasher", package.seeall)
 
 require("bit")
+require("tester")
+local progress = tester.callback_progress
+local callback = tester.callback
+
 
 BUS_Parflash    = 0             -- parallel flash
 BUS_Spi         = 1             -- serial flash on spi bus
@@ -51,27 +55,18 @@ MSK_SQI_CFG_IDLE_IO3_OUT         = 0x20
 SRT_SQI_CFG_IDLE_IO3_OUT         = 5
 
 
-local function progress(cnt,max)
-	print(string.format("%d%% (%d/%d)", cnt*100/max, cnt, max))
-	return true
-end
 
-local function callback(a,b)
-	print(string.format("'%s'", a))
-	return true
-end
-
-
-local function set_parameterblock(tPlugin, ulAddress, aulParameters)
-	local strBin = ""
-
-
-	for i,v in ipairs(aulParameters) do
-		strBin = strBin .. string.char( bit.band(v,0xff), bit.band(bit.rshift(v,8),0xff), bit.band(bit.rshift(v,16),0xff), bit.band(bit.rshift(v,24),0xff) )
-	end
-	tPlugin:write_image(ulAddress, strBin, progress, string.len(strBin))
-end
-
+-- Download flasher.
+-- tPlugin plugin object with an active connection
+-- strPrefix path to flasher binaries
+-- fnCallback callback to call while downloading the flasher
+--
+-- - Load the flasher binary according to the chip type the
+--    plugin is connected to
+-- - Extract header information from the flasher
+--   (static information about code/exec/buffer addresses)
+-- - Download the flasher to the specified address
+-- - Returns header information
 
 function download(tPlugin, strPrefix, fnCallback)
 	-- Get the chiptyp.
@@ -79,6 +74,7 @@ function download(tPlugin, strPrefix, fnCallback)
 	local aAttr = {}
 
 	-- Get the binary for the ASIC.
+	print(string.format("detected chip type: %d %s", tAsicTyp, tPlugin:GetChiptypName(tAsicTyp)))
 	if tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX50 then
 		aAttr.strBinaryName = strPrefix .. "flasher_netx50.bin"
 	elseif tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX100 or tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX500 then
@@ -86,7 +82,7 @@ function download(tPlugin, strPrefix, fnCallback)
 	elseif tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX10 then
 		aAttr.strBinaryName = strPrefix .. "flasher_netx10.bin"
 	else
-		error("Unknown chiptyp!")
+		error("Unknown chiptyp! " .. tostring(tAsicTyp))
 	end
 
 	-- Try to load the binary.
@@ -94,10 +90,10 @@ function download(tPlugin, strPrefix, fnCallback)
 	if not strData then
 		error("Failed to load binary '" .. aAttr.strBinaryName .. "': " .. msg)
 	else
+		print(string.format("loaded file %s, %d bytes", aAttr.strBinaryName, strData:len()))
 		-- Get the load and exec address from the binary.
 		aAttr.ulLoadAddress = strData:byte(33) + strData:byte(34)*0x00000100 + strData:byte(35)*0x00010000 + strData:byte(36)*0x01000000
 		aAttr.ulExecAddress = strData:byte(37) + strData:byte(38)*0x00000100 + strData:byte(39)*0x00010000 + strData:byte(40)*0x01000000
-
 		aAttr.ulParameter   = strData:byte(41) + strData:byte(42)*0x00000100 + strData:byte(43)*0x00010000 + strData:byte(44)*0x01000000
 		aAttr.ulDeviceDesc  = strData:byte(45) + strData:byte(46)*0x00000100 + strData:byte(47)*0x00010000 + strData:byte(48)*0x01000000
 		aAttr.ulBufferAdr   = strData:byte(49) + strData:byte(50)*0x00000100 + strData:byte(51)*0x00010000 + strData:byte(52)*0x01000000
@@ -113,76 +109,75 @@ function download(tPlugin, strPrefix, fnCallback)
 		-- download binary
 		print(string.format("downloading %s to 0x%08x", aAttr.strBinaryName, aAttr.ulLoadAddress))
 		tPlugin:write_image(aAttr.ulLoadAddress, strData, fnCallback, string.len(strData))
+		
 		return aAttr
 	end
 end
 
 
-function flash(tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress)
-	local ulValue
-	local aulParameter
-	local fIsOk
+local function set_parameterblock(tPlugin, ulAddress, aulParameters)
+	local strBin = ""
+	for i,v in ipairs(aulParameters) do
+		strBin = strBin .. string.char( bit.band(v,0xff), bit.band(bit.rshift(v,8),0xff), bit.band(bit.rshift(v,16),0xff), bit.band(bit.rshift(v,24),0xff) )
+	end
+	tPlugin:write_image(ulAddress, strBin, progress, string.len(strBin))
+end
 
-
-	aulParameter = {}
-	-- set the parameter
-	aulParameter[1] = 0xffffffff
-	aulParameter[2] = aAttr.ulParameter+0x0c
-	aulParameter[3] = 0x00000000
-	-- set the extended parameter
-	aulParameter[4] = 0x00020000                                    -- parameter version: 2.0
-	aulParameter[5] = OPERATION_MODE_Flash                          -- operation mode: Flash
-	aulParameter[6] = aAttr.ulDeviceDesc                            -- data block for the device description
-	aulParameter[7] = ulStartAdr
-	aulParameter[8] = ulDataByteSize
-	aulParameter[9] = ulDataAddress
+function callFlasher(tPlugin, aAttr, aulParams)
+	-- set the parameters
+	local aulParameter = {}
+	aulParameter[1] = 0xffffffff             -- placeholder for return vallue, will be 0 if ok
+	aulParameter[2] = aAttr.ulParameter+0x0c -- pointer to actual parameters
+	aulParameter[3] = 0x00000000             -- unused
+	                                         -- extended parameters
+	aulParameter[4] = 0x00020000             -- parameter version: 2.0
+	for i=1, #aulParams do
+		aulParameter[4+i] = aulParams[i]     -- actual parameters for the particular function
+	end
 
 	set_parameterblock(tPlugin, aAttr.ulParameter, aulParameter)
-
+	
+	-- call
 	tPlugin:call(aAttr.ulExecAddress, aAttr.ulParameter, callback, 2)
-
-	-- get the result
+	
+	-- get the return value (ok/failed)
+	-- any further return values must be read by the calling function
 	ulValue = tPlugin:read_data32(aAttr.ulParameter+0x00)
 	print(string.format("call finished with result 0x%08x", ulValue))
-	fIsOk = (ulValue==0)
+	return ulValue
+end
 
-	return fIsOk
+
+function flash(tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress)
+	local aulParameter = 
+	{
+		OPERATION_MODE_Flash,
+		aAttr.ulDeviceDesc,
+		ulStartAdr,
+		ulDataByteSize,
+		ulDataAddress
+	}
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
+	return ulValue == 0
 end
 
 
 
 function erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
-	local ulValue
-	local aulParameter
-	local fIsOk
-
-
-	aulParameter = {}
-	-- set the parameter
-	aulParameter[1] = 0xffffffff
-	aulParameter[2] = aAttr.ulParameter+0x0c
-	aulParameter[3] = 0x00000000
-	-- set the extended parameter
-	aulParameter[4] = 0x00020000                                    -- parameter version: 2.0
-	aulParameter[5] = OPERATION_MODE_Erase                          -- operation mode: erase
-	aulParameter[6] = aAttr.ulDeviceDesc                            -- data block for the device description
-	aulParameter[7] = ulEraseStart
-	aulParameter[8] = ulEraseEnd
-
-	set_parameterblock(tPlugin, aAttr.ulParameter, aulParameter)
-
-	tPlugin:call(aAttr.ulExecAddress, aAttr.ulParameter, callback, 2)
-
-	-- get the result
-	ulValue = tPlugin:read_data32(aAttr.ulParameter+0x00)
-	print(string.format("call finished with result 0x%08x", ulValue))
-	fIsOk = (ulValue==0)
-
-	return fIsOk
+	local aulParameter = 
+	{
+		OPERATION_MODE_Erase,                          -- operation mode: erase
+		aAttr.ulDeviceDesc,                            -- data block for the device description
+		ulEraseStart,
+		ulEraseEnd
+	}
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
+	return ulValue == 0
 end
 
 
 
+-- ulDevDescAdr is unused
 function detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, ulDevDescAdr)
 	local ulValue
 	local aulParameter
@@ -190,33 +185,26 @@ function detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, ulDevDescAdr)
 	local ulIdleCfg
 
 
-	ulIdleCfg = MSK_SQI_CFG_IDLE_IO1_OE + MSK_SQI_CFG_IDLE_IO1_OUT + MSK_SQI_CFG_IDLE_IO2_OE + MSK_SQI_CFG_IDLE_IO2_OUT + MSK_SQI_CFG_IDLE_IO3_OE + MSK_SQI_CFG_IDLE_IO3_OUT
+	ulIdleCfg = 
+	  MSK_SQI_CFG_IDLE_IO1_OE + MSK_SQI_CFG_IDLE_IO1_OUT 
+	+ MSK_SQI_CFG_IDLE_IO2_OE + MSK_SQI_CFG_IDLE_IO2_OUT 
+	+ MSK_SQI_CFG_IDLE_IO3_OE + MSK_SQI_CFG_IDLE_IO3_OUT
 
-	aulParameter = {}
-	-- set the parameter
-	aulParameter[ 1] = 0xffffffff
-	aulParameter[ 2] = aAttr.ulParameter+0x0c
-	aulParameter[ 3] = 0x00000000
-	-- set the extended parameter
-	aulParameter[ 4] = 0x00020000                           -- parameter version: 2.0
-	aulParameter[ 5] = OPERATION_MODE_Detect                -- operation mode: detect
-	aulParameter[ 6] = tBus                                 -- device: spi flash
-	aulParameter[ 7] = ulUnit                               -- unit
-	aulParameter[ 8] = ulChipSelect                         -- chip select: 1
-	aulParameter[ 9] = 1000                                 -- initial speed in kHz (1000 -> 1MHz)
-	aulParameter[10] = ulIdleCfg                            -- idle config
-	aulParameter[11] = 3                                    -- mode
-	aulParameter[12] = 0xffffffff                           -- mmio config
-	aulParameter[13] = aAttr.ulDeviceDesc                   -- data block for the device description
-
-	set_parameterblock(tPlugin, aAttr.ulParameter, aulParameter)
-
-
-	tPlugin:call(aAttr.ulExecAddress, aAttr.ulParameter, callback, 2)
-
-	-- get the result
-	ulValue = tPlugin:read_data32(aAttr.ulParameter+0x00)
-	print(string.format("call finished with result 0x%08x", ulValue))
+	aulParameter = 
+	{
+		OPERATION_MODE_Detect,                -- operation mode: detect
+		tBus,                                 -- device: spi flash
+		ulUnit,                               -- unit
+		ulChipSelect,                         -- chip select: 1
+		1000,                                 -- initial speed in kHz (1000 -> 1MHz)
+		ulIdleCfg,                            -- idle config
+		3,                                    -- mode
+		0xffffffff,                           -- mmio config
+		aAttr.ulDeviceDesc                    -- data block for the device description
+	}
+	
+	ulValue = callFlasher(tPlugin, aAttr, aulParameter)
+	
 	if ulValue==0 then
 		-- check the device description
 		ulValue = tPlugin:read_data32(aAttr.ulDeviceDesc)
@@ -255,28 +243,15 @@ function getEraseArea(tPlugin, aAttr, ulStartAdr, ulEndAdr)
 	local ulEraseStart
 	local ulEraseEnd
 
-
-	aulParameter = {}
-	-- set the parameter
-	aulParameter[1] = 0xffffffff
-	aulParameter[2] = aAttr.ulParameter+0x0c
-	aulParameter[3] = 0x00000000
-	-- set the extended parameter
-	aulParameter[4] = 0x00020000                            -- parameter version: 2.0
-	aulParameter[5] = OPERATION_MODE_GetEraseArea           -- operation mode: get erase area
-	aulParameter[6] = aAttr.ulDeviceDesc                    -- data block for the device description
-	aulParameter[7] = ulStartAdr
-	aulParameter[8] = ulEndAdr
-
-
-	set_parameterblock(tPlugin, aAttr.ulParameter, aulParameter)
-
-
-	tPlugin:call(aAttr.ulExecAddress, aAttr.ulParameter, callback, 2)
-
-	-- get the result
-	ulValue = tPlugin:read_data32(aAttr.ulParameter+0x00)
-	print(string.format("call finished with result 0x%08x", ulValue))
+	aulParameter = 
+	{
+		OPERATION_MODE_GetEraseArea,           -- operation mode: get erase area
+		aAttr.ulDeviceDesc,                    -- data block for the device description
+		ulStartAdr,
+		ulEndAdr
+	}
+	
+	ulValue = callFlasher(tPlugin, aAttr, aulParameter)
 	if ulValue==0 then
 		-- check the device description
 		ulEraseStart = tPlugin:read_data32(aAttr.ulParameter+0x18)
@@ -286,36 +261,18 @@ function getEraseArea(tPlugin, aAttr, ulStartAdr, ulEndAdr)
 	return ulEraseStart, ulEraseEnd
 end
 
-
-
 function isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
-	local ulValue
-	local aulParameter
-	local ulEraseStart
-	local ulEraseEnd
-	local fIsErased
+	local fIsErased = false
 
-
-	aulParameter = {}
-	-- set the parameter
-	aulParameter[1] = 0xffffffff
-	aulParameter[2] = aAttr.ulParameter+0x0c
-	aulParameter[3] = 0x00000000
-	-- set the extended parameter
-	aulParameter[4] = 0x00020000                            -- parameter version: 2.0
-	aulParameter[5] = OPERATION_MODE_IsErased               -- operation mode: isErased
-	aulParameter[6] = aAttr.ulDeviceDesc                    -- data block for the device description
-	aulParameter[7] = ulEraseStart
-	aulParameter[8] = ulEraseEnd
-
-	set_parameterblock(tPlugin, aAttr.ulParameter, aulParameter)
-
-
-	tPlugin:call(aAttr.ulExecAddress, aAttr.ulParameter, callback, 2)
-
-	-- get the result
-	ulValue = tPlugin:read_data32(aAttr.ulParameter+0x00)
-	print(string.format("call finished with result 0x%08x", ulValue))
+	local aulParameter = 
+	{
+		OPERATION_MODE_IsErased,               -- operation mode: isErased
+		aAttr.ulDeviceDesc,                    -- data block for the device description
+		ulEraseStart,
+		ulEraseEnd
+	}
+	
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
 	if ulValue==0 then
 		-- check the device description
 		ulValue = tPlugin:read_data32(aAttr.ulParameter+0x08)
@@ -328,28 +285,18 @@ end
 
 local function getInfoBlock(tPlugin, aAttr, ulBusIdx, ulUnitIdx)
 	local aResult = nil
+	
+	local aulParameter = 
+	{
+		OPERATION_MODE_GetBoardInfo,           -- operation mode: get board info
+		ulBusIdx,
+		ulUnitIdx,
+		aAttr.ulBufferAdr,
+		aAttr.ulBufferLen
+	}
+	
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
 
-	local aulParameter = {}
-	-- set the parameter
-	aulParameter[1] = 0xffffffff
-	aulParameter[2] = aAttr.ulParameter+0x0c
-	aulParameter[3] = 0x00000000
-	-- set the extended parameter
-	aulParameter[4] = 0x00020000                            -- parameter version: 2.0
-	aulParameter[5] = OPERATION_MODE_GetBoardInfo           -- operation mode: get board info
-	aulParameter[6] = ulBusIdx
-	aulParameter[7] = ulUnitIdx
-	aulParameter[8] = aAttr.ulBufferAdr
-	aulParameter[9] = aAttr.ulBufferLen
-
-	set_parameterblock(tPlugin, aAttr.ulParameter, aulParameter)
-
-
-	tPlugin:call(aAttr.ulExecAddress, aAttr.ulParameter, callback, 2)
-
-	-- get the result
-	local ulValue = tPlugin:read_data32(aAttr.ulParameter+0x00)
-	print(string.format("call finished with result 0x%08x", ulValue))
 	if ulValue==0 then
 		-- Get the size of the board description.
 		local sizInfoMax = tPlugin:read_data32(aAttr.ulParameter+0x08)
@@ -359,9 +306,7 @@ local function getInfoBlock(tPlugin, aAttr, ulBusIdx, ulUnitIdx)
 
 			-- Get the number of entries.
 			local sizEntryNum = strInfo:byte(1)
-
 			aResult = {}
-
 			-- Loop over all entries.
 			strNames = strInfo:sub(2)
 			for strIdx,strName in string.gmatch(strNames, "(.)([^%z]+)%z") do

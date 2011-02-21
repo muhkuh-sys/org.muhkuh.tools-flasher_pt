@@ -164,24 +164,6 @@ typedef enum
 } CFI_SETUP_T;
 
 
-/* Structure describing a flash device. */
-struct tagFLASH_DEVICE
-{
-	unsigned char       ucManufacturer;          /* Manufacturer code provided by flash. */
-	unsigned char       ucDevice;                /* Device code provided by flash. */
-	unsigned short      usVendorCommandSet;      /* Vendor Command Set. */
-	BUS_WIDTH_T         tBits;                   /* Bus width. */
-	int                 fPaired;                 /* TRUE on 16/16 or 8/8 configurations. */
-	CFI_SETUP_T         tSetup;                  /* Bus width and paired mode. */
-	unsigned long       ulFlashSize;             /* Total size of flash in bytes. */
-	unsigned long       ulMaxBufferWriteSize;    /* Buffered Write buffer length in Bytes. */
-	unsigned char      *pucFlashBase;            /* Base address of flash device. */
-	unsigned long       ulSectorCnt;             /* Total number of sectors. */
-	FLASH_FUNCTIONS_T   tFlashFunctions;         /* Function pointer table for flash commands. */
-	PFN_FLASHSETUP      pfnSetup;                /* Function to setup the memory interface. */
-	char                acIdent[16];             /* Name of the device. */
-	SECTOR_INFO_T       atSectors[MAX_SECTORS];  /* Information for each sector. */
-};
 
 
 
@@ -214,10 +196,151 @@ typedef struct
   unsigned short  usInterfaceDescr;       /* Interface descriptor (see CFI Publication 100) */
   unsigned short  usMaxBufferWriteSize;   /* Maximum number of bytes in buffer to write (in 2^n Bytes) */
   unsigned char   bEraseBlockRegions;     /* Number of regions in device */
-  unsigned long   aulEraseBlockInformations[MAX_SECTORS]; /* information about each region (31-16: block size in 256 Byte increments, 15-0 number of cont. blocks -1) */
+  unsigned long   aulEraseRegionInfo[256]; /* information about each region (31-16: block size in 256 Byte increments, 15-0 number of cont. blocks -1) */
 } CFI_QUERY_INFORMATION;
+
+#define CFI_QUERY_BASE_SIZE (offsetof(CFI_QUERY_INFORMATION, aulEraseRegionInfo[0]))
+
+
+// ///////////////////////////////////////////////////// 
+//              Extended query header
+// ///////////////////////////////////////////////////// 
+
+typedef struct{
+  char abExtQueryIdent[3];                 //!< ASCII string "PRI" 
+  char bMajorVer;                          //!< major version number as ASCII char 
+  char bMinorVer;                          //!< minor version number as ASCII char 
+} CFI_EXTQUERY_HEADER_T;
+
+
+// ///////////////////////////////////////////////////// 
+//     Extended query structure V1.0-1.4 for Spansion
+// ///////////////////////////////////////////////////// 
+
+// fAddressSensitiveUnlock:
+//   bits 0-1 00 = required, 01= not required 
+//   PRI1.1/1.2: bits 2-7: process technology 
+//   PRI1.3:     bits 2-5: process technology 
+//            
+// bProtectScheme:           
+//   1 = AM29F040   (hardware only)
+//   2 = AM29F016   (hardware only)
+//   3 = AM29F400   (hardware only)
+//   4 = AM29LV800A (hardware only)
+//   5 = AM29BDS640 (software command locking)
+//   6 = AM29BDD160 (new sector protect)
+//   7 = AM29PDL128 (new sector protect + AM29LV800A)
+//   8 = Advanced sector protection
+// 
+// fSimultaneousOperation:   
+//   V 1.0: 0 = not supported, 1 = supported 
+//   V 1.2: 0 = not supported, XX = number of sectors in bank 2
+//   V 1.3: 0 = not supported, XX = number of sectors in bank in all banks except boot bank
+// 
+// bTopBottomBootSector:
+//   0 = device without WP control
+//   1 = 8x8kb sectors at to and bottom with WP control
+//   2 = Bottom boot device
+//   3 = Top boot device
+//   4 = Uniform/bottom WP protect
+//   5 = Uniform/top WP protect  
+//   V 1.2: If number of erase block regions = 1, ignore this field 
+
+typedef struct{
+  char abExtQueryIdent[3];                 //!< ASCII string "PRI" 
+  char bMajorVer;                          //!< major version number as ASCII char 
+  char bMinorVer;                          //!< minor version number as ASCII char 
+  unsigned char fAddressSensitiveUnlock;   //!< address sensitive unlock/process technology 
+  unsigned char fEraseSuspendSupported;    //!< 0 = not supported, 1 = read only, 2 = read/write 
+  unsigned char fSectorProtect;            //!< 0 = not supported, >0 = number of sectors per group 
+  unsigned char fTempSectorUnprotect;      //!< 0 = not supported, 1 = supported (hardware/software methods) 
+  unsigned char bProtectScheme;            //!< sector protection scheme 
+  unsigned char fSimultaneousOperation;    //!< simultaneous operation 
+  unsigned char fBurstModeType;            //!< 0 = not supported, 1 = supported 
+  unsigned char fPageModeType;             //!< 0 = not supported, 1 = 4 word page, 2 = 8 word page 
+  
+  //!< V 1.1 and above
+  unsigned char bSupplyMin;                //!< Acceleration Supply Minimum (7-4 BCD volts, 0-3 BCD 100mVolts) 
+  unsigned char bSupplyMax;                //!< Acceleration Supply Maximum (7-4 BCD volts, 0-3 BCD 100mVolts) 
+  unsigned char bTopBottomBootSector;
+  
+  //!< V 1.2 and above
+  unsigned char fProgramSuspend;           //!< 0 = not supported, 1 = supported 
+  
+  //!< V 1.4 and above
+  unsigned char fUnlockBypass;             //!< 0 = not supported, 1 = supported 
+  unsigned char bSecSiSize;                //!< 2^n bytes
+  unsigned char bEmbeddedHWResetMaxTimeout;//!< 2^n ns
+  unsigned char bNonEmbeddedHWResetMaxTimeout;//!< 2^n ns
+  unsigned char bEraseSuspendMaxTimeout;   //!< 2^n us
+  unsigned char bProgramSuspendMaxTimeout; //!< 2^n us
+  
+  //!< V1.3: only the first 4 entries are valid, V1.4: 32 entries
+  unsigned char bBankOrganization;         //!< 0: simultaneous operation = 0, xx = number of banks
+  unsigned char abBankInfo[32];            //!< number of sectors in banks 1-32
+} CFI_SPANSION_EXTQUERY_T;
+
+#define SPANSION_CFI_EXTQUERY_BASE_SIZE (offsetof(CFI_SPANSION_EXTQUERY_T, bSupplyMin))
+
+
+/*  
+ulFeatureSupport:
+Optional feature and command support(1=yes, 0=no) 
+bits 9–31 are reserved; undefined bits are 0. 
+If bit 31 is 1 then another 31 bit field of optional features 
+follows at the end of the bit-30 field.
+
+  bit0 Chip erase supported
+  bit1 Suspend erase supported
+  bit2 Suspend program supported
+  bit3 Legacy lock/unlock supported
+  bit4 Queued erase supported
+  bit5 Instant Individual block locking supported
+  bit6 Protection bits supported
+  bit7 Page-mode read supported
+  bit8 Synchronous read supported
+
+*/
+
+typedef struct{
+	char abExtQueryIdent[3];                 //!< ASCII string "PRI" 
+	char bMajorVer;                          //!< major version number as ASCII char 
+	char bMinorVer;                          //!< minor version number as ASCII char 
+	unsigned long ulFeatureSupport;          //!< optional feature and command support
+	unsigned char bAfterSuspend;             //!< supported functions after suspend
+	unsigned short usBlockStatusRegMask;     //!< block status register mask
+	unsigned char bVCCMax;                   //!< highest performance program/erase voltage (7-4 BCD volts, 0-3 BCD 100mVolts)
+	unsigned char bVPPOpt;                   //!< optimum program/erase voltage (7-4 BCD volts, 0-3 BCD 100mVolts)
+	unsigned char bNumProtectionRegFields;   //!< number of protection register fields
+	unsigned long aulProtectionFields[256];  //!< protection register fields
+} CFI_STRATA_EXTQUERY_T;
+
+
 #pragma pack()
 
+/* Structure describing a flash device. */
+struct tagFLASH_DEVICE
+{
+	unsigned char       ucManufacturer;          /* Manufacturer code provided by flash. */
+	unsigned char       ucDevice;                /* Device code provided by flash. */
+	unsigned short      usVendorCommandSet;      /* Vendor Command Set. */
+	BUS_WIDTH_T         tBits;                   /* Bus width. */
+	int                 fPaired;                 /* TRUE on 16/16 or 8/8 configurations. */
+	CFI_SETUP_T         tSetup;                  /* Bus width and paired mode. */
+	unsigned long       ulFlashSize;             /* Total size of flash in bytes. */
+	unsigned long       ulMaxBufferWriteSize;    /* Buffered Write buffer length in Bytes. */
+	unsigned char      *pucFlashBase;            /* Base address of flash device. */
+	unsigned long       ulSectorCnt;             /* Total number of sectors. */
+	FLASH_FUNCTIONS_T   tFlashFunctions;         /* Function pointer table for flash commands. */
+	PFN_FLASHSETUP      pfnSetup;                /* Function to setup the memory interface. */
+	char                acIdent[16];             /* Name of the device. */
+	SECTOR_INFO_T       atSectors[MAX_SECTORS];  /* Information for each sector. */
+	int                 fPriExtQueryValid;        //!< 1 if tPriExtQuery is valid, 0 if not
+	union {
+    	CFI_EXTQUERY_HEADER_T   tHeader;
+    	CFI_SPANSION_EXTQUERY_T tSpansion;  
+	} tPriExtQuery;                               //!< CFI primary extended query block
+};
 
 int CFI_IdentifyFlash(FLASH_DEVICE_T* ptFlashDevice, PARFLASH_CONFIGURATION_T *ptCfg);
 const SECTOR_INFO_T *cfi_find_matching_sector(const FLASH_DEVICE_T *ptFlashDescription, unsigned long ulAddress);

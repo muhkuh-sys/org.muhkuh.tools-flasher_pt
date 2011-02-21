@@ -54,7 +54,6 @@
 #if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
 static void setup_flash_srb(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits)
 {
-	unsigned long *pulFlashCtrl = (unsigned long*)(HOSTADR(extsram0_ctrl));
 	unsigned long  ulRegValue;
 
 
@@ -76,8 +75,88 @@ static void setup_flash_srb(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T t
 		break;
 	}
 
-	*pulFlashCtrl = ulRegValue;
+	//ptNetxControlledGlobalRegisterBlock2Area->aulExtsram_ctrl[ptCfg->uiChipSelect] = ulRegValue;
+	ptExtAsyncmemCtrlArea->aulExtsram_ctrl[ptCfg->uiChipSelect] = ulRegValue;
 }
+
+/* 
+0x00103610-361c Extension Bus Configuration Chip Select 0/1/2/3
+
+cs_en (bit 0) = 1
+16 bit mode   = 0/1
+nWr_mode      = 0
+ds_mode       = 0
+nRd_mode      = 0
+wait_en       = 0
+wait_polarity = 0
+Trdwrcyc      = 15
+TrdWroff      = 15
+Twron         = 1
+Trdon         = 1
+Tcson         = 0
+Tadrhold      = 0
+Talewidt      = 0
+*/
+
+static void setup_flash_ext(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits)
+{
+	unsigned long ulIoRegMode0;
+	unsigned long ulExtBusConfig;
+
+	if( ptCfg->uiChipSelect>3 )
+	{
+		DEBUGMSG(ZONE_ERROR, ("setup_flash_ext: Invalid chipselect! Must be 0, 1, 2 or 3, but is %d.\n", ptCfg->uiChipSelect));
+	}
+	else
+	{
+		switch(tBits)
+		{
+		case BUS_WIDTH_8Bit:
+			ulIoRegMode0   = 0xFFFFFFFF;
+			ulExtBusConfig = 0x0012F781;
+			break;
+	
+		case BUS_WIDTH_16Bit:
+			ulIoRegMode0   = 0xFFFFFFFF;
+			ulExtBusConfig = 0x0012F783;
+			break;
+		
+		default:
+			DEBUGMSG(ZONE_ERROR, ("setup_flash_ext: Invalid bus width! Must be 0 or 1, but is %d.\n", tBits));
+		}
+		
+		
+		ptNetxControlledGlobalRegisterBlock2Area->ulIo_reg_mode0        = ulIoRegMode0;
+		ptNetxControlledGlobalRegisterBlock2Area->ulIo_reg_mode1        = 0x000E7EFF;
+	
+		ptNetxControlledGlobalRegisterBlock2Area->ulIf_conf1            = 0x10000000;
+		/* ptNetXGlobalRegBlock2Area->ul_if_conf2      = 0x60000000; */
+	
+		ptNetxControlledGlobalRegisterBlock2Area->ulIo_reg_drv_en0      = 0xFFFFFFFF;
+		ptNetxControlledGlobalRegisterBlock2Area->ulIo_reg_drv_en1      = 0x000E7EFF;
+	
+		//ptNetXGlobalRegBlock2Area->aul_ext_bus_config[0]  = ulExtBusConfig;
+		switch (ptCfg->uiChipSelect)
+		{
+		case 0:
+			ptNetxControlledGlobalRegisterBlock2Area->ulExp_bus_reg = ulExtBusConfig;
+			break;
+			
+		case 1:
+			ptNetxControlledGlobalRegisterBlock2Area->ulDpmas_ext_config1 = ulExtBusConfig;
+			break;
+			
+		case 2:
+			ptNetxControlledGlobalRegisterBlock2Area->ulDpmas_ext_config2 = ulExtBusConfig;
+			break;
+			
+		case 3:
+			ptNetxControlledGlobalRegisterBlock2Area->ulDpmas_ext_config3 = ulExtBusConfig;
+			break;
+		}
+	}
+}
+
 #elif ASIC_TYP==10
 static void setup_flash(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits)
 {
@@ -91,11 +170,11 @@ static void setup_flash(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits
 	/* Check the parameters. */
 	if( tBits!=BUS_WIDTH_8Bit && tBits!=BUS_WIDTH_16Bit )
 	{
-		DEBUGMSG(ZONE_ERROR, ("Invalid bus width! Must be 0 or 1, but is %d.\n", tBits));
+		DEBUGMSG(ZONE_ERROR, ("setup_flash: Invalid bus width! Must be 0 or 1, but is %d.\n", tBits));
 	}
 	else if( uiChipSelect>3 )
 	{
-		DEBUGMSG(ZONE_ERROR, ("Invalid chipselect! Must be 0, 1, 2 or 3, but is %d.\n", uiChipSelect));
+		DEBUGMSG(ZONE_ERROR, ("setup_flash: Invalid chipselect! Must be 0, 1, 2 or 3, but is %d.\n", uiChipSelect));
 	}
 	else
 	{
@@ -142,8 +221,68 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	ptFlashDevice = &(ptDeviceDescription->uInfo.tParFlash);
 
 #if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
-	ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADDR(extsram0);
-	ptFlashDevice->pfnSetup = setup_flash_srb;
+	if( uiUnit==0 )
+	{
+		if( uiChipSelect>3 )
+		{
+			DEBUGMSG(ZONE_ERROR, ("Invalid chipselect for unit %d: %d\n", uiUnit, uiChipSelect));
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		}
+		else
+		{
+			switch(uiChipSelect)
+			{
+			case 0:
+				ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADDR(extsram0);
+				break;
+			case 1:
+				ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADDR(extsram1);
+				break;
+			case 2:
+				ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADDR(extsram2);
+				break;
+			case 3:
+				ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADDR(extsram3);
+				break;
+			}
+			ptFlashDevice->pfnSetup = setup_flash_srb;
+		}
+	}
+	else if( uiUnit==1 )
+	{
+		if( uiChipSelect>3 )
+		{
+			DEBUGMSG(ZONE_ERROR, ("Invalid chipselect for unit %d: %d\n", uiUnit, uiChipSelect));
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		}
+		else
+		{
+			//ptFlashDevice->pucFlashBase = (unsigned char*)(HOSTADDR(hif_ahbls6)+0x02000000*uiChipSelect);
+			
+			switch(uiChipSelect)
+			{
+			case 0:
+				ptFlashDevice->pucFlashBase = (unsigned char*)(HOSTADDR(hif_ahbls6)+0x02000000*0);
+				break;
+			case 1:
+				ptFlashDevice->pucFlashBase = (unsigned char*)(HOSTADDR(hif_ahbls6)+0x02000000*1);
+				break;
+			case 2:
+				ptFlashDevice->pucFlashBase = (unsigned char*)(HOSTADDR(hif_ahbls6)+0x02000000*2);
+				break;
+			case 3:
+				ptFlashDevice->pucFlashBase = (unsigned char*)(HOSTADDR(hif_ahbls6)+0x02000000*3);
+				break;
+			}
+			
+			ptFlashDevice->pfnSetup = setup_flash_ext;
+		}
+	}
+	else
+	{
+		DEBUGMSG(ZONE_ERROR, ("Invalid unit number: %d\n", uiUnit));
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
 #elif ASIC_TYP==10
 	if( uiUnit!=0 )
 	{
@@ -216,6 +355,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	return tResult;
 }
 
+/* end address is exclusive */
 
 NETX_CONSOLEAPP_RESULT_T parflash_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptParameter)
 {
@@ -254,7 +394,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptP
 
 		/* Look for the erase block which contains the start address. */
 		ptSectorStart = cfi_find_matching_sector(ptFlashDescription, ulStartAdr);
-		ptSectorEnd = cfi_find_matching_sector(ptFlashDescription, ulEndAdr);
+		ptSectorEnd = cfi_find_matching_sector(ptFlashDescription, ulEndAdr-1);
 
 		if( ptSectorStart!=NULL && ptSectorEnd!=NULL )
 		{
@@ -487,7 +627,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_erase(const CMD_PARAMETER_ERASE_T *ptParameter
 		sizCnt = cfi_find_matching_sector_index(ptFlashDescription, ulEraseStartAdr);
 		if( sizCnt==0xffffffffU )
 		{
-			DEBUGMSG(ZONE_ERROR, ("Can not find sector in table!\n"));
+			DEBUGMSG(ZONE_ERROR, ("! Can not find sector in table!\n"));
 			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 		}
 		else
@@ -495,8 +635,8 @@ NETX_CONSOLEAPP_RESULT_T parflash_erase(const CMD_PARAMETER_ERASE_T *ptParameter
 			ptSectors = ptFlashDescription->atSectors;
 			do
 			{
-				DEBUGMSG(ZONE_VERBOSE, (". Erasing sector %d: [0x%08x, 0x%08x[\n", sizCnt, ptSectors[sizCnt].ulOffset, ptSectors[sizCnt].ulOffset+ptSectors[sizCnt].ulSize));
-
+				DEBUGMSG(ZONE_VERBOSE, (". Erasing sector %d: [0x%08x, 0x%08x[\n", 
+					sizCnt, ptSectors[sizCnt].ulOffset,ptSectors[sizCnt].ulOffset+ptSectors[sizCnt].ulSize));
 				tFlashError = ptFlashDescription->tFlashFunctions.pfnErase(ptFlashDescription, sizCnt);
 				if( tFlashError!=eFLASH_NO_ERROR )
 				{
@@ -506,10 +646,11 @@ NETX_CONSOLEAPP_RESULT_T parflash_erase(const CMD_PARAMETER_ERASE_T *ptParameter
 					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 					break;
 				}
-
 				/* Next sector. */
 				++sizCnt;
 			} while( sizCnt<ptFlashDescription->ulSectorCnt && ptSectors[sizCnt].ulOffset<ulEraseEndAdr );
+			DEBUGMSG(ZONE_VERBOSE, (". Erase complete.\n"));
+
 		}
 	}
 
