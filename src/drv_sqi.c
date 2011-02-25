@@ -26,6 +26,7 @@
 #include "mmio.h"
 #include "netx_io_areas.h"
 
+#define UNUSED(x) (void) x;
 
 static const MMIO_CFG_T aatMmioValues[3][4] =
 {
@@ -428,6 +429,7 @@ static int qsi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucDat
 
 static void qsi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpecificSpeed)
 {
+	UNUSED(ptCfg)
 	unsigned long ulValue;
 
 

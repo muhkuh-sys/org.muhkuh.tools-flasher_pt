@@ -161,6 +161,42 @@ function flash(tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress)
 	return ulValue == 0
 end
 
+-- ulStartAdr = address in Flash, ulDataAddress = address in buffer
+function read(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress)
+	local aulParameter = 
+	{
+		OPERATION_MODE_Read,
+		aAttr.ulDeviceDesc,
+		ulFlashStartOffset,
+		ulFlashEndOffset,
+		ulBufferAddress
+	}
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
+	return ulValue == 0
+end
+
+
+-- ulStartAdr = address in Flash, ulDataAddress = address in buffer
+function verify(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress)
+	local fEqual = false
+	local aulParameter = 
+	{
+		OPERATION_MODE_Verify,
+		aAttr.ulDeviceDesc,
+		ulFlashStartOffset,
+		ulFlashEndOffset,
+		ulBufferAddress
+	}
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
+	
+	if ulValue==0 then
+		ulValue = tPlugin:read_data32(aAttr.ulParameter+0x08)
+		fEqual = (ulValue==0)
+	end
+	
+	return fEqual
+end
+
 
 
 function erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
@@ -253,7 +289,6 @@ function getEraseArea(tPlugin, aAttr, ulStartAdr, ulEndAdr)
 	
 	ulValue = callFlasher(tPlugin, aAttr, aulParameter)
 	if ulValue==0 then
-		-- check the device description
 		ulEraseStart = tPlugin:read_data32(aAttr.ulParameter+0x18)
 		ulEraseEnd = tPlugin:read_data32(aAttr.ulParameter+0x1c)
 	end
@@ -274,7 +309,6 @@ function isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
 	
 	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
 	if ulValue==0 then
-		-- check the device description
 		ulValue = tPlugin:read_data32(aAttr.ulParameter+0x08)
 		fIsErased = (ulValue==0xff)
 	end

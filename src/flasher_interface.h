@@ -67,7 +67,11 @@ typedef struct
 } DEVICE_DESCRIPTION_T;
 
 
-
+/* 
+    ulStartAddr/ulEndAddr are relative offsets into the flash,
+    pucData is an absolute pointer to the RAM buffer.
+*/
+   
 typedef struct
 {
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;

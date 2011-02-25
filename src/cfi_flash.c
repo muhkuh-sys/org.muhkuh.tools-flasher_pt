@@ -296,7 +296,7 @@ static int CFI_getbyte(FLASH_DEVICE_T *ptFlashDevice, unsigned char *pucDest, si
 		break;
 
 	default:
-		DEBUGMSG(ZONE_ERROR, ("!CFI_getbyte: illegal bus width\n"));
+		uprintf("!CFI_getbyte: illegal bus width\n");
 		iResult = FALSE; // Error: illegal bus width
 	}
 	
@@ -306,8 +306,8 @@ static int CFI_getbyte(FLASH_DEVICE_T *ptFlashDevice, unsigned char *pucDest, si
 	if (iResult == TRUE) {
 		if( ptFlashDevice->fPaired!=0 && ucFlash0!=ucFlash1 )
 		{
-			DEBUGMSG(ZONE_ERROR, ("!The paired flashes do not match! This is not supported.\n"));
-			DEBUGMSG(ZONE_ERROR, ("!address = 0x%08x ulValue=0x%08x\n", tVAdr.pul, ulValue));
+			uprintf("!The paired flashes do not match! This is not supported.\n");
+			uprintf("!address = 0x%08x ulValue=0x%08x\n", tVAdr.pul, ulValue);
 			iResult = FALSE; // Error: paired flashes do not match
 		}
 		else
@@ -384,7 +384,7 @@ static unsigned long detect_setup_condition(FLASH_DEVICE_T* ptFlashDevice, PARFL
 	{
 		tBits = ptCnt->tBits;
 		tSetup = ptCnt->tSetup;
-		DEBUGMSG(ZONE_VERBOSE, (".Trying  bits: %02d, paired: %d\n", 8U<<tBits, ptCnt->fPaired));
+		uprintf(".Trying  bits: %02d, paired: %d\n", 8U<<tBits, ptCnt->fPaired);
 
 		/* set bus width to query size */
 		ptFlashDevice->pfnSetup(ptCfg, tBits);
@@ -399,7 +399,7 @@ static unsigned long detect_setup_condition(FLASH_DEVICE_T* ptFlashDevice, PARFL
 		if( iCmpResult==0 )
 		{
 			ulDetectedTypes |= ptCnt->tSetup;
-			DEBUGMSG(ZONE_VERBOSE, (".Ok, found magic!\n"));
+			uprintf(".Ok, found magic!\n");
 		}
 
 		++ptCnt;
@@ -410,7 +410,7 @@ static unsigned long detect_setup_condition(FLASH_DEVICE_T* ptFlashDevice, PARFL
 	CFI_FlashWriteCommand(pucFlashBase, READ_ARRAY_OFFSET, CFI_SETUP_2x08, READ_ARRAY_CMD);
 	CFI_FlashWriteCommand(pucFlashBase, READ_ARRAY_OFFSET, CFI_SETUP_2x16, READ_ARRAY_CMD);
 
-	DEBUGMSG(ZONE_VERBOSE, (".Detection state: 0x%08x\n", ulDetectedTypes));
+	uprintf(".Detection state: 0x%08x\n", ulDetectedTypes);
 	return ulDetectedTypes;
 }
 
@@ -608,7 +608,7 @@ static int query_flash_layout(FLASH_DEVICE_T *ptFlashDevice, const PARFLASH_CONF
 				iResult = CFI_memcpy(ptFlashDevice, 
 					(unsigned char*) &ptFlashDevice->tPriExtQuery, 
 					tQueryInformation.usPrimaryAlgorithmExt, 
-					SPANSION_CFI_EXTQUERY_BASE_SIZE);
+					CFI_SPANSION_EXTQUERY_BASE_SIZE);
 				
 				if( iResult==TRUE &&
 					ptFlashDevice->tPriExtQuery.tSpansion.abExtQueryIdent[0] == 'P' &&
@@ -683,7 +683,7 @@ int CFI_IdentifyFlash(FLASH_DEVICE_T* ptFlashDevice, PARFLASH_CONFIGURATION_T *p
 			ptFlashDevice->fPaired = iPaired;
 			ptFlashDevice->tSetup = ptSetupConditions->tSetup;
 
-			DEBUGMSG(ZONE_VERBOSE, (".Found bits: %02d, paired: %d\n", 8U<<tBits, iPaired));
+			uprintf(".Found bits: %02d, paired: %d\n", 8U<<tBits, iPaired);
 
 			iResult = query_flash_layout(ptFlashDevice, ptCfg, tBits, iPaired);
 			if( iResult==TRUE )
@@ -694,18 +694,18 @@ int CFI_IdentifyFlash(FLASH_DEVICE_T* ptFlashDevice, PARFLASH_CONFIGURATION_T *p
 				{
 				case CFI_FLASH_100_INTEL_STD:
 				case CFI_FLASH_100_INTEL_EXT:
-					DEBUGMSG(ZONE_VERBOSE, (".CFI_IdentifyFlash(): Intel command set detected.\n"));
+					uprintf(".CFI_IdentifyFlash(): Intel command set detected.\n");
 					iResult = IntelIdentifyFlash(ptFlashDevice);
 					break;
 
 				case CFI_FLASH_100_AMD_STD:
 				case CFI_FLASH_100_AMD_EXT:
-					DEBUGMSG(ZONE_VERBOSE, (".CFI_IdentifyFlash(): AMD command set detected.\n"));
+					uprintf(".CFI_IdentifyFlash(): AMD command set detected.\n");
 					iResult = SpansionIdentifyFlash(ptFlashDevice);
 					break;     
 
 				default:
-					DEBUGMSG(ZONE_ERROR, ("!CFI_IdentifyFlash(): Error, unknown vendor command set: 0x%08x.\n", uiCommandSet));
+					uprintf("!CFI_IdentifyFlash(): Error, unknown vendor command set: 0x%08x.\n", uiCommandSet);
 					iResult = FALSE;
 					break;
 				}
@@ -717,51 +717,33 @@ int CFI_IdentifyFlash(FLASH_DEVICE_T* ptFlashDevice, PARFLASH_CONFIGURATION_T *p
 	return iResult;
 }
 
-
 const SECTOR_INFO_T *cfi_find_matching_sector(const FLASH_DEVICE_T *ptFlashDescription, unsigned long ulAddress)
 {
-	const SECTOR_INFO_T *ptCnt;
-	const SECTOR_INFO_T *ptEnd;
-	const SECTOR_INFO_T *ptHit;
-	unsigned long ulBlockStartOffset;
-	unsigned long ulBlockEndOffset;
-
-
-	ptCnt = ptFlashDescription->atSectors;
-	ptEnd = ptFlashDescription->atSectors + ptFlashDescription->ulSectorCnt;
-	ptHit = NULL;
-	while( ptCnt<ptEnd )
+	size_t sizIndex = cfi_find_matching_sector_index(ptFlashDescription, ulAddress);
+	if (sizIndex != 0xffffffffU)
 	{
-		ulBlockStartOffset = ptCnt->ulOffset;
-		ulBlockEndOffset = ulBlockStartOffset + ptCnt->ulSize;
-		if( ulBlockStartOffset<=ulAddress && ulBlockEndOffset>ulAddress )
-		{
-			ptHit = ptCnt;
-			break;
-		}
-		++ptCnt;
-	}
-
-	return ptHit;
-}
-
-
-size_t cfi_find_matching_sector_index(const FLASH_DEVICE_T *ptFlashDescription, unsigned long ulAddress)
-{
-	const SECTOR_INFO_T *ptHit;
-	size_t sizIndex;
-
-
-	ptHit = cfi_find_matching_sector(ptFlashDescription, ulAddress);
-	if( ptHit==NULL )
-	{
-		sizIndex = 0xffffffffU;
+		return &ptFlashDescription->atSectors[sizIndex];
 	}
 	else
 	{
-		sizIndex = (size_t)(ptHit - ptFlashDescription->atSectors);
+		return NULL;
 	}
+}
 
-	return sizIndex;
+size_t cfi_find_matching_sector_index(const FLASH_DEVICE_T *ptFlashDescription, unsigned long ulAddress)
+{
+	const SECTOR_INFO_T *ptSec = ptFlashDescription->atSectors;
+	size_t sizIndex = 0;
+	
+	while(sizIndex < ptFlashDescription->ulSectorCnt)
+	{
+		if (ptSec->ulOffset <= ulAddress && ulAddress < (ptSec->ulOffset + ptSec->ulSize))
+		{
+			return sizIndex;
+		}
+		++ptSec, ++sizIndex;
+	}
+	
+	return 0xffffffffU;
 }
 

@@ -40,6 +40,7 @@
 /* ------------------------------------- */
 
 
+
 static NETX_CONSOLEAPP_RESULT_T opMode_detect(tFlasherInputParameter *ptAppParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
@@ -51,7 +52,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_detect(tFlasherInputParameter *ptAppParam
 	/* Clear the result data. */
 	memset(ptAppParams->uParameter.tDetect.ptDeviceDescription, 0, sizeof(DEVICE_DESCRIPTION_T));
 
-	uprintf(". Device :");
+	uprintf(". Device: ");
 	switch(tSourceTyp)
 	{
 	case BUS_ParFlash:
@@ -128,7 +129,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_flash(tFlasherInputParameter *ptAppParams
 	/* get the source typ */
 	tSourceTyp = ptDeviceDescription->tSourceTyp;
 
-	uprintf(". Device :");
+	uprintf(". Device: ");
 	switch(tSourceTyp)
 	{
 	case BUS_ParFlash:
@@ -172,7 +173,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_erase(tFlasherInputParameter *ptAppParams
 	/* get the source typ */
 	tSourceTyp = ptDeviceDescription->tSourceTyp;
 
-	uprintf(". Device :");
+	uprintf(". Device: ");
 	switch(tSourceTyp)
 	{
 	case BUS_ParFlash:
@@ -216,9 +217,15 @@ static NETX_CONSOLEAPP_RESULT_T opMode_read(tFlasherInputParameter *ptAppParams)
 	/* get the source typ */
 	tSourceTyp = ptDeviceDescription->tSourceTyp;
 
-	uprintf(". Device :");
+	uprintf(". Device: ");
 	switch(tSourceTyp)
 	{
+	case BUS_ParFlash:
+		/*  use parallel flash */
+		uprintf("Parallel flash\n");
+		tResult = parflash_read(&(ptAppParams->uParameter.tRead));
+		break;
+		
 	case BUS_SPI:
 		/*  use SPI flash */
 		uprintf("SPI flash\n");
@@ -239,89 +246,46 @@ static NETX_CONSOLEAPP_RESULT_T opMode_read(tFlasherInputParameter *ptAppParams)
 
 /* ------------------------------------- */
 
-#if 0
-static NETX_CONSOLEAPP_RESULT_T opMode_verify(ptFlasherInputParameter ptAppParams)
+
+static NETX_CONSOLEAPP_RESULT_T opMode_verify(tFlasherInputParameter *ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
 {
-        NETX_CONSOLEAPP_RESULT_T tResult;
-        tBootBlockSrcType tBBSrcType;
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
+	BUS_T tSourceTyp;
 
 
-        tBBSrcType = (tBootBlockSrcType)ptAppParams->ulBootBlockSrcType;
+	/* check the device description */
+	ptDeviceDescription = ptAppParams->uParameter.tVerify.ptDeviceDescription;
+	tResult = check_device_description(ptDeviceDescription);
 
-        uprintf(". Device :");
-        switch(tBBSrcType)
-        {
-        case BootBlockSrcType_OldStyle:
-                /*  old style bootblock, default to SPI */
-                uprintf("old style, fallback to SPI flash\n");
-                tResult = spi_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
-                break;
+	/* get the source typ */
+	tSourceTyp = ptDeviceDescription->tSourceTyp;
 
-        case BootBlockSrcType_SRamBus:
-                /*  use parallel flash on SRam bus */
-                uprintf("SRam Bus parflash\n");
-                tResult = srb_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
-                break;
+	uprintf(". Device: ");
+	switch(tSourceTyp)
+	{
+	case BUS_ParFlash:
+		/*  use parallel flash */
+		uprintf("Parallel flash\n");
+		tResult = parflash_verify(&(ptAppParams->uParameter.tVerify), ptConsoleParams);
+		break;
+		
+	case BUS_SPI:
+		/*  use SPI flash */
+		uprintf("SPI flash\n");
+		tResult = spi_verify(&(ptAppParams->uParameter.tVerify), ptConsoleParams);
+		break;
 
-        case BootBlockSrcType_SPI:
-                /*  use SPI flash */
-                uprintf("SPI flash\n");
-                tResult = spi_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
-                break;
+	default:
+		/*  unknown boot device */
+		uprintf("unknown\n");
+		uprintf("! illegal device id specified\n");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		break;
+	}
 
-        case BootBlockSrcType_I2C:
-                /*  use I2C eeprom */
-                uprintf("I2C eeprom\n");
-                tResult = i2c_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
-                break;
-
-        case BootBlockSrcType_MMC:
-                /*  use MMC/SD card */
-                uprintf("MMC / SD card\n");
-
-                /*  not yet... */
-                uprintf("! MMC / SD card is not supported yet...\n");
-                tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-
-                break;
-
-        case BootBlockSrcType_DPM:
-                /*  DPM can't be flashed */
-                uprintf("DPM\n");
-
-                uprintf("! DPM is not supported\n");
-                tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-                break;
-
-        case BootBlockSrcType_DPE:
-                uprintf("DPM extended\n");
-
-                /*  DPM extended can't be flashed */
-                uprintf("! DPM extented not supported\n");
-                tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-                break;
-
-        case BootBlockSrcType_ExtBus:
-                /*  use parallel flash on Extension bus */
-                uprintf("extension bus parflash\n");
-                tResult = ext_verify(ptAppParams->pbData, ptAppParams->ulDataByteSize);
-                break;
-
-        default:
-                /*  unknown boot device */
-                uprintf("unknown\n");
-                uprintf("! illegal device id specified\n");
-                tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-                break;
-        }
-
-        return tResult;
+	return tResult;
 }
-
-
-/* ------------------------------------- */
-
-#endif
 
 
 static NETX_CONSOLEAPP_RESULT_T opMode_isErased(tFlasherInputParameter *ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
@@ -343,7 +307,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_isErased(tFlasherInputParameter *ptAppPar
 	}
 	else
 	{
-		uprintf(". Device :");
+		uprintf(". Device: ");
 		switch(tSrcType)
 		{
 		case BUS_ParFlash:
@@ -393,7 +357,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(tFlasherInputParameter *ptAp
 	}
 	else
 	{
-		uprintf(". Device :");
+		uprintf(". Device: ");
 		switch(tSrcType)
 		{
 		case BUS_ParFlash:
@@ -540,12 +504,12 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 				uprintf(". Operation Mode: Read\n");
 				tResult = opMode_read(ptAppParams);
 				break;
-/*
-			case OperationMode_Verify:
+				
+			case OPERATION_MODE_Verify:
 				uprintf(". Operation Mode: Verify\n");
-				tResult = opMode_verify(ptAppParams);
+				tResult = opMode_verify(ptAppParams, ptTestParam);
 				break;
-*/
+				
 			case OPERATION_MODE_IsErased:
 				uprintf(". Operation Mode: IsErased\n");
 				tResult = opMode_isErased(ptAppParams, ptTestParam);

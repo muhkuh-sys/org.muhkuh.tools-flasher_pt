@@ -174,35 +174,28 @@ static FLASH_ERRORS_E FlashEraseAll(const FLASH_DEVICE_T *ptFlashDev)
 */
 static FLASH_ERRORS_E FlashProgram(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulStartOffset, unsigned long ulLength, const void* pvData)
 {
-  unsigned long  ulCurrentSector  = 0;
-  unsigned long  ulCurrentOffset  = ulStartOffset; 
-  const unsigned char* pbSource         = (const unsigned char*)pvData;
-  unsigned long  ulCnt            = 0;
-  BOOL           fFound           = FALSE;
   FLASH_ERRORS_E eRet             = eFLASH_NO_ERROR;
+  unsigned long  ulCurrentSector;
+  unsigned long  ulCurrentOffset;   
+  VADR_T tWriteAdr;
+  CADR_T tSrcEndAdr;
+  CADR_T tSrcAdr;
+  tSrcAdr.puc = (const unsigned char*)pvData;
 
   /* Determine the start sector and offset inside the sector */
-  for(ulCnt = 0; ulCnt < ptFlashDev->ulSectorCnt; ++ulCnt)
+  ulCurrentSector = cfi_find_matching_sector_index(ptFlashDev, ulStartOffset);
+  if (ulCurrentSector == 0xffffffffU)
   {
-    if(ulCurrentOffset < ptFlashDev->atSectors[ulCnt].ulSize)
-    {
-      ulCurrentSector = ulCnt;
-      fFound          = TRUE;
-      break;
-    }
-
-    ulCurrentOffset -= ptFlashDev->atSectors[ulCnt].ulSize;
-  }
-
-  if(!fFound)
     return eFLASH_INVALID_PARAMETER;
-
+  }
+  ulCurrentOffset = ulStartOffset - ptFlashDev->atSectors[ulCurrentSector].ulOffset;
 
   FlashWriteCommand(ptFlashDev, ulCurrentSector, 0, CLEAR_STATUS_REGISTER);
   FlashReset(ptFlashDev, ulCurrentSector);
 
   while(ulLength > 0)
   {
+    /* determine number of bytes to write */
     unsigned long ulWriteSize    = 0; /* Bufferwrite size this run */
     unsigned char bWriteCountCmd = 0;
     unsigned long ulMaxBuffer    = ptFlashDev->ulMaxBufferWriteSize;
@@ -220,6 +213,10 @@ static FLASH_ERRORS_E FlashProgram(const FLASH_DEVICE_T *ptFlashDev, unsigned lo
       ulWriteSize = ptFlashDev->atSectors[ulCurrentSector].ulSize - ulCurrentOffset;
     }
 
+    /* send write buffer command */
+    FlashWriteCommand(ptFlashDev, ulCurrentSector, 0, WRITE_TO_BUFFER);
+    FlashWaitStatusDone(ptFlashDev, ulCurrentSector);
+
     switch(ptFlashDev->tBits)
     {
     case BUS_WIDTH_8Bit:
@@ -233,45 +230,38 @@ static FLASH_ERRORS_E FlashProgram(const FLASH_DEVICE_T *ptFlashDev, unsigned lo
     case BUS_WIDTH_32Bit:
       bWriteCountCmd = (unsigned char)(ulWriteSize / 4 - 1);
       break;
-    }
-
-    FlashWriteCommand(ptFlashDev, ulCurrentSector, 0, WRITE_TO_BUFFER);
-    FlashWaitStatusDone(ptFlashDev, ulCurrentSector);
+    }    
 
     FlashWriteCommand(ptFlashDev, ulCurrentSector, 0, bWriteCountCmd);
-
-    ulLength -= ulWriteSize;
-
-    while(ulWriteSize != 0)
-    {
-      volatile unsigned char* pbWriteAddr = ptFlashDev->pucFlashBase + 
+       
+    /* fill the buffer */ 
+    tWriteAdr.puc = ptFlashDev->pucFlashBase + 
                                    ptFlashDev->atSectors[ulCurrentSector].ulOffset + 
                                    ulCurrentOffset;
+                                                                      
+    tSrcEndAdr.puc = tSrcAdr.puc + ulWriteSize;
 
+    
+    while(tSrcAdr.puc != tSrcEndAdr.puc) 
       switch(ptFlashDev->tBits)
       {
       case BUS_WIDTH_8Bit:
-        *pbWriteAddr = *pbSource++;
-        ++ulCurrentOffset;
-        --ulWriteSize;
+        *tWriteAdr.puc++ = *tSrcAdr.puc++;
         break;
-
+  
       case BUS_WIDTH_16Bit:
-        *(volatile unsigned short*)pbWriteAddr = *(volatile unsigned short*)pbSource;
-        pbSource += 2;
-        ulCurrentOffset += 2;
-        ulWriteSize -= 2;
+        *tWriteAdr.pus++ = *tSrcAdr.pus++;
         break;
-
+  
       case BUS_WIDTH_32Bit:
-        *(volatile unsigned long*)pbWriteAddr = *(volatile unsigned long*)pbSource;
-        pbSource += 4;
-        ulCurrentOffset += 4;
-        ulWriteSize -= 4;
+        *tWriteAdr.pul++ = *tSrcAdr.pul++;
         break;
       }
-    }
-
+    
+    ulCurrentOffset += ulWriteSize;
+    ulLength -= ulWriteSize;
+    
+    /* program the buffer contents */
     FlashWriteCommand(ptFlashDev, ulCurrentSector, 0, BLOCK_ERASE_PROGRAM_RESUME);
 
     /* Full Status Check */
@@ -294,7 +284,6 @@ static FLASH_ERRORS_E FlashProgram(const FLASH_DEVICE_T *ptFlashDev, unsigned lo
 
   return eRet;
 }
-
 
 FLASH_ERRORS_E FlashLock(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
@@ -394,23 +383,25 @@ void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector,
 */
 int FlashIsset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulCmd)
 {
-  int            iRet       = FALSE;
-  volatile unsigned char* pbReadAddr = ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset;
-
+  int iRet = FALSE;
+  volatile void* pvReadAddr = ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset;
+  
   switch(ptFlashDev->tBits)
   {
   case BUS_WIDTH_8Bit:
-    if(*pbReadAddr & ulCmd)
-      iRet = TRUE;
+    {
+      unsigned char ucValue       = *(volatile unsigned char*)pvReadAddr;
+      if (ucValue & (unsigned char) ulCmd)
+        iRet = TRUE;
+    }
     break;
-
   case BUS_WIDTH_16Bit:
     {
-      unsigned short usValue    = *(volatile unsigned short*)pbReadAddr;
-      unsigned short usCheckCmd = ulCmd;
+      unsigned short usValue    = *(volatile unsigned short*)pvReadAddr;
+      unsigned short usCheckCmd = (unsigned short) ulCmd;
 
       if(ptFlashDev->fPaired)
-        usCheckCmd |= ulCmd << 8;
+        usCheckCmd |= (unsigned short)(ulCmd << 8);
 
       if((usValue & usCheckCmd) == usCheckCmd)
         iRet = TRUE;
@@ -419,7 +410,7 @@ int FlashIsset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigne
 
   case BUS_WIDTH_32Bit:
     {
-      unsigned long ulValue    = *(volatile unsigned long*)pbReadAddr;
+      unsigned long ulValue    = *(volatile unsigned long*)pvReadAddr;
       unsigned long ulCheckCmd = ulCmd;
 
       if(ptFlashDev->fPaired)
@@ -433,7 +424,6 @@ int FlashIsset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigne
 
   return iRet;
 }
-
 
 /*! Wait until FLASH has accepted a state change
 *

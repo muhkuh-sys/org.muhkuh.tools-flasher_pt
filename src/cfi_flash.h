@@ -131,8 +131,6 @@ typedef struct
 	unsigned long ulAllowedBusWidths;
 } PARFLASH_CONFIGURATION_T;
 
-typedef void(*PFN_FLASHSETUP)(const PARFLASH_CONFIGURATION_T *ptParameter, unsigned int uiWidth);
-
 /* Function pointer table for flash support. */
 typedef struct FLASH_FUNCTIONS_Ttag
 {
@@ -164,8 +162,7 @@ typedef enum
 } CFI_SETUP_T;
 
 
-
-
+typedef void(*PFN_FLASHSETUP)(const PARFLASH_CONFIGURATION_T *ptParameter, BUS_WIDTH_T tBits);
 
 
 
@@ -280,7 +277,7 @@ typedef struct{
   unsigned char abBankInfo[32];            //!< number of sectors in banks 1-32
 } CFI_SPANSION_EXTQUERY_T;
 
-#define SPANSION_CFI_EXTQUERY_BASE_SIZE (offsetof(CFI_SPANSION_EXTQUERY_T, bSupplyMin))
+#define CFI_SPANSION_EXTQUERY_BASE_SIZE (offsetof(CFI_SPANSION_EXTQUERY_T, bSupplyMin))
 
 
 /*  
@@ -341,6 +338,8 @@ struct tagFLASH_DEVICE
     	CFI_SPANSION_EXTQUERY_T tSpansion;  
 	} tPriExtQuery;                               //!< CFI primary extended query block
 };
+
+
 
 int CFI_IdentifyFlash(FLASH_DEVICE_T* ptFlashDevice, PARFLASH_CONFIGURATION_T *ptCfg);
 const SECTOR_INFO_T *cfi_find_matching_sector(const FLASH_DEVICE_T *ptFlashDescription, unsigned long ulAddress);

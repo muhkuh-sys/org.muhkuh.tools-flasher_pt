@@ -11,6 +11,22 @@ require("select_plugin")
 FLASHER_PATH = "../targets/"
 --FLASHER_PATH = "./"
 
+
+-- write binary file into string
+-- returns true or false, message
+function writeBin(strName, bin)
+	local f, msg = io.open(strName, "wb")
+	if f then 
+		f:write(bin)
+		f:close()
+		return true, string.format("%d bytes written to file %s", bin:len(), strName)
+	else
+		print("Failed to open file for writing")
+		return false, msg
+	end
+end
+
+
 --------------------------------------------------------------------------
 --  callbacks
 --------------------------------------------------------------------------
@@ -40,108 +56,174 @@ end
 -- handle command line arguments
 --------------------------------------------------------------------------
 
-MODE_FLASH = 1
-MODE_DETECT = 32
+MODE_FLASH = 0
+MODE_READ = 2
+MODE_VERIFY = 3
+MODE_INFO = 8
 MODE_HELP = 255
 
 strUsage = [==[
 Usage: 
-flash a file:         lua flash.lua [plugin] [device] filename
-detect flash devices: lua flash.lua [plugin] -d
-show this help:       lua flash.lua -h
+flash a file:   lua flash.lua flash  [plugin] device filename
+read flash:     lua flash.lua read   [plugin] device range filename
+verify flash:   lua flash.lua verify [plugin] device [-s offset] filename
+get board info: lua flash.lua info
+show this help: lua flash.lua -h
 
 plugin: -p plugin_name
         example: -p romloader_usb_00_00
         
 device: -b bus -u unit -cs chip_select
         example: -b 0 -u 0 -cs 0
-        unit/chip select default to 0, 0
+        unit and chip select default to 0, 0
 
+range: -s device_start_offset -l len
+       the start offset defaults to 0.
+       
 ]==]
 
+
+function printf(...) print(string.format(...)) end
+
+argdefs = {
+b  = {argkey = "iBus",              clkey ="-b",  name="bus number"},
+u  = {argkey = "iUnit",             clkey ="-u",  name="unit number"},
+cs = {argkey = "iChipSelect",       clkey ="-cs", name="chip select number"},
+p  = {argkey = "strPluginName",     clkey ="-p",  name="plugin name"},
+s  = {argkey = "ulStartOffset",     clkey ="-s",  name="start offset"},
+l  = {argkey = "ulLen",             clkey ="-l",  name="number of bytes to read"},
+f  = {argkey = "strDataFileName",   clkey = "",   name="file name"}
+}
+
+requiredargs = {
+[MODE_FLASH]  = {"b", "u", "cs", "f"},
+[MODE_READ]   = {"b", "u", "cs", "f", "l"},
+[MODE_VERIFY] = {"b", "u", "cs", "f"},
+[MODE_INFO]   = {},
+[MODE_HELP]   = {}
+}
+
+function checkArgs(aArgs)
+	-- get the list of required/optional args for mode
+	local required = requiredargs[aArgs.iMode]
+	if not required then
+		print("unknown mode!")
+		return false
+	end
+	
+	local fOk = true
+	
+	--show_args(aArgs)
+
+	for i, strKey in pairs(required) do
+		local argdef = argdefs[strKey]
+		--print(strKey, argdef.argkey)
+		if not aArgs[argdef.argkey] then
+			printf("please specify %s (%s)", argdef.name, argdef.clkey)
+			fOk = false
+		end
+	end
+		
+	return fOk
+end
 
 -- Evaluate command line arguments.
 -- returns list of arguments or nil and error message.
 -- Entries returned in aArgs:
--- iMode              MODE_FLASH/MODE_DETECT/MODE_HELP
+-- iMode              MODE_FLASH/MODE_READ/MODE_INFO/MODE_HELP
 -- strPluginName      plugin name
 -- iBus               bus number
 -- iUnit              unit number 
 -- iChipSelect        chip selet number
--- strInputFile       input file name
+-- ulStartOffset      start offset for read
+-- ulLen              number of bytes to read
+-- strDataFileName    input/output file name
+
 
 function evalArg()
 	local aArgs = {}
 	local iMode
-	local iArg = 1
+	local iArg = 2
 	local nArgs = #arg
 	
-	if nArgs == 0 then
+	if nArgs>=2 and arg[1] == "flash" then
+		aArgs.iMode = MODE_FLASH
+	elseif nArgs>=2 and arg[1] == "read" then
+		aArgs.iMode = MODE_READ
+	elseif nArgs>=2 and arg[1] == "verify" then
+		aArgs.iMode = MODE_VERIFY
+	elseif nArgs>=1 and arg[1] == "info" then
+		aArgs.iMode = MODE_INFO
+	elseif nArgs>=1 and arg[1] == "-h" then
 		aArgs.iMode = MODE_HELP
+	else
+		return nil
+	end
+	
+	
+	while (iArg <= nArgs) do
+		local iRemArgs = nArgs - iArg + 1
+		if arg[iArg] == "-p" and iRemArgs >=2 then
+			aArgs.strPluginName = arg[iArg+1]
+			iArg = iArg + 2
+			
+		elseif arg[iArg] == "-b" and iRemArgs >=2 then
+			aArgs.iBus  = tonumber(arg[iArg+1])
+			if not aArgs.iBus then
+				return nil, "Error parsing bus number (-b)"
+			end
+			iArg = iArg + 2
+			
+		elseif arg[iArg] == "-u" and iRemArgs >=2 then
+			aArgs.iUnit  = tonumber(arg[iArg+1])
+			if not aArgs.iUnit then
+				return nil, "Error parsing unit number (-u)"
+			end
+			iArg = iArg + 2
+			
+		elseif arg[iArg] == "-cs" and iRemArgs >=2 then
+			aArgs.iChipSelect  = tonumber(arg[iArg+1])
+			if not aArgs.iChipSelect then
+				return nil, "Error parsing chip select number (-cs)"
+			end
+			iArg = iArg + 2
+			
+		elseif arg[iArg] == "-s" and iRemArgs >=2 then
+			aArgs.ulStartOffset  = tonumber(arg[iArg+1])
+			if not aArgs.ulStartOffset then
+				return nil, "Error parsing start offset (-s)"
+			end
+			iArg = iArg + 2
+
+		elseif arg[iArg] == "-l" and iRemArgs >=2 then
+			aArgs.ulLen  = tonumber(arg[iArg+1])
+			if not aArgs.ulLen then
+				return nil, "Error parsing length (-l)"
+			end
+			iArg = iArg + 2
+			
+		elseif iRemArgs == 1 then
+			aArgs.strDataFileName = arg[iArg]
+			iArg = iArg + 1
+		else
+			return nil, string.format("unknown argument: %s", arg[iArg])
+		end
+	end
+		
+	-- set defaults
+	aArgs.iUnit = aArgs.iUnit or 0
+	aArgs.iChipSelect = aArgs.iChipSelect or 0
+	aArgs.ulStartOffset = aArgs.ulStartOffset or 0
+	
+	
+	-- check for missing args
+	if checkArgs(aArgs) then
 		return aArgs
 	else
-		aArgs.iMode = MODE_FLASH
-		while (iArg <= nArgs) do
-			local iRemArgs = nArgs - iArg + 1
-			
-			if arg[iArg] == "-h" and iRemArgs >= 1 then
-				aArgs.iMode = MODE_HELP
-				iArg = iArg + 1
-				
-			elseif arg[iArg] == "-d" and iRemArgs >= 1 then
-				aArgs.iMode = MODE_DETECT
-				iArg = iArg + 1
-				
-			elseif arg[iArg] == "-p" and iRemArgs >=2 then
-				aArgs.strPluginName = arg[iArg+1]
-				iArg = iArg + 2
-				
-			elseif arg[iArg] == "-b" and iRemArgs >=2 then
-				aArgs.iBus  = tonumber(arg[iArg+1])
-				if not aArgs.iBus then
-					return nil, "Error parsing bus number (-b)"
-				end
-				iArg = iArg + 2
-				
-			elseif arg[iArg] == "-u" and iRemArgs >=2 then
-				aArgs.iUnit  = tonumber(arg[iArg+1])
-				if not aArgs.iUnit then
-					return nil, "Error parsing unit number (-u)"
-				end
-				iArg = iArg + 2
-				
-			elseif arg[iArg] == "-cs" and iRemArgs >=2 then
-				aArgs.iChipSelect  = tonumber(arg[iArg+1])
-				if not aArgs.iChipSelect then
-					return nil, "Error parsing chip select number (-cs)"
-				end
-				iArg = iArg + 2
-				
-			elseif iRemArgs == 1 then
-				aArgs.strDataFileName = arg[iArg]
-				iArg = iArg + 1
-			else
-				return nil, "Too many/unknown arguments"
-			end
-			
-			
-		end
-		
-		-- if bus number is specified, unit and chip select default to 0
-		if aArgs.iBus then
-			aArgs.iUnit = aArgs.iUnit or 0
-			aArgs.iChipSelect = aArgs.iChipSelect or 0
-		end
-		
-		if aArgs.iMode == MODE_FLASH and not aArgs.iBus then
-			return nil, "Please specify the bus/unit/chip select number."
-		end
-		
-		if aArgs.iMode == MODE_FLASH and not aArgs.strDataFileName then
-			return nil, "Please specify the input file to flash."
-		end
-		return aArgs
+		return nil
 	end
+	
+	return aArgs
 end
 
 function show_args(aArgs)
@@ -204,6 +286,11 @@ end
 
 --------------------------------------------------------------------------
 -- flash
+--   iBus
+--   iUnit
+--   iChipSelect
+--   strDataFileName
+
 --------------------------------------------------------------------------
 
 function doFlash(tPlugin, args)
@@ -211,8 +298,12 @@ function doFlash(tPlugin, args)
 	
 	local strDevDesc
 	-- Download the flasher.
+	-- Download the flasher.
 	print("Downloading flasher binary")
-	aAttr = flasher.download(tPlugin, FLASHER_PATH, progress)
+	local aAttr = flasher.download(tPlugin, FLASHER_PATH, progress)
+	if not aAttr then
+		return false, "Error while downloading flasher binary"
+	end
 
 	-- check if the selected flash is present
 	print("Detecting flash device")
@@ -273,9 +364,9 @@ function doFlash(tPlugin, args)
 	-- das Binary größer als der Puffer ist
 	-- und das Flash kein PageErase/EraseAndProgram kann?
 	
-	ulDataByteSize = strData:len()
-	ulDataOffset = 0
-	ulDeviceOffset = 0
+	local ulDataByteSize = strData:len()
+	local ulDataOffset = 0
+	local ulDeviceOffset = 0
 	while ulDataOffset<ulDataByteSize do
 		-- Extract the next chunk.
 		strChunk = strData:sub(ulDataOffset+1, ulDataOffset+aAttr.ulBufferLen)
@@ -301,9 +392,141 @@ end
 
 
 
+--------------------------------------------------------------------------
+-- read
+--   iBus
+--   iUnit
+--   iChipSelect
+--   ulStartOffset
+--   ulLen
+--   strDataFileName
+--------------------------------------------------------------------------
+
+function doRead(tPlugin, args)
+	local fResult 
+	local strDataFileName = args.strDataFileName
+	local ulDeviceOffset = args.ulStartOffset
+	local ulSize = args.ulLen
+	
+	-- Download the flasher.
+	print("Downloading flasher binary")
+	local aAttr = flasher.download(tPlugin, FLASHER_PATH, progress)
+	if not aAttr then
+		return false, "Error while downloading flasher binary"
+	end
+	
+	local ulBufferAddr = aAttr.ulBufferAdr
+	local ulBufferLen = aAttr.ulBufferLen
+	
+	-- check if the selected flash is present
+	print("Detecting flash device")
+	local strDevDesc = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
+	if not strDevDesc then
+		return false, "Failed to get a device description!"
+	end
+	
+	-- Verify the data in chunks.
+	local astrChunks = {}
+	while ulSize>0 do
+		-- determine chunk size
+		local ulChunkSize
+		if ulSize > ulBufferLen then 
+			ulChunkSize = ulBufferLen
+		else
+			ulChunkSize = ulSize 
+		end
+	
+		-- Read chunk into buffer
+		print(string.format("reading flash offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
+		fResult = flasher.read(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulChunkSize, ulBufferAddr)
+		if fResult==false or fResult==nil then
+			return false, "Error while reading from flash!"
+		end
+		
+		-- Read the buffer 
+		local strChunk = tPlugin:read_image(ulBufferAddr, ulChunkSize, progress, ulChunkSize)
+		if not strChunk then
+			return false, "Error while reading buffer!"
+		end
+	
+		table.insert(astrChunks, strChunk)
+		
+		ulDeviceOffset = ulDeviceOffset + ulChunkSize
+		ulSize = ulSize - ulChunkSize
+	end
+
+	local strBin = table.concat(astrChunks)
+	local fResult, strMsg = writeBin(args.strDataFileName, strBin)
+	
+	return fResult, strMsg
+end
+
 
 --------------------------------------------------------------------------
---  device list/menu
+-- verify
+--   iBus
+--   iUnit
+--   iChipSelect
+--   ulStartOffset
+--   strDataFileName
+--------------------------------------------------------------------------
+
+function doVerify(tPlugin, args)
+	local fResult 
+	local strDataFileName = args.strDataFileName
+	local ulDeviceOffset = args.ulStartOffset
+	
+	-- Download the flasher.
+	print("Downloading flasher binary")
+	local aAttr = flasher.download(tPlugin, FLASHER_PATH, progress)
+	if not aAttr then
+		return false, "Error while downloading flasher binary"
+	end
+	
+	-- check if the selected flash is present
+	print("Detecting flash device")
+	local strDevDesc = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
+	if not strDevDesc then
+		return false, "Failed to get a device description!"
+	end
+	
+	-- Load the data.
+	print("Loading data file")
+	strData, msg = muhkuh.load(strDataFileName)
+	if not strData then
+		return false, "Failed to load binary '" .. strDataFileName .. "': " .. msg
+	end
+	
+	local ulDataByteSize = strData:len()
+	local ulDataOffset = 0
+
+	while ulDataOffset<ulDataByteSize do
+		-- Extract the next chunk.
+		strChunk = strData:sub(ulDataOffset+1, ulDataOffset+aAttr.ulBufferLen)
+		ulChunkSize = strChunk:len()
+
+		-- Download the chunk to the buffer.
+		tPlugin:write_image(aAttr.ulBufferAdr, strChunk, progress, ulChunkSize)
+
+		-- Verify the chunk.
+		print(string.format("verifying offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
+		fResult = flasher.verify(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulChunkSize, aAttr.ulBufferAdr)
+		if fResult==false or fResult==nil then
+			return false, "Differences were found!"
+		end
+
+		-- Increase pointers.
+		ulDataOffset = ulDataOffset + ulChunkSize
+		ulDeviceOffset = ulDeviceOffset + ulChunkSize
+	end
+
+	
+	return true, "The data in flash is equal to the input file"
+end
+
+
+--------------------------------------------------------------------------
+--  board info
 --------------------------------------------------------------------------
 
 
@@ -327,9 +550,13 @@ end
 
 
 
-function doDetect(tPlugin, aArgs)
-	-- Download the flasher binary.
-	aAttr = flasher.download(tPlugin, FLASHER_PATH, progress)
+function doInfo(tPlugin, aArgs)
+	-- Download the flasher.
+	print("Downloading flasher binary")
+	local aAttr = flasher.download(tPlugin, FLASHER_PATH, progress)
+	if not aAttr then
+		return false, "Error while downloading flasher binary"
+	end
 	
 	-- Get the board info table.
 	aBoardInfo = flasher.getBoardInfo(tPlugin, aAttr)
@@ -353,16 +580,10 @@ end
 
 
 --------------------------------------------------------------------------
---
+-- main
 --------------------------------------------------------------------------
 
-
-local fOk = false
-local args
-local strMsg
-local tPlugin
-
-args, strMsg = evalArg()
+local args, strMsg = evalArg()
 
 if args == nil then
 	if strMsg then
@@ -375,29 +596,22 @@ elseif args.iMode == MODE_HELP then
 	print(strUsage)
 	os.exit(0)
 	
-elseif args.iMode == MODE_FLASH then
+else
 	show_args(args)
+	local fOk = false
+	local tPlugin
 	tPlugin, strMsg = getPlugin(args.strPluginName)
 	if tPlugin then
-		fOk, strMsg = doFlash(tPlugin, args)
-		tPlugin:Disconnect()
-		tPlugin = nil
-	end
-	
-	if fOk then
-		if strMsg then 
-			print(strMsg)
+		if args.iMode == MODE_FLASH then
+			fOk, strMsg = doFlash(tPlugin, args)
+		elseif args.iMode == MODE_READ then
+			fOk, strMsg = doRead(tPlugin, args)
+		elseif args.iMode == MODE_VERIFY then
+			fOk, strMsg = doVerify(tPlugin, args)
+			
+		elseif args.iMode == MODE_INFO then
+			fOk, strMsg = doInfo(tPlugin, args)
 		end
-		os.exit(0)
-	else
-		print(strMsg or "an unknown error occurred")
-		os.exit(1)
-	end
-	
-elseif args.iMode == MODE_DETECT then
-	tPlugin, strMsg = getPlugin(args.strPluginName)
-	if tPlugin then
-		fOk, strMsg = doDetect(tPlugin, args)
 		tPlugin:Disconnect()
 		tPlugin = nil
 	end
@@ -412,4 +626,3 @@ elseif args.iMode == MODE_DETECT then
 		os.exit(1)
 	end
 end
-

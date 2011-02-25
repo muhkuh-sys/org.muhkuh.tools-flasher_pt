@@ -103,9 +103,9 @@ static void setup_flash_ext(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T t
 	unsigned long ulIoRegMode0;
 	unsigned long ulExtBusConfig;
 
-	if( ptCfg->uiChipSelect>3 )
+	if( ptCfg->uiChipSelect > 3 )
 	{
-		DEBUGMSG(ZONE_ERROR, ("setup_flash_ext: Invalid chipselect! Must be 0, 1, 2 or 3, but is %d.\n", ptCfg->uiChipSelect));
+		uprintf("setup_flash_ext: Invalid chipselect! Must be 0, 1, 2 or 3, but is %d.\n", ptCfg->uiChipSelect);
 	}
 	else
 	{
@@ -122,7 +122,8 @@ static void setup_flash_ext(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T t
 			break;
 		
 		default:
-			DEBUGMSG(ZONE_ERROR, ("setup_flash_ext: Invalid bus width! Must be 0 or 1, but is %d.\n", tBits));
+			uprintf("setup_flash_ext: Invalid bus width! Must be 0 or 1, but is %d.\n", tBits);
+			return;
 		}
 		
 		
@@ -170,16 +171,16 @@ static void setup_flash(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits
 	/* Check the parameters. */
 	if( tBits!=BUS_WIDTH_8Bit && tBits!=BUS_WIDTH_16Bit )
 	{
-		DEBUGMSG(ZONE_ERROR, ("setup_flash: Invalid bus width! Must be 0 or 1, but is %d.\n", tBits));
+		uprintf("setup_flash: Invalid bus width! Must be 0 or 1, but is %d.\n", tBits);
 	}
 	else if( uiChipSelect>3 )
 	{
-		DEBUGMSG(ZONE_ERROR, ("setup_flash: Invalid chipselect! Must be 0, 1, 2 or 3, but is %d.\n", uiChipSelect));
+		uprintf("setup_flash: Invalid chipselect! Must be 0, 1, 2 or 3, but is %d.\n", uiChipSelect);
 	}
 	else
 	{
 		/* Set the memory interface configuration. */
-		ulValue = tBits << SRT_NX10_hif_io_cfg_hif_mi_cfg;
+		ulValue = ((unsigned long) tBits) << SRT_NX10_hif_io_cfg_hif_mi_cfg;
 		/* unlock access key */
 		ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
 		/* configure the hif pins */
@@ -188,7 +189,7 @@ static void setup_flash(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits
 		ulValue  = DFLT_VAL_NX10_extsram0_ctrl_ws << SRT_NX10_extsram0_ctrl_ws;
 		ulValue |= DFLT_VAL_NX10_extsram0_ctrl_p_pre << SRT_NX10_extsram0_ctrl_p_pre;
 		ulValue |= DFLT_VAL_NX10_extsram0_ctrl_p_post << SRT_NX10_extsram0_ctrl_p_post;
-		ulValue |= tBits << SRT_NX10_extsram0_ctrl_dwidth;
+		ulValue |= ((unsigned long) tBits) << SRT_NX10_extsram0_ctrl_dwidth;
 		ptExtAsyncmemCtrlArea->aulExtsram_ctrl[uiChipSelect] = ulValue;
 	}
 }
@@ -225,7 +226,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	{
 		if( uiChipSelect>3 )
 		{
-			DEBUGMSG(ZONE_ERROR, ("Invalid chipselect for unit %d: %d\n", uiUnit, uiChipSelect));
+			uprintf("Invalid chipselect for unit %d: %d\n", uiUnit, uiChipSelect);
 			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 		}
 		else
@@ -252,7 +253,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	{
 		if( uiChipSelect>3 )
 		{
-			DEBUGMSG(ZONE_ERROR, ("Invalid chipselect for unit %d: %d\n", uiUnit, uiChipSelect));
+			uprintf("Invalid chipselect for unit %d: %d\n", uiUnit, uiChipSelect);
 			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 		}
 		else
@@ -280,18 +281,18 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	}
 	else
 	{
-		DEBUGMSG(ZONE_ERROR, ("Invalid unit number: %d\n", uiUnit));
+		uprintf("Invalid unit number: %d\n", uiUnit);
 		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 	}
 #elif ASIC_TYP==10
 	if( uiUnit!=0 )
 	{
-		DEBUGMSG(ZONE_ERROR, ("Invalid unit number: %d\n", uiUnit));
+		uprintf("Invalid unit number: %d\n", uiUnit);
 		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 	}
 	else if( uiChipSelect>3 )
 	{
-		DEBUGMSG(ZONE_ERROR, ("Invalid chipselect for unit %d: %d\n", uiUnit, uiChipSelect));
+		uprintf("Invalid chipselect for unit %d: %d\n", uiUnit, uiChipSelect);
 		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 	}
 	else
@@ -318,7 +319,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 	{
 		/* Try to detect the flash. */
-		DEBUGMSG(ZONE_VERBOSE, (". Detecting CFI flash at 0x%08x...\n", ptFlashDevice->pucFlashBase));
+		uprintf(". Detecting CFI flash at 0x%08x...\n", ptFlashDevice->pucFlashBase);
 		iRes = CFI_IdentifyFlash(ptFlashDevice, &(ptParameter->uSourceParameter.tParFlash));
 		if( iRes==0 )
 		{
@@ -355,6 +356,29 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	return tResult;
 }
 
+
+static NETX_CONSOLEAPP_RESULT_T parflash_checkSizes(unsigned long ulStartAdr, unsigned long ulEndAdr, unsigned long ulFlashSize)
+{
+	if( (ulStartAdr>=ulFlashSize) || (ulEndAdr>ulFlashSize) )
+	{
+		/* The requested area is larger than the flash. */
+		uprintf("! error, the specified area exceeds the flash size\n");
+		return NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else if( ulStartAdr>ulEndAdr )
+	{
+		/* The start address of the area is larger than the end address. */
+		uprintf("! error, the start address is larger than the end address!\n");
+		return NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else
+	{
+		DEBUGMSG(ZONE_VERBOSE, (". ok, the area fits into the flash\n"));
+		return NETX_CONSOLEAPP_RESULT_OK;
+	}
+}
+
+
 /* end address is exclusive */
 
 NETX_CONSOLEAPP_RESULT_T parflash_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptParameter)
@@ -372,26 +396,12 @@ NETX_CONSOLEAPP_RESULT_T parflash_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptP
 	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tParFlash);
 	ulStartAdr = ptParameter->ulStartAdr;
 	ulEndAdr  = ptParameter->ulEndAdr;
-
 	ulFlashSize = ptFlashDescription->ulFlashSize;
 
 	/* Test addresses. */
-	if( (ulStartAdr>=ulFlashSize) || (ulEndAdr>ulFlashSize) )
+	tResult = parflash_checkSizes(ulStartAdr, ulEndAdr, ulFlashSize);
+	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 	{
-		/* The requested area is larger than the flash. */
-		DEBUGMSG(ZONE_ERROR, ("! error, the specified area exceeds the flash size\n"));
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else if( ulStartAdr>ulEndAdr )
-	{
-		/* The start address of the area is larger than the end address. */
-		DEBUGMSG(ZONE_ERROR, ("! error, the start address is larger than the end address!\n"));
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else
-	{
-		DEBUGMSG(ZONE_VERBOSE, (". ok, the area fits into the flash\n"));
-
 		/* Look for the erase block which contains the start address. */
 		ptSectorStart = cfi_find_matching_sector(ptFlashDescription, ulStartAdr);
 		ptSectorEnd = cfi_find_matching_sector(ptFlashDescription, ulEndAdr-1);
@@ -411,7 +421,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptP
 		}
 		else
 		{
-			DEBUGMSG(ZONE_ERROR, ("Can not find start/end address in sector table!\n"));
+			uprintf("Can not find start/end address in sector table!\n");
 			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 		}
 	}
@@ -421,7 +431,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptP
 }
 
 
-NETX_CONSOLEAPP_RESULT_T parflash_isErased(CMD_PARAMETER_ISERASED_T *ptParameter, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+NETX_CONSOLEAPP_RESULT_T parflash_isErased(const CMD_PARAMETER_ISERASED_T *ptParameter, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	const FLASH_DEVICE_T *ptFlashDescription;
@@ -433,34 +443,16 @@ NETX_CONSOLEAPP_RESULT_T parflash_isErased(CMD_PARAMETER_ISERASED_T *ptParameter
 	unsigned long ulProgressBarPosition;
 	unsigned long ulErased;
 
-
-	/* expect success */
-	tResult = NETX_CONSOLEAPP_RESULT_OK;
-
 	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tParFlash);
 	ulStartAdr = ptParameter->ulStartAdr;
 	ulEndAdr = ptParameter->ulEndAdr;
-
 	ulFlashSize = ptFlashDescription->ulFlashSize;
 	DEBUGMSG(ZONE_VERBOSE, ("flash size: 0x%08x\n", ulFlashSize));
 
-	/* test addresses */
-	if( (ulStartAdr>=ulFlashSize) || (ulEndAdr>ulFlashSize) )
+	tResult = parflash_checkSizes(ulStartAdr, ulEndAdr, ulFlashSize);
+	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 	{
-		/* data is larger than flash */
-		DEBUGMSG(ZONE_ERROR, ("! error, the specified area exceeds the flash size\n"));
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else if( ulStartAdr>ulEndAdr )
-	{
-		/* The start address of the area is larger than the end address. */
-		DEBUGMSG(ZONE_ERROR, ("! error, the start address is larger than the end address!\n"));
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else
-	{
-		DEBUGMSG(ZONE_VERBOSE, (". ok, the area fits into the flash\n"));
-		DEBUGMSG(ZONE_VERBOSE, ("# Checking data...\n"));
+		uprintf("# Checking if empty...\n");
 
 		progress_bar_init(ulEndAdr-ulStartAdr);
 
@@ -492,17 +484,14 @@ NETX_CONSOLEAPP_RESULT_T parflash_isErased(CMD_PARAMETER_ISERASED_T *ptParameter
 		}
 
 		progress_bar_finalize();
-	}
-
-	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
-	{
+		
 		if( ulErased==0xff )
 		{
-			DEBUGMSG(ZONE_VERBOSE, (". CLEAN! The area is erased.\n"));
+			uprintf(". CLEAN! The area is erased.\n");
 		}
 		else
 		{
-			DEBUGMSG(ZONE_VERBOSE, (". DIRTY! The area is not erased.\n"));
+			uprintf(". DIRTY! The area is not erased.\n");
 		}
 		ptConsoleParams->pvReturnMessage = (void*)ulErased;
 	}
@@ -511,96 +500,138 @@ NETX_CONSOLEAPP_RESULT_T parflash_isErased(CMD_PARAMETER_ISERASED_T *ptParameter
 }
 
 
+static NETX_CONSOLEAPP_RESULT_T parflash_unlock(const FLASH_DEVICE_T *ptFlashDev)
+{
+	FLASH_ERRORS_E tFlashError;
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	DEBUGMSG(ZONE_FUNCTION, ("+parflash_unlock(): ptFlashDev=0x%08x\n", ptFlashDev));
+
+	tResult = NETX_CONSOLEAPP_RESULT_OK;
+
+	/* unlock the complete flash */
+	tFlashError = ptFlashDev->tFlashFunctions.pfnUnlock(ptFlashDev);
+	if( tFlashError!=eFLASH_NO_ERROR )
+	{
+		/* failed to unlock all sectors */
+		uprintf(". failed to unlock all flash sectors\n");
+/*		showPflashError(tFlashError);*/
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+
+	DEBUGMSG(ZONE_FUNCTION, ("-parflash_unlock(): tResult=0x%08x\n", tResult));
+
+	return tResult;
+}
+
+
+static NETX_CONSOLEAPP_RESULT_T parflash_compare(
+	const FLASH_DEVICE_T *ptFlashDescription, 
+	unsigned long ulStartAdr, unsigned long ulEndAdr, 
+	const unsigned char* pucDataStartAdr);
+	
 NETX_CONSOLEAPP_RESULT_T parflash_flash(const CMD_PARAMETER_FLASH_T *ptParameter)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
+	
 	const unsigned char *pucDataStartAdr;
 	unsigned long ulFlashStartAdr;
 	unsigned long ulDataByteSize;
-	unsigned long ulFlashDeviceSize;
+	
+	unsigned long ulProgressBarPosition;
+	
 	const FLASH_DEVICE_T *ptFlashDescription;
+	unsigned long ulFlashDeviceSize;
 	const SECTOR_INFO_T *ptSector;
 	unsigned long ulSectorOffset;
+	
 	unsigned long ulChunkSize;
 	FLASH_ERRORS_E tFlashError;
-
-
-	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
 	ulFlashStartAdr = ptParameter->ulStartAdr;
 	ulDataByteSize  = ptParameter->ulDataByteSize;
 	pucDataStartAdr = ptParameter->pucData;
-
 	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tParFlash);
 	ulFlashDeviceSize = ptFlashDescription->ulFlashSize;
 
 	/* test flash size */
 	DEBUGMSG(ZONE_VERBOSE, (". Check size...\n"));
 	DEBUGMSG(ZONE_VERBOSE, (". data start address: 0x%08x\n", ulFlashStartAdr));
-	DEBUGMSG(ZONE_VERBOSE, (". data size:  0x%08x\n", ulDataByteSize));
-	DEBUGMSG(ZONE_VERBOSE, (". flash size: 0x%08x\n", ulFlashDeviceSize));
+	DEBUGMSG(ZONE_VERBOSE, (". data size:   0x%08x\n", ulDataByteSize));
+	DEBUGMSG(ZONE_VERBOSE, (". flash size:  0x%08x\n", ulFlashDeviceSize));
 	DEBUGMSG(ZONE_VERBOSE, (". data buffer: 0x%08x\n", pucDataStartAdr));
-	if( (ulFlashStartAdr>=ulFlashDeviceSize) || ((ulFlashStartAdr+ulDataByteSize)>ulFlashDeviceSize) )
+	
+	tResult = parflash_checkSizes(ulFlashStartAdr, ulFlashStartAdr + ulDataByteSize, ulFlashDeviceSize);
+	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 	{
-		/* data is larger than flash */
-		DEBUGMSG(ZONE_ERROR, ("! error, data size exceeds flash\n"));
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else
-	{
-		DEBUGMSG(ZONE_VERBOSE, (". ok, data fits into flash\n"));
-
-		while( ulDataByteSize!=0 )
+		tResult = parflash_unlock(ptFlashDescription);
+		if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 		{
-			/* Split the data by erase sectors. */
-			ptSector = cfi_find_matching_sector(ptFlashDescription, ulFlashStartAdr);
-			if( ptSector==NULL )
+			uprintf("#Writing...\n");
+			progress_bar_init(ulDataByteSize);
+			ulProgressBarPosition = 0;
+			
+			while( ulDataByteSize!=0 )
 			{
-				DEBUGMSG(ZONE_ERROR, ("Can not find sector in table!\n"));
-				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-				break;
+				/* Split the data by erase sectors. */
+				ptSector = cfi_find_matching_sector(ptFlashDescription, ulFlashStartAdr);
+				if( ptSector==NULL )
+				{
+					uprintf("Can not find sector in table!\n");
+					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					break;
+				}
+				ulSectorOffset = ulFlashStartAdr - ptSector->ulOffset;
+				ulChunkSize = ptSector->ulSize - ulSectorOffset;
+				if( ulChunkSize>ulDataByteSize )
+				{
+					ulChunkSize = ulDataByteSize;
+				}
+	
+				DEBUGMSG(ZONE_VERBOSE, ("Flashing [0x%08x, 0x%08x[\n", ulFlashStartAdr, ulFlashStartAdr+ulChunkSize));
+				tFlashError = ptFlashDescription->tFlashFunctions.pfnProgram(ptFlashDescription, ulFlashStartAdr, ulChunkSize, pucDataStartAdr);
+				if( tFlashError!=eFLASH_NO_ERROR )
+				{
+					/* failed to program the sector */
+					uprintf("Failed to program flash sector!\n");
+	/*				showPflashError(tFlashError); */
+					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					break;
+				}
+				
+				ulFlashStartAdr += ulChunkSize;
+				pucDataStartAdr += ulChunkSize;
+				ulDataByteSize -= ulChunkSize;
+				ulProgressBarPosition += ulChunkSize;
+				
+				progress_bar_set_position(ulProgressBarPosition);
 			}
-			ulSectorOffset = ulFlashStartAdr - ptSector->ulOffset;
-			ulChunkSize = ptSector->ulSize - ulSectorOffset;
-			if( ulChunkSize>ulDataByteSize )
-			{
-				ulChunkSize = ulDataByteSize;
-			}
+			progress_bar_finalize();
+		}
+		
+		if (tResult == NETX_CONSOLEAPP_RESULT_OK)
+		{
+			ulFlashStartAdr = ptParameter->ulStartAdr;
+			ulDataByteSize  = ptParameter->ulDataByteSize;
+			pucDataStartAdr = ptParameter->pucData;
 
-			DEBUGMSG(ZONE_VERBOSE, ("Flashing [0x%08x, 0x%08x[\n", ulFlashStartAdr, ulFlashStartAdr+ulChunkSize));
-			tFlashError = ptFlashDescription->tFlashFunctions.pfnProgram(ptFlashDescription, ulFlashStartAdr, ulChunkSize, pucDataStartAdr);
-			if( tFlashError!=eFLASH_NO_ERROR )
-			{
-				/* failed to program the sector */
-				DEBUGMSG(ZONE_ERROR, ("Failed to program flash sector!\n"));
-/*				showPflashError(tFlashError); */
-				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-				break;
-			}
-
-			ulFlashStartAdr += ulChunkSize;
-			pucDataStartAdr += ulChunkSize;
-			ulDataByteSize -= ulChunkSize;
+			tResult = parflash_compare(ptFlashDescription, ulFlashStartAdr, ulFlashStartAdr + ulDataByteSize, pucDataStartAdr);
 		}
 	}
-
 	return tResult;
 }
-
 
 NETX_CONSOLEAPP_RESULT_T parflash_erase(const CMD_PARAMETER_ERASE_T *ptParameter)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
+	
 	unsigned long ulEraseStartAdr;
 	unsigned long ulEraseEndAdr;
 	unsigned long ulFlashDeviceSize;
+	unsigned long ulProgressBarPosition;
 	const FLASH_DEVICE_T *ptFlashDescription;
 	const SECTOR_INFO_T *ptSectors;
 	FLASH_ERRORS_E tFlashError;
 	size_t sizCnt;
-
-
-	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
 	ulEraseStartAdr = ptParameter->ulStartAdr;
 	ulEraseEndAdr   = ptParameter->ulEndAdr;
@@ -613,46 +644,208 @@ NETX_CONSOLEAPP_RESULT_T parflash_erase(const CMD_PARAMETER_ERASE_T *ptParameter
 	DEBUGMSG(ZONE_VERBOSE, (". erase start: 0x%08x\n", ulEraseStartAdr));
 	DEBUGMSG(ZONE_VERBOSE, (". erase end:   0x%08x\n", ulEraseEndAdr));
 	DEBUGMSG(ZONE_VERBOSE, (". flash size:  0x%08x\n", ulFlashDeviceSize));
-	if( (ulEraseStartAdr>=ulFlashDeviceSize) || (ulEraseEndAdr>ulFlashDeviceSize) )
+	
+	tResult = parflash_checkSizes(ulEraseStartAdr, ulEraseEndAdr, ulFlashDeviceSize);
+	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 	{
-		/* data is larger than flash */
-		DEBUGMSG(ZONE_ERROR, ("! error, erase area exceeds flash\n"));
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else
-	{
-		DEBUGMSG(ZONE_VERBOSE, (". ok, data fits into flash\n"));
-
 		/* Split the data by erase sectors. */
 		sizCnt = cfi_find_matching_sector_index(ptFlashDescription, ulEraseStartAdr);
 		if( sizCnt==0xffffffffU )
 		{
-			DEBUGMSG(ZONE_ERROR, ("! Can not find sector in table!\n"));
+			uprintf("! Can not find sector in table!\n");
 			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 		}
-		else
-		{
-			ptSectors = ptFlashDescription->atSectors;
-			do
-			{
-				DEBUGMSG(ZONE_VERBOSE, (". Erasing sector %d: [0x%08x, 0x%08x[\n", 
-					sizCnt, ptSectors[sizCnt].ulOffset,ptSectors[sizCnt].ulOffset+ptSectors[sizCnt].ulSize));
-				tFlashError = ptFlashDescription->tFlashFunctions.pfnErase(ptFlashDescription, sizCnt);
-				if( tFlashError!=eFLASH_NO_ERROR )
-				{
-					/* failed to erase the sector */
-					DEBUGMSG(ZONE_ERROR, (". failed to erase flash sector %d\n", sizCnt));
-/*					showPflashError(tFlashError); */
-					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-					break;
-				}
-				/* Next sector. */
-				++sizCnt;
-			} while( sizCnt<ptFlashDescription->ulSectorCnt && ptSectors[sizCnt].ulOffset<ulEraseEndAdr );
-			DEBUGMSG(ZONE_VERBOSE, (". Erase complete.\n"));
-
-		}
+		
 	}
-
+	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
+	{
+		tResult = parflash_unlock(ptFlashDescription);
+	}
+	
+	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
+	{
+		uprintf("#Erasing...\n");
+		progress_bar_init(ulEraseEndAdr - ulEraseStartAdr);
+		ulProgressBarPosition = 0;
+		
+		ptSectors = ptFlashDescription->atSectors;
+		do
+		{
+			DEBUGMSG(ZONE_VERBOSE, (". Erasing sector %d: [0x%08x, 0x%08x[\n", 
+				sizCnt, ptSectors[sizCnt].ulOffset,ptSectors[sizCnt].ulOffset+ptSectors[sizCnt].ulSize));
+			tFlashError = ptFlashDescription->tFlashFunctions.pfnErase(ptFlashDescription, sizCnt);
+			if( tFlashError!=eFLASH_NO_ERROR )
+			{
+				/* failed to erase the sector */
+				uprintf(". failed to erase flash sector %d\n", sizCnt);
+				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+				break;
+			}
+			
+			/* Show progress */
+			ulProgressBarPosition += ptSectors[sizCnt].ulSize;
+			progress_bar_set_position(ulProgressBarPosition);
+			
+			/* Next sector. */
+			++sizCnt;
+			
+		} while( sizCnt<ptFlashDescription->ulSectorCnt && ptSectors[sizCnt].ulOffset<ulEraseEndAdr );
+		uprintf(". Erase complete.\n");
+		progress_bar_finalize();
+	}
 	return tResult;
 }
+
+
+
+NETX_CONSOLEAPP_RESULT_T parflash_read(const CMD_PARAMETER_READ_T *ptParameter)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+
+	const FLASH_DEVICE_T *ptFlashDescription;
+	unsigned long ulFlashSize;
+	
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
+	unsigned char *pucDataStartAdr;
+
+	CADR_T tSrc;
+	ADR_T tDst;
+	CADR_T tSrcEnd;
+	
+	//unsigned long ulDataSize = ulEndAddr-ulStartAddr;
+
+	unsigned long ulProgressBarPosition;
+
+	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tParFlash);
+	ulFlashSize = ptFlashDescription->ulFlashSize;
+	
+	ulStartAdr = ptParameter->ulStartAdr;
+	ulEndAdr = ptParameter->ulEndAdr;
+	pucDataStartAdr = ptParameter->pucData;
+	
+	tResult = parflash_checkSizes(ulStartAdr, ulEndAdr, ulFlashSize);
+	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
+	{
+		uprintf("#Reading from flash...\n");
+
+		progress_bar_init(ulEndAdr-ulStartAdr);
+		ulProgressBarPosition = 0;
+		
+		/* Get the source start address. */
+		tSrc.puc  = ptFlashDescription->pucFlashBase;
+		tSrc.puc += ulStartAdr;
+
+		/* Get the source end address. */
+		tSrcEnd.puc  = ptFlashDescription->pucFlashBase;
+		tSrcEnd.puc += ulEndAdr;
+
+		/* Get the dest address */
+		tDst.puc = (unsigned char*) pucDataStartAdr;
+
+		/* Loop over the complete area. */
+		while( tSrc.puc<tSrcEnd.puc )
+		{
+			*tDst.puc++ = *tSrc.puc++;
+			++ulProgressBarPosition;
+
+			/* Show progress every 64K bytes. */
+			if( (ulProgressBarPosition&0xffff)==0 )
+			{
+				progress_bar_set_position(ulProgressBarPosition);
+			}
+		}
+		progress_bar_finalize();
+	}
+	
+	return tResult;
+}
+
+/* return value: 
+   NETX_CONSOLEAPP_RESULT_OK: equal, 
+   NETX_CONSOLEAPP_RESULT_ERROR: not equal 
+ */
+static NETX_CONSOLEAPP_RESULT_T parflash_compare(const FLASH_DEVICE_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, const unsigned char* pucDataStartAdr)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult = NETX_CONSOLEAPP_RESULT_OK;
+
+	/* src/srcEnd point to Flash; dst, points to RAM */
+	CADR_T tSrc;
+	CADR_T tDst;
+	CADR_T tSrcEnd;
+	
+	unsigned long ulProgressBarPosition;
+
+	uprintf("#Verifying...\n");
+
+	/* Get the source start address. */
+	tSrc.puc  = ptFlashDescription->pucFlashBase;
+	tSrc.puc += ulStartAdr;
+
+	/* Get the source end address. */
+	tSrcEnd.puc  = ptFlashDescription->pucFlashBase;
+	tSrcEnd.puc += ulEndAdr;
+
+	/* Get the dest address */
+	tDst.puc = (const unsigned char*) pucDataStartAdr;
+
+	progress_bar_init(ulEndAdr-ulStartAdr);
+	ulProgressBarPosition = 0;
+	
+	/* Loop over the complete area. */
+	while( tSrc.puc<tSrcEnd.puc )
+	{
+		if (*tDst.puc != *tSrc.puc) 
+		{
+			uprintf(". verify error at address 0x%08x. buffer: 0x%02x, flash: 0x%02x.\n", tSrc.ul, *tDst.puc, *tSrc.puc);
+			return NETX_CONSOLEAPP_RESULT_ERROR;
+		}
+		++tDst.puc;
+		++tSrc.puc;
+		++ulProgressBarPosition;
+
+		/* Show progress every 64K bytes. */
+		if( (ulProgressBarPosition&0xffff)==0 )
+		{
+			progress_bar_set_position(ulProgressBarPosition);
+		}
+	}
+	progress_bar_finalize();
+	
+	uprintf(". verify ok\n");
+	return NETX_CONSOLEAPP_RESULT_OK;
+}
+
+/* if return value is NETX_CONSOLEAPP_RESULT_OK, 
+   the value stored in ptConsoleParams->pvReturnMessage is the result of the comparison.
+   0 = equal, 1 = not equal
+*/
+NETX_CONSOLEAPP_RESULT_T parflash_verify(const CMD_PARAMETER_VERIFY_T *ptParameter, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	NETX_CONSOLEAPP_RESULT_T tEqual;
+	
+	const FLASH_DEVICE_T *ptFlashDescription;
+	unsigned long ulFlashSize;
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
+	unsigned char *pucDataStartAdr;
+
+	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tParFlash);
+	ulFlashSize = ptFlashDescription->ulFlashSize;
+	ulStartAdr = ptParameter->ulStartAdr;
+	ulEndAdr = ptParameter->ulEndAdr;
+	pucDataStartAdr = ptParameter->pucData;
+	
+	tResult = parflash_checkSizes(ulStartAdr, ulEndAdr, ulFlashSize);
+	
+	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
+	{
+		tEqual = parflash_compare(ptFlashDescription, ulStartAdr, ulEndAdr, pucDataStartAdr);
+		ptConsoleParams->pvReturnMessage = (void*)tEqual;
+		
+	}
+	
+	return tResult;
+}
+

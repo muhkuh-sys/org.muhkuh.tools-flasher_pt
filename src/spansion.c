@@ -49,6 +49,7 @@
 	#define DEBUGMSG(cond,printf_exp) ((void)0)
 #endif /* CFG_DEBUGMSG!=0 */
 
+#define UNUSED(x) (void) x;
 
 #define DQ0                                   0x01U
 #define DQ1                                   0x02U
@@ -210,6 +211,9 @@ static FLASH_COMMAND_BLOCK_T s_atPPBExit[] =
         {SPANSION_ADR_PPB_EXIT_CYCLE1, SPANSION_CMD_PPB_EXIT_CYCLE1}
 };
 
+#define FLASH_ABSADDR(d,s,o)  (d->pucFlashBase + d->atSectors[s].ulOffset + o)
+
+
 int SpansionIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
 {
 	int fRet = FALSE;
@@ -221,13 +225,13 @@ int SpansionIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
 	FlashWriteCommandSequence(ptFlashDev, s_atAutoSelect, ARRAYSIZE(s_atAutoSelect));
 
 	ptFlashDev->ucManufacturer = ptFlashDev->pucFlashBase[0];
+	uprintf("Manufacturer: %02x\n", ptFlashDev->ucManufacturer);
 	
 	FlashReset(ptFlashDev, 0);
 
 	if(MFGCODE_SPANSION == ptFlashDev->ucManufacturer)
 	{
 		/* TODO: Check Device IDs */
-
 		strcpy(ptFlashDev->acIdent, "SPANSION");
 		memcpy(&(ptFlashDev->tFlashFunctions), &s_tSpansionFuncs, sizeof(FLASH_FUNCTIONS_T));
 		fRet = TRUE;
@@ -259,10 +263,9 @@ int SpansionIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
 		}
 	}
 	
-	DEBUGMSG(ZONE_FUNCTION, ("+SpansionIdentifyFlash(): fRet=%d\n", fRet));
+	DEBUGMSG(ZONE_FUNCTION, ("-SpansionIdentifyFlash(): fRet=%d\n", fRet));
 	return fRet;
 }
-
 
 
 
@@ -277,6 +280,7 @@ int SpansionIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
 */
 static FLASH_ERRORS_E FlashReset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
+	UNUSED(ulSector)
 	FLASH_ERRORS_E tResult;
 
 
@@ -302,7 +306,6 @@ static FLASH_ERRORS_E FlashErase(const FLASH_DEVICE_T *ptFlashDev, unsigned long
 
 
 	DEBUGMSG(ZONE_FUNCTION, ("+FlashErase(): ptFlashDev=0x%08x, ulSector=%d\n", ptFlashDev, ulSector));
-	DEBUGMSG(ZONE_VERBOSE, ("FlashErase(): ptFlashDev=0x%08x, ulSector=%d\n", ptFlashDev, ulSector));
 	FlashWriteCommandSequence(ptFlashDev, s_atErasePrefix, ARRAYSIZE(s_atErasePrefix));
 	FlashWriteCommand(ptFlashDev, ulSector, 0, SPANSION_CMD_SECTORERASE_CYCLE_5);
 	tResult = FlashWaitEraseDone(ptFlashDev, ulSector);
@@ -360,7 +363,7 @@ static FLASH_ERRORS_E FlashNormalWrite(const FLASH_DEVICE_T *ptFlashDev, unsigne
 	DEBUGMSG(ZONE_FUNCTION, ("+FlashNormalWrite(): ptFlashDev=0x%08x, ulSector=%d, ulOffset=0x%08x, pucData=0x%08x, ulWriteSize=0x%08x\n", ptFlashDev, ulSector, ulOffset, pucData, ulWriteSize));
 
 	tSrc.puc = pucData;
-	tDst.puc = ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset;
+	tDst.puc = FLASH_ABSADDR(ptFlashDev, ulSector, ulOffset);
 	ulEndOffset  = ulOffset + ulWriteSize;
 	ulLastData   = 0;
 	
@@ -471,10 +474,7 @@ static FLASH_ERRORS_E FlashBufferedWrite(const FLASH_DEVICE_T *ptFlashDev, const
 
 		ulLength -= ulWriteSize;
 
-		tDst.puc  = ptFlashDev->pucFlashBase;
-		tDst.puc += ptFlashDev->atSectors[ulCurrentSector].ulOffset;
-		tDst.puc += ulCurrentOffset;
-
+		tDst.puc = FLASH_ABSADDR(ptFlashDev, ulCurrentSector, ulCurrentOffset);
 		tEnd.puc = tDst.puc + ulWriteSize;
 
 		switch(ptFlashDev->tBits)
@@ -595,7 +595,7 @@ static FLASH_ERRORS_E FlashProgram(const FLASH_DEVICE_T *ptFlashDev, unsigned lo
 	else if (ptFlashDev->ulMaxBufferWriteSize == 1) 
 	{
 		/* if the device does not support buffered writes, write the entire data normally */
-		uprintf (".FlashProgram(): using normal writes\n");
+		DEBUGMSG(ZONE_VERBOSE, (".FlashProgram(): using normal writes\n"));
 		tResult = FlashNormalWrite(ptFlashDev, ulCurrentSector, ulCurrentOffset, pucSource, ulLength);
 	}
 	else
@@ -611,13 +611,13 @@ static FLASH_ERRORS_E FlashProgram(const FLASH_DEVICE_T *ptFlashDev, unsigned lo
 		{
 			/* get the maximum size for the normal write operation (only write until buffered write can be used) */
 			unsigned long ulUnbufferedWriteSize = ulDeviceBufferSize - ulOffsetMod;
-			uprintf(". ulUnbufferedWriteSize = 0x%08x\n", ulUnbufferedWriteSize);
+			DEBUGMSG(ZONE_VERBOSE, (". ulUnbufferedWriteSize = 0x%08x\n", ulUnbufferedWriteSize));
 			
 			/* limit the write size to the requested chunk */
 			if( ulUnbufferedWriteSize>ulLength )
 			{
 				ulUnbufferedWriteSize = ulLength;
-				uprintf(". ulUnbufferedWriteSize adjusted to 0x%08x\n", ulUnbufferedWriteSize);
+				DEBUGMSG(ZONE_VERBOSE, (". ulUnbufferedWriteSize adjusted to 0x%08x\n", ulUnbufferedWriteSize));
 			}
 			tResult = FlashNormalWrite(ptFlashDev, ulCurrentSector, ulCurrentOffset, pucSource, ulUnbufferedWriteSize);
 			if(tResult==eFLASH_NO_ERROR)
@@ -651,9 +651,9 @@ static FLASH_ERRORS_E FlashProgram(const FLASH_DEVICE_T *ptFlashDev, unsigned lo
 
 FLASH_ERRORS_E FlashLock(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
 {
-        FLASH_ERRORS_E tResult;
-
-
+	UNUSED(ptFlashDev)
+	UNUSED(ulSector)
+	FLASH_ERRORS_E tResult;
 	DEBUGMSG(ZONE_FUNCTION, ("+FlashLock(): ptFlashDev=0x%08x, ulSector=%d\n", ptFlashDev, ulSector));
 
 	/* not yet */
@@ -666,14 +666,15 @@ FLASH_ERRORS_E FlashLock(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSecto
 
 FLASH_ERRORS_E FlashUnlockDummy(const FLASH_DEVICE_T *ptFlashDev)
 {
-	DEBUGMSG(ZONE_VERBOSE, (".FlashUnlockDummy(): Unlock noch supported\n"));
+	UNUSED(ptFlashDev)
+	uprintf(".FlashUnlockDummy(): Unlock noch supported\n");
 	return eFLASH_NO_ERROR;
 }
 
 FLASH_ERRORS_E FlashUnlock(const FLASH_DEVICE_T *ptFlashDev)
 {
-        unsigned long ulNotProtected;
-        unsigned long ulProtectionBit;
+	unsigned long ulNotProtected;
+	unsigned long ulProtectionBit;
 	unsigned long ulSector;
 	FLASH_ERRORS_E eRet = eFLASH_NO_ERROR;
 	volatile unsigned char* pbReadAddr;
@@ -717,6 +718,10 @@ FLASH_ERRORS_E FlashUnlock(const FLASH_DEVICE_T *ptFlashDev)
 		/* wait for erase done */
 		eRet = FlashWaitEraseDone(ptFlashDev, 0);
 	}
+	else
+	{
+		uprintf(". Ok, no locked sectors found.\n");
+	}
 
 	/* leave ppb mode */
 	FlashWriteCommandSequence(ptFlashDev, s_atPPBExit, sizeof(s_atPPBExit) / sizeof(s_atPPBExit[0]));
@@ -724,7 +729,7 @@ FLASH_ERRORS_E FlashUnlock(const FLASH_DEVICE_T *ptFlashDev)
 	/* back to memory mode */
 	FlashReset(ptFlashDev, ulSector);
 
-	DEBUGMSG(ZONE_FUNCTION, ("-FlashProgram(): eRet=0x$8\n", eRet));
+	DEBUGMSG(ZONE_FUNCTION, ("-FlashUnlock(): eRet=%d\n", eRet));
 
 	/* done */
 	return eRet;
@@ -740,15 +745,15 @@ FLASH_ERRORS_E FlashUnlock(const FLASH_DEVICE_T *ptFlashDev)
 */
 void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned int uiCmd)
 {
-	volatile unsigned char* pbWriteAddr = ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset;
 	unsigned long ulValue;
-
-
+	VADR_T tWriteAddr;
+	tWriteAddr.puc = FLASH_ABSADDR(ptFlashDev, ulSector, 0);
+	
 	switch(ptFlashDev->tBits)
 	{
 	case BUS_WIDTH_8Bit:
 		/* 8bits cannot be paired */
-		pbWriteAddr[ulOffset] = (unsigned char)uiCmd;
+		tWriteAddr.puc[ulOffset] = (unsigned char)uiCmd;
 		break;
 
 	case BUS_WIDTH_16Bit:
@@ -757,7 +762,7 @@ void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector,
 		{
 			ulValue |= ulValue << 8U;
 		}
-		((volatile unsigned short*)pbWriteAddr)[ulOffset] = (unsigned short)ulValue;
+		tWriteAddr.pus[ulOffset] = (unsigned short)ulValue;
 		break;
 
 	case BUS_WIDTH_32Bit:
@@ -766,12 +771,13 @@ void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector,
 		{
 			ulValue |= ulValue << 16U;
 		}
-		((volatile unsigned long*)pbWriteAddr)[ulOffset] = ulValue;
+		tWriteAddr.pul[ulOffset] = ulValue;
 		break;
 	}
 
 	DEBUGMSG(ZONE_FUNCTION, ("-FlashWriteCommand()\n"));
 }
+
 
 /*! Checks if a given flag (bCmd) is set on the FLASH device
 *
@@ -786,63 +792,43 @@ void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector,
 static int FlashIsset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulSet, unsigned long ulClear)
 {
 	int iRet = FALSE;
-	volatile unsigned char* pbReadAddr = ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset;
+	unsigned long ulValue = 0;
+	VADR_T tReadAddr;
 
-
+	tReadAddr.puc = FLASH_ABSADDR(ptFlashDev, ulSector, ulOffset);
+	
 	DEBUGMSG(ZONE_FUNCTION, ("+FlashIsset(): ptFlashDev=0x%08x, ulSector=%d, ulOffset=0x%08x, ulSet=0x%08x, ulClear=0x%08x\n", ptFlashDev, ulSector, ulOffset, ulSet, ulClear));
 
 	switch(ptFlashDev->tBits)
 	{
 	case BUS_WIDTH_8Bit:
-		{
-			unsigned char bValue = *pbReadAddr;
-
-			if( ((bValue & ulSet) == ulSet) && ((bValue & ulClear) == 0) )
-			{
-				iRet = TRUE;
-			}
-		}
+		ulValue = (unsigned long) *tReadAddr.puc;
 		break;
 
 	case BUS_WIDTH_16Bit:
+		ulValue = (unsigned long) *tReadAddr.pus; 
+		if(ptFlashDev->fPaired)
 		{
-			unsigned short usValue         = *(volatile unsigned short*)pbReadAddr;
-			unsigned short usCheckSetCmd   = ulSet;
-			unsigned short usCheckClearCmd = ulClear;
-
-			if(ptFlashDev->fPaired)
-			{
-				usCheckSetCmd   |= ulSet << 8;
-				usCheckClearCmd |= ulClear;
-			}
-
-			if( ((usValue & usCheckSetCmd) == usCheckSetCmd) && ((usValue & usCheckClearCmd) == 0) )
-			{
-				iRet = TRUE;
-			}
+			ulSet   |= (ulSet << 8);
+			ulClear |= (ulClear << 8);
 		}
 		break;
 
 	case BUS_WIDTH_32Bit:
+		ulValue = *tReadAddr.pul; 
+		if(ptFlashDev->fPaired)
 		{
-			unsigned long ulValue         = *(volatile unsigned long*)pbReadAddr;
-			unsigned long ulCheckSetCmd   = ulSet;
-			unsigned long ulCheckClearCmd = ulClear;
-
-			if(ptFlashDev->fPaired)
-			{
-				ulCheckSetCmd   |= ulSet   << 16;
-				ulCheckClearCmd |= ulClear << 16;
-			}
-
-			if( ((ulValue & ulCheckSetCmd) == ulCheckSetCmd) && ((ulValue & ulCheckClearCmd) == 0) )
-			{
-				iRet = TRUE;
-			}
+			ulSet   |= ulSet   << 16;
+			ulClear |= ulClear << 16;
 		}
 		break;
 	}
 
+	if( ((ulValue & ulSet) == ulSet) && ((ulValue & ulClear) == 0) )
+	{
+		iRet = TRUE;
+	}
+	
 	DEBUGMSG(ZONE_FUNCTION, ("-FlashIsset(): iRet=%d\n", iRet));
 	return iRet;
 }
@@ -897,8 +883,8 @@ static FLASH_ERRORS_E FlashWaitEraseDone(const FLASH_DEVICE_T *ptFlashDev, unsig
 */
 static DEVSTATUS FlashGetStatus(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulAddress, BOOL fBufferWriteOp)
 {
-        unsigned long ulDQ1Mask;
-        unsigned long ulDQ2Mask;
+	unsigned long ulDQ1Mask;
+	unsigned long ulDQ2Mask;
 	unsigned long ulDQ5Mask;
 	unsigned long ulDQ6Mask;
 	unsigned long ulDQ6Toggle;
@@ -1009,8 +995,8 @@ static DEVSTATUS FlashGetStatus(const FLASH_DEVICE_T *ptFlashDev, unsigned long 
 */
 static FLASH_ERRORS_E FlashWaitWriteDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulOffsetData, BOOL fBufferWrite)
 {
-        DEVSTATUS       dev_status;
-        unsigned int    polling_counter;
+	DEVSTATUS       dev_status;
+	unsigned int    polling_counter;
 	unsigned long   ulActData;
 	unsigned long   ulBlockAddress;
 	FLASH_ERRORS_E  eRet;
@@ -1023,7 +1009,8 @@ static FLASH_ERRORS_E FlashWaitWriteDone(const FLASH_DEVICE_T *ptFlashDev, unsig
 
 	/* Perform Polling Operation */
 	polling_counter = 0xFFFFFFFF;
-	ulBlockAddress  = (unsigned long)(ptFlashDev->pucFlashBase + ptFlashDev->atSectors[ulSector].ulOffset + ulOffset);
+	ulBlockAddress  = (unsigned long)FLASH_ABSADDR(ptFlashDev, ulSector, ulOffset);
+	
 	do
 	{
 		polling_counter--;

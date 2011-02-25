@@ -237,7 +237,7 @@ static NETX_CONSOLEAPP_RESULT_T spi_verify_with_progress(const SPI_FLASH_T *ptFl
 		{
 			if( pucCmp0[sizCmpCnt]!=pucCmp1[sizCmpCnt] )
 			{
-				uprintf(". verify error at offset 0x%08x. written 0x%02x, readback 0x%02x.\n", ulProgressCnt+sizCmpCnt, pucCmp1[sizCmpCnt], pucCmp0[sizCmpCnt]);
+				uprintf(". verify error at offset 0x%08x. buffer: 0x%02x, flash: 0x%02x.\n", ulC + ulProgressCnt + sizCmpCnt, pucCmp1[sizCmpCnt], pucCmp0[sizCmpCnt]);
 				return NETX_CONSOLEAPP_RESULT_ERROR;
 			}
 			++sizCmpCnt;
@@ -512,58 +512,55 @@ NETX_CONSOLEAPP_RESULT_T spi_read(CMD_PARAMETER_READ_T *ptParameter)
 	return tResult;
 }
 
-#if 0
-NETX_CONSOLEAPP_RESULT_T spi_verify(CMD_PARAMETER_VERIFY_T *ptParameter)
+NETX_CONSOLEAPP_RESULT_T spi_verify(CMD_PARAMETER_VERIFY_T *ptParameter, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	SPI_FLASH_T tFlashDev;  
-	int                 iResult;
-	const unsigned char *pucDataStartAdr;	
-	unsigned long       ulFlashStartAdr;	
+	NETX_CONSOLEAPP_RESULT_T tEqual;
+	const unsigned char *pucDataStartAdr;
+	unsigned long ulFlashStartAdr;
+	unsigned long ulFlashEndAdr;
+	unsigned long ulDataByteSize;
+	unsigned long ulFlashByteSize;
+	const SPI_FLASH_T *ptFlashDescription;
 
 
-	pucDataStartAdr = pbData;
+	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
-	/* try to detect flash */
-	uprintf(". Detecting SPI flash...\n");
-	tFlashDev.uiSlaveId = SPI_SLAVE_ID;
-	iResult = Drv_SpiInitializeFlash(0, 0, &tFlashDev);
-	if( iResult!=0 )
-	{
-		/* failed to detect the spi flash */
-		uprintf("! failed to detect flash\n");
-		return NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	uprintf(". ok, found %s\n", tFlashDev.tAttributes.acName);
+	ulFlashStartAdr = ptParameter->ulStartAdr;
+	ulFlashEndAdr   = ptParameter->ulEndAdr;
+	ulDataByteSize  = ulFlashEndAdr - ulFlashStartAdr;
+	pucDataStartAdr = ptParameter->pucData;
+
+	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
+	ulFlashByteSize = ptFlashDescription->tAttributes.ulSize;
 
 	/* test flash size */
-
 	uprintf(". Check size...\n");
-	uprintf(". data size:  0x%08x\n", ulDataByteLen);
-	uprintf(". flash size: 0x%08x\n", tFlashDev.tAttributes.ulSize);
-	if( ulDataByteLen>tFlashDev.tAttributes.ulSize )
+	uprintf(". data size:  0x%08x\n", ulDataByteSize);
+	uprintf(". flash size: 0x%08x\n", ulFlashByteSize);
+	if( (ulFlashStartAdr>=ulFlashByteSize) || (ulFlashEndAdr>ulFlashByteSize) )
 	{
 		/* data is larger than flash */
 		uprintf("! error, data size exceeds flash\n");
-		return NETX_CONSOLEAPP_RESULT_ERROR;
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 	}
-	uprintf(". ok, data fits into flash\n");
-
-	/* verify data from start of flash (address 0) */
-	ulFlashStartAdr = 0;
-
-	/* verify data */
-	tResult = spi_verify_with_progress(&tFlashDev, ulFlashStartAdr, ulDataByteLen, pucDataStartAdr);
-	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
+	else
 	{
-		uprintf("! verify error\n");
-		return tResult;
+		uprintf(". ok, data fits into flash\n");
+
+		/* verify data */
+		tEqual = spi_verify_with_progress(ptFlashDescription, ulFlashStartAdr, ulDataByteSize, pucDataStartAdr);
+		if( tEqual!=NETX_CONSOLEAPP_RESULT_OK )
+		{
+			uprintf("! verify error\n");
+		}
+		
+		ptConsoleParams->pvReturnMessage = (void*)tEqual;
 	}
 
-	/* all ok */
-	return NETX_CONSOLEAPP_RESULT_OK;
+	return tResult;
 }
-#endif
+
 
 /*-----------------------------------*/
 
