@@ -198,6 +198,26 @@ function verify(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAd
 end
 
 
+-- ulStartAdr = address in Flash, ulDataAddress = address in buffer
+function hash(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset)
+	local strHashBin = nil
+	local aulParameter =
+	{
+		OPERATION_MODE_Checksum,
+		aAttr.ulDeviceDesc,
+		ulFlashStartOffset,
+		ulFlashEndOffset,
+	}
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
+	
+	if ulValue==0 then
+		strHashBin = tPlugin:read_image(aAttr.ulParameter+0x20, 20, progress, 20)
+	end
+	
+	return ulValue == 0, strHashBin
+end
+
+
 
 function erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
 	local aulParameter = 

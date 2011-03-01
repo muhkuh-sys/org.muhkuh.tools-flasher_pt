@@ -306,6 +306,53 @@ static NETX_CONSOLEAPP_RESULT_T spi_read_with_progress(const SPI_FLASH_T *ptFlas
 	return NETX_CONSOLEAPP_RESULT_OK;
 }
 
+#if CFG_INCLUDE_SHA1!=0
+static NETX_CONSOLEAPP_RESULT_T spi_sha1_with_progress(const SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulFlashEndAdr, SHA_CTX *ptSha1Context)
+{
+	unsigned long ulSegSize, ulMaxSegSize;
+	unsigned long ulProgressCnt;
+	int iResult;
+
+	uprintf("# Hashing data...\n");
+
+	ulMaxSegSize = SPI_BUFFER_SIZE;
+
+	ulProgressCnt = 0;
+	progress_bar_init(ulFlashEndAdr-ulFlashStartAdr);
+
+	while( ulFlashStartAdr<ulFlashEndAdr )
+	{
+		/* get the next segment, limit it to 'ulMaxSegSize' */
+		ulSegSize = ulFlashEndAdr - ulFlashStartAdr;
+		if( ulSegSize>ulMaxSegSize )
+		{
+			ulSegSize = ulMaxSegSize;
+		}
+
+		/* read the segment */
+		iResult = Drv_SpiReadFlash(ptFlashDev, ulFlashStartAdr, pucSpiBuffer, ulSegSize);
+		if( iResult!=0 )
+		{
+			return NETX_CONSOLEAPP_RESULT_ERROR;
+		}
+		
+		SHA1_Update(ptSha1Context, (const void*)pucSpiBuffer, ulSegSize);
+
+		/* next segment */
+		ulFlashStartAdr += ulSegSize;
+
+		/* inc progress */
+		ulProgressCnt += ulSegSize;
+		progress_bar_set_position(ulProgressCnt);
+	}
+
+	progress_bar_finalize();
+	uprintf(". hash done\n");
+
+	/* read ok! */
+	return NETX_CONSOLEAPP_RESULT_OK;
+}
+#endif
 
 static NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFlashDev, unsigned long ulStartAdr, unsigned long ulEndAdr)
 {
@@ -424,6 +471,7 @@ NETX_CONSOLEAPP_RESULT_T spi_flash(CMD_PARAMETER_FLASH_T *ptParameter)
 	return tResult;
 }
 
+/*-----------------------------------*/
 
 NETX_CONSOLEAPP_RESULT_T spi_erase(CMD_PARAMETER_ERASE_T *ptParameter)
 {
@@ -465,6 +513,8 @@ NETX_CONSOLEAPP_RESULT_T spi_erase(CMD_PARAMETER_ERASE_T *ptParameter)
 
 	return tResult;
 }
+
+/*-----------------------------------*/
 
 
 NETX_CONSOLEAPP_RESULT_T spi_read(CMD_PARAMETER_READ_T *ptParameter)
@@ -511,6 +561,57 @@ NETX_CONSOLEAPP_RESULT_T spi_read(CMD_PARAMETER_READ_T *ptParameter)
 	/* all ok */
 	return tResult;
 }
+
+
+#if CFG_INCLUDE_SHA1!=0
+NETX_CONSOLEAPP_RESULT_T spi_sha1(CMD_PARAMETER_CHECKSUM_T *ptParameter, SHA_CTX *ptSha1Context)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	const SPI_FLASH_T *ptFlashDescription;
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
+	unsigned long ulFlashByteSize;
+
+
+	/* Expect success. */
+	tResult = NETX_CONSOLEAPP_RESULT_OK;
+
+	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
+	ulStartAdr = ptParameter->ulStartAdr;
+	ulEndAdr = ptParameter->ulEndAdr;
+
+	/* test flash size */
+	ulFlashByteSize = ptFlashDescription->tAttributes.ulSize;
+
+	uprintf(". Check size...\n");
+	uprintf(". start addr: 0x%08x\n", ulStartAdr);
+	uprintf(". end addr:   0x%08x\n", ulEndAdr);
+	uprintf(". flash size: 0x%08x\n", ulFlashByteSize);
+	if( (ulStartAdr>=ulFlashByteSize) || (ulEndAdr>ulFlashByteSize) )
+	{
+		/* data is larger than flash */
+		uprintf("! error, the area exceeds the flash\n");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else
+	{
+		uprintf(". ok, the area fits into the flash\n");
+
+		/* read data */
+		tResult = spi_sha1_with_progress(ptFlashDescription, ulStartAdr, ulEndAdr, ptSha1Context);
+		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
+		{
+			uprintf("! read error\n");
+		}
+	}
+
+	/* all ok */
+	return tResult;
+}
+#endif
+
+/*-----------------------------------*/
+
 
 NETX_CONSOLEAPP_RESULT_T spi_verify(CMD_PARAMETER_VERIFY_T *ptParameter, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
 {

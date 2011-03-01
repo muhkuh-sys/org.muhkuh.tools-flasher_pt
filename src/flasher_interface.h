@@ -112,7 +112,7 @@ typedef struct
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	unsigned long ulStartAdr;
 	unsigned long ulEndAdr;
-	unsigned char *pucData;
+	unsigned char aucSha1[20];
 } CMD_PARAMETER_CHECKSUM_T;
 
 

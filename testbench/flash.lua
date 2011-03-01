@@ -7,6 +7,7 @@ require("flasher")
 require("muhkuh")
 require("tester")
 require("select_plugin")
+require("mhash")
 
 FLASHER_PATH = "../targets/"
 --FLASHER_PATH = "./"
@@ -59,16 +60,22 @@ end
 MODE_FLASH = 0
 MODE_READ = 2
 MODE_VERIFY = 3
+MODE_HASH = 4
+MODE_VERIFY_HASH = 42
 MODE_INFO = 8
 MODE_HELP = 255
 
 strUsage = [==[
-Usage: 
-flash a file:   lua flash.lua flash  [plugin] device filename
-read flash:     lua flash.lua read   [plugin] device range filename
-verify flash:   lua flash.lua verify [plugin] device [-s offset] filename
-get board info: lua flash.lua info
-show this help: lua flash.lua -h
+Usage: lua flash.lua mode parameters
+
+                   Mode        Parameters
+flash a file:      flash       [plugin] device filename
+read flash:        read        [plugin] device range filename
+verify flash:      verify      [plugin] device [offset] filename
+compute SHA1:      hash        [plugin] device range
+verify using hash: verify_hash [plugin] device [offset] filename
+get board info:    info
+show this help:    -h
 
 plugin: -p plugin_name
         example: -p romloader_usb_00_00
@@ -80,6 +87,8 @@ device: -b bus -u unit -cs chip_select
 range: -s device_start_offset -l len
        the start offset defaults to 0.
        
+offset: -s device_start_offset
+       offset in the flash device, defaults to 0
 ]==]
 
 
@@ -96,11 +105,13 @@ f  = {argkey = "strDataFileName",   clkey = "",   name="file name"}
 }
 
 requiredargs = {
-[MODE_FLASH]  = {"b", "u", "cs", "f"},
-[MODE_READ]   = {"b", "u", "cs", "f", "l"},
-[MODE_VERIFY] = {"b", "u", "cs", "f"},
-[MODE_INFO]   = {},
-[MODE_HELP]   = {}
+[MODE_FLASH]        = {"b", "u", "cs", "f"},
+[MODE_READ]         = {"b", "u", "cs", "f", "l"},
+[MODE_VERIFY]       = {"b", "u", "cs", "f"},
+[MODE_VERIFY_HASH]  = {"b", "u", "cs", "f"},
+[MODE_HASH]         = {"b", "u", "cs"},
+[MODE_INFO]         = {},
+[MODE_HELP]         = {}
 }
 
 function checkArgs(aArgs)
@@ -152,6 +163,10 @@ function evalArg()
 		aArgs.iMode = MODE_READ
 	elseif nArgs>=2 and arg[1] == "verify" then
 		aArgs.iMode = MODE_VERIFY
+	elseif nArgs>=2 and arg[1] == "verify_hash" then
+		aArgs.iMode = MODE_VERIFY_HASH
+	elseif nArgs>=2 and arg[1] == "hash" then
+		aArgs.iMode = MODE_HASH
 	elseif nArgs>=1 and arg[1] == "info" then
 		aArgs.iMode = MODE_INFO
 	elseif nArgs>=1 and arg[1] == "-h" then
@@ -525,6 +540,126 @@ function doVerify(tPlugin, args)
 end
 
 
+
+
+--------------------------------------------------------------------------
+-- hash
+--   iBus
+--   iUnit
+--   iChipSelect
+--   ulStartOffset
+--   ulLen
+--------------------------------------------------------------------------
+
+function doHash(tPlugin, args)
+	local fResult 
+	local ulDeviceOffset = args.ulStartOffset
+	local ulLen = args.ulLen
+	
+	-- Download the flasher.
+	print("Downloading flasher binary")
+	local aAttr = flasher.download(tPlugin, FLASHER_PATH, progress)
+	if not aAttr then
+		return false, "Error while downloading flasher binary"
+	end
+	
+	-- check if the selected flash is present
+	print("Detecting flash device")
+	local strDevDesc = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
+	if not strDevDesc then
+		return false, "Failed to get a device description!"
+	end
+	
+	fResult, strHashBin = flasher.hash(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulLen)
+	if fResult==false or fResult==nil then
+		return false, "Could not compute the checksum!"
+	end
+	
+	local strSHA1 = ""
+	for i=1, strHashBin:len() do
+		strSHA1 = strSHA1 .. string.format("%02x", strHashBin:byte(i))
+	end
+	
+	print("SHA1: " .. strSHA1)
+	
+	return true, strSHA1
+end
+
+
+--------------------------------------------------------------------------
+-- verify_hash
+--   iBus
+--   iUnit
+--   iChipSelect
+--   ulStartOffset
+--   strDataFileName
+--------------------------------------------------------------------------
+
+
+function doVerifyHash(tPlugin, args)
+	local fResult 
+	local ulDeviceOffset = args.ulStartOffset
+	
+	-- Download the flasher.
+	print("Downloading flasher binary")
+	local aAttr = flasher.download(tPlugin, FLASHER_PATH, progress)
+	if not aAttr then
+		return false, "Error while downloading flasher binary"
+	end
+	
+	-- check if the selected flash is present
+	print("Detecting flash device")
+	local strDevDesc = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
+	if not strDevDesc then
+		return false, "Failed to get a device description!"
+	end
+	
+	-- Load the data.
+	print("Loading data file")
+	strData, msg = muhkuh.load(args.strDataFileName)
+	if not strData then
+		return false, "Failed to load binary '" .. strDataFileName .. "': " .. msg
+	end
+	local ulDataByteSize = strData:len()
+	
+	-- compute the SHA1 of the data file
+	local mh = mhash.mhash_state()
+	mh:init(mhash.MHASH_SHA1)
+	mh:hash(strData)
+	local strFileHashBin = mh:hash_end()
+
+	local strFileHash = ""
+	for i=1, strFileHashBin:len() do
+		strFileHash = strFileHash .. string.format("%02x", strFileHashBin:byte(i))
+	end
+	
+	print("File SHA1: " .. strFileHash)
+	
+	
+	-- compute the SHA1 of the data in the flash
+	fResult, strFlashHashBin = flasher.hash(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulDataByteSize)
+	if fResult==false or fResult==nil then
+		return false, "Could not compute the checksum!"
+	end
+	
+	local strFlashHash = ""
+	for i=1, strFlashHashBin:len() do
+		strFlashHash = strFlashHash .. string.format("%02x", strFlashHashBin:byte(i))
+	end
+	
+	print("Flash SHA1: " .. strFlashHash)
+	print("File SHA1:  " .. strFileHash)
+
+	-- compare
+	if strFileHashBin == strFlashHashBin then
+		print("Checksums are equal!")
+		return true, "The data in the flash and the file have the same checksum"
+	else
+		print("Checksums are not equal!")
+		return true, "The data in the flash and the file do not have the same checksum"
+	end
+end
+
 --------------------------------------------------------------------------
 --  board info
 --------------------------------------------------------------------------
@@ -608,7 +743,10 @@ else
 			fOk, strMsg = doRead(tPlugin, args)
 		elseif args.iMode == MODE_VERIFY then
 			fOk, strMsg = doVerify(tPlugin, args)
-			
+		elseif args.iMode == MODE_VERIFY_HASH then
+			fOk, strMsg = doVerifyHash(tPlugin, args)
+		elseif args.iMode == MODE_HASH then
+			fOk, strMsg = doHash(tPlugin, args)
 		elseif args.iMode == MODE_INFO then
 			fOk, strMsg = doInfo(tPlugin, args)
 		end

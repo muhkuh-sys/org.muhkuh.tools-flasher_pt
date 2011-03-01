@@ -28,7 +28,7 @@
 #include "flasher_parflash.h"
 /* Serial flash on spi. */
 #include "flasher_spi.h"
-
+#include "sha1.h"
 
 #include "flasher_interface.h"
 #include "units.h"
@@ -287,6 +287,56 @@ static NETX_CONSOLEAPP_RESULT_T opMode_verify(tFlasherInputParameter *ptAppParam
 	return tResult;
 }
 
+#if CFG_INCLUDE_SHA1!=0
+static NETX_CONSOLEAPP_RESULT_T opMode_checksum(tFlasherInputParameter *ptAppParams)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
+	BUS_T tSourceTyp;
+	SHA_CTX tShaContext;
+	
+	/* check the device description */
+	ptDeviceDescription = ptAppParams->uParameter.tChecksum.ptDeviceDescription;
+	tResult = check_device_description(ptDeviceDescription);
+
+	SHA1_Init(&tShaContext);
+	
+	/* get the source typ */
+	tSourceTyp = ptDeviceDescription->tSourceTyp;
+
+	uprintf(". Device: ");
+	switch(tSourceTyp)
+	{
+	case BUS_ParFlash:
+		/*  use parallel flash */
+		uprintf("Parallel flash\n");
+		tResult = parflash_sha1(&(ptAppParams->uParameter.tChecksum), &tShaContext);
+		break;
+		
+	case BUS_SPI:
+		/*  use SPI flash */
+		uprintf("SPI flash\n");
+		tResult = spi_sha1(&(ptAppParams->uParameter.tChecksum), &tShaContext);
+		break;
+
+	default:
+		/*  unknown boot device */
+		uprintf("unknown\n");
+		uprintf("! illegal device id specified\n");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		break;
+	}
+
+	/* store hash value in parameter */
+	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
+	{
+		SHA1_Final(&ptAppParams->uParameter.tChecksum.aucSha1[0], &tShaContext);
+	}
+	
+	return tResult;
+}
+#endif
+
 
 static NETX_CONSOLEAPP_RESULT_T opMode_isErased(tFlasherInputParameter *ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
 {
@@ -509,6 +559,13 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 				uprintf(". Operation Mode: Verify\n");
 				tResult = opMode_verify(ptAppParams, ptTestParam);
 				break;
+				
+#if CFG_INCLUDE_SHA1!=0
+			case OPERATION_MODE_Checksum:
+				uprintf(". Operation Mode: Checksum (SHA1)\n");
+				tResult = opMode_checksum(ptAppParams);
+				break;
+#endif
 				
 			case OPERATION_MODE_IsErased:
 				uprintf(". Operation Mode: IsErased\n");

@@ -761,14 +761,72 @@ NETX_CONSOLEAPP_RESULT_T parflash_read(const CMD_PARAMETER_READ_T *ptParameter)
 	return tResult;
 }
 
+#if CFG_INCLUDE_SHA1!=0
+NETX_CONSOLEAPP_RESULT_T parflash_sha1(const CMD_PARAMETER_CHECKSUM_T *ptParameter, SHA_CTX *ptSha1Context)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	
+	const FLASH_DEVICE_T *ptFlashDescription;
+	unsigned long ulFlashSize;
+	unsigned long ulStartAdr;
+	unsigned long ulEndAdr;
+	
+	unsigned long ulOffset;
+	unsigned long ulBlockSize;
+	const void *pvFlashAddr;
+	
+	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tParFlash);
+	ulFlashSize = ptFlashDescription->ulFlashSize;
+	ulStartAdr = ptParameter->ulStartAdr;
+	ulEndAdr = ptParameter->ulEndAdr;
+
+	DEBUGMSG(ZONE_VERBOSE, (". Check size...\n"));
+	DEBUGMSG(ZONE_VERBOSE, (". start offset: 0x%08x\n", ulStartAdr));
+	DEBUGMSG(ZONE_VERBOSE, (". end offset:   0x%08x\n", ulEndAdr));
+	DEBUGMSG(ZONE_VERBOSE, (". flash size:   0x%08x\n", ulFlashSize));
+
+	tResult = parflash_checkSizes(ulStartAdr, ulEndAdr, ulFlashSize);
+	
+	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
+	{
+		// without progress:
+		// pvStartAddr = (const void*)(ptFlashDescription->pucFlashBase + ulStartAdr);
+		// ulSize = ulEndAdr - ulStartAdr;
+		// SHA1_Update(ptSha1Context, pvStartAddr, ulSize);
+
+		uprintf("# Hashing data...\n");
+		ulOffset = 0;
+		
+		while (ulOffset < ulEndAdr - ulStartAdr)
+		{
+			ulBlockSize = ulEndAdr - ulStartAdr - ulOffset;
+			if (ulBlockSize > 0x10000) 
+			{
+				ulBlockSize = 0x10000;
+			}
+			
+			pvFlashAddr = (const void*)(ptFlashDescription->pucFlashBase + ulStartAdr + ulOffset);
+			SHA1_Update(ptSha1Context, pvFlashAddr, ulBlockSize);
+			
+			ulOffset += ulBlockSize;
+			
+			progress_bar_set_position(ulOffset);
+			
+		}
+		
+		uprintf(". hash done\n");
+	}
+	
+	return tResult;
+}
+#endif
+
 /* return value: 
    NETX_CONSOLEAPP_RESULT_OK: equal, 
    NETX_CONSOLEAPP_RESULT_ERROR: not equal 
  */
 static NETX_CONSOLEAPP_RESULT_T parflash_compare(const FLASH_DEVICE_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, const unsigned char* pucDataStartAdr)
 {
-	NETX_CONSOLEAPP_RESULT_T tResult = NETX_CONSOLEAPP_RESULT_OK;
-
 	/* src/srcEnd point to Flash; dst, points to RAM */
 	CADR_T tSrc;
 	CADR_T tDst;

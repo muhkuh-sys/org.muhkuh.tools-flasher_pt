@@ -20,7 +20,7 @@
 
 #include "netx_consoleapp.h"
 #include "flasher_interface.h"
-
+#include "sha1.h"
 
 #ifndef __FLASHER_PARFLASH_H__
 #define __FLASHER_PARFLASH_H__
@@ -33,5 +33,6 @@ NETX_CONSOLEAPP_RESULT_T parflash_flash(const CMD_PARAMETER_FLASH_T *ptParameter
 NETX_CONSOLEAPP_RESULT_T parflash_erase(const CMD_PARAMETER_ERASE_T *ptParameter);
 NETX_CONSOLEAPP_RESULT_T parflash_read(const CMD_PARAMETER_READ_T *ptParameter);
 NETX_CONSOLEAPP_RESULT_T parflash_verify(const CMD_PARAMETER_VERIFY_T *ptParameter, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams);
+NETX_CONSOLEAPP_RESULT_T parflash_sha1(const CMD_PARAMETER_CHECKSUM_T *ptParameter, SHA_CTX *ptSha1Context);
 
 #endif	/* __FLASHER_PARFLASH_H__ */
