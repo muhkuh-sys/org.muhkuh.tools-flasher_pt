@@ -61,7 +61,7 @@ static NETX_CONSOLEAPP_RESULT_T spi_write_with_progress(const SPI_FLASH_T *ptFla
 	else
 	{
 		/* write the complete data */
-		uprintf("# Write data...\n");
+		uprintf("# Writing...\n");
 
 		/* loop over all data */
 		ulC = ulFlashStartAdr;
@@ -201,7 +201,7 @@ static NETX_CONSOLEAPP_RESULT_T spi_verify_with_progress(const SPI_FLASH_T *ptFl
 	size_t sizCmpCnt;
 
 
-	uprintf("# Verify data...\n");
+	uprintf("# Verifying...\n");
 
 	ulMaxSegSize = SPI_BUFFER_SIZE;
 
@@ -267,7 +267,7 @@ static NETX_CONSOLEAPP_RESULT_T spi_read_with_progress(const SPI_FLASH_T *ptFlas
 	int iResult;
 
 
-	uprintf("# Read data...\n");
+	uprintf("# Reading...\n");
 
 	ulMaxSegSize = SPI_BUFFER_SIZE;
 
@@ -313,7 +313,7 @@ static NETX_CONSOLEAPP_RESULT_T spi_sha1_with_progress(const SPI_FLASH_T *ptFlas
 	unsigned long ulProgressCnt;
 	int iResult;
 
-	uprintf("# Hashing data...\n");
+	uprintf("# Calculating hash...\n");
 
 	ulMaxSegSize = SPI_BUFFER_SIZE;
 
@@ -424,48 +424,24 @@ NETX_CONSOLEAPP_RESULT_T spi_flash(CMD_PARAMETER_FLASH_T *ptParameter)
 	const unsigned char *pucDataStartAdr;
 	unsigned long ulFlashStartAdr;
 	unsigned long ulDataByteSize;
-	unsigned long ulFlashByteSize;
 	const SPI_FLASH_T *ptFlashDescription;
 
-
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
-
 	ulFlashStartAdr = ptParameter->ulStartAdr;
 	ulDataByteSize  = ptParameter->ulDataByteSize;
 	pucDataStartAdr = ptParameter->pucData;
-
 	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
-	ulFlashByteSize = ptFlashDescription->tAttributes.ulSize;
-
-	/* test flash size */
-	uprintf(". Check size...\n");
-	uprintf(". data size:  0x%08x\n", ulDataByteSize);
-	uprintf(". flash size: 0x%08x\n", ulFlashByteSize);
-	if( (ulFlashStartAdr>=ulFlashByteSize) || ((ulFlashStartAdr+ulDataByteSize)>ulFlashByteSize) )
+	
+	/* write data */
+	tResult = spi_write_with_progress(ptFlashDescription, ulFlashStartAdr, ulDataByteSize, pucDataStartAdr);
+	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 	{
-		/* data is larger than flash */
-		uprintf("! error, data size exceeds flash\n");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		uprintf("! write error\n");
 	}
 	else
 	{
-		uprintf(". ok, data fits into flash\n");
-
-		/* write data */
-		tResult = spi_write_with_progress(ptFlashDescription, ulFlashStartAdr, ulDataByteSize, pucDataStartAdr);
-		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
-		{
-			uprintf("! write error\n");
-		}
-		else
-		{
-			/* verify data */
-			tResult = spi_verify_with_progress(ptFlashDescription, ulFlashStartAdr, ulDataByteSize, pucDataStartAdr);
-			if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
-			{
-				uprintf("! verify error\n");
-			}
-		}
+		/* verify data */
+		tResult = spi_verify_with_progress(ptFlashDescription, ulFlashStartAdr, ulDataByteSize, pucDataStartAdr);
 	}
 
 	return tResult;
@@ -479,36 +455,16 @@ NETX_CONSOLEAPP_RESULT_T spi_erase(CMD_PARAMETER_ERASE_T *ptParameter)
 	const SPI_FLASH_T *ptFlashDescription;
 	unsigned long ulStartAdr;
 	unsigned long ulEndAdr;
-	unsigned long ulFlashByteSize;
-
 
 	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
 	ulStartAdr = ptParameter->ulStartAdr;
 	ulEndAdr = ptParameter->ulEndAdr;
 
-	/* test flash size */
-	ulFlashByteSize = ptFlashDescription->tAttributes.ulSize;
-
-	uprintf(". Check size...\n");
-	uprintf(". start adr:  0x%08x\n", ulStartAdr);
-	uprintf(". end adr:    0x%08x\n", ulEndAdr);
-	uprintf(". flash size: 0x%08x\n", ulFlashByteSize);
-	if( (ulStartAdr>=ulFlashByteSize) || (ulEndAdr>ulFlashByteSize) )
+	/* erase the block */
+	tResult = spi_erase_with_progress(ptFlashDescription, ulStartAdr, ulEndAdr);
+	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 	{
-		/* data is larger than flash */
-		uprintf("! error, the area exceeds the flash\n");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else
-	{
-		uprintf(". ok, the area fits into the flash\n");
-
-		/* erase the block */
-		tResult = spi_erase_with_progress(ptFlashDescription, ulStartAdr, ulEndAdr);
-		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
-		{
-			uprintf("! erase error\n");
-		}
+		uprintf("! erase error\n");
 	}
 
 	return tResult;
@@ -523,8 +479,6 @@ NETX_CONSOLEAPP_RESULT_T spi_read(CMD_PARAMETER_READ_T *ptParameter)
 	const SPI_FLASH_T *ptFlashDescription;
 	unsigned long ulStartAdr;
 	unsigned long ulEndAdr;
-	unsigned long ulFlashByteSize;
-
 
 	/* Expect success. */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
@@ -533,32 +487,13 @@ NETX_CONSOLEAPP_RESULT_T spi_read(CMD_PARAMETER_READ_T *ptParameter)
 	ulStartAdr = ptParameter->ulStartAdr;
 	ulEndAdr = ptParameter->ulEndAdr;
 
-	/* test flash size */
-	ulFlashByteSize = ptFlashDescription->tAttributes.ulSize;
-
-	uprintf(". Check size...\n");
-	uprintf(". start adr:  0x%08x\n", ulStartAdr);
-	uprintf(". end adr:    0x%08x\n", ulEndAdr);
-	uprintf(". flash size: 0x%08x\n", ulFlashByteSize);
-	if( (ulStartAdr>=ulFlashByteSize) || (ulEndAdr>ulFlashByteSize) )
+	/* read data */
+	tResult = spi_read_with_progress(ptFlashDescription, ulStartAdr, ulEndAdr, ptParameter->pucData);
+	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 	{
-		/* data is larger than flash */
-		uprintf("! error, the area exceeds the flash\n");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else
-	{
-		uprintf(". ok, the area fits into the flash\n");
-
-		/* read data */
-		tResult = spi_read_with_progress(ptFlashDescription, ulStartAdr, ulEndAdr, ptParameter->pucData);
-		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
-		{
-			uprintf("! read error\n");
-		}
+		uprintf("! read error\n");
 	}
 
-	/* all ok */
 	return tResult;
 }
 
@@ -570,42 +505,18 @@ NETX_CONSOLEAPP_RESULT_T spi_sha1(CMD_PARAMETER_CHECKSUM_T *ptParameter, SHA_CTX
 	const SPI_FLASH_T *ptFlashDescription;
 	unsigned long ulStartAdr;
 	unsigned long ulEndAdr;
-	unsigned long ulFlashByteSize;
-
-
-	/* Expect success. */
-	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
 	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
 	ulStartAdr = ptParameter->ulStartAdr;
 	ulEndAdr = ptParameter->ulEndAdr;
 
-	/* test flash size */
-	ulFlashByteSize = ptFlashDescription->tAttributes.ulSize;
-
-	uprintf(". Check size...\n");
-	uprintf(". start addr: 0x%08x\n", ulStartAdr);
-	uprintf(". end addr:   0x%08x\n", ulEndAdr);
-	uprintf(". flash size: 0x%08x\n", ulFlashByteSize);
-	if( (ulStartAdr>=ulFlashByteSize) || (ulEndAdr>ulFlashByteSize) )
+	/* read data */
+	tResult = spi_sha1_with_progress(ptFlashDescription, ulStartAdr, ulEndAdr, ptSha1Context);
+	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 	{
-		/* data is larger than flash */
-		uprintf("! error, the area exceeds the flash\n");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else
-	{
-		uprintf(". ok, the area fits into the flash\n");
-
-		/* read data */
-		tResult = spi_sha1_with_progress(ptFlashDescription, ulStartAdr, ulEndAdr, ptSha1Context);
-		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
-		{
-			uprintf("! read error\n");
-		}
+		uprintf("! error calculating hash\n");
 	}
 
-	/* all ok */
 	return tResult;
 }
 #endif
@@ -616,16 +527,11 @@ NETX_CONSOLEAPP_RESULT_T spi_sha1(CMD_PARAMETER_CHECKSUM_T *ptParameter, SHA_CTX
 NETX_CONSOLEAPP_RESULT_T spi_verify(CMD_PARAMETER_VERIFY_T *ptParameter, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	NETX_CONSOLEAPP_RESULT_T tEqual;
 	const unsigned char *pucDataStartAdr;
 	unsigned long ulFlashStartAdr;
 	unsigned long ulFlashEndAdr;
 	unsigned long ulDataByteSize;
-	unsigned long ulFlashByteSize;
 	const SPI_FLASH_T *ptFlashDescription;
-
-
-	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
 	ulFlashStartAdr = ptParameter->ulStartAdr;
 	ulFlashEndAdr   = ptParameter->ulEndAdr;
@@ -633,31 +539,11 @@ NETX_CONSOLEAPP_RESULT_T spi_verify(CMD_PARAMETER_VERIFY_T *ptParameter, NETX_CO
 	pucDataStartAdr = ptParameter->pucData;
 
 	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
-	ulFlashByteSize = ptFlashDescription->tAttributes.ulSize;
 
-	/* test flash size */
-	uprintf(". Check size...\n");
-	uprintf(". data size:  0x%08x\n", ulDataByteSize);
-	uprintf(". flash size: 0x%08x\n", ulFlashByteSize);
-	if( (ulFlashStartAdr>=ulFlashByteSize) || (ulFlashEndAdr>ulFlashByteSize) )
-	{
-		/* data is larger than flash */
-		uprintf("! error, data size exceeds flash\n");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else
-	{
-		uprintf(". ok, data fits into flash\n");
-
-		/* verify data */
-		tEqual = spi_verify_with_progress(ptFlashDescription, ulFlashStartAdr, ulDataByteSize, pucDataStartAdr);
-		if( tEqual!=NETX_CONSOLEAPP_RESULT_OK )
-		{
-			uprintf("! verify error\n");
-		}
-		
-		ptConsoleParams->pvReturnMessage = (void*)tEqual;
-	}
+	/* verify data */
+	tResult = spi_verify_with_progress(ptFlashDescription, ulFlashStartAdr, ulDataByteSize, pucDataStartAdr);
+	
+	ptConsoleParams->pvReturnMessage = (void*)tResult;
 
 	return tResult;
 }
@@ -672,7 +558,6 @@ NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	int iResult;
 	DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	SPI_FLASH_T *ptFlashDescription;
-
 
 	ptDeviceDescription = ptParameter->ptDeviceDescription;
 	ptFlashDescription = &(ptDeviceDescription->uInfo.tSpiInfo);
@@ -717,7 +602,6 @@ NETX_CONSOLEAPP_RESULT_T spi_isErased(CMD_PARAMETER_ISERASED_T *ptParameter, NET
 	const SPI_FLASH_T *ptFlashDescription;
 	unsigned long ulStartAdr;
 	unsigned long ulEndAdr;
-	unsigned long ulFlashSize;
 	unsigned long ulCnt;
 	unsigned char *pucCnt;
 	unsigned char *pucEnd;
@@ -726,7 +610,6 @@ NETX_CONSOLEAPP_RESULT_T spi_isErased(CMD_PARAMETER_ISERASED_T *ptParameter, NET
 	int iResult;
 	unsigned long ulErased;
 
-
 	/* expect success */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
@@ -734,73 +617,56 @@ NETX_CONSOLEAPP_RESULT_T spi_isErased(CMD_PARAMETER_ISERASED_T *ptParameter, NET
 	ulStartAdr = ptParameter->ulStartAdr;
 	ulEndAdr  = ptParameter->ulEndAdr;
 
-	ulFlashSize = ptFlashDescription->tAttributes.ulSize;
+	ulErased = 0xffU;
 
-	uprintf("flash size: 0x%08x\n", ulFlashSize);
+	uprintf("# Checking data...\n");
 
-	/* test addresses */
-	if( (ulStartAdr>=ulFlashSize) || (ulEndAdr>ulFlashSize) )
+	ulMaxSegSize = SPI_BUFFER_SIZE;
+
+	/* loop over all data */
+	ulCnt = ulStartAdr;
+	ulProgressCnt = 0;
+	progress_bar_init(ulEndAdr-ulStartAdr);
+
+	while( ulCnt<ulEndAdr )
 	{
-		/* data is larger than flash */
-		uprintf("! error, the specified area exceeds the flash size\n");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else
-	{
-		uprintf(". ok, the area fits into the flash\n");
-
-		ulErased = 0xffU;
-
-		uprintf("# Checking data...\n");
-
-		ulMaxSegSize = SPI_BUFFER_SIZE;
-
-		/* loop over all data */
-		ulCnt = ulStartAdr;
-
-		ulProgressCnt = 0;
-		progress_bar_init(ulEndAdr-ulStartAdr);
-
-		while( ulCnt<ulEndAdr )
+		/* get the next segment, limit it to 'ulMaxSegSize' */
+		ulSegSize = ulEndAdr - ulCnt;
+		if( ulSegSize>ulMaxSegSize )
 		{
-			/* get the next segment, limit it to 'ulMaxSegSize' */
-			ulSegSize = ulEndAdr - ulCnt;
-			if( ulSegSize>ulMaxSegSize )
-			{
-				ulSegSize = ulMaxSegSize;
-			}
-
-			/* read the segment */
-			iResult = Drv_SpiReadFlash(ptFlashDescription, ulCnt, pucSpiBuffer, ulSegSize);
-			if( iResult!=0 )
-			{
-				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-				break;
-			}
-
-			pucCnt = pucSpiBuffer;
-			pucEnd = pucSpiBuffer + ulSegSize;
-			while( pucCnt<pucEnd )
-			{
-				ulErased &= *(pucCnt++);
-			}
-
-			if( ulErased!=0xff )
-			{
-				break;
-			}
-
-			/* next segment */
-			ulCnt += ulSegSize;
-			pucCnt += ulSegSize;
-
-			/* inc progress */
-			ulProgressCnt += ulSegSize;
-			progress_bar_set_position(ulProgressCnt);
+			ulSegSize = ulMaxSegSize;
 		}
 
-		progress_bar_finalize();
+		/* read the segment */
+		iResult = Drv_SpiReadFlash(ptFlashDescription, ulCnt, pucSpiBuffer, ulSegSize);
+		if( iResult!=0 )
+		{
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+			break;
+		}
+
+		pucCnt = pucSpiBuffer;
+		pucEnd = pucSpiBuffer + ulSegSize;
+		while( pucCnt<pucEnd )
+		{
+			ulErased &= *(pucCnt++);
+		}
+
+		if( ulErased!=0xff )
+		{
+			break;
+		}
+
+		/* next segment */
+		ulCnt += ulSegSize;
+		pucCnt += ulSegSize;
+
+		/* inc progress */
+		ulProgressCnt += ulSegSize;
+		progress_bar_set_position(ulProgressCnt);
 	}
+
+	progress_bar_finalize();
 
 	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 	{
@@ -828,50 +694,32 @@ NETX_CONSOLEAPP_RESULT_T spi_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptParame
 	const SPI_FLASH_T *ptFlashDescription;
 	unsigned long ulStartAdr;
 	unsigned long ulEndAdr;
-	unsigned long ulFlashSize;
 	unsigned long ulEraseBlockSize;
-
 
 	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
 	ulStartAdr = ptParameter->ulStartAdr;
 	ulEndAdr  = ptParameter->ulEndAdr;
 
-	ulFlashSize = ptFlashDescription->tAttributes.ulSize;
+	/* NOTE: this code assumes that the serial flash has uniform erase block sizes. */
 	ulEraseBlockSize = ptFlashDescription->ulSectorSize;
-
-	uprintf("flash size: 0x%08x\n", ulFlashSize);
 	uprintf("erase block size: 0x%08x\n", ulEraseBlockSize);
+	uprintf("0x%08x - 0x%08x\n", ulStartAdr, ulEndAdr);
 
-	/* test addresses */
-	if( (ulStartAdr>=ulFlashSize) || (ulEndAdr>ulFlashSize) )
-	{
-		/* data is larger than flash */
-		uprintf("! error, the specified area exceeds the flash size\n");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else
-	{
-		uprintf(". ok, the area fits into the flash\n");
+	/* round down the first address */
+	ulStartAdr /= ulEraseBlockSize;
+	ulStartAdr *= ulEraseBlockSize;
+	/* round up the last address */
+	ulEndAdr += ulEraseBlockSize - 1;
+	ulEndAdr /= ulEraseBlockSize;
+	ulEndAdr *= ulEraseBlockSize;
 
-		/* NOTE: this code assumes that the serial flash has uniform erase block sizes. */
+	uprintf("0x%08x - 0x%08x\n", ulStartAdr, ulEndAdr);
 
-		uprintf("0x%08x - 0x%08x\n", ulStartAdr, ulEndAdr);
+	ptParameter->ulStartAdr = ulStartAdr;
+	ptParameter->ulEndAdr = ulEndAdr;
 
-		/* round down the first address */
-		ulStartAdr /= ulEraseBlockSize;
-		ulStartAdr *= ulEraseBlockSize;
-		/* round up the last address */
-		ulEndAdr += ulEraseBlockSize - 1;
-		ulEndAdr /= ulEraseBlockSize;
-		ulEndAdr *= ulEraseBlockSize;
+	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
-		uprintf("0x%08x - 0x%08x\n", ulStartAdr, ulEndAdr);
-
-		ptParameter->ulStartAdr = ulStartAdr;
-		ptParameter->ulEndAdr = ulEndAdr;
-
-		tResult = NETX_CONSOLEAPP_RESULT_OK;
-	}
 
 	/* all ok */
 	return tResult;
