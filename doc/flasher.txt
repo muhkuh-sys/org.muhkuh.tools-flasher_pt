@@ -21,25 +21,28 @@ Building the netX flasher is currently supported on Linux operating systems and 
  * Windows 7
  * Windows Server 2008
 
-To compile the netX flasher you need only 3 tools: Python, a Java Runtime Environment (JRE) and Maven2. Maven2 will take care of the rest of the dependencies.
+To compile the netX flasher you need only 1 tool: Python. A small python script will take care of the rest of the dependencies.
 
 Recommended versions:
 
  * Python >= 2.5
- * JRE >= 1.5
- * Maven2 >= 2.2.0
 
 === Setting up the build system on Linux
 
-Most distributions provide packages for Python, JRE and Maven2. Search the list of available software packets for the terms 'python', 'jre' and 'maven2'.
+Most distributions have python preinstalled. Try to execute the command `python --version` in a shell. This will print the python version if it is installed.
+
+-----------------------------------------------------------------------------
+ hindin:/home/brynhild$ python --version
+ Python 2.6.6
+-----------------------------------------------------------------------------
+
+If no python is installed, search the list of available software packets for the term 'python'.
 
 .Example for debian based systems
- apt-get install python sun-java6-jre maven2
+ apt-get install python
 
-If you prefer to install the tools by hand
+If you prefer to install python by hand:
 
- 1. Sun JRE: http://www.java.com/en/download/index.jsp . The site has excellent installation instructions.
- 1. Maven2: http://maven.apache.org/download.html . The site has good step-by-step instructions.
  1. Python 2.x.x: http://www.python.org/download . The source package has build instructions.
 
 
@@ -47,14 +50,28 @@ If you prefer to install the tools by hand
 
 Download and install the packages from the following locations:
 
- 1. Sun JRE: http://www.java.com/en/download/index.jsp . Sun Java has a nice and easy installer.
- 1. Maven2: http://maven.apache.org/download.html . There is no installer, but the download site has good step-by-step instructions.
  1. Python 2.x.x: http://www.python.org/download . The installer presents several features to be installed. You can save disk space and select only "Register Extensions". You do not need "Tcl/Tk", "Documentation", "Utility Scripts" and the "Test Suite".
 
 
 == Compile
 
-Open a command line window and change to the folder where you unpacked the flasher sources. There is a file named 'pom.xml'. Run the command 'mvn' there. After some time and a lot of output, the target folder contains the binaries and this documentation.
+Open a command line window and change to the folder where you unpacked the flasher sources. There is a file named 'setup.xml'. Run the command 'python mbs/setup.py' there. After some time and a lot of output, the target folder contains the binaries and this documentation.
+
+
+-----------------------------------------------------------------------------
+ hindin:/home/brynhild/flasher$ python mbs/setup.py
+ Processing package scons-local, version 2.0.1_1
+ The package is not installed yet.
+ The package must be downloaded.
+ Trying repository at http://downloads.sourceforge.net/project/muhkuh/mbs/...
+ 100% (87/87)
+ 0% (2048/128433386)
+ 0% (4096/128433386)
+ 0% (6144/128433386)
+ 0% (8192/128433386)
+[...]
+-----------------------------------------------------------------------------
+
 
 .List of produced files
  * `targets/flasher_netx500.bin` : the netX500 version
