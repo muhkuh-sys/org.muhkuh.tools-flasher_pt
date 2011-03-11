@@ -163,4 +163,20 @@ bin_netx10_dbg = env_netx10_dbg.ObjCopy('targets/flasher_netx10_debug.bin', elf_
 #
 # Build the documentation.
 #
-env_default.Asciidoc('targets/doc/flasher.html', 'doc/flasher.txt')
+doc = env_default.Asciidoc('targets/doc/flasher.html', 'doc/flasher.txt')
+
+
+#----------------------------------------------------------------------------
+#
+# Build the distribution.
+#
+aPathTranslate = dict({
+	bin_netx500_nodbg[0]: 'bin',
+	bin_netx50_nodbg[0]: 'bin',
+	bin_netx10_nodbg[0]: 'bin',
+	bin_netx500_dbg[0]: 'bin/debug',
+	bin_netx50_dbg[0]: 'bin/debug',
+	bin_netx10_dbg[0]: 'bin/debug',
+	doc[0]: 'doc'
+})
+env_default.FlexZip('targets/flasher.zip', bin_netx500_nodbg+bin_netx50_nodbg+bin_netx10_nodbg+bin_netx500_dbg+bin_netx50_dbg+bin_netx10_dbg+doc, ZIP_PATH_TRANSLATE=aPathTranslate)
