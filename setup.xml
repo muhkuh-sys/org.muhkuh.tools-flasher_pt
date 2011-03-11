@@ -7,16 +7,6 @@
 		<minor>0</minor>
 	</project_version>
 
-	<paths>
-		<marker>~/.m2/depack</marker>
-		<repository>~/.m2/repository</repository>
-		<depack>~/.m2/depack</depack>
-	</paths>
-
-	<repositories>
-		<repository name="muhkuh@sourceforge">http://downloads.sourceforge.net/project/muhkuh/maven2</repository>
-	</repositories>
-
 	<scons>
 		<group>org.scons</group>
 		<name>scons-local</name>
@@ -41,19 +31,4 @@
 			<typ>tar.bz2</typ>
 		</tool>
 	</tools>
-
-	<filters>
-		<filter>
-			<template>templates/scons.bat</template>
-			<destination>scons.bat</destination>
-		</filter>
-		<filter>
-			<template>templates/scons.sh</template>
-			<destination>scons.sh</destination>
-		</filter>
-		<filter>
-			<template>templates/site_init.py</template>
-			<destination>site_scons/site_init.py</destination>
-		</filter>
-	</filters>
 </muhkuh_buildsystem>
