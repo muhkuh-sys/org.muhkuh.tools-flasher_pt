@@ -322,9 +322,8 @@ function doFlash(tPlugin, args)
 
 	-- check if the selected flash is present
 	print("Detecting flash device")
-	strDevDesc = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
-	
-	if not strDevDesc then
+	fOk = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
+	if not fOk then
 		return false, "Failed to get a device description!"
 	end
 
@@ -435,8 +434,8 @@ function doRead(tPlugin, args)
 	
 	-- check if the selected flash is present
 	print("Detecting flash device")
-	local strDevDesc = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
-	if not strDevDesc then
+	fOk = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
+	if not fOk then
 		return false, "Failed to get a device description!"
 	end
 	
@@ -500,8 +499,8 @@ function doVerify(tPlugin, args)
 	
 	-- check if the selected flash is present
 	print("Detecting flash device")
-	local strDevDesc = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
-	if not strDevDesc then
+	fOk = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
+	if not fOk then
 		return false, "Failed to get a device description!"
 	end
 	
@@ -565,8 +564,8 @@ function doHash(tPlugin, args)
 	
 	-- check if the selected flash is present
 	print("Detecting flash device")
-	local strDevDesc = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
-	if not strDevDesc then
+	fOk = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
+	if not fOk then
 		return false, "Failed to get a device description!"
 	end
 	
@@ -609,8 +608,8 @@ function doVerifyHash(tPlugin, args)
 	
 	-- check if the selected flash is present
 	print("Detecting flash device")
-	local strDevDesc = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
-	if not strDevDesc then
+	fOk = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
+	if not fOk then
 		return false, "Failed to get a device description!"
 	end
 	

@@ -114,7 +114,7 @@ function download(tPlugin, strPrefix, fnCallback)
 	end
 end
 
-
+-- download parameters to netX
 local function set_parameterblock(tPlugin, ulAddress, aulParameters)
 	local strBin = ""
 	for i,v in ipairs(aulParameters) do
@@ -123,6 +123,8 @@ local function set_parameterblock(tPlugin, ulAddress, aulParameters)
 	tPlugin:write_image(ulAddress, strBin, progress, string.len(strBin))
 end
 
+-- Stores parameters in netX memory, calls the flasher and returns the result value
+-- 0 = success, 1 = failure
 function callFlasher(tPlugin, aAttr, aulParams)
 	-- set the parameters
 	local aulParameter = {}
@@ -147,196 +149,8 @@ function callFlasher(tPlugin, aAttr, aulParams)
 	return ulValue
 end
 
-
-function flash(tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress)
-	local aulParameter = 
-	{
-		OPERATION_MODE_Flash,
-		aAttr.ulDeviceDesc,
-		ulStartAdr,
-		ulDataByteSize,
-		ulDataAddress
-	}
-	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
-	return ulValue == 0
-end
-
--- ulStartAdr = address in Flash, ulDataAddress = address in buffer
-function read(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress)
-	local aulParameter = 
-	{
-		OPERATION_MODE_Read,
-		aAttr.ulDeviceDesc,
-		ulFlashStartOffset,
-		ulFlashEndOffset,
-		ulBufferAddress
-	}
-	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
-	return ulValue == 0
-end
-
-
--- ulStartAdr = address in Flash, ulDataAddress = address in buffer
-function verify(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress)
-	local fEqual = false
-	local aulParameter = 
-	{
-		OPERATION_MODE_Verify,
-		aAttr.ulDeviceDesc,
-		ulFlashStartOffset,
-		ulFlashEndOffset,
-		ulBufferAddress
-	}
-	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
-	
-	if ulValue==0 then
-		ulValue = tPlugin:read_data32(aAttr.ulParameter+0x08)
-		fEqual = (ulValue==0)
-	end
-	
-	return fEqual
-end
-
-
--- ulStartAdr = address in Flash, ulDataAddress = address in buffer
-function hash(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset)
-	local strHashBin = nil
-	local aulParameter =
-	{
-		OPERATION_MODE_Checksum,
-		aAttr.ulDeviceDesc,
-		ulFlashStartOffset,
-		ulFlashEndOffset,
-	}
-	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
-	
-	if ulValue==0 then
-		strHashBin = tPlugin:read_image(aAttr.ulParameter+0x20, 20, progress, 20)
-	end
-	
-	return ulValue == 0, strHashBin
-end
-
-
-
-function erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
-	local aulParameter = 
-	{
-		OPERATION_MODE_Erase,                          -- operation mode: erase
-		aAttr.ulDeviceDesc,                            -- data block for the device description
-		ulEraseStart,
-		ulEraseEnd
-	}
-	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
-	return ulValue == 0
-end
-
-
-
--- ulDevDescAdr is unused
-function detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, ulDevDescAdr)
-	local ulValue
-	local aulParameter
-	local strDevDesc = nil
-	local ulIdleCfg
-
-
-	ulIdleCfg = 
-	  MSK_SQI_CFG_IDLE_IO1_OE + MSK_SQI_CFG_IDLE_IO1_OUT 
-	+ MSK_SQI_CFG_IDLE_IO2_OE + MSK_SQI_CFG_IDLE_IO2_OUT 
-	+ MSK_SQI_CFG_IDLE_IO3_OE + MSK_SQI_CFG_IDLE_IO3_OUT
-
-	aulParameter = 
-	{
-		OPERATION_MODE_Detect,                -- operation mode: detect
-		tBus,                                 -- device: spi flash
-		ulUnit,                               -- unit
-		ulChipSelect,                         -- chip select: 1
-		1000,                                 -- initial speed in kHz (1000 -> 1MHz)
-		ulIdleCfg,                            -- idle config
-		3,                                    -- mode
-		0xffffffff,                           -- mmio config
-		aAttr.ulDeviceDesc                    -- data block for the device description
-	}
-	
-	ulValue = callFlasher(tPlugin, aAttr, aulParameter)
-	
-	if ulValue==0 then
-		-- check the device description
-		ulValue = tPlugin:read_data32(aAttr.ulDeviceDesc)
-		if ulValue==0 then
-			print("the device desription is not valid, nothing detected.")
-		else
-			local ulSize
-			local ulVersion
-
-			-- get the size of the returned data
-			ulSize = tPlugin:read_data32(aAttr.ulDeviceDesc+0x04)
-			if ulSize<16 then
-				print("the device description claims to be valid, but has a strange size.")
-			else
-				-- read the interface version of the returned data
-				ulVersion = tPlugin:read_data32(aAttr.ulDeviceDesc+0x08)
-				if ulVersion~=0x00020000 then
-					-- the version does not match the expected value
-					print(string.format("the device description has a strange interface version."))
-				else
-					-- get the device description
-					strDevDesc = tPlugin:read_image(aAttr.ulDeviceDesc, ulSize, progress, ulSize)
-				end
-			end
-		end
-	end
-
-	return strDevDesc
-end
-
-
-
-function getEraseArea(tPlugin, aAttr, ulStartAdr, ulEndAdr)
-	local ulValue
-	local aulParameter
-	local ulEraseStart
-	local ulEraseEnd
-
-	aulParameter = 
-	{
-		OPERATION_MODE_GetEraseArea,           -- operation mode: get erase area
-		aAttr.ulDeviceDesc,                    -- data block for the device description
-		ulStartAdr,
-		ulEndAdr
-	}
-	
-	ulValue = callFlasher(tPlugin, aAttr, aulParameter)
-	if ulValue==0 then
-		ulEraseStart = tPlugin:read_data32(aAttr.ulParameter+0x18)
-		ulEraseEnd = tPlugin:read_data32(aAttr.ulParameter+0x1c)
-	end
-
-	return ulEraseStart, ulEraseEnd
-end
-
-function isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
-	local fIsErased = false
-
-	local aulParameter = 
-	{
-		OPERATION_MODE_IsErased,               -- operation mode: isErased
-		aAttr.ulDeviceDesc,                    -- data block for the device description
-		ulEraseStart,
-		ulEraseEnd
-	}
-	
-	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
-	if ulValue==0 then
-		ulValue = tPlugin:read_data32(aAttr.ulParameter+0x08)
-		fIsErased = (ulValue==0xff)
-	end
-
-	return fIsErased
-end
-
-
+-- get "static" information about the buses, depending on the chip type:
+-- SRAM bus parflash, extension bus parflash, SPI serial flash, SQI serial flash
 local function getInfoBlock(tPlugin, aAttr, ulBusIdx, ulUnitIdx)
 	local aResult = nil
 	
@@ -384,5 +198,209 @@ function getBoardInfo(tPlugin, aAttr)
 
 	return aBoardInfo
 end
+
+-- check if a device is available on tBus/ulUnit/ulChipSelect
+function detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect)
+	local ulValue
+	local aulParameter
+	local ulIdleCfg
+	
+	ulIdleCfg = 
+	  MSK_SQI_CFG_IDLE_IO1_OE + MSK_SQI_CFG_IDLE_IO1_OUT 
+	+ MSK_SQI_CFG_IDLE_IO2_OE + MSK_SQI_CFG_IDLE_IO2_OUT 
+	+ MSK_SQI_CFG_IDLE_IO3_OE + MSK_SQI_CFG_IDLE_IO3_OUT
+
+	aulParameter = 
+	{
+		OPERATION_MODE_Detect,                -- operation mode: detect
+		tBus,                                 -- device: spi flash
+		ulUnit,                               -- unit
+		ulChipSelect,                         -- chip select: 1
+		1000,                                 -- initial speed in kHz (1000 -> 1MHz)
+		ulIdleCfg,                            -- idle config
+		3,                                    -- mode
+		0xffffffff,                           -- mmio config
+		aAttr.ulDeviceDesc                    -- data block for the device description
+	}
+	
+	ulValue = callFlasher(tPlugin, aAttr, aulParameter)
+	return ulValue == 0
+end
+
+-- read device descriptor after detect (debugging)
+function readDeviceDescriptor(tPlugin, aAttr)
+	-- check the device description
+	local strDevDesc
+	local ulSize
+	local ulVersion
+	
+	local ulValue = tPlugin:read_data32(aAttr.ulDeviceDesc)
+	if ulValue==0 then
+		print("the device desription is not valid, nothing detected.")
+	else
+
+		-- get the size of the returned data
+		ulSize = tPlugin:read_data32(aAttr.ulDeviceDesc+0x04)
+		if ulSize<16 then
+			print("the device description claims to be valid, but has a strange size.")
+		else
+			-- read the interface version of the returned data
+			ulVersion = tPlugin:read_data32(aAttr.ulDeviceDesc+0x08)
+			if ulVersion~=0x00020000 then
+				-- the version does not match the expected value
+				print(string.format("the device description has a strange interface version."))
+			else
+				-- get the device description
+				strDevDesc = tPlugin:read_image(aAttr.ulDeviceDesc, ulSize, progress, ulSize)
+			end
+		end
+	end
+
+	return strDevDesc
+end
+
+---------------------------------------------------------------------------------
+-- The following functions assume that detect has been run and there is a 
+-- valid device description in the memory.
+
+-- ulStartAddr, ulEndAddr are offsets in the flash device.
+-- ulDataAddress is the absolute address of the  buffer.
+---------------------------------------------------------------------------------
+
+-- Writes data which has been loaded into the buffer at ulDataAddress to ulStartAddr in the flash.
+function flash(tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress)
+	local aulParameter = 
+	{
+		OPERATION_MODE_Flash,
+		aAttr.ulDeviceDesc,
+		ulStartAdr,
+		ulDataByteSize,
+		ulDataAddress
+	}
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
+	return ulValue == 0
+end
+
+-- Reads data from flash to RAM
+function read(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress)
+	local aulParameter = 
+	{
+		OPERATION_MODE_Read,
+		aAttr.ulDeviceDesc,
+		ulFlashStartOffset,
+		ulFlashEndOffset,
+		ulBufferAddress
+	}
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
+	return ulValue == 0
+end
+
+
+-- Compares data in flash to RAM
+function verify(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress)
+	local fEqual = false
+	local aulParameter = 
+	{
+		OPERATION_MODE_Verify,
+		aAttr.ulDeviceDesc,
+		ulFlashStartOffset,
+		ulFlashEndOffset,
+		ulBufferAddress
+	}
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
+	
+	if ulValue==0 then
+		ulValue = tPlugin:read_data32(aAttr.ulParameter+0x08)
+		fEqual = (ulValue==0)
+	end
+	
+	return fEqual
+end
+
+
+-- Computes the SHA1 hash over data in the flash.
+function hash(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset)
+	local strHashBin = nil
+	local aulParameter =
+	{
+		OPERATION_MODE_Checksum,
+		aAttr.ulDeviceDesc,
+		ulFlashStartOffset,
+		ulFlashEndOffset,
+	}
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
+	
+	if ulValue==0 then
+		strHashBin = tPlugin:read_image(aAttr.ulParameter+0x20, 20, progress, 20)
+	end
+	
+	return ulValue == 0, strHashBin
+end
+
+
+
+-- Determines the smallest interval of sectors which has to be
+-- erased in order to erase ulStartAdr to ulEndAdr-1.
+
+function getEraseArea(tPlugin, aAttr, ulStartAdr, ulEndAdr)
+	local ulValue
+	local aulParameter
+	local ulEraseStart
+	local ulEraseEnd
+
+	aulParameter = 
+	{
+		OPERATION_MODE_GetEraseArea,           -- operation mode: get erase area
+		aAttr.ulDeviceDesc,                    -- data block for the device description
+		ulStartAdr,
+		ulEndAdr
+	}
+	
+	ulValue = callFlasher(tPlugin, aAttr, aulParameter)
+	if ulValue==0 then
+		ulEraseStart = tPlugin:read_data32(aAttr.ulParameter+0x18)
+		ulEraseEnd = tPlugin:read_data32(aAttr.ulParameter+0x1c)
+	end
+
+	return ulEraseStart, ulEraseEnd
+end
+
+-- Checks if the area from ulEraseStart to ulEraseEnd is 0xff.
+function isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
+	local fIsErased = false
+
+	local aulParameter = 
+	{
+		OPERATION_MODE_IsErased,               -- operation mode: isErased
+		aAttr.ulDeviceDesc,                    -- data block for the device description
+		ulEraseStart,
+		ulEraseEnd
+	}
+	
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
+	if ulValue==0 then
+		ulValue = tPlugin:read_data32(aAttr.ulParameter+0x08)
+		fIsErased = (ulValue==0xff)
+	end
+
+	return fIsErased
+end
+
+-- Erase an area in the flash.
+-- The start and end addresses must be aligned to sector boundaries as
+-- set by getEraseArea.
+function erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
+	local aulParameter = 
+	{
+		OPERATION_MODE_Erase,                          -- operation mode: erase
+		aAttr.ulDeviceDesc,                            -- data block for the device description
+		ulEraseStart,
+		ulEraseEnd
+	}
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter)
+	return ulValue == 0
+end
+
+
 
 
