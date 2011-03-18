@@ -21,6 +21,7 @@
 module("flasher", package.seeall)
 
 require("bit")
+require("muhkuh")
 
 
 BUS_Parflash    = 0             -- parallel flash
