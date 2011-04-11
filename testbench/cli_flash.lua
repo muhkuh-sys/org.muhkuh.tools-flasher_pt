@@ -27,9 +27,17 @@ function writeBin(strName, bin)
 	end
 end
 
+-- get hex representation (no spaces) of a byte string
+function getHexString(strBin)
+	local strHex = ""
+	for i=1, strBin:len() do
+		strHex = strHex .. string.format("%02x", strBin:byte(i))
+	end
+end
 
 --------------------------------------------------------------------------
---  callbacks
+-- callback/progress function
+-- progress is only printed every 10%
 --------------------------------------------------------------------------
 
 local progress_last_cnt
@@ -61,12 +69,13 @@ MODE_FLASH = 0
 MODE_READ = 2
 MODE_VERIFY = 3
 MODE_HASH = 4
+MODE_DETECT = 5
 MODE_VERIFY_HASH = 42
 MODE_INFO = 8
 MODE_HELP = 255
 
 strUsage = [==[
-Usage: lua flash.lua mode parameters
+Usage: lua cli_flash.lua mode parameters
 
                    Mode        Parameters
 flash a file:      flash       [plugin] device filename
@@ -75,6 +84,7 @@ verify flash:      verify      [plugin] device [offset] filename
 compute SHA1:      hash        [plugin] device range
 verify using hash: verify_hash [plugin] device [offset] filename
 get board info:    info
+detect flash:      detect      [plugin] device
 show this help:    -h
 
 plugin: -p plugin_name
@@ -110,6 +120,7 @@ requiredargs = {
 [MODE_VERIFY]       = {"b", "u", "cs", "f"},
 [MODE_VERIFY_HASH]  = {"b", "u", "cs", "f"},
 [MODE_HASH]         = {"b", "u", "cs"},
+[MODE_DETECT]       = {"b", "u", "cs"},
 [MODE_INFO]         = {},
 [MODE_HELP]         = {}
 }
@@ -125,7 +136,6 @@ function checkArgs(aArgs)
 	local fOk = true
 	
 	--show_args(aArgs)
-
 	for i, strKey in pairs(required) do
 		local argdef = argdefs[strKey]
 		--print(strKey, argdef.argkey)
@@ -167,6 +177,8 @@ function evalArg()
 		aArgs.iMode = MODE_VERIFY_HASH
 	elseif nArgs>=2 and arg[1] == "hash" then
 		aArgs.iMode = MODE_HASH
+	elseif nArgs>=2 and arg[1] == "detect" then
+		aArgs.iMode = MODE_DETECT
 	elseif nArgs>=1 and arg[1] == "info" then
 		aArgs.iMode = MODE_INFO
 	elseif nArgs>=1 and arg[1] == "-h" then
@@ -305,14 +317,13 @@ end
 --   iUnit
 --   iChipSelect
 --   strDataFileName
-
+--   ulStartOffset
 --------------------------------------------------------------------------
 
 function doFlash(tPlugin, args)
 	local strDataFileName = args.strDataFileName
+	local fOk
 	
-	local strDevDesc
-	-- Download the flasher.
 	-- Download the flasher.
 	print("Downloading flasher binary")
 	local aAttr = flasher.download(tPlugin, FLASHER_PATH, progress)
@@ -337,7 +348,7 @@ function doFlash(tPlugin, args)
 	-- Get the erase area.
 	print("Erasing the area")
 	local ulDataFirst, ulDataEnd, ulEraseFirst, ulEraseEnd
-	ulDataFirst = 0x00000000
+	ulDataFirst = args.ulStartOffset
 	ulDataEnd = ulDataFirst + string.len(strData)
 	ulEraseFirst,ulEraseEnd = flasher.getEraseArea(tPlugin, aAttr, ulDataFirst, ulDataEnd)
 	print(string.format("Area:  [0x%08x, 0x%08x[", ulDataFirst, ulDataEnd))
@@ -346,7 +357,6 @@ function doFlash(tPlugin, args)
 	-- Make sure the area is erased.
 	-- TODO: for serial flashes:
 	-- if the flash has erase-and-program capability, we might skip this
-	-- if the flash has neither PageErase nor EraseAndProgram,
 	local fIsErased = flasher.isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
 	if fIsErased==nil then
 		return false, "Failed to check if the area is erased!"
@@ -355,14 +365,14 @@ function doFlash(tPlugin, args)
 	else
 		print("!!!DIRTY!!! The area must be erased before flashing!")
 
-		io.write("Press enter to start erasing >") io.read()
+		--io.write("Press enter to start erasing >") io.read()
 		
 		fIsErased = flasher.erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
 		if fIsErased~=true then
 			return false, "Failed to erase the area!"
 		else
 		
-			io.write("Press enter to start erase check >") io.read()
+			--io.write("Press enter to start erase check >") io.read()
 			fIsErased = flasher.isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd)
 			if fIsErased~=true then
 				return false, "The flasher pretended to erase the area, but it is still dirty!"
@@ -371,7 +381,7 @@ function doFlash(tPlugin, args)
 	end
 
 
-	io.write("Press enter to start flashing >") io.read()
+	--io.write("Press enter to start flashing >") io.read()
 	-- Loop over the complete data array and flash it in chunks.
 	
 	-- Was ist, wenn Puffergröße kein Vielfaches der Sektorgröße ist,
@@ -380,7 +390,7 @@ function doFlash(tPlugin, args)
 	
 	local ulDataByteSize = strData:len()
 	local ulDataOffset = 0
-	local ulDeviceOffset = 0
+	local ulDeviceOffset = args.ulStartOffset
 	while ulDataOffset<ulDataByteSize do
 		-- Extract the next chunk.
 		strChunk = strData:sub(ulDataOffset+1, ulDataOffset+aAttr.ulBufferLen)
@@ -391,8 +401,8 @@ function doFlash(tPlugin, args)
 
 		-- Flash the chunk.
 		print(string.format("flashing offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
-		fResult = flasher.flash(tPlugin, aAttr, ulDeviceOffset, ulChunkSize, aAttr.ulBufferAdr)
-		if fResult==false or fResult==nil then
+		fOk = flasher.flash(tPlugin, aAttr, ulDeviceOffset, ulChunkSize, aAttr.ulBufferAdr)
+		if not fOk then
 			return false, "Failed to flash data!"
 		end
 
@@ -417,7 +427,7 @@ end
 --------------------------------------------------------------------------
 
 function doRead(tPlugin, args)
-	local fResult 
+	local fOk, strMsg 
 	local strDataFileName = args.strDataFileName
 	local ulDeviceOffset = args.ulStartOffset
 	local ulSize = args.ulLen
@@ -429,9 +439,6 @@ function doRead(tPlugin, args)
 		return false, "Error while downloading flasher binary"
 	end
 	
-	local ulBufferAddr = aAttr.ulBufferAdr
-	local ulBufferLen = aAttr.ulBufferLen
-	
 	-- check if the selected flash is present
 	print("Detecting flash device")
 	fOk = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
@@ -440,6 +447,8 @@ function doRead(tPlugin, args)
 	end
 	
 	-- Verify the data in chunks.
+	local ulBufferAddr = aAttr.ulBufferAdr
+	local ulBufferLen = aAttr.ulBufferLen
 	local astrChunks = {}
 	while ulSize>0 do
 		-- determine chunk size
@@ -452,8 +461,8 @@ function doRead(tPlugin, args)
 	
 		-- Read chunk into buffer
 		print(string.format("reading flash offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
-		fResult = flasher.read(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulChunkSize, ulBufferAddr)
-		if fResult==false or fResult==nil then
+		fOk = flasher.read(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulChunkSize, ulBufferAddr)
+		if not fOk then
 			return false, "Error while reading from flash!"
 		end
 		
@@ -470,9 +479,9 @@ function doRead(tPlugin, args)
 	end
 
 	local strBin = table.concat(astrChunks)
-	local fResult, strMsg = writeBin(args.strDataFileName, strBin)
+	fOk, strMsg = writeBin(args.strDataFileName, strBin)
 	
-	return fResult, strMsg
+	return fOk, strMsg
 end
 
 
@@ -486,7 +495,7 @@ end
 --------------------------------------------------------------------------
 
 function doVerify(tPlugin, args)
-	local fResult 
+	local fOk 
 	local strDataFileName = args.strDataFileName
 	local ulDeviceOffset = args.ulStartOffset
 	
@@ -506,7 +515,7 @@ function doVerify(tPlugin, args)
 	
 	-- Load the data.
 	print("Loading data file")
-	strData, msg = muhkuh.load(strDataFileName)
+	local strData, msg = muhkuh.load(strDataFileName)
 	if not strData then
 		return false, "Failed to load binary '" .. strDataFileName .. "': " .. msg
 	end
@@ -524,8 +533,8 @@ function doVerify(tPlugin, args)
 
 		-- Verify the chunk.
 		print(string.format("verifying offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
-		fResult = flasher.verify(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulChunkSize, aAttr.ulBufferAdr)
-		if fResult==false or fResult==nil then
+		fOk = flasher.verify(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulChunkSize, aAttr.ulBufferAdr)
+		if not fOk then
 			return false, "Differences were found!"
 		end
 
@@ -533,11 +542,9 @@ function doVerify(tPlugin, args)
 		ulDataOffset = ulDataOffset + ulChunkSize
 		ulDeviceOffset = ulDeviceOffset + ulChunkSize
 	end
-
 	
 	return true, "The data in flash is equal to the input file"
 end
-
 
 
 
@@ -551,7 +558,7 @@ end
 --------------------------------------------------------------------------
 
 function doHash(tPlugin, args)
-	local fResult 
+	local fOk 
 	local ulDeviceOffset = args.ulStartOffset
 	local ulLen = args.ulLen
 	
@@ -569,16 +576,12 @@ function doHash(tPlugin, args)
 		return false, "Failed to get a device description!"
 	end
 	
-	fResult, strHashBin = flasher.hash(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulLen)
-	if fResult==false or fResult==nil then
+	local fOk, strHashBin = flasher.hash(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulLen)
+	if not fOk then
 		return false, "Could not compute the checksum!"
 	end
 	
-	local strSHA1 = ""
-	for i=1, strHashBin:len() do
-		strSHA1 = strSHA1 .. string.format("%02x", strHashBin:byte(i))
-	end
-	
+	local strSHA1 = getHexString(strHashBin)
 	print("SHA1: " .. strSHA1)
 	
 	return true, strSHA1
@@ -596,7 +599,6 @@ end
 
 
 function doVerifyHash(tPlugin, args)
-	local fResult 
 	local ulDeviceOffset = args.ulStartOffset
 	
 	-- Download the flasher.
@@ -627,25 +629,17 @@ function doVerifyHash(tPlugin, args)
 	mh:hash(strData)
 	local strFileHashBin = mh:hash_end()
 
-	local strFileHash = ""
-	for i=1, strFileHashBin:len() do
-		strFileHash = strFileHash .. string.format("%02x", strFileHashBin:byte(i))
-	end
-	
+	local strFileHash = getHexString(strFileHashBin)
 	print("File SHA1: " .. strFileHash)
 	
 	
 	-- compute the SHA1 of the data in the flash
-	fResult, strFlashHashBin = flasher.hash(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulDataByteSize)
-	if fResult==false or fResult==nil then
+	local fOk, strFlashHashBin = flasher.hash(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulDataByteSize)
+	if not fOk then
 		return false, "Could not compute the checksum!"
 	end
 	
-	local strFlashHash = ""
-	for i=1, strFlashHashBin:len() do
-		strFlashHash = strFlashHash .. string.format("%02x", strFlashHashBin:byte(i))
-	end
-	
+	local strFlashHash = getHexString(strFlashHashBin)
 	print("Flash SHA1: " .. strFlashHash)
 	print("File SHA1:  " .. strFileHash)
 
@@ -657,6 +651,32 @@ function doVerifyHash(tPlugin, args)
 		print("Checksums are not equal!")
 		return true, "The data in the flash and the file do not have the same checksum"
 	end
+end
+
+--------------------------------------------------------------------------
+-- detect
+--   iBus
+--   iUnit
+--   iChipSelect
+--------------------------------------------------------------------------
+
+function doDetect(tPlugin, args)
+	
+	-- Download the flasher.
+	print("Downloading flasher binary")
+	local aAttr = flasher.download(tPlugin, FLASHER_PATH, progress)
+	if not aAttr then
+		return false, "Error while downloading flasher binary"
+	end
+	
+	-- check if the selected flash is present
+	print("Detecting flash device")
+	local fOk = flasher.detect(tPlugin, aAttr, args.iBus, args.iUnit, args.iChipSelect)
+	if not fOk then
+		return false, "Failed to get a device description!"
+	end
+	
+	return true, "ok"
 end
 
 --------------------------------------------------------------------------
@@ -746,6 +766,8 @@ else
 			fOk, strMsg = doVerifyHash(tPlugin, args)
 		elseif args.iMode == MODE_HASH then
 			fOk, strMsg = doHash(tPlugin, args)
+		elseif args.iMode == MODE_DETECT then
+			fOk, strMsg = doDetect(tPlugin, args)
 		elseif args.iMode == MODE_INFO then
 			fOk, strMsg = doInfo(tPlugin, args)
 		end
