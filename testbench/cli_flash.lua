@@ -33,6 +33,7 @@ function getHexString(strBin)
 	for i=1, strBin:len() do
 		strHex = strHex .. string.format("%02x", strBin:byte(i))
 	end
+	return strHex
 end
 
 --------------------------------------------------------------------------
