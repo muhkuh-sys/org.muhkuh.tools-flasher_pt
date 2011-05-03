@@ -114,6 +114,25 @@ env_netx10_default.Append(CPPPATH = ['src', 'src/netx10', 'src/sha1_arm'])
 
 #----------------------------------------------------------------------------
 #
+# Build the netX10 flasher with the old netX50 console io interface.
+#
+env_netx10_oldio_nodbg = env_netx10_default.Clone()
+env_netx10_oldio_nodbg.Replace(LDFILE = File('src/netx10/netx10_oldio.ld'))
+env_netx10_oldio_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+src_netx10_oldio_nodbg = env_netx10_oldio_nodbg.SetBuildPath('targets/netx10_oldio_nodbg', 'src', src_netx10)
+elf_netx10_oldio_nodbg = env_netx10_oldio_nodbg.Elf('targets/oldio/flasher_netx10.elf', src_netx10_oldio_nodbg)
+bin_netx10_oldio_nodbg = env_netx10_oldio_nodbg.ObjCopy('targets/oldio/flasher_netx10.bin', elf_netx10_oldio_nodbg)
+
+env_netx10_oldio_dbg = env_netx10_default.Clone()
+env_netx10_oldio_dbg.Replace(LDFILE = File('src/netx10/netx10_oldio.ld'))
+env_netx10_oldio_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+src_netx10_oldio_dbg = env_netx10_oldio_dbg.SetBuildPath('targets/netx10_oldio_dbg', 'src', src_netx10)
+elf_netx10_oldio_dbg = env_netx10_oldio_dbg.Elf('targets/oldio/flasher_netx10_debug.elf', src_netx10_oldio_dbg)
+bin_netx10_oldio_dbg = env_netx10_oldio_dbg.ObjCopy('targets/oldio/flasher_netx10_debug.bin', elf_netx10_oldio_dbg)
+
+
+#----------------------------------------------------------------------------
+#
 # Build the flasher without debug messages.
 #
 env_netx500_nodbg = env_netx500_default.Clone()
