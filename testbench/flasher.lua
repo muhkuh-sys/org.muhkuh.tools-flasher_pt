@@ -23,7 +23,6 @@ module("flasher", package.seeall)
 require("bit")
 require("muhkuh")
 
-
 BUS_Parflash    = 0             -- parallel flash
 BUS_Spi         = 1             -- serial flash on spi bus
 
@@ -94,11 +93,11 @@ function download(tPlugin, strPrefix, fnCallbackProgress)
 
 	-- Get the binary for the ASIC.
 	print(string.format("detected chip type: %d %s", tAsicTyp, tPlugin:GetChiptypName(tAsicTyp)))
-	if tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX50 then
+	if tAsicTyp==romloader.ROMLOADER_CHIPTYP_NETX50 then
 		aAttr.strBinaryName = strPrefix .. "flasher_netx50.bin"
-	elseif tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX100 or tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX500 then
+	elseif tAsicTyp==romloader.ROMLOADER_CHIPTYP_NETX100 or tAsicTyp==romloader.ROMLOADER_CHIPTYP_NETX500 then
 		aAttr.strBinaryName = strPrefix .. "flasher_netx500.bin"
-	elseif tAsicTyp==romloader_usb.ROMLOADER_CHIPTYP_NETX10 then
+	elseif tAsicTyp==romloader.ROMLOADER_CHIPTYP_NETX10 then
 		aAttr.strBinaryName = strPrefix .. "flasher_netx10.bin"
 	else
 		error("Unknown chiptyp! " .. tostring(tAsicTyp))
@@ -134,17 +133,19 @@ function download(tPlugin, strPrefix, fnCallbackProgress)
 end
 
 -- download parameters to netX
-local function set_parameterblock(tPlugin, ulAddress, aulParameters)
+local function set_parameterblock(tPlugin, ulAddress, aulParameters, fnCallbackProgress)
+	fnCallbackProgress = fnCallbackProgress or default_callback_progress
+
 	local strBin = ""
 	for i,v in ipairs(aulParameters) do
 		strBin = strBin .. string.char( bit.band(v,0xff), bit.band(bit.rshift(v,8),0xff), bit.band(bit.rshift(v,16),0xff), bit.band(bit.rshift(v,24),0xff) )
 	end
-	tPlugin:write_image(ulAddress, strBin, progress, string.len(strBin))
+	tPlugin:write_image(ulAddress, strBin, fnCallbackProgress, string.len(strBin))
 end
 
 -- Stores parameters in netX memory, calls the flasher and returns the result value
 -- 0 = success, 1 = failure
-function callFlasher(tPlugin, aAttr, aulParams, fnCallbackMessage)
+function callFlasher(tPlugin, aAttr, aulParams, fnCallbackMessage, fnCallbackProgress)
 	fnCallbackMessage = fnCallbackMessage or default_callback_message
 	
 	-- set the parameters
@@ -158,7 +159,7 @@ function callFlasher(tPlugin, aAttr, aulParams, fnCallbackMessage)
 		aulParameter[4+i] = aulParams[i]     -- actual parameters for the particular function
 	end
 
-	set_parameterblock(tPlugin, aAttr.ulParameter, aulParameter)
+	set_parameterblock(tPlugin, aAttr.ulParameter, aulParameter, fnCallbackProgress)
 	
 	-- call
 	tPlugin:call(aAttr.ulExecAddress, aAttr.ulParameter, fnCallbackMessage, 2)
@@ -172,7 +173,7 @@ end
 
 -- get "static" information about the buses, depending on the chip type:
 -- SRAM bus parflash, extension bus parflash, SPI serial flash, SQI serial flash
-local function getInfoBlock(tPlugin, aAttr, ulBusIdx, ulUnitIdx, fnCallbackMessage)
+local function getInfoBlock(tPlugin, aAttr, ulBusIdx, ulUnitIdx, fnCallbackMessage, fnCallbackProgress)
 	local aResult = nil
 	
 	local aulParameter = 
@@ -184,14 +185,14 @@ local function getInfoBlock(tPlugin, aAttr, ulBusIdx, ulUnitIdx, fnCallbackMessa
 		aAttr.ulBufferLen
 	}
 	
-	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage)
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
 
 	if ulValue==0 then
 		-- Get the size of the board description.
 		local sizInfoMax = tPlugin:read_data32(aAttr.ulParameter+0x08)
 		if sizInfoMax>0 then
 			-- Get the board information.
-			strInfo = tPlugin:read_image(aAttr.ulBufferAdr, sizInfoMax, progress, sizInfoMax)
+			strInfo = tPlugin:read_image(aAttr.ulBufferAdr, sizInfoMax, fnCallbackProgress, sizInfoMax)
 
 			-- Get the number of entries.
 			local sizEntryNum = strInfo:byte(1)
@@ -221,7 +222,7 @@ function getBoardInfo(tPlugin, aAttr, fnCallbackMessage)
 end
 
 -- check if a device is available on tBus/ulUnit/ulChipSelect
-function detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, fnCallbackMessage)
+function detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, fnCallbackMessage, fnCallbackProgress)
 	local ulValue
 	local aulParameter
 	local ulIdleCfg
@@ -244,7 +245,7 @@ function detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, fnCallbackMessage)
 		aAttr.ulDeviceDesc                    -- data block for the device description
 	}
 	
-	ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage)
+	ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
 	return ulValue == 0
 end
 
@@ -289,7 +290,7 @@ end
 ---------------------------------------------------------------------------------
 
 -- Writes data which has been loaded into the buffer at ulDataAddress to ulStartAddr in the flash.
-function flash(tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress, fnCallbackMessage)
+function flash(tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress, fnCallbackMessage, fnCallbackProgress)
 	local aulParameter = 
 	{
 		OPERATION_MODE_Flash,
@@ -298,12 +299,12 @@ function flash(tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress, fnCall
 		ulDataByteSize,
 		ulDataAddress
 	}
-	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage)
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
 	return ulValue == 0
 end
 
 -- Reads data from flash to RAM
-function read(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress, fnCallbackMessage)
+function read(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress, fnCallbackMessage, fnCallbackProgress)
 	local aulParameter = 
 	{
 		OPERATION_MODE_Read,
@@ -312,13 +313,13 @@ function read(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddr
 		ulFlashEndOffset,
 		ulBufferAddress
 	}
-	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage)
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
 	return ulValue == 0
 end
 
 
 -- Compares data in flash to RAM
-function verify(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress, fnCallbackMessage)
+function verify(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress, fnCallbackMessage, fnCallbackProgress)
 	local fEqual = false
 	local aulParameter = 
 	{
@@ -328,7 +329,7 @@ function verify(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAd
 		ulFlashEndOffset,
 		ulBufferAddress
 	}
-	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage)
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
 	
 	if ulValue==0 then
 		ulValue = tPlugin:read_data32(aAttr.ulParameter+0x08)
@@ -340,7 +341,7 @@ end
 
 
 -- Computes the SHA1 hash over data in the flash.
-function hash(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, fnCallbackMessage)
+function hash(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, fnCallbackMessage, fnCallbackProgress)
 	local strHashBin = nil
 	local aulParameter =
 	{
@@ -349,7 +350,7 @@ function hash(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, fnCallbackMe
 		ulFlashStartOffset,
 		ulFlashEndOffset,
 	}
-	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage)
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
 	
 	if ulValue==0 then
 		strHashBin = tPlugin:read_image(aAttr.ulParameter+0x20, 20, progress, 20)
@@ -363,7 +364,7 @@ end
 -- Determines the smallest interval of sectors which has to be
 -- erased in order to erase ulStartAdr to ulEndAdr-1.
 
-function getEraseArea(tPlugin, aAttr, ulStartAdr, ulEndAdr, fnCallbackMessage)
+function getEraseArea(tPlugin, aAttr, ulStartAdr, ulEndAdr, fnCallbackMessage, fnCallbackProgress)
 	local ulValue
 	local aulParameter
 	local ulEraseStart
@@ -377,7 +378,7 @@ function getEraseArea(tPlugin, aAttr, ulStartAdr, ulEndAdr, fnCallbackMessage)
 		ulEndAdr
 	}
 	
-	ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage)
+	ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
 	if ulValue==0 then
 		ulEraseStart = tPlugin:read_data32(aAttr.ulParameter+0x18)
 		ulEraseEnd = tPlugin:read_data32(aAttr.ulParameter+0x1c)
@@ -389,7 +390,7 @@ end
 
 
 -- Checks if the area from ulEraseStart to ulEraseEnd is 0xff.
-function isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage)
+function isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
 	local fIsErased = false
 
 	local aulParameter = 
@@ -400,7 +401,7 @@ function isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage)
 		ulEraseEnd
 	}
 	
-	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage)
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
 	if ulValue==0 then
 		ulValue = tPlugin:read_data32(aAttr.ulParameter+0x08)
 		fIsErased = (ulValue==0xff)
@@ -414,7 +415,7 @@ end
 -- Erase an area in the flash.
 -- The start and end addresses must be aligned to sector boundaries as
 -- set by getEraseArea.
-function erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage)
+function erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
 	local aulParameter = 
 	{
 		OPERATION_MODE_Erase,                          -- operation mode: erase
@@ -422,7 +423,7 @@ function erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage)
 		ulEraseStart,
 		ulEraseEnd
 	}
-	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage)
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
 	return ulValue == 0
 end
 
@@ -431,12 +432,14 @@ end
 -- This is a simple routine to flash one file.
 function simple_flasher(tPlugin, strDataFileName, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)
 	strFlasherPrefix = strFlasherPrefix or ""
+	fnCallbackProgress = fnCallbackProgress or default_callback_progress
+	fnCallbackMessage = fnCallbackMessage or default_callback_message
 	
 	-- Download the binary.
 	local aAttr = download(tPlugin, strFlasherPrefix, fnCallbackProgress)
 	
 	-- Detect the device.
-	local fDetectOk = detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, ulDevDescAdr, fnCallbackMessage)
+	local fDetectOk = detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, ulDevDescAdr, fnCallbackMessage, fnCallbackProgress)
 	if fDetectOk~=true then
 		error("Failed to detect the device!")
 	end
@@ -450,12 +453,12 @@ function simple_flasher(tPlugin, strDataFileName, tBus, ulUnit, ulChipSelect, st
 	-- Get erase area.
 	local ulDataFirst = 0x00000000
 	local ulDataEnd = ulDataFirst + string.len(strData)
-	local ulEraseFirst,ulEraseEnd = getEraseArea(tPlugin, aAttr, ulDataFirst, ulDataEnd, fnCallbackMessage)
+	local ulEraseFirst,ulEraseEnd = getEraseArea(tPlugin, aAttr, ulDataFirst, ulDataEnd, fnCallbackMessage, fnCallbackProgress)
 	print(string.format("Area:  [0x%08x, 0x%08x[", ulDataFirst, ulDataEnd))
 	print(string.format("Erase: [0x%08x, 0x%08x[", ulEraseFirst, ulEraseEnd))
 	
 	-- Check if the area is erased.
-	local fIsErased = isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage)
+	local fIsErased = isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
 	if fIsErased==nil then
 		error("Failed to check if the area is erased!")
 	elseif fIsErased==true then
@@ -464,11 +467,11 @@ function simple_flasher(tPlugin, strDataFileName, tBus, ulUnit, ulChipSelect, st
 		-- Erase the area and continue.
 		print("!!!DIRTY!!! The area must be erased before flashing!")
 		
-		fIsErased = erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage)
+		fIsErased = erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
 		if fIsErased~=true then
 			error("Failed to erase the area!")
 		else
-			fIsErased = isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage)
+			fIsErased = isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
 			if fIsErased~=true then
 				error("The flasher pretended to erase the area, but it is still dirty!")
 			end
@@ -490,7 +493,7 @@ function simple_flasher(tPlugin, strDataFileName, tBus, ulUnit, ulChipSelect, st
 		
 		-- Flash the chunk.
 		print(string.format("flashing offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
-		fResult = flash(tPlugin, aAttr, ulDeviceOffset, ulChunkSize, aAttr.ulBufferAdr, fnCallbackMessage)
+		fResult = flash(tPlugin, aAttr, ulDeviceOffset, ulChunkSize, aAttr.ulBufferAdr, fnCallbackMessage, fnCallbackProgress)
 		if fResult==false or fResult==nil then
 			error("Failed to flash data!")
 		end
