@@ -1,23 +1,22 @@
-/***************************************************************************
- *   Copyright (C) 2011 by Hilscher GmbH                                   *
- *   cthelen@hilscher.com                                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
- *   published by the Free Software Foundation; either version 2 of the    *
- *   License, or (at your option) any later version.                       *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
- *   License along with this program; if not, write to the                 *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+/*************************************************************************** 
+ *   Copyright (C) 2011 by Hilscher GmbH                                   * 
+ *   cthelen@hilscher.com                                                  * 
+ *                                                                         * 
+ *   This program is free software; you can redistribute it and/or modify  * 
+ *   it under the terms of the GNU Library General Public License as       * 
+ *   published by the Free Software Foundation; either version 2 of the    * 
+ *   License, or (at your option) any later version.                       * 
+ *                                                                         * 
+ *   This program is distributed in the hope that it will be useful,       * 
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        * 
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * 
+ *   GNU General Public License for more details.                          * 
+ *                                                                         * 
+ *   You should have received a copy of the GNU Library General Public     * 
+ *   License along with this program; if not, write to the                 * 
+ *   Free Software Foundation, Inc.,                                       * 
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             * 
  ***************************************************************************/
-
 
 #include "uprintf.h"
 
@@ -220,8 +219,6 @@ static void uprintf_str(const char *pcString, size_t sizMinimum, char cFillUpCha
 }
 
 
-
-
 void uprintf(const char *pcFmt, ...)
 {
 	char cChar;
@@ -238,33 +235,32 @@ void uprintf(const char *pcFmt, ...)
 	int iArgument;
 	CONSOLE_LINEFEED_T tLinefeedMode;
 	typedef void (*pfnSerialInit_t)(void);
+	unsigned long ulResVec;
+	unsigned long ulChipId;
 
-
-	/* get the linefeed mode */
-	tLinefeedMode = CONSOLE_LINEFEED_CRLF;
-
-	/* Get initial pointer to first argument */
-	va_start(ptArgument, pcFmt);
 
 	/* Check the output handlers. */
 	if( tSerialVectors.fn.fnPut==NULL )
 	{
-		/* Is this a netx500? */
-		if( *((volatile unsigned long*)0x00000000)==0xea080001 && *((volatile unsigned long*)0x00200008)==0x00001000 )
+		/* NOTE:
+		   On netX500 and netX100 the romcode disables the UART before the call and reenables it when the call
+		   returns. This means we have to init the uart here.
+		*/
+		
+		/* Is this a netx100/500? */
+		ulResVec = *((volatile unsigned long*)0x00000000);
+		ulChipId = *((volatile unsigned long*)0x00200008);
+		if(  (ulResVec==0xea080001 && ulChipId==0x00001000 )  ||  (ulResVec==0xea080002 && ulChipId==0x00003002 ) )
 		{
-			/* Yes, it's a netx500. */
+			/* Yes, it's a netx100/500. */
 
-			/* Reinit the romcode uart routines. They are deactivated right before
-			 * the 'CALL' command enters the user's code.
-			 * NOTE: the routine is thumb-code, bit #0 of the address must be set
-			 *       to switch the mode.
-			 */
+			/* Reinit the romcode uart routines, they are deactivated right before the 'CALL' command enters the user's code.
+			   NOTE: the routine is thumb-code, bit #0 of the address must be set to switch the mode.
+			*/
 			((pfnSerialInit_t)(0x002015f4|1))();
 
-			/* Set the vectors to the romcode.
-			 * NOTE: all routines are thumb-code, bit #0 of the address must be set
-			 * to switch the mode.
-			 */
+			// set the vectors to the romcode
+			// NOTE: all routines are thumb-code, bit #0 of the address must be set to switch the mode
 			tSerialVectors.fn.fnGet   = (PFN_SERIAL_GET_T)(0x00201664|1);
 			tSerialVectors.fn.fnPut   = (PFN_SERIAL_PUT_T)(0x00201646|1);
 			tSerialVectors.fn.fnPeek  = (PFN_SERIAL_PEEK_T)(0x002016b0|1);
@@ -272,156 +268,166 @@ void uprintf(const char *pcFmt, ...)
 		}
 	}
 
-	/* Is it a NULL Pointer ? */
-	if( pcFmt==NULL )
+	if( tSerialVectors.fn.fnPut!=NULL )
 	{
-		/* replace the argument with the default string */
-		pcFmt = "NULL\n";
-	}
+		/* get the linefeed mode */
+		tLinefeedMode = CONSOLE_LINEFEED_CRLF;
 
-	/* loop over all chars in the format string */
-	do
-	{
-		/* get the next char */
-		cChar = *(pcFmt++);
+		/* Get initial pointer to first argument */
+		va_start(ptArgument, pcFmt);
 
-		/* is this the end of the format string? */
-		if( cChar!=0 )
+		/* Is it a NULL Pointer ? */
+		if( pcFmt==NULL )
 		{
-			/* no -> process the char */
-
-			/* is this an escape char? */
-			if( cChar=='%' )
-			{
-				/* yes -> process the escape sequence */
-
-				/* set default values for escape sequences */
-				cFillUpChar = ' ';
-				sizMinimumSize = 0;
-
-				do
-				{
-					cChar = *(pcFmt++);
-					if( cChar=='%' )
-					{
-						/* it is just a '%' */
-						SERIAL_PUT(cChar);
-						break;
-					}
-					else if( cChar=='0' )
-					{
-						cFillUpChar = '0';
-					}
-					else if( cChar>'0' && cChar<='9' )
-					{
-						/* no digit found yet */
-						iDigitCnt = 1;
-						/* the number started one char before */
-						pcNumEnd = pcFmt;
-						/* count all digits */
-						do
-						{
-							cChar = *pcFmt;
-							if( cChar>='0' && cChar<='9' )
-							{
-								++pcFmt;
-							}
-							else
-							{
-								break;
-							}
-						} while(1);
-
-						/* loop over all digits and add them to the */
-						uiValue = 0;
-						iDigitCnt = 0;
-						pcNumCnt = pcFmt;
-						while( pcNumCnt>=pcNumEnd )
-						{
-							--pcNumCnt;
-							uiCnt = (*pcNumCnt) & 0x0fU;
-							while( uiCnt>0 )
-							{
-								uiValue += aulUprintfDecTab[iDigitCnt];
-								--uiCnt;
-							}
-							++iDigitCnt;
-						}
-						sizMinimumSize = (size_t)uiValue;
-					}
-					else if( cChar=='x' )
-					{
-						/* show hexadecimal number */
-						ulArgument = va_arg((ptArgument), unsigned long);
-						uprintf_hex(ulArgument, sizMinimumSize, cFillUpChar);
-						break;
-					}
-					else if( cChar=='d' )
-					{
-						/* show decimal number */
-						ulArgument = va_arg((ptArgument), unsigned long);
-						uprintf_dec(ulArgument, sizMinimumSize, cFillUpChar);
-						break;
-					}
-					else if( cChar=='b' )
-					{
-						/* show binary number */
-						ulArgument = va_arg((ptArgument), unsigned long);
-						uprintf_bin(ulArgument, sizMinimumSize, cFillUpChar);
-						break;
-					}
-					else if( cChar=='s' )
-					{
-						/* show string */
-						pcArgument = va_arg((ptArgument), const char *);
-						uprintf_str(pcArgument, sizMinimumSize, cFillUpChar);
-						break;
-					}
-					else if( cChar=='c' )
-					{
-						/* show char */
-						iArgument = va_arg((ptArgument), int);
-						SERIAL_PUT((char)iArgument);
-						break;
-					}
-					else
-					{
-						SERIAL_PUT('*');
-						SERIAL_PUT('*');
-						SERIAL_PUT('*');
-						break;
-					}
-				} while( cChar!=0 );
-			}
-			else if( cChar=='\n' )
-			{
-				/* print linefeed */
-				switch(tLinefeedMode)
-				{
-				case CONSOLE_LINEFEED_LF:
-					break;
-
-				case CONSOLE_LINEFEED_CR:
-					cChar = '\r';
-					break;
-
-				default:
-				case CONSOLE_LINEFEED_CRLF:
-					SERIAL_PUT('\r');
-					break;
-				}
-				SERIAL_PUT(cChar);
-				SERIAL_FLUSH();
-			}
-			else
-			{
-				SERIAL_PUT(cChar);
-			}
+			/* replace the argument with the default string */
+			pcFmt = "NULL\n";
 		}
-	} while( cChar!=0 );
 
-	va_end(ptArgument);
+		/* loop over all chars in the format string */
+		do
+		{
+			/* get the next char */
+			cChar = *(pcFmt++);
+
+			/* is this the end of the format string? */
+			if( cChar!=0 )
+			{
+				/* no -> process the char */
+
+				/* is this an escape char? */
+				if( cChar=='%' )
+				{
+					/* yes -> process the escape sequence */
+
+					/* set default values for escape sequences */
+					cFillUpChar = ' ';
+					sizMinimumSize = 0;
+
+					do
+					{
+						cChar = *(pcFmt++);
+						if( cChar=='%' )
+						{
+							/* it is just a '%' */
+							SERIAL_PUT(cChar);
+							break;
+						}
+						else if( cChar=='0' )
+						{
+							cFillUpChar = '0';
+						}
+						else if( cChar>'0' && cChar<='9' )
+						{
+							/* no digit found yet */
+							iDigitCnt = 1;
+							/* the number started one char before */
+							pcNumEnd = pcFmt;
+							/* count all digits */
+							do
+							{
+								cChar = *pcFmt;
+								if( cChar>='0' && cChar<='9' )
+								{
+									++pcFmt;
+								}
+								else
+								{
+									break;
+							}	
+							} while(1);
+
+							/* loop over all digits and add them to the */
+							uiValue = 0;
+							iDigitCnt = 0;
+							pcNumCnt = pcFmt;
+							while( pcNumCnt>=pcNumEnd )
+							{
+								--pcNumCnt;
+								uiCnt = (*pcNumCnt) & 0x0fU;
+								while( uiCnt>0 )
+								{
+									uiValue += aulUprintfDecTab[iDigitCnt];
+									--uiCnt;
+								}
+								++iDigitCnt;
+							}
+							sizMinimumSize = (size_t)uiValue;
+						}
+						else if( cChar=='x' )
+						{
+							/* show hexadecimal number */
+							ulArgument = va_arg((ptArgument), unsigned long);
+							uprintf_hex(ulArgument, sizMinimumSize, cFillUpChar);
+							break;
+						}
+						else if( cChar=='d' )
+						{
+							/* show decimal number */
+							ulArgument = va_arg((ptArgument), unsigned long);
+							uprintf_dec(ulArgument, sizMinimumSize, cFillUpChar);
+							break;
+						}
+						else if( cChar=='b' )
+						{
+							/* show binary number */
+							ulArgument = va_arg((ptArgument), unsigned long);
+							uprintf_bin(ulArgument, sizMinimumSize, cFillUpChar);
+							break;
+						}
+						else if( cChar=='s' )
+						{
+							/* show string */
+							pcArgument = va_arg((ptArgument), const char *);
+							uprintf_str(pcArgument, sizMinimumSize, cFillUpChar);
+							break;
+						}
+						else if( cChar=='c' )
+						{
+							/* show char */
+							iArgument = va_arg((ptArgument), int);
+							SERIAL_PUT((char)iArgument);
+							break;
+						}
+						else
+						{
+							SERIAL_PUT('*');
+							SERIAL_PUT('*');
+							SERIAL_PUT('*');
+							break;
+						}
+					} while( cChar!=0 );
+				}
+				else if( cChar=='\n' )
+				{
+					/* print linefeed */
+					switch(tLinefeedMode)
+					{
+					case CONSOLE_LINEFEED_LF:
+						break;
+
+					case CONSOLE_LINEFEED_CR:
+						cChar = '\r';
+						break;
+
+					default:
+					case CONSOLE_LINEFEED_CRLF:
+						SERIAL_PUT('\r');
+						break;
+					}
+					SERIAL_PUT(cChar);
+					SERIAL_FLUSH();
+				}
+				else
+				{
+					SERIAL_PUT(cChar);
+				}
+			}
+		} while( cChar!=0 );
+
+		va_end(ptArgument);
+	}
 }
+
 
 void hexdump(const unsigned char *pcData, size_t sizData)
 {
