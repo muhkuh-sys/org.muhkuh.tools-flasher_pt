@@ -22,26 +22,14 @@ ENTRY(start)
 
 MEMORY
 {
-	IOCODE_DTCM(r) : ORIGIN = 0x00000380, LENGTH = 0x00000180
-	IOCODE_ITCM(r) : ORIGIN = 0x04000e00, LENGTH = 0x000001f0
 	IOVECTORS(rx)  : ORIGIN = 0x04000ff0, LENGTH = 0x00000010
-	INTRAM(rwx)    : ORIGIN = 0x08004000, LENGTH = 0x0003c000
+	INTRAM(rwx)    : ORIGIN = 0x08020000, LENGTH = 0x00020000
 }
 
 
 /* Section Definitions */
 SECTIONS
 {
-	.iocode_dtcm ORIGIN(IOCODE_DTCM) :
-	{
-		. = . + LENGTH(IOCODE_DTCM);
-	} >IOCODE_DTCM
-
-	.iocode_itcm ORIGIN(IOCODE_ITCM) :
-	{
-		. = . + LENGTH(IOCODE_ITCM);
-	} >IOCODE_ITCM
-
 	.serial_vectors ORIGIN(IOVECTORS) :
 	{
 		tSerialVectors = . ;
