@@ -348,12 +348,12 @@ function doFlash(tPlugin, args)
 
 	-- Get the erase area.
 	print("Erasing the area")
-	local ulDataFirst, ulDataEnd, ulEraseFirst, ulEraseEnd
+	local ulDataFirst, ulDataEnd, ulEraseStart, ulEraseEnd
 	ulDataFirst = args.ulStartOffset
 	ulDataEnd = ulDataFirst + string.len(strData)
-	ulEraseFirst,ulEraseEnd = flasher.getEraseArea(tPlugin, aAttr, ulDataFirst, ulDataEnd)
+	ulEraseStart,ulEraseEnd = flasher.getEraseArea(tPlugin, aAttr, ulDataFirst, ulDataEnd)
 	print(string.format("Area:  [0x%08x, 0x%08x[", ulDataFirst, ulDataEnd))
-	print(string.format("Erase: [0x%08x, 0x%08x[", ulEraseFirst, ulEraseEnd))
+	print(string.format("Erase: [0x%08x, 0x%08x[", ulEraseStart, ulEraseEnd))
 
 	-- Make sure the area is erased.
 	-- TODO: for serial flashes:
