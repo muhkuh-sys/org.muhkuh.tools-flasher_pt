@@ -61,6 +61,8 @@
 #define DQ7                                   0x80U
 
 #define MFGCODE_SPANSION                      0x01U
+#define MFGCODE_EON                           0x7fU
+#define MFGCODE_MACRONIX                      0xc2U
 
 #define SPANSION_CMD_RESET                    0xF0U
 
@@ -217,48 +219,63 @@ static FLASH_COMMAND_BLOCK_T s_atPPBExit[] =
 int SpansionIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
 {
 	int fRet = FALSE;
-
-
+	unsigned char ucManufacturer;
+	
 	DEBUGMSG(ZONE_FUNCTION, ("+SpansionIdentifyFlash(): ptFlashDev=0x%08x\n", ptFlashDev));
 
-	/* try to identify SpansionFlash */
-	FlashWriteCommandSequence(ptFlashDev, s_atAutoSelect, ARRAYSIZE(s_atAutoSelect));
-
-	ptFlashDev->ucManufacturer = ptFlashDev->pucFlashBase[0];
-	uprintf("Manufacturer: %02x\n", ptFlashDev->ucManufacturer);
-	
+	/* Read manufacturer */
+	/* Accept Eon and Macronix flashes and treat them as Spansion flashes */
 	FlashReset(ptFlashDev, 0);
-
-	if(MFGCODE_SPANSION == ptFlashDev->ucManufacturer)
+	FlashWriteCommandSequence(ptFlashDev, s_atAutoSelect, ARRAYSIZE(s_atAutoSelect));
+	ucManufacturer = ptFlashDev->pucFlashBase[0];
+	FlashReset(ptFlashDev, 0);
+	
+	uprintf("Manufacturer: %02x\n", ucManufacturer);
+	
+	ptFlashDev->ucManufacturer = ucManufacturer;
+	
+	if(MFGCODE_SPANSION == ucManufacturer)
 	{
-		/* TODO: Check Device IDs */
 		strcpy(ptFlashDev->acIdent, "SPANSION");
 		memcpy(&(ptFlashDev->tFlashFunctions), &s_tSpansionFuncs, sizeof(FLASH_FUNCTIONS_T));
 		fRet = TRUE;
+	}
+	else if(MFGCODE_EON == ucManufacturer) 
+	{
+		strcpy(ptFlashDev->acIdent, "EON");
+		memcpy(&(ptFlashDev->tFlashFunctions), &s_tSpansionFuncs, sizeof(FLASH_FUNCTIONS_T));
+		fRet = TRUE;
+	} 
+	else if(MFGCODE_MACRONIX == ucManufacturer) 
+	{
+		strcpy(ptFlashDev->acIdent, "MACRONIX");
+		memcpy(&(ptFlashDev->tFlashFunctions), &s_tSpansionFuncs, sizeof(FLASH_FUNCTIONS_T));
+		fRet = TRUE;
+	}
+	
 		
-		/* If a valid ExtQuery block was read, check its version.
-		   If it is a known version, check the sector protect scheme.
-		   If the flash does not protect software unlocking, 
-		   replace the unlock function with a dummy.
-		*/
-		if (ptFlashDev->fPriExtQueryValid)
+	/* If a valid ExtQuery block was read, check its version.
+	   If it is a known version, check the sector protect scheme.
+	   If the flash does not support software unlocking, 
+	   replace the unlock function with a dummy.
+	*/
+	if ((fRet == TRUE) && ptFlashDev->fPriExtQueryValid)
+	{
+		CFI_SPANSION_EXTQUERY_T *ptExtQry;
+		ptExtQry = &ptFlashDev->tPriExtQuery.tSpansion;
+		uprintf(".SpansionIdentifyFlash(): ExtQuery AMD V%c.%c\n", ptExtQry->bMajorVer, ptExtQry->bMinorVer);
+		if (ptExtQry->bMajorVer=='1' && ptExtQry->bMinorVer<'5')
 		{
-			CFI_SPANSION_EXTQUERY_T *ptExtQry;
-			ptExtQry = &ptFlashDev->tPriExtQuery.tSpansion;
-			uprintf(".SpansionIdentifyFlash(): ExtQuery AMD V%c.%c\n", ptExtQry->bMajorVer, ptExtQry->bMinorVer);
-			if (ptExtQry->bMajorVer=='1' && ptExtQry->bMinorVer<'5')
+			uprintf(".SpansionIdentifyFlash(): Sector protect scheme %d\n", ptExtQry->bProtectScheme);
+			if (ptExtQry->bProtectScheme<5) 
 			{
-				uprintf(".SpansionIdentifyFlash(): Sector protect scheme %d\n", ptExtQry->bProtectScheme);
-				if (ptExtQry->bProtectScheme<5) 
-				{
-					uprintf(".SpansionIdentifyFlash(): Disabling unlock\n"); 
-					s_tSpansionFuncs.pfnUnlock = FlashUnlockDummy;
-				}
-				else
-				{
-					uprintf(".SpansionIdentifyFlash(): Enabling unlock\n"); 
-					s_tSpansionFuncs.pfnUnlock = FlashUnlock;
-				}
+				uprintf(".SpansionIdentifyFlash(): Disabling unlock\n"); 
+				s_tSpansionFuncs.pfnUnlock = FlashUnlockDummy;
+			}
+			else
+			{
+				uprintf(".SpansionIdentifyFlash(): Enabling unlock\n"); 
+				s_tSpansionFuncs.pfnUnlock = FlashUnlock;
 			}
 		}
 	}
@@ -266,8 +283,6 @@ int SpansionIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
 	DEBUGMSG(ZONE_FUNCTION, ("-SpansionIdentifyFlash(): fRet=%d\n", fRet));
 	return fRet;
 }
-
-
 
 
 
