@@ -22,7 +22,7 @@
 #include "spi_flash_types.h"
 
 /* uncomment the next line to disable some strange flashes with byte program only */
-#define __NO_1BYTEPERPAGE_FLASHES__
+/* #define __NO_1BYTEPERPAGE_FLASHES__ */
 
 const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
 {
@@ -1226,6 +1226,38 @@ const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
                              .aucIdMagic = {0x00, 0xef, 0x40, 0x16}                     /* id_magic                   */
         },
 
+        /* Winbond W25Q128  -  not tested */
+        {
+                                 .acName = "W25Q128\0",                                 /* name                       */
+                                 .ulSize = 16777216,                                    /* size                       */
+                                .ulClock = 33000,                                       /* minClock                   */
+                             .ulPageSize = 256,                                         /* pageSize                   */
+                          .ulSectorPages = 16,                                          /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_LINEAR,                         /* address mode               */
+                           .ucReadOpcode = 0x03,                                        /* readOpcode                 */
+                    .ucReadOpcodeDCBytes = 0,                                           /* readOpcodeDCBytes          */
+                    .ucWriteEnableOpcode = 0x06,                                        /* writeEnableOpcode          */
+                      .ucErasePageOpcode = 0x00,                                        /* erase page                 */
+                    .ucEraseSectorOpcode = 0x20,                                        /* eraseSectorOpcode          */
+                      .uiEraseChipCmdLen = 1,                                           /* erase chip command length  */
+                        .aucEraseChipCmd = {0xc7},                                      /* erase chip command         */
+                       .ucPageProgOpcode = 0x02,                                        /* pageProgOpcode             */
+                           .ucBufferFill = 0x00,                                        /* buffer fill opcode         */
+                    .ucBufferWriteOpcode = 0x00,                                        /* buffer write opcode        */
+               .ucEraseAndPageProgOpcode = 0x00,                                        /* eraseAndPageProgOpcode     */
+                     .ucReadStatusOpcode = 0x05,                                        /* readStatusOpcode           */
+                      .ucStatusReadyMask = 0x01,                                        /* statusReadyMask            */
+                     .ucStatusReadyValue = 0x00,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
+                            .aucInitCmd0 = {0},                                         /* initCmd0                   */
+                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
+                            .aucInitCmd1 = {0},                                         /* initCmd1                   */
+                             .uiIdLength = 4,                                           /* id_length                  */
+                              .aucIdSend = {0x9f, 0x00, 0x00, 0x00},                    /* id_send                    */
+                              .aucIdMask = {0x00, 0xff, 0xff, 0xff},                    /* id_mask                    */
+                             .aucIdMagic = {0x00, 0xef, 0x40, 0x18}                     /* id_magic                   */
+        },
+
         /* EON EN25P32 */
         {
                                  .acName = "EN25P32\0",                                 /* name                       */
@@ -1644,6 +1676,39 @@ const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
                               .aucIdMask = {0x00, 0x3c},                                /* id_mask                    */
                              .aucIdMagic = {0x00, 0x34}                                 /* id_magic                   */
         },
+        
+        /* EON EN25Q128 added by customer, not tested */
+        {
+                                 .acName = "EN25Q128\0",                                /* name                       */
+                                 .ulSize = 16777216,                                    /* size                       */
+                                .ulClock = 66000,                                       /* minClock                   */
+                             .ulPageSize = 256,                                         /* pageSize                   */
+                          .ulSectorPages = 16,                                          /* sectorSize                 */
+                               .tAdrMode = SPIFLASH_ADR_LINEAR,                         /* address mode               */
+                           .ucReadOpcode = 0x03,                                        /* readOpcode                 */
+                    .ucReadOpcodeDCBytes = 0,                                           /* readOpcodeDCBytes          */
+                    .ucWriteEnableOpcode = 0x06,                                        /* writeEnableOpcode          */
+                      .ucErasePageOpcode = 0x00,                                        /* erase page                 */
+                    .ucEraseSectorOpcode = 0x20,                                        /* eraseSectorOpcode           */
+                      .uiEraseChipCmdLen = 1,                                           /* erase chip command length  */
+                        .aucEraseChipCmd = {0xc7},                                      /* erase chip command         */
+                       .ucPageProgOpcode = 0x02,                                        /* pageProgOpcode             */
+                           .ucBufferFill = 0x00,                                        /* buffer fill opcode         */
+                    .ucBufferWriteOpcode = 0x00,                                        /* buffer write opcode        */
+               .ucEraseAndPageProgOpcode = 0x00,                                        /* eraseAndPageProgOpcode     */
+                     .ucReadStatusOpcode = 0x05,                                        /* readStatusOpcode           */
+                      .ucStatusReadyMask = 0x01,                                        /* statusReadyMask            */
+                     .ucStatusReadyValue = 0x00,                                        /* statusReadyValue           */
+                      .uiInitCmd0_length = 0,                                           /* initCmd0_length            */
+                            .aucInitCmd0 = {0},                                         /* initCmd0                   */
+                      .uiInitCmd1_length = 0,                                           /* initCmd1_length            */
+                            .aucInitCmd1 = {0},                                         /* initCmd1                   */
+                             .uiIdLength = 4,                                           /* id_length                  */
+                              .aucIdSend = {0x9f, 0x00, 0x00, 0x00},                    /* id_send                    */
+                              .aucIdMask = {0x00, 0xff, 0xff, 0xff},                    /* id_mask                    */
+                             .aucIdMagic = {0x00, 0x1c, 0x30, 0x18}                     /* id_magic                   */
+        },        
+        
 };
 
 
