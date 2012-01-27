@@ -682,7 +682,7 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 	return iResult;
 }
 
-
+#if 0
 /*! Drv_SpiEraseFlashPage
 *   Erases a Page in the specified serial FLASH
 *
@@ -768,7 +768,7 @@ int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddr
 	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashPage(): iResult=%d.\n", iResult));
 	return iResult;
 }
-
+#endif
 /*! Drv_SpiEraseFlashSector
 *   Erases a Sector in the specified serial FLASH
 *
@@ -841,7 +841,7 @@ int Drv_SpiEraseFlashSector(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 	return iResult;
 }
 
-
+#if 0
 /*! Drv_SpiEraseFlashMultiSectors
 *   Erases a sequence of sectors in the flash
 *
@@ -881,8 +881,8 @@ int Drv_SpiEraseFlashMultiSectors(const SPI_FLASH_T *ptFlash, unsigned long ulLi
 	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashMultiSectors(): iResult=%d.\n", iResult));
 	return iResult;
 }
-
-
+#endif
+#if 0
 /*! Drv_SpiEraseFlashComplete
 *   Erases the complete flash
 *
@@ -943,8 +943,9 @@ int Drv_SpiEraseFlashComplete(const SPI_FLASH_T *ptFlash)
 	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashComplete(): iResult=%d.\n", iResult));
 	return iResult;
 }
+#endif
 
-
+#if 0
 /*! Drv_SpiWriteFlashPages
 *   write 1 or more pages to the flash
 *
@@ -1022,7 +1023,7 @@ int Drv_SpiWriteFlashPages(const SPI_FLASH_T *ptFlash, unsigned long ulOffs, con
 	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiWriteFlashPages(): iResult=%d.\n", iResult));
 	return iResult;
 }
-
+#endif
 
 /*! Drv_SpiReadFlash
 *   Reads a byte block from a FLASH
@@ -1120,7 +1121,7 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 	return iResult;
 }
 
-
+#if 0
 /*! DrvSflEraseAndWritePage
 *   erase a page and write new data
 *
@@ -1262,7 +1263,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseAndWritePage(): iResult=%d.\n", iResult));
 	return iResult;
 }
-
+#endif
 
 
 static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pabBuffer)
