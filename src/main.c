@@ -33,6 +33,7 @@
 #include "flasher_interface.h"
 #include "units.h"
 #include "uprintf.h"
+#include "systime.h"
 
 #include "main.h"
 
@@ -323,16 +324,12 @@ static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(tFlasherInputParameter *ptAp
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSrcType;
-	unsigned long ulStartAdr;
-	unsigned long ulEndAdr;
 
 	tSrcType = ptAppParams->uParameter.tGetEraseArea.ptDeviceDescription->tSourceTyp;
-	ulStartAdr = ptAppParams->uParameter.tGetEraseArea.ulStartAdr;
-	ulEndAdr = ptAppParams->uParameter.tGetEraseArea.ulEndAdr;
 
-	if (ulEndAdr == 0xffffffffU)
+	if (ptAppParams->uParameter.tGetEraseArea.ulEndAdr == 0xffffffffU)
 	{
-		ulEndAdr = getFlashSize(ptAppParams->uParameter.tGetEraseArea.ptDeviceDescription);
+		ptAppParams->uParameter.tGetEraseArea.ulEndAdr = getFlashSize(ptAppParams->uParameter.tGetEraseArea.ptDeviceDescription);
 	}
 	
 	switch(tSrcType)
@@ -750,8 +747,8 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	tFlasherInputParameter *ptAppParams;
 	OPERATION_MODE_T tOpMode;
-
-
+	
+	
 	/* init the board */
 	tResult = board_init();
 	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
@@ -763,6 +760,9 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 	{
 		/* switch off sys led */
 		setRdyRunLed(RDYRUN_LED_OFF);
+		
+		/* configure systime, used by progress functions */
+		systime_init();  
 
 		/* say hi */
 		uprintf(
