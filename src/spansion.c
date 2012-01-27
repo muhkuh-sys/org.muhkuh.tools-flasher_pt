@@ -216,6 +216,13 @@ static FLASH_COMMAND_BLOCK_T s_atPPBExit[] =
 #define FLASH_ABSADDR(d,s,o)  (d->pucFlashBase + d->atSectors[s].ulOffset + o)
 
 
+/*
+Todo: the version check for the primary vendor extension table and the
+protect scheme check should be vendor-specific:
+
+Mfg Spansion, Pri < V1.5, bProtectScheme < 5 -> disable unlock procedure
+Mfg Eon,      Pri V1.4,   bProtectScheme = 3 -> unlock procedure should probably stay enabled
+*/
 int SpansionIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
 {
 	int fRet = FALSE;
