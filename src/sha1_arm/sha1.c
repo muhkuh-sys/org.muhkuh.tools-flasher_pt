@@ -26,7 +26,7 @@ void SHA1_Update(SHA_CTX *c, const void *p, unsigned long n)
 	unsigned int partial;
 	unsigned long done;
 
-	partial = c->len & 0x3f;
+	partial = (unsigned int)(c->len & 0x3fU);
 	c->len += n;
 	if ((partial + n) >= 64) {
 		if (partial) {
@@ -56,13 +56,13 @@ void SHA1_Final(unsigned char *hash, SHA_CTX *c)
 	static const unsigned char padding[64] = { 0x80, };
 
 	bitlen = c->len << 3;
-	offset = c->len & 0x3f;
-	padlen = ((offset < 56) ? 56 : (64 + 56)) - offset;
+	offset = (unsigned int)(c->len & 0x3fU);
+	padlen = ((offset < 56U) ? 56U : (64U + 56U)) - offset;
 	SHA1_Update(c, padding, padlen);
 
 	// convert bitlen to 64-bit big endian
 	bitlen_hi = (unsigned char) (bitlen >> 32);
-	bitlen_lo = bitlen & 0xffffffff;
+	bitlen_lo = (uint32_t)(bitlen & 0xffffffffU);
 	bits[0] = (unsigned char) (bitlen_hi >> 24);
 	bits[1] = (unsigned char) (bitlen_hi >> 16);
 	bits[2] = (unsigned char) (bitlen_hi >> 8);
