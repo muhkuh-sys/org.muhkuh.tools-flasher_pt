@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2010 by Hilscher GmbH                                   *
+ *   Copyright (C) 2012 by Hilscher GmbH                                   *
  *   cthelen@hilscher.com                                                  *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -38,101 +38,101 @@ typedef struct
 } NX10_HANDSHAKE_BLOCK_AREA_T;
 
 
-extern NX10_ARM_BOOT_VECTOR_AREA_T * const ptArmBootVectorArea;
+#define NX10_DEF_ptArmBootVectorArea NX10_ARM_BOOT_VECTOR_AREA_T * const ptArmBootVectorArea = (NX10_ARM_BOOT_VECTOR_AREA_T * const)Addr_NX10_arm_boot_vector;
 
-extern NX10_SR_AREA_T * const ptSrArea;
+#define NX10_DEF_ptSrArea NX10_SR_AREA_T * const ptSrArea = (NX10_SR_AREA_T * const)Addr_NX10_sr_motion;
 
-extern NX10_CORDIC_AREA_T * const ptCordicArea;
+#define NX10_DEF_ptCordicArea NX10_CORDIC_AREA_T * const ptCordicArea = (NX10_CORDIC_AREA_T * const)Addr_NX10_cordic;
 
-extern NX10_MPWM_AREA_T * const ptMpwmArea;
+#define NX10_DEF_ptMpwmArea NX10_MPWM_AREA_T * const ptMpwmArea = (NX10_MPWM_AREA_T * const)Addr_NX10_mpwm;
 
-extern NX10_MENC_AREA_T * const ptMencArea;
+#define NX10_DEF_ptMencArea NX10_MENC_AREA_T * const ptMencArea = (NX10_MENC_AREA_T * const)Addr_NX10_menc;
 
-extern NX10_XLINK_AREA_T * const ptXlink0Area;
-extern NX10_XLINK_AREA_T * const ptXlink1Area;
-extern NX10_XLINK_AREA_T * const ptXlink2Area;
-extern NX10_XLINK_AREA_T * const ptXlink3Area;
+#define NX10_DEF_ptXlink0Area NX10_XLINK_AREA_T * const ptXlink0Area = (NX10_XLINK_AREA_T * const)Addr_NX10_xlink0;
+#define NX10_DEF_ptXlink1Area NX10_XLINK_AREA_T * const ptXlink1Area = (NX10_XLINK_AREA_T * const)Addr_NX10_xlink1;
+#define NX10_DEF_ptXlink2Area NX10_XLINK_AREA_T * const ptXlink2Area = (NX10_XLINK_AREA_T * const)Addr_NX10_xlink2;
+#define NX10_DEF_ptXlink3Area NX10_XLINK_AREA_T * const ptXlink3Area = (NX10_XLINK_AREA_T * const)Addr_NX10_xlink3;
 
-extern NX10_IO_LINK_IRQ_AREA_T * const IoLinkIrqArea;
+#define NX10_DEF_IoLinkIrqArea NX10_IO_LINK_IRQ_AREA_T * const IoLinkIrqArea = (NX10_IO_LINK_IRQ_AREA_T * const)Addr_NX10_io_link_irq;
 
-extern NX10_ADC_CTRL_AREA_T * const ptAdcCtrlArea;
+#define NX10_DEF_ptAdcCtrlArea NX10_ADC_CTRL_AREA_T * const ptAdcCtrlArea = (NX10_ADC_CTRL_AREA_T * const)Addr_NX10_adc_ctrl;
 
-extern NX10_XPIC_TIMER_AREA_T * const ptXpicTimerArea;
+#define NX10_DEF_ptXpicTimerArea NX10_XPIC_TIMER_AREA_T * const ptXpicTimerArea = (NX10_XPIC_TIMER_AREA_T * const)Addr_NX10_xpic_timer;
 
-extern NX10_XPIC_VIC_AREA_T * const ptXpicVicArea;
+#define NX10_DEF_ptXpicVicArea NX10_XPIC_VIC_AREA_T * const ptXpicVicArea = (NX10_XPIC_VIC_AREA_T * const)Addr_NX10_xpic_vic;
 
-extern NX10_XPIC_WDG_AREA_T * const ptXpicWdgArea;
+#define NX10_DEF_ptXpicWdgArea NX10_XPIC_WDG_AREA_T * const ptXpicWdgArea = (NX10_XPIC_WDG_AREA_T * const)Addr_NX10_xpic_wdg;
 
-extern NX10_XC_AREA_T * const ptXcArea;
+#define NX10_DEF_ptXcArea NX10_XC_AREA_T * const ptXcArea = (NX10_XC_AREA_T * const)Addr_NX10_xc;
 
-extern NX10_XPEC_AREA_T * const ptXpec0Area;
+#define NX10_DEF_ptXpec0Area NX10_XPEC_AREA_T * const ptXpec0Area = (NX10_XPEC_AREA_T * const)Addr_NX10_xpec0;
 
-extern NX10_XPIC_AREA_T * const ptXpicArea;
+#define NX10_DEF_ptXpicArea NX10_XPIC_AREA_T * const ptXpicArea = (NX10_XPIC_AREA_T * const)Addr_NX10_xpic;
 
-extern NX10_XPIC_DEBUG_AREA_T * const ptXpicDebugArea;
+#define NX10_DEF_ptXpicDebugArea NX10_XPIC_DEBUG_AREA_T * const ptXpicDebugArea = (NX10_XPIC_DEBUG_AREA_T * const)Addr_NX10_xpic_debug;
 
-extern NX10_XMAC_AREA_T * const ptXmac0Area;
+#define NX10_DEF_ptXmac0Area NX10_XMAC_AREA_T * const ptXmac0Area = (NX10_XMAC_AREA_T * const)Addr_NX10_xmac0;
 
-extern NX10_POINTER_FIFO_AREA_T * const ptPointerFifoArea;
+#define NX10_DEF_ptPointerFifoArea NX10_POINTER_FIFO_AREA_T * const ptPointerFifoArea = (NX10_POINTER_FIFO_AREA_T * const)Addr_NX10_pointer_fifo;
 
-extern NX10_XPEC_IRQ_REGISTERS_AREA_T * const ptXpecIrqRegistersArea;
+#define NX10_DEF_ptXpecIrqRegistersArea NX10_XPEC_IRQ_REGISTERS_AREA_T * const ptXpecIrqRegistersArea = (NX10_XPEC_IRQ_REGISTERS_AREA_T * const)Addr_NX10_xpec_irq_registers;
 
-extern NX10_XC_MEM_PROT_AREA_T * const ptXcMemProtArea;
+#define NX10_DEF_ptXcMemProtArea NX10_XC_MEM_PROT_AREA_T * const ptXcMemProtArea = (NX10_XC_MEM_PROT_AREA_T * const)Addr_NX10_xc_mem_prot;
 
-extern NX10_BUF_MAN_AREA_T * const ptBufManArea;
+#define NX10_DEF_ptBufManArea NX10_BUF_MAN_AREA_T * const ptBufManArea = (NX10_BUF_MAN_AREA_T * const)Addr_NX10_buf_man;
 
-extern NX10_ASIC_CTRL_AREA_T * const ptAsicCtrlArea;
+#define NX10_DEF_ptAsicCtrlArea NX10_ASIC_CTRL_AREA_T * const ptAsicCtrlArea = (NX10_ASIC_CTRL_AREA_T * const)Addr_NX10_asic_ctrl;
 
-extern NX10_EXT_ASYNCMEM_CTRL_AREA_T * const ptExtAsyncmemCtrlArea;
+#define NX10_DEF_ptExtAsyncmemCtrlArea NX10_EXT_ASYNCMEM_CTRL_AREA_T * const ptExtAsyncmemCtrlArea = (NX10_EXT_ASYNCMEM_CTRL_AREA_T * const)Addr_NX10_ext_asyncmem_ctrl;
 /*Addr_ext_sdram_ctrl*/
-extern NX10_WATCHDOG_AREA_T * const ptWatchdogArea;
+#define NX10_DEF_ptWatchdogArea NX10_WATCHDOG_AREA_T * const ptWatchdogArea = (NX10_WATCHDOG_AREA_T * const)Addr_NX10_watchdog;
 
-extern NX10_GPIO_AREA_T * const ptGpioArea;
+#define NX10_DEF_ptGpioArea NX10_GPIO_AREA_T * const ptGpioArea = (NX10_GPIO_AREA_T * const)Addr_NX10_gpio;
 
-extern NX10_ARM_TIMER_AREA_T * const ptArmTimerArea;
+#define NX10_DEF_ptArmTimerArea NX10_ARM_TIMER_AREA_T * const ptArmTimerArea = (NX10_ARM_TIMER_AREA_T * const)Addr_NX10_arm_timer;
 
-extern NX10_MMIO_CTRL_AREA_T * const ptMmioCtrlArea;
+#define NX10_DEF_ptMmioCtrlArea NX10_MMIO_CTRL_AREA_T * const ptMmioCtrlArea = (NX10_MMIO_CTRL_AREA_T * const)Addr_NX10_mmio_ctrl;
 
-extern NX10_UART_AREA_T * const ptUart0Area;
-extern NX10_UART_AREA_T * const ptUart1Area;
+#define NX10_DEF_ptUart0Area NX10_UART_AREA_T * const ptUart0Area = (NX10_UART_AREA_T * const)Addr_NX10_uart0;
+#define NX10_DEF_ptUart1Area NX10_UART_AREA_T * const ptUart1Area = (NX10_UART_AREA_T * const)Addr_NX10_uart1;
 
-extern NX10_MIIMU_AREA_T * const ptMiimuArea;
+#define NX10_DEF_ptMiimuArea NX10_MIIMU_AREA_T * const ptMiimuArea = (NX10_MIIMU_AREA_T * const)Addr_NX10_miimu;
 
-extern NX10_HIF_IO_CTRL_AREA_T * const ptHifIoCtrlArea;
+#define NX10_DEF_ptHifIoCtrlArea NX10_HIF_IO_CTRL_AREA_T * const ptHifIoCtrlArea = (NX10_HIF_IO_CTRL_AREA_T * const)Addr_NX10_hif_io_ctrl;
 
-extern NX10_SPI_AREA_T * const ptSpiArea;
+#define NX10_DEF_ptSpiArea NX10_SPI_AREA_T * const ptSpiArea = (NX10_SPI_AREA_T * const)Addr_NX10_spi_motion;
 
-extern NX10_SQI_AREA_T * const ptSqiArea;
+#define NX10_DEF_ptSqiArea NX10_SQI_AREA_T * const ptSqiArea = (NX10_SQI_AREA_T * const)Addr_NX10_sqi;
 
-extern NX10_I2C_AREA_T * const ptI2cArea;
+#define NX10_DEF_ptI2cArea NX10_I2C_AREA_T * const ptI2cArea = (NX10_I2C_AREA_T * const)Addr_NX10_i2c;
 
-extern NX10_USB_DEV_CTRL_AREA_T * const ptUsbDevCtrlArea;
+#define NX10_DEF_ptUsbDevCtrlArea NX10_USB_DEV_CTRL_AREA_T * const ptUsbDevCtrlArea = (NX10_USB_DEV_CTRL_AREA_T * const)Addr_NX10_usb_dev_ctrl;
 
-extern NX10_USB_DEV_FIFO_CTRL_AREA_T * const ptUsbDevFifoCtrlArea;
+#define NX10_DEF_ptUsbDevFifoCtrlArea NX10_USB_DEV_FIFO_CTRL_AREA_T * const ptUsbDevFifoCtrlArea = (NX10_USB_DEV_FIFO_CTRL_AREA_T * const)Addr_NX10_usb_dev_fifo_ctrl;
 
-extern NX10_USB_DEV_FIFO_AREA_T * const ptUsvDevFifoArea;
+#define NX10_DEF_ptUsvDevFifoArea NX10_USB_DEV_FIFO_AREA_T * const ptUsvDevFifoArea = (NX10_USB_DEV_FIFO_AREA_T * const)Addr_NX10_usb_dev_fifo;
 
-extern NX10_SYSTIME_AREA_T * const ptSystimeArea;
+#define NX10_DEF_ptSystimeArea NX10_SYSTIME_AREA_T * const ptSystimeArea = (NX10_SYSTIME_AREA_T * const)Addr_NX10_systime;
 
-extern NX10_HANDSHAKE_CTRL_AREA_T * const ptHandshakeCtrlArea;
+#define NX10_DEF_ptHandshakeCtrlArea NX10_HANDSHAKE_CTRL_AREA_T * const ptHandshakeCtrlArea = (NX10_HANDSHAKE_CTRL_AREA_T * const)Addr_NX10_handshake_ctrl;
 
-extern NX10_DPM_AREA_T * const ptDpmArea;
+#define NX10_DEF_ptDpmArea NX10_DPM_AREA_T * const ptDpmArea = (NX10_DPM_AREA_T * const)Addr_NX10_dpm;
 
-extern NX10_DMAC_CH_AREA_T * const ptDmacCh0Area;
-extern NX10_DMAC_CH_AREA_T * const ptDmacCh1Area;
+#define NX10_DEF_ptDmacCh0Area NX10_DMAC_CH_AREA_T * const ptDmacCh0Area = (NX10_DMAC_CH_AREA_T * const)Addr_NX10_dmac_ch0;
+#define NX10_DEF_ptDmacCh1Area NX10_DMAC_CH_AREA_T * const ptDmacCh1Area = (NX10_DMAC_CH_AREA_T * const)Addr_NX10_dmac_ch1;
 
-extern NX10_DMAC_REG_AREA_T * const ptDmacRegArea;
+#define NX10_DEF_ptDmacRegArea NX10_DMAC_REG_AREA_T * const ptDmacRegArea = (NX10_DMAC_REG_AREA_T * const)Addr_NX10_dmac_reg;
 
-extern NX10_VIC_AREA_T * const ptVicArea;
+#define NX10_DEF_ptVicArea NX10_VIC_AREA_T * const ptVicArea = (NX10_VIC_AREA_T * const)Addr_NX10_vic;
 
-/*EXTMEM_PRIORITY_CTRL_AREA_T *ptExtmemPriorityCtrlArea;*/
+/*EXTMEM_PRIORITY_CTRL_AREA_T *ptExtmemPriorityCtrlArea = (EXTMEM_PRIORITY_CTRL_AREA_T*);*/
 
-extern NX10_SDRAM_AREA_T * const ptSdramArea;
+#define NX10_DEF_ptSdramArea NX10_SDRAM_AREA_T * const ptSdramArea = (NX10_SDRAM_AREA_T * const)Addr_NX10_ext_sdram_ctrl;
 
-extern NX10_USB_DEV_FIFO_AREA_T * const ptUsbDevFifoArea;
+#define NX10_DEF_ptUsbDevFifoArea NX10_USB_DEV_FIFO_AREA_T * const ptUsbDevFifoArea = (NX10_USB_DEV_FIFO_AREA_T * const)Addr_NX10_usb_dev_fifo;
 
-extern NX10_HANDSHAKE_BLOCK_AREA_T * const ptHandshakeArea;
-extern NX10_HANDSHAKE_BLOCK_AREA_T * const ptHandshakeDtcmArmMirrorArea;
+#define NX10_DEF_ptHandshakeArea NX10_HANDSHAKE_BLOCK_AREA_T * const ptHandshakeArea = (NX10_HANDSHAKE_BLOCK_AREA_T * const)Addr_NX10_intram5_mirror_dtcm;
+#define NX10_DEF_ptHandshakeDtcmArmMirrorArea NX10_HANDSHAKE_BLOCK_AREA_T * const ptHandshakeDtcmArmMirrorArea = (NX10_HANDSHAKE_BLOCK_AREA_T * const)Addr_NX10_intram5_mirror_dtcm_arm_mirror;
 
 
 typedef enum

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2011 by Hilscher GmbH                                   *
+ *   Copyright (C) 2012 by Hilscher GmbH                                   *
  *   cthelen@hilscher.com                                                  *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -32,51 +32,52 @@ typedef struct
 } NX50_SDRAM_AREA_T;
 
 
-extern NX50_ASIC_CTRL_AREA_T * const ptAsicCtrlArea;
-extern NX50_SDRAM_AREA_T * const ptSdramArea;
-extern NX50_EXT_ASYNCMEM_CTRL_AREA_T * const ptExtAsyncmemCtrlArea;
-extern NX50_EXTMEM_PRIORITY_CTRL_AREA_T * const ptExtmemPriorityCtrlArea;
-extern NX50_WATCHDOG_AREA_T * const ptWatchdogArea;
-extern NX50_GPIO_AREA_T * const ptGpioArea;
-extern NX50_PIO_AREA_T * const ptPioArea;
-extern NX50_UART_AREA_T * const ptUart0Area;
-extern NX50_UART_AREA_T * const ptUart1Area;
-extern NX50_UART_AREA_T * const ptUart2Area;
-extern NX50_MIIMU_AREA_T * const ptMiimuArea;
-extern NX50_SPI_AREA_T * const ptSpi0Area;
-extern NX50_SPI_AREA_T * const ptSpi1Area;
-extern NX50_I2C_AREA_T * const ptI2cArea;
-extern NX50_CCDC_AREA_T * const ptCcdcArea;
-extern NX50_CRC_AREA_T * const ptCrcArea;
-extern NX50_SYSTIME_AREA_T * const ptSystimeArea;
-extern NX50_MMIO_CTRL_AREA_T * const ptMmioCtrlArea;
-extern NX50_HOST_CONTROLLED_DMA_REGISTER_BLOCK_AREA_T * const ptHostControlledDmaRegisterBlockArea;
-extern NX50_HOST_CONTROLLED_GLOBAL_REGISTER_BLOCK_AREA_T * const ptHostControlledGlobalRegisterBlockArea;
-extern NX50_HOST_CONTROLLED_HANDSHAKE_REGISTER_BLOCK_AREA_T * const ptHostControlledHandshakeRegisterBlockArea;
-extern NX50_NETX_CONTROLLED_DMA_REGISTER_BLOCK_AREA_T * const ptNetxControlledDmaRegisterBlockArea;
-extern NX50_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_1_AREA_T * const ptNetxControlledGlobalRegisterBlock1Area;
-extern NX50_NETX_CONTROLLED_HANDSHAKE_REGISTER_BLOCK_AREA_T * const ptNetxControlledHandshakeRegisterBlockArea;
-extern NX50_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_2_AREA_T * const ptNetxControlledGlobalRegisterBlock2Area;
-extern NX50_DMAC_CH_AREA_T * const ptDmacCh0Area;
-extern NX50_DMAC_CH_AREA_T * const ptDmacCh1Area;
-extern NX50_DMAC_CH_AREA_T * const ptDmacCh2Area;
-extern NX50_DMAC_CH_AREA_T * const ptDmacCh3Area;
-extern NX50_DMAC_REG_AREA_T * const ptDmacRegArea;
-extern NX50_USB_CORE_AREA_T * const ptUsbCoreArea;
-extern NX50_USB_FIFO_AREA_T * const ptUsbFifoArea;
-extern NX50_XPEC_AREA_T * const ptXpec0Area;
-extern NX50_XPEC_AREA_T * const ptXpec1Area;
-extern NX50_XMAC_AREA_T * const ptXmac0Area;
-extern NX50_XMAC_AREA_T * const ptXmac1Area;
-extern NX50_POINTER_FIFO_AREA_T * const ptPointerFifoArea;
-extern NX50_XPEC_IRQ_REGISTERS_AREA_T * const ptXpecIrqRegistersArea;
-extern NX50_XC_MEM_PROT_AREA_T * const ptXcMemProtArea;
-extern NX50_XC_DEBUG_AREA_T * const ptXcDebugArea;
-extern NX50_TRIGGER_SAMPLE_UNIT_AREA_T * const ptTriggerSampleUnitArea;
-extern NX50_FMMUSM_AREA_T * const ptFmmusmArea;
-extern NX50_BUF_MAN_AREA_T * const ptBufManArea;
-extern NX50_XC_EXTBUS_SEL_AREA_T * const ptXcExtbusSelArea;
-extern NX50_VIC_AREA_T * const ptVicArea;
+#define NX50_DEF_ptAsicCtrlArea NX50_ASIC_CTRL_AREA_T * const ptAsicCtrlArea = (NX50_ASIC_CTRL_AREA_T * const)Addr_NX50_asic_ctrl;
+#define NX50_DEF_ptSdramArea NX50_SDRAM_AREA_T * const ptSdramArea = (NX50_SDRAM_AREA_T * const)Addr_NX50_ext_sdram_ctrl;
+#define NX50_DEF_ptExtAsyncmemCtrlArea NX50_EXT_ASYNCMEM_CTRL_AREA_T * const ptExtAsyncmemCtrlArea = (NX50_EXT_ASYNCMEM_CTRL_AREA_T * const)Addr_NX50_ext_asyncmem_ctrl;
+#define NX50_DEF_ptExtmemPriorityCtrlArea NX50_EXTMEM_PRIORITY_CTRL_AREA_T * const ptExtmemPriorityCtrlArea = (NX50_EXTMEM_PRIORITY_CTRL_AREA_T * const)Addr_NX50_extmem_priority_ctrl;
+#define NX50_DEF_ptWatchdogArea NX50_WATCHDOG_AREA_T * const ptWatchdogArea = (NX50_WATCHDOG_AREA_T * const)Addr_NX50_watchdog;
+#define NX50_DEF_ptGpioArea NX50_GPIO_AREA_T * const ptGpioArea = (NX50_GPIO_AREA_T * const)Addr_NX50_gpio;
+/* #define NX50_DEF_ptIolinkArea NX50_IOLINK_AREA_T * const ptIolinkArea = (NX50_IOLINK_AREA_T * const)Addr_NX50_iolink; */
+#define NX50_DEF_ptPioArea NX50_PIO_AREA_T * const ptPioArea = (NX50_PIO_AREA_T * const)Addr_NX50_pio;
+#define NX50_DEF_ptUart0Area NX50_UART_AREA_T * const ptUart0Area = (NX50_UART_AREA_T * const)Addr_NX50_uart0;
+#define NX50_DEF_ptUart1Area NX50_UART_AREA_T * const ptUart1Area = (NX50_UART_AREA_T * const)Addr_NX50_uart1;
+#define NX50_DEF_ptUart2Area NX50_UART_AREA_T * const ptUart2Area = (NX50_UART_AREA_T * const)Addr_NX50_uart2;
+#define NX50_DEF_ptMiimuArea NX50_MIIMU_AREA_T * const ptMiimuArea = (NX50_MIIMU_AREA_T * const)Addr_NX50_miimu;
+#define NX50_DEF_ptSpi0Area NX50_SPI_AREA_T * const ptSpi0Area = (NX50_SPI_AREA_T * const)Addr_NX50_spi0;
+#define NX50_DEF_ptSpi1Area NX50_SPI_AREA_T * const ptSpi1Area = (NX50_SPI_AREA_T * const)Addr_NX50_spi1;
+#define NX50_DEF_ptI2cArea NX50_I2C_AREA_T * const ptI2cArea = (NX50_I2C_AREA_T * const)Addr_NX50_i2c;
+#define NX50_DEF_ptCcdcArea NX50_CCDC_AREA_T * const ptCcdcArea = (NX50_CCDC_AREA_T * const)Addr_NX50_ccdc;
+#define NX50_DEF_ptCrcArea NX50_CRC_AREA_T * const ptCrcArea = (NX50_CRC_AREA_T * const)Addr_NX50_crc;
+#define NX50_DEF_ptSystimeArea NX50_SYSTIME_AREA_T * const ptSystimeArea = (NX50_SYSTIME_AREA_T * const)Addr_NX50_systime;
+#define NX50_DEF_ptMmioCtrlArea NX50_MMIO_CTRL_AREA_T * const ptMmioCtrlArea = (NX50_MMIO_CTRL_AREA_T * const)Addr_NX50_mmio_ctrl;
+#define NX50_DEF_ptHostControlledDmaRegisterBlockArea NX50_HOST_CONTROLLED_DMA_REGISTER_BLOCK_AREA_T * const ptHostControlledDmaRegisterBlockArea = (NX50_HOST_CONTROLLED_DMA_REGISTER_BLOCK_AREA_T * const)Addr_NX50_host_controlled_dma_register_block;
+#define NX50_DEF_ptHostControlledGlobalRegisterBlockArea NX50_HOST_CONTROLLED_GLOBAL_REGISTER_BLOCK_AREA_T * const ptHostControlledGlobalRegisterBlockArea = (NX50_HOST_CONTROLLED_GLOBAL_REGISTER_BLOCK_AREA_T * const)Addr_NX50_host_controlled_global_register_block;
+#define NX50_DEF_ptHostControlledHandshakeRegisterBlockArea NX50_HOST_CONTROLLED_HANDSHAKE_REGISTER_BLOCK_AREA_T * const ptHostControlledHandshakeRegisterBlockArea = (NX50_HOST_CONTROLLED_HANDSHAKE_REGISTER_BLOCK_AREA_T * const)Addr_NX50_host_controlled_handshake_register_block;
+#define NX50_DEF_ptNetxControlledDmaRegisterBlockArea NX50_NETX_CONTROLLED_DMA_REGISTER_BLOCK_AREA_T * const ptNetxControlledDmaRegisterBlockArea = (NX50_NETX_CONTROLLED_DMA_REGISTER_BLOCK_AREA_T * const)Addr_NX50_netx_controlled_dma_register_block;
+#define NX50_DEF_ptNetxControlledGlobalRegisterBlock1Area NX50_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_1_AREA_T * const ptNetxControlledGlobalRegisterBlock1Area = (NX50_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_1_AREA_T * const)Addr_NX50_netx_controlled_global_register_block_1;
+#define NX50_DEF_ptNetxControlledHandshakeRegisterBlockArea NX50_NETX_CONTROLLED_HANDSHAKE_REGISTER_BLOCK_AREA_T * const ptNetxControlledHandshakeRegisterBlockArea = (NX50_NETX_CONTROLLED_HANDSHAKE_REGISTER_BLOCK_AREA_T * const)Addr_NX50_netx_controlled_handshake_register_block;
+#define NX50_DEF_ptNetxControlledGlobalRegisterBlock2Area NX50_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_2_AREA_T * const ptNetxControlledGlobalRegisterBlock2Area = (NX50_NETX_CONTROLLED_GLOBAL_REGISTER_BLOCK_2_AREA_T * const)Addr_NX50_netx_controlled_global_register_block_2;
+#define NX50_DEF_ptDmacCh0Area NX50_DMAC_CH_AREA_T * const ptDmacCh0Area = (NX50_DMAC_CH_AREA_T * const)Addr_NX50_dmac_ch0;
+#define NX50_DEF_ptDmacCh1Area NX50_DMAC_CH_AREA_T * const ptDmacCh1Area = (NX50_DMAC_CH_AREA_T * const)Addr_NX50_dmac_ch1;
+#define NX50_DEF_ptDmacCh2Area NX50_DMAC_CH_AREA_T * const ptDmacCh2Area = (NX50_DMAC_CH_AREA_T * const)Addr_NX50_dmac_ch2;
+#define NX50_DEF_ptDmacCh3Area NX50_DMAC_CH_AREA_T * const ptDmacCh3Area = (NX50_DMAC_CH_AREA_T * const)Addr_NX50_dmac_ch3;
+#define NX50_DEF_ptDmacRegArea NX50_DMAC_REG_AREA_T * const ptDmacRegArea = (NX50_DMAC_REG_AREA_T * const)Addr_NX50_dmac_reg;
+#define NX50_DEF_ptUsbCoreArea NX50_USB_CORE_AREA_T * const ptUsbCoreArea = (NX50_USB_CORE_AREA_T * const)Addr_NX50_usb_core;
+#define NX50_DEF_ptUsbFifoArea NX50_USB_FIFO_AREA_T * const ptUsbFifoArea = (NX50_USB_FIFO_AREA_T * const)Addr_NX50_usb_fifo;
+#define NX50_DEF_ptXpec0Area NX50_XPEC_AREA_T * const ptXpec0Area = (NX50_XPEC_AREA_T * const)Addr_NX50_xpec0;
+#define NX50_DEF_ptXpec1Area NX50_XPEC_AREA_T * const ptXpec1Area = (NX50_XPEC_AREA_T * const)Addr_NX50_xpec1;
+#define NX50_DEF_ptXmac0Area NX50_XMAC_AREA_T * const ptXmac0Area = (NX50_XMAC_AREA_T * const)Addr_NX50_xmac0;
+#define NX50_DEF_ptXmac1Area NX50_XMAC_AREA_T * const ptXmac1Area = (NX50_XMAC_AREA_T * const)Addr_NX50_xmac1;
+#define NX50_DEF_ptPointerFifoArea NX50_POINTER_FIFO_AREA_T * const ptPointerFifoArea = (NX50_POINTER_FIFO_AREA_T * const)Addr_NX50_pointer_fifo;
+#define NX50_DEF_ptXpecIrqRegistersArea NX50_XPEC_IRQ_REGISTERS_AREA_T * const ptXpecIrqRegistersArea = (NX50_XPEC_IRQ_REGISTERS_AREA_T * const)Addr_NX50_xpec_irq_registers;
+#define NX50_DEF_ptXcMemProtArea NX50_XC_MEM_PROT_AREA_T * const ptXcMemProtArea = (NX50_XC_MEM_PROT_AREA_T * const)Addr_NX50_xc_mem_prot;
+#define NX50_DEF_ptXcDebugArea NX50_XC_DEBUG_AREA_T * const ptXcDebugArea = (NX50_XC_DEBUG_AREA_T * const)Addr_NX50_xc_debug;
+#define NX50_DEF_ptTriggerSampleUnitArea NX50_TRIGGER_SAMPLE_UNIT_AREA_T * const ptTriggerSampleUnitArea = (NX50_TRIGGER_SAMPLE_UNIT_AREA_T * const)Addr_NX50_trigger_sample_unit;
+#define NX50_DEF_ptFmmusmArea NX50_FMMUSM_AREA_T * const ptFmmusmArea = (NX50_FMMUSM_AREA_T * const)Addr_NX50_fmmusm;
+#define NX50_DEF_ptBufManArea NX50_BUF_MAN_AREA_T * const ptBufManArea = (NX50_BUF_MAN_AREA_T * const)Addr_NX50_buf_man;
+#define NX50_DEF_ptXcExtbusSelArea NX50_XC_EXTBUS_SEL_AREA_T * const ptXcExtbusSelArea = (NX50_XC_EXTBUS_SEL_AREA_T * const)Addr_NX50_xc_extbus_sel;
+#define NX50_DEF_ptVicArea NX50_VIC_AREA_T * const ptVicArea = (NX50_VIC_AREA_T * const)Addr_NX50_vic;
 
 
 typedef enum

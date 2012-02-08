@@ -71,7 +71,7 @@ typedef enum
 #define TRIGGER_ROM_WATCHDOG(a) __asm("nop\n")
 
 
-#if ASIC_TYP==10 || ASIC_TYP==50
+#if ASIC_TYP==10 || ASIC_TYP==50 || ASIC_TYP==56
 static void i2c_hifsta_clock(void)
 {
 	/* trigger rom watchdog */
@@ -92,24 +92,25 @@ static void i2c_hifsta_clock(void)
 #endif
 
 
-#if ASIC_TYP==10
+#if ASIC_TYP==10 || ASIC_TYP==56
 void i2c_hifsta_rdy_on_run_off(void)
 {
+	HOSTDEF(ptAsicCtrlArea);
 	unsigned long ulValue;
 
 
 	ulValue = ptAsicCtrlArea->ulRdy_run_cfg;
 
-	/* sclk (rdy) lo */
-	ulValue |= MSK_NX10_rdy_run_cfg_RDY_DRV;
+	/* SCLK (RDY) lo */
+	ulValue |= HOSTMSK(rdy_run_cfg_RDY_DRV);
 	ptAsicCtrlArea->ulRdy_run_cfg = ulValue;
-	/* sdata (run) lo */
-	ulValue |= MSK_NX10_rdy_run_cfg_RUN_DRV;
+	/* SData (RUN) lo */
+	ulValue |= HOSTMSK(rdy_run_cfg_RUN_DRV);
 	ptAsicCtrlArea->ulRdy_run_cfg = ulValue;
 	i2c_hifsta_clock();
 
-	/* sdata (run) hi */
-	ulValue &= ~MSK_NX10_rdy_run_cfg_RUN_DRV;
+	/* SData (RUN) hi */
+	ulValue &= ~HOSTMSK(rdy_run_cfg_RUN_DRV);
 	ptAsicCtrlArea->ulRdy_run_cfg = ulValue;
 	i2c_hifsta_clock();
 }
@@ -117,21 +118,22 @@ void i2c_hifsta_rdy_on_run_off(void)
 
 void i2c_hifsta_rdy_off_run_on(void)
 {
+	HOSTDEF(ptAsicCtrlArea);
 	unsigned long ulValue;
 
 
 	ulValue = ptAsicCtrlArea->ulRdy_run_cfg;
 
-	/* sclk (rdy) lo */
-	ulValue |= MSK_NX10_rdy_run_cfg_RDY_DRV;
+	/* SCLK (RDY) lo */
+	ulValue |= HOSTMSK(rdy_run_cfg_RDY_DRV);
 	ptAsicCtrlArea->ulRdy_run_cfg = ulValue;
-	/* sdata (run) lo */
-	ulValue |= MSK_NX10_rdy_run_cfg_RUN_DRV;
+	/* SData (RUN) lo */
+	ulValue |= HOSTMSK(rdy_run_cfg_RUN_DRV);
 	ptAsicCtrlArea->ulRdy_run_cfg = ulValue;
 	i2c_hifsta_clock();
 
-	/* sclk (rdy) hi */
-	ulValue &= ~MSK_NX10_rdy_run_cfg_RDY_DRV;
+	/* SCLK (RDY) hi */
+	ulValue &= ~HOSTMSK(rdy_run_cfg_RDY_DRV);
 	ptAsicCtrlArea->ulRdy_run_cfg = ulValue;
 	i2c_hifsta_clock();
 }
@@ -139,22 +141,24 @@ void i2c_hifsta_rdy_off_run_on(void)
 
 void i2c_hifsta_rdy_off_run_off(void)
 {
+	HOSTDEF(ptAsicCtrlArea);
 	unsigned long ulValue;
 
 
 	ulValue = ptAsicCtrlArea->ulRdy_run_cfg;
 
-	/* sclk (rdy) hi */
-	ulValue &= ~MSK_NX10_rdy_run_cfg_RDY_DRV;
+	/* SCLK (RDY) hi */
+	ulValue &= ~HOSTMSK(rdy_run_cfg_RDY_DRV);
 	ptAsicCtrlArea->ulRdy_run_cfg = ulValue;
-	/* sdata (run) lo */
-	ulValue &= ~MSK_NX10_rdy_run_cfg_RUN_DRV;
+	/* SData (RUN) lo */
+	ulValue &= ~HOSTMSK(rdy_run_cfg_RUN_DRV);
 	ptAsicCtrlArea->ulRdy_run_cfg = ulValue;
 	i2c_hifsta_clock();
 }
 #elif ASIC_TYP==50
 void i2c_hifsta_rdy_on_run_off(void)
 {
+	HOSTDEF(ptNetxControlledGlobalRegisterBlock1Area);
 	unsigned long ulValue;
 
 
@@ -176,6 +180,7 @@ void i2c_hifsta_rdy_on_run_off(void)
 
 void i2c_hifsta_rdy_off_run_on(void)
 {
+	HOSTDEF(ptNetxControlledGlobalRegisterBlock1Area);
 	unsigned long ulValue;
 
 
@@ -200,6 +205,7 @@ void i2c_hifsta_rdy_off_run_on(void)
 
 void i2c_hifsta_rdy_off_run_off(void)
 {
+	HOSTDEF(ptNetxControlledGlobalRegisterBlock1Area);
 	unsigned long ulValue;
 
 

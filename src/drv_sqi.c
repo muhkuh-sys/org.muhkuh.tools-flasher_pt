@@ -26,39 +26,71 @@
 #include "mmio.h"
 #include "netx_io_areas.h"
 
-#define UNUSED(x) (void) x;
-
 static const MMIO_CFG_T aatMmioValues[3][4] =
 {
+#if ASIC_TYP==10
 	/*
 	 * Chip select 0
 	 */
 	{
-		0xffU,				/* chip select */
-		0xffU,				/* clock */
-		0xffU,				/* miso */
-		0xffU				/* mosi */
+		0xffU,                          /* chip select */
+		0xffU,                          /* clock */
+		0xffU,                          /* MISO */
+		0xffU                           /* MOSI */
 	},
 
 	/*
 	 * Chip select 1
 	 */
 	{
-		MMIO_CFG_spi0_cs1n,		/* chip select */
-		0xffU,				/* clock */
-		0xffU,				/* miso */
-		0xffU				/* mosi */
+		MMIO_CFG_spi0_cs1n,             /* chip select */
+		0xffU,                          /* clock */
+		0xffU,                          /* MISO */
+		0xffU                           /* MOSI */
 	},
 
 	/*
 	 * Chip select 2
 	 */
 	{
-		MMIO_CFG_spi0_cs2n,		/* chip select */
-		0xffU,				/* clock */
-		0xffU,				/* miso */
-		0xffU				/* mosi */
+		MMIO_CFG_spi0_cs2n,             /* chip select */
+		0xffU,                          /* clock */
+		0xffU,                          /* MISO */
+		0xffU                           /* MOSI */
 	}
+#elif ASIC_TYP==56
+	/*
+	 * Chip select 0
+	 */
+	{
+		0xffU,                          /* chip select */
+		0xffU,                          /* clock */
+		0xffU,                          /* MISO */
+		0xffU                           /* MOSI */
+	},
+
+	/*
+	 * Chip select 1
+	 */
+	{
+		0xffU,                          /* chip select */
+		0xffU,                          /* clock */
+		0xffU,                          /* MISO */
+		0xffU                           /* MOSI */
+	},
+
+	/*
+	 * Chip select 2
+	 */
+	{
+		MMIO_CFG_spi0_cs2n,             /* chip select */
+		0xffU,                          /* clock */
+		0xffU,                          /* MISO */
+		0xffU                           /* MOSI */
+	}
+#else
+#       error "The SQI driver does not support this ASIC type!"
+#endif
 };
 
 
@@ -67,7 +99,7 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 /* BootSPI_ExchangeByte
  *
  * Description:
- *   Send and receive one byte on the spi bus.
+ *   Send and receive one byte on the SPI bus.
  *
  * Parameters:
  *
@@ -81,6 +113,7 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
  */
 static unsigned char qsi_spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char uiByte)
 {
+	HOSTDEF(ptSqiArea);
 	unsigned long ulValue;
 	unsigned char ucByte;
 
@@ -95,7 +128,7 @@ static unsigned char qsi_spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char
 	/* send byte */
 	ptSqiArea->ulSqi_dr = uiByte;
 
-	/* wait for one byte in the fifo */
+	/* Wait for one byte in the FIFO. */
 	do
 	{
 		ulValue  = ptSqiArea->ulSqi_sr;
@@ -150,6 +183,7 @@ static unsigned long qsi_get_device_speed_representation(unsigned int uiSpeed)
 
 static int qsi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 {
+	HOSTDEF(ptSqiArea);
 	int iResult;
 	unsigned long uiChipSelect;
 	unsigned long ulValue;
@@ -157,7 +191,7 @@ static int qsi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 
 	iResult = 0;
 
-	/* get the chipselect value */
+	/* Get the chip select value. */
 	uiChipSelect  = 0;
 	if( fIsSelected!=0 )
 	{
@@ -427,9 +461,9 @@ static int qsi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucDat
 }
 #endif
 
-static void qsi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpecificSpeed)
+static void qsi_set_new_speed(const SPI_CFG_T *ptCfg __attribute__((unused)), unsigned long ulDeviceSpecificSpeed)
 {
-	UNUSED(ptCfg)
+	HOSTDEF(ptSqiArea);
 	unsigned long ulValue;
 
 
@@ -444,12 +478,13 @@ static void qsi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpec
 
 static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 {
+	HOSTDEF(ptSqiArea);
 	unsigned long ulValue;
 
 
-	/* deactivate irqs */
+	/* deactivate IRQs */
 	ptSqiArea->ulSqi_irq_mask = 0;
-	/* clear all pending irqs */
+	/* clear all pending IRQs */
 	ulValue  = HOSTMSK(sqi_irq_clear_RORIC);
 	ulValue |= HOSTMSK(sqi_irq_clear_RTIC);
 	ulValue |= HOSTMSK(sqi_irq_clear_RXIC);
@@ -459,13 +494,13 @@ static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 	ulValue |= HOSTMSK(sqi_irq_clear_txeic);
 	ulValue |= HOSTMSK(sqi_irq_clear_trans_end);
 	ptSqiArea->ulSqi_irq_clear = ulValue;
-	/* deactivate irq routing to the cpus */
+	/* deactivate IRQ routing to the CPUs */
 	ptSqiArea->ulSqi_irq_cpu_sel = 0;
 
-	/* deactivate dmas */
+	/* deactivate DMAs */
 	ptSqiArea->ulSqi_dmacr = 0;
 
-	/* deactivate xip */
+	/* deactivate XIP */
 	ptSqiArea->ulSqi_sqirom_cfg = 0;
 
 	ptSqiArea->ulSqi_tcr = 0;
@@ -476,13 +511,14 @@ static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 	ptSqiArea->aulSqi_cr[0] = 0;
 	ptSqiArea->aulSqi_cr[1] = 0;
 
-	/* activate the spi pins */
+	/* activate the SPI pins */
 	mmio_deactivate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[ptCfg->uiChipSelect]);
 }
 
 
 int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 {
+	HOSTDEF(ptSqiArea);
 	unsigned long ulValue;
 	int iResult;
 	unsigned int uiIdleCfg;
@@ -511,12 +547,12 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	ptCfg->pfnGetDeviceSpeedRepresentation = qsi_get_device_speed_representation;
 	ptCfg->pfnDeactivate = qsi_deactivate;
 
-	/* copy the mmio pins */
+	/* copy the MMIO pins */
 	memcpy(ptCfg->aucMmio, ptSpiCfg->aucMmio, sizeof(ptSpiCfg->aucMmio));
 
-	/* do not use irqs in bootloader */
+	/* do not use IRQs in bootloader */
 	ptSqiArea->ulSqi_irq_mask = 0;
-	/* clear all pending irqs */
+	/* clear all pending IRQs */
 	ulValue  = HOSTMSK(sqi_irq_clear_RORIC);
 	ulValue |= HOSTMSK(sqi_irq_clear_RTIC);
 	ulValue |= HOSTMSK(sqi_irq_clear_RXIC);
@@ -526,13 +562,13 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	ulValue |= HOSTMSK(sqi_irq_clear_txeic);
 	ulValue |= HOSTMSK(sqi_irq_clear_trans_end);
 	ptSqiArea->ulSqi_irq_clear = ulValue;
-	/* do not route the irqs to a cpu */
+	/* do not route the IRQs to a CPU */
 	ptSqiArea->ulSqi_irq_cpu_sel = 0;
 
-	/* do not use dmas */
+	/* do not use DMAs */
 	ptSqiArea->ulSqi_dmacr = 0;
 
-	/* do not use xip */
+	/* do not use XIP */
 	ptSqiArea->ulSqi_sqirom_cfg = 0;
 
 	/* set 8 bits */
@@ -554,13 +590,13 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	ptSqiArea->aulSqi_cr[0] = ulValue;
 
 
-	/* manual chipselect */
+	/* manual chip select */
 	ulValue  = HOSTMSK(sqi_cr1_fss_static);
 	/* manual transfer start */
 	ulValue |= HOSTMSK(sqi_cr1_spi_trans_ctrl);
 	/* enable the interface */
 	ulValue |= HOSTMSK(sqi_cr1_sqi_en);
-	/* clear both fifos */
+	/* clear both FIFOs */
 	ulValue |= HOSTMSK(sqi_cr1_rx_fifo_clr)|HOSTMSK(sqi_cr1_tx_fifo_clr);
 	ptSqiArea->aulSqi_cr[1] = ulValue;
 
@@ -602,7 +638,7 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	}
 	ptSqiArea->ulSqi_pio_oe = ulValue;
 
-	/* set the idle char from the tx config */
+	/* set the idle char from the TX configuration */
 	if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO1_OUT)!=0 )
 	{
 		ucIdleChar = 0xffU;
@@ -613,7 +649,7 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	}
 	ptCfg->ucIdleChar = ucIdleChar;
 
-	/* activate the spi pins */
+	/* activate the SPI pins */
 	mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[uiChipSelect]);
 
 	return iResult;

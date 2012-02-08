@@ -14,7 +14,7 @@
  *                                                                         *
  *   You should have received a copy of the GNU Library General Public     *
  *   License along with this program; if not, write to the                 *
- *   Free Software Foudnation, Inc.,                                       *
+ *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
@@ -26,7 +26,7 @@
 
 /* Parallel flash routines. */
 #include "flasher_parflash.h"
-/* Serial flash on spi. */
+/* Serial flash on SPI. */
 #include "flasher_spi.h"
 #include "sha1.h"
 
@@ -137,7 +137,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_flash(tFlasherInputParameter *ptAppParams
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
 
-	/* get the source typ */
+	/* get the source type */
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 	switch(tSourceTyp)
 	{
@@ -165,7 +165,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_erase(tFlasherInputParameter *ptAppParams
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
 
-	/* get the source typ */
+	/* get the source type */
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 	switch(tSourceTyp)
 	{
@@ -191,7 +191,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_read(tFlasherInputParameter *ptAppParams)
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
 
-	/* get the source typ */
+	/* get the source type */
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 	switch(tSourceTyp)
 	{
@@ -218,7 +218,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_verify(tFlasherInputParameter *ptAppParam
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
 
-	/* get the source typ */
+	/* get the source type */
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 
 	switch(tSourceTyp)
@@ -246,7 +246,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_checksum(tFlasherInputParameter *ptAppPar
 	
 	SHA1_Init(&tShaContext);
 	
-	/* get the source typ */
+	/* get the source type */
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 
 	switch(tSourceTyp)

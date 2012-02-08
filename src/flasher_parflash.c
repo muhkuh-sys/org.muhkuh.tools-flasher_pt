@@ -57,6 +57,7 @@
    */
 static void setup_flash_srb(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits)
 {
+	HOSTDEF(ptExtAsyncmemCtrlArea);
 	unsigned long  ulRegValue;
 
 
@@ -106,6 +107,7 @@ Talewidt      = 0
 
 static void setup_flash_ext(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits)
 {
+	HOSTDEF(ptNetxControlledGlobalRegisterBlock2Area);
 	unsigned long ulIoRegMode0;
 	unsigned long ulExtBusConfig;
 
@@ -170,6 +172,9 @@ static void setup_flash_ext(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T t
    */
 static void setup_flash(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits)
 {
+	HOSTDEF(ptAsicCtrlArea);
+	HOSTDEF(ptHifIoCtrlArea);
+	HOSTDEF(ptExtAsyncmemCtrlArea);
 	unsigned long ulValue;
 	unsigned int uiChipSelect;
 

@@ -23,8 +23,8 @@
 
 #include "spi_flash.h"
 
-#if ASIC_TYP==10
-/* netX10 has a SQI and a SPI unit. */
+#if ASIC_TYP==10 || ASIC_TYP==56
+/* netX10 and netX56 have a SQI and a SPI unit. */
 #	include "drv_sqi.h"
 #	include "drv_spi_hsoc_v2.h"
 #elif ASIC_TYP==50
@@ -524,8 +524,8 @@ static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 *               
 *   \param  ptFls   Pointer to FLASH Control Block
 *                                                                              
-*   \return  RX_OK                   FLASH successcully initialized
-*            Drv_SpiS_INVALID        Specified Flash Conrtol Block invalid
+*   \return  RX_OK                   FLASH successfully initialized
+*            Drv_SpiS_INVALID        Specified Flash Control Block invalid
 *            Drv_SpiS_UNKNOWN_FLASH  failed to detect the serial FLASH
 */
 int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptFlash)
@@ -549,7 +549,7 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 	switch( ptSpiCfg->uiUnit )
 	{
 	case 0:
-		ptSpiDev->ptUnit = ptSpiArea;
+		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(spi);
 		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
@@ -561,12 +561,12 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 	switch( ptSpiCfg->uiUnit )
 	{
 	case 0:
-		ptSpiDev->ptUnit = ptSpi0Area;
+		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(spi0);
 		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	case 1:
-		ptSpiDev->ptUnit = ptSpi1Area;
+		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(spi1);
 		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
@@ -574,7 +574,7 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 		iResult = -1;
 		break;
 	}
-#elif ASIC_TYP==10
+#elif ASIC_TYP==10 || ASIC_TYP==56
 	switch( ptSpiCfg->uiUnit )
 	{
 	case 0:
@@ -582,7 +582,7 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 		break;
 
 	case 1:
-		ptSpiDev->ptUnit = ptSpiArea;
+		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(spi_motion);
 		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 

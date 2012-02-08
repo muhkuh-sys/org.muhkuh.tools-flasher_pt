@@ -23,6 +23,8 @@
 
 void mmio_activate(const unsigned char *pucMmioPins, size_t sizMmioPins, const MMIO_CFG_T *ptMmioValues)
 {
+	HOSTDEF(ptAsicCtrlArea)
+	HOSTDEF(ptMmioCtrlArea)
 	const unsigned char *pucCnt;
 	const unsigned char *pucEnd;
 	unsigned int uiMmioPin;
@@ -51,6 +53,8 @@ void mmio_activate(const unsigned char *pucMmioPins, size_t sizMmioPins, const M
 
 void mmio_deactivate(const unsigned char *pucMmioPins, size_t sizMmioPins, const MMIO_CFG_T *ptMmioValues)
 {
+	HOSTDEF(ptAsicCtrlArea)
+	HOSTDEF(ptMmioCtrlArea)
 	const unsigned char *pucCnt;
 	const unsigned char *pucEnd;
 	unsigned int uiMmioPin;

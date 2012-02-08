@@ -53,6 +53,7 @@
 /*****************************************************************************/
 void delay_us(unsigned int uiDelayUs)
 {
+	HOSTDEF(ptGpioArea);
 	unsigned long ulTimerValue;
 	unsigned long ulTimerCtrl;
 

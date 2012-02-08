@@ -26,6 +26,9 @@
 
 void systime_init(void)
 {
+	HOSTDEF(ptSystimeArea)
+
+
 	/* set systime border to 1ms */
 	ptSystimeArea->ulSystime_border = (DEV_FREQUENCY/100U)-1U;
 	ptSystimeArea->ulSystime_count_value = 10U<<28U;
@@ -42,12 +45,16 @@ void systime_init(void)
 
 unsigned long systime_get_ms(void)
 {
+	HOSTDEF(ptSystimeArea)
+
+
 	return ptSystimeArea->ulSystime_s;
 }
 
 
 int systime_elapsed(unsigned long ulStart, unsigned long ulDuration)
 {
+	HOSTDEF(ptSystimeArea)
 	unsigned long ulDiff;
 
 
