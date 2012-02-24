@@ -90,8 +90,8 @@ static NETX_CONSOLEAPP_RESULT_T spi_write_with_progress(const SPI_FLASH_T *ptFla
 				ulSegSize = ulMaxSegSize;
 			}
 
-			/* read the start of the page */
-			iResult = Drv_SpiReadFlash(ptFlashDev, ulPageStartAdr, pucSpiBuffer, ulOffset);
+			/* read the whole page */
+			iResult = Drv_SpiReadFlash(ptFlashDev, ulPageStartAdr, pucSpiBuffer, ulPageSize);
 			if( iResult!=0 )
 			{
 				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
