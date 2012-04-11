@@ -64,16 +64,17 @@ else
 		error("No error reported, but the area is not erased!")
 	end
 	print("The first erase area is clear now!")
-	print("")
-	print(" #######  ##    ## ")
-	print("##     ## ##   ##  ")
-	print("##     ## ##  ##   ")
-	print("##     ## #####    ")
-	print("##     ## ##  ##   ")
-	print("##     ## ##   ##  ")
-	print(" #######  ##    ## ")
-	print("")
 end
+
+print("")
+print(" #######  ##    ## ")
+print("##     ## ##   ##  ")
+print("##     ## ##  ##   ")
+print("##     ## #####    ")
+print("##     ## ##  ##   ")
+print("##     ## ##   ##  ")
+print(" #######  ##    ## ")
+print("")
 
 -- Disconnect the plugin.
 tester.closeCommonPlugin()
