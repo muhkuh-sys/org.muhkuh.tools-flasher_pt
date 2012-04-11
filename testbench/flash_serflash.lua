@@ -30,6 +30,16 @@ ulUnit = 0
 ulChipSelect = 0
 flasher.simple_flasher(tPlugin, strFileName, tBus, ulUnit, ulChipSelect, "../targets/")
 
+print("")
+print(" #######  ##    ## ")
+print("##     ## ##   ##  ")
+print("##     ## ##  ##   ")
+print("##     ## #####    ")
+print("##     ## ##  ##   ")
+print("##     ## ##   ##  ")
+print(" #######  ##    ## ")
+print("")
+
 -- Disconnect the plugin.
 tester.closeCommonPlugin()
 
