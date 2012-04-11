@@ -1,24 +1,35 @@
-
+require("romloader_eth")
 require("romloader_usb")
+require("romloader_uart")
+
+require("muhkuh")
+require("select_plugin_cli")
+require("tester_cli")
 
 require("flasher")
-require("muhkuh")
-require("select_plugin")
 
 
-tPlugin = select_plugin.SelectPlugin()
-if tPlugin==nil then
-	print("No plugin selected, nothing to do!")
-else
-	-- connect the plugin
-	tPlugin:Connect()
+__MUHKUH_WORKING_FOLDER = "./"
 
-	-- Flash the file.
-	flasher.simple_flasher(tPlugin, "nx10_sqixip.img", flasher.BUS_Spi, 0, 0, "../targets/")
 
-	-- Disconnect the plugin.
-	tPlugin:Disconnect()
-
-	-- Free the plugin.
-	tPlugin = nil
+if #arg~=1 then
+	error("Missing parameter: file to flash.")
 end
+strFileName = arg[1]
+
+
+tPlugin = tester.getCommonPlugin()
+if not tPlugin then
+	error("No plugin selected, nothing to do!")
+end
+
+
+-- Flash the file.
+tBus = flasher.BUS_Spi
+ulUnit = 0
+ulChipSelect = 0
+flasher.simple_flasher(tPlugin, strFileName, tBus, ulUnit, ulChipSelect, "../targets/")
+
+-- Disconnect the plugin.
+tester.closeCommonPlugin()
+
