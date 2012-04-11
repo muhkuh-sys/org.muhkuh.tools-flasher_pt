@@ -18,18 +18,23 @@
 --   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             --
 -----------------------------------------------------------------------------
 
---require("romloader_baka")
+require("romloader_eth")
 require("romloader_usb")
+require("romloader_uart")
+
+require("muhkuh")
+require("select_plugin_cli")
+require("tester_cli")
 
 require("flasher")
-require("muhkuh")
-require("tester")
 
 
--- Ask the user to pick a plugin.
+__MUHKUH_WORKING_FOLDER = "./"
+
+
 tPlugin = tester.getCommonPlugin()
 if not tPlugin then
-	error("No plugin selected!")
+	error("No plugin selected, nothing to do!")
 end
 
 -- Download the flasher binary.
