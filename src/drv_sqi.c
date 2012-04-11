@@ -479,12 +479,16 @@ static void qsi_set_new_speed(const SPI_CFG_T *ptCfg __attribute__((unused)), un
 static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 {
 	HOSTDEF(ptSqiArea);
+#if ASIC_TYP==56
+	HOSTDEF(ptAsicCtrlArea);
+#endif
 	unsigned long ulValue;
 
 
-	/* deactivate IRQs */
+	/* Deactivate IRQs. */
 	ptSqiArea->ulSqi_irq_mask = 0;
-	/* clear all pending IRQs */
+
+	/* Clear all pending IRQs. */
 	ulValue  = HOSTMSK(sqi_irq_clear_RORIC);
 	ulValue |= HOSTMSK(sqi_irq_clear_RTIC);
 	ulValue |= HOSTMSK(sqi_irq_clear_RXIC);
@@ -494,31 +498,43 @@ static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 	ulValue |= HOSTMSK(sqi_irq_clear_txeic);
 	ulValue |= HOSTMSK(sqi_irq_clear_trans_end);
 	ptSqiArea->ulSqi_irq_clear = ulValue;
-	/* deactivate IRQ routing to the CPUs */
+
+	/* Deactivate IRQ routing to the CPUs. */
 	ptSqiArea->ulSqi_irq_cpu_sel = 0;
 
-	/* deactivate DMAs */
+	/* Deactivate DMAs. */
 	ptSqiArea->ulSqi_dmacr = 0;
 
-	/* deactivate XIP */
+	/* Deactivate XIP. */
 	ptSqiArea->ulSqi_sqirom_cfg = 0;
 
 	ptSqiArea->ulSqi_tcr = 0;
 	ptSqiArea->ulSqi_pio_oe = 0;
 	ptSqiArea->ulSqi_pio_out = 0;
 
-	/* deactivate the unit */
+	/* Deactivate the unit. */
 	ptSqiArea->aulSqi_cr[0] = 0;
 	ptSqiArea->aulSqi_cr[1] = 0;
 
-	/* activate the SPI pins */
+	/* Deactivate the SPI pins. */
 	mmio_deactivate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[ptCfg->uiChipSelect]);
+
+#if ASIC_TYP==56
+	/* Deactivate the SIO2 and SIO3 pins. */
+	ulValue  = ptAsicCtrlArea->ulIo_config2;
+	ulValue &= ~HOSTMSK(io_config2_sel_sqi);
+	ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+	ptAsicCtrlArea->ulIo_config2 = ulValue;
+#endif
 }
 
 
 int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 {
 	HOSTDEF(ptSqiArea);
+#if ASIC_TYP==56
+	HOSTDEF(ptAsicCtrlArea);
+#endif
 	unsigned long ulValue;
 	int iResult;
 	unsigned int uiIdleCfg;
@@ -651,6 +667,14 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 
 	/* activate the SPI pins */
 	mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[uiChipSelect]);
+
+#if ASIC_TYP==56
+	/* Activate the SIO2 and SIO3 pins. */
+	ulValue  = ptAsicCtrlArea->ulIo_config2;
+	ulValue |= HOSTMSK(io_config2_sel_sqi);
+	ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+	ptAsicCtrlArea->ulIo_config2 = ulValue;
+#endif
 
 	return iResult;
 }
