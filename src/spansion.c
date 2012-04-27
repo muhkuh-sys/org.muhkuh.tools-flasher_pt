@@ -277,12 +277,12 @@ int SpansionIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
 			if (ptExtQry->bProtectScheme<5) 
 			{
 				uprintf(".SpansionIdentifyFlash(): Disabling unlock\n"); 
-				s_tSpansionFuncs.pfnUnlock = FlashUnlockDummy;
+				ptFlashDev->tFlashFunctions.pfnUnlock = FlashUnlockDummy;
 			}
 			else
 			{
 				uprintf(".SpansionIdentifyFlash(): Enabling unlock\n"); 
-				s_tSpansionFuncs.pfnUnlock = FlashUnlock;
+				ptFlashDev->tFlashFunctions.pfnUnlock = FlashUnlock;
 			}
 		}
 	}
@@ -689,7 +689,7 @@ FLASH_ERRORS_E FlashLock(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSecto
 FLASH_ERRORS_E FlashUnlockDummy(const FLASH_DEVICE_T *ptFlashDev)
 {
 	UNUSED(ptFlashDev)
-	uprintf(".FlashUnlockDummy(): Unlock noch supported\n");
+	uprintf(".FlashUnlockDummy(): Unlock not supported\n");
 	return eFLASH_NO_ERROR;
 }
 
