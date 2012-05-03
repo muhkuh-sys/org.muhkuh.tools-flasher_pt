@@ -252,12 +252,12 @@ tArc = env_default.Archive('targets/flasher.zip', None, ARCHIVE_CONTENTS=tArcLis
 # Create the artifact list.
 #
 
-strPomGroupID    = 'net.sourceforge.muhkuh'
-strPomArtifactID = 'flasher'
-strPomPackaging  = 'zip'
+strGroupID = 'net.sourceforge.muhkuh'
+aServer = ('nexus@netx01', 'muhkuh', 'muhkuh_snapshots')
+bCanRelease = env_default['CFG_BUILD']=='release'
 
 # Add the LUA file to the list of artifacts.
-env_default.AddArtifact(tArc, strPomGroupID, strPomArtifactID, strPomPackaging)
+env_default.AddArtifact(tArc, aServer, strGroupID, 'flasher', 'zip', GOOD=bCanRelease)
 
 tArtifacts = env_default.Artifact('targets/artifacts.xml', None)
 
