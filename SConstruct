@@ -242,7 +242,8 @@ tArcList.AddFiles('lua/',
 	'testbench/get_erase_areas_parflash.lua',
 	'testbench/identify_parflash.lua',
 	'testbench/identify_serflash.lua',
-	'testbench/is_erased_parflash.lua')
+	'testbench/is_erased_parflash.lua',
+	'testbench/read_complete_flash.lua')
 
 tArc = env_default.Archive('targets/flasher.zip', None, ARCHIVE_CONTENTS=tArcList)
 
