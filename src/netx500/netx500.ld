@@ -41,7 +41,7 @@ SECTIONS
 	{
 		__LOAD_ADDRESS__ = . ;
 		*(.init_code)
-		*(.version_info)
+		KEEP( *(.version_info) )
 		*(.text)
 		*(.glue*)
 		*(.vfp11_veneer)
