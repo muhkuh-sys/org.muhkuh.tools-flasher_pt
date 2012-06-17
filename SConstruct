@@ -94,9 +94,9 @@ src_netx10  = flasher_sources_common + flasher_sources_custom_netx10
 
 #----------------------------------------------------------------------------
 #
-# Create a special filter builder which includes the svnversion command.
+# Get the source code version from the VCS.
 #
-env_default.SVNVersion('src/flasher_version.h', 'templates/flasher_version.h')
+env_default.Version('targets/version/flasher_version.h', 'templates/flasher_version.h')
 
 
 #----------------------------------------------------------------------------
@@ -108,19 +108,19 @@ env_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
 
 env_netx500_default = env_default.CreateCompilerEnv('500', ['cpu=arm926ej-s'])
 env_netx500_default.Replace(LDFILE = File('src/netx500/netx500.ld'))
-env_netx500_default.Append(CPPPATH = ['src', 'src/netx500', 'src/sha1_arm'])
+env_netx500_default.Append(CPPPATH = ['src', 'src/netx500', 'src/sha1_arm', 'targets/version'])
 
 env_netx56_default  = env_default.CreateCompilerEnv('56',  ['cpu=arm966e-s'])
 env_netx56_default.Replace(LDFILE = File('src/netx56/netx56.ld'))
-env_netx56_default.Append(CPPPATH = ['src', 'src/netx56', 'src/sha1_arm'])
+env_netx56_default.Append(CPPPATH = ['src', 'src/netx56', 'src/sha1_arm', 'targets/version'])
 
 env_netx50_default  = env_default.CreateCompilerEnv('50',  ['cpu=arm966e-s'])
 env_netx50_default.Replace(LDFILE = File('src/netx50/netx50.ld'))
-env_netx50_default.Append(CPPPATH = ['src', 'src/netx50', 'src/sha1_arm'])
+env_netx50_default.Append(CPPPATH = ['src', 'src/netx50', 'src/sha1_arm', 'targets/version'])
 
 env_netx10_default  = env_default.CreateCompilerEnv('10',  ['cpu=arm966e-s'])
 env_netx10_default.Replace(LDFILE = File('src/netx10/netx10.ld'))
-env_netx10_default.Append(CPPPATH = ['src', 'src/netx10', 'src/sha1_arm'])
+env_netx10_default.Append(CPPPATH = ['src', 'src/netx10', 'src/sha1_arm', 'targets/version'])
 
 
 #----------------------------------------------------------------------------
