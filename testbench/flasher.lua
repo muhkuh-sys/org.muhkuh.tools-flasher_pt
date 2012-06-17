@@ -30,12 +30,6 @@ module("flasher", package.seeall)
 --                       separated loading and downloading of flasher
 --                       added flash/read/write/erase Area routines
 -----------------------------------------------------------------------------
------------------------------------------------------------------------------
--- SVN Keywords
-SVN_DATE   ="$Date$"
-SVN_VERSION="$Revision$"
-SVN_AUTHOR ="$Author$"
------------------------------------------------------------------------------
 
 require("bit")
 require("muhkuh")
