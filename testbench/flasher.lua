@@ -175,12 +175,12 @@ function get_flasher_binary_attributes(strData)
 	local aAttr = {}
 	
 	-- Get the load and exec address from the binary.
-	aAttr.ulLoadAddress = strData:byte(33) + strData:byte(34)*0x00000100 + strData:byte(35)*0x00010000 + strData:byte(36)*0x01000000
-	aAttr.ulExecAddress = strData:byte(37) + strData:byte(38)*0x00000100 + strData:byte(39)*0x00010000 + strData:byte(40)*0x01000000
-	aAttr.ulParameter   = strData:byte(41) + strData:byte(42)*0x00000100 + strData:byte(43)*0x00010000 + strData:byte(44)*0x01000000
-	aAttr.ulDeviceDesc  = strData:byte(45) + strData:byte(46)*0x00000100 + strData:byte(47)*0x00010000 + strData:byte(48)*0x01000000
-	aAttr.ulBufferAdr   = strData:byte(49) + strData:byte(50)*0x00000100 + strData:byte(51)*0x00010000 + strData:byte(52)*0x01000000
-	aAttr.ulBufferEnd   = strData:byte(53) + strData:byte(54)*0x00000100 + strData:byte(55)*0x00010000 + strData:byte(56)*0x01000000
+	aAttr.ulLoadAddress = strData:byte(81) + strData:byte(82)*0x00000100 + strData:byte(83)*0x00010000 + strData:byte(84)*0x01000000
+	aAttr.ulExecAddress = strData:byte(85) + strData:byte(86)*0x00000100 + strData:byte(87)*0x00010000 + strData:byte(88)*0x01000000
+	aAttr.ulParameter   = strData:byte(89) + strData:byte(90)*0x00000100 + strData:byte(91)*0x00010000 + strData:byte(92)*0x01000000
+	aAttr.ulDeviceDesc  = strData:byte(93) + strData:byte(94)*0x00000100 + strData:byte(95)*0x00010000 + strData:byte(96)*0x01000000
+	aAttr.ulBufferAdr   = strData:byte(97) + strData:byte(98)*0x00000100 + strData:byte(99)*0x00010000 + strData:byte(100)*0x01000000
+	aAttr.ulBufferEnd   = strData:byte(101) + strData:byte(102)*0x00000100 + strData:byte(103)*0x00010000 + strData:byte(104)*0x01000000
 	aAttr.ulBufferLen   = aAttr.ulBufferEnd - aAttr.ulBufferAdr
 
 	-- Show the information:
