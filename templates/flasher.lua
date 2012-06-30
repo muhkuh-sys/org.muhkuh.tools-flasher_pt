@@ -396,7 +396,7 @@ function readDeviceDescriptor(tPlugin, aAttr, fnCallbackProgress)
 		else
 			-- read the interface version of the returned data
 			ulVersion = tPlugin:read_data32(aAttr.ulDeviceDesc+0x08)
-			if ulVersion~=0x00020000 then
+			if ulVersion~=FLASHER_INTERFACE_VERSION then
 				-- the version does not match the expected value
 				print(string.format("the device description has a strange interface version."))
 			else
