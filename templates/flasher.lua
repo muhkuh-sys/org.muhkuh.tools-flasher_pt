@@ -70,6 +70,7 @@ MSK_SQI_CFG_IDLE_IO3_OUT         = ${MSK_SQI_CFG_IDLE_IO3_OUT}
 SRT_SQI_CFG_IDLE_IO3_OUT         = ${SRT_SQI_CFG_IDLE_IO3_OUT}
 
 
+FLASHER_INTERFACE_VERSION        = ${FLASHER_INTERFACE_VERSION}
 
 
 --------------------------------------------------------------------------
@@ -271,11 +272,11 @@ function callFlasher(tPlugin, aAttr, aulParams, fnCallbackMessage, fnCallbackPro
 	
 	-- set the parameters
 	local aulParameter = {}
-	aulParameter[1] = 0xffffffff             -- placeholder for return vallue, will be 0 if ok
-	aulParameter[2] = aAttr.ulParameter+0x0c -- pointer to actual parameters
-	aulParameter[3] = 0x00000000             -- unused
-	                                         -- extended parameters
-	aulParameter[4] = 0x00020000             -- parameter version: 2.0
+	aulParameter[1] = 0xffffffff                 -- placeholder for return vallue, will be 0 if ok
+	aulParameter[2] = aAttr.ulParameter+0x0c     -- pointer to actual parameters
+	aulParameter[3] = 0x00000000                 -- unused
+	                                             -- extended parameters
+	aulParameter[4] = FLASHER_INTERFACE_VERSION  -- set the parameter version
 	for i=1, #aulParams do
 		aulParameter[4+i] = aulParams[i]     -- actual parameters for the particular function
 	end
