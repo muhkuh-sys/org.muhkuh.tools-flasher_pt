@@ -40,34 +40,34 @@ require("romloader")
 --                           Definitions
 -----------------------------------------------------------------------------
 
-BUS_Parflash    = 0             -- parallel flash
-BUS_Spi         = 1             -- serial flash on spi bus
+BUS_Parflash    = ${BUS_ParFlash}             -- parallel flash
+BUS_Spi         = ${BUS_SPI}             -- serial flash on spi bus
 
 
-OPERATION_MODE_Flash             = 0
-OPERATION_MODE_Erase             = 1
-OPERATION_MODE_Read              = 2
-OPERATION_MODE_Verify            = 3
-OPERATION_MODE_Checksum          = 4     -- Build a checksum over the contents of a specified area of a device.
-OPERATION_MODE_Detect            = 5     -- Detect a device.
-OPERATION_MODE_IsErased          = 6     -- Check if the specified area of a device is erased.
-OPERATION_MODE_GetEraseArea      = 7     -- Expand an area to the erase block borders.
-OPERATION_MODE_GetBoardInfo      = 8     -- Get bus and unit information.
+OPERATION_MODE_Flash             = ${OPERATION_MODE_Flash}
+OPERATION_MODE_Erase             = ${OPERATION_MODE_Erase}
+OPERATION_MODE_Read              = ${OPERATION_MODE_Read}
+OPERATION_MODE_Verify            = ${OPERATION_MODE_Verify}
+OPERATION_MODE_Checksum          = ${OPERATION_MODE_Checksum}     -- Build a checksum over the contents of a specified area of a device.
+OPERATION_MODE_Detect            = ${OPERATION_MODE_Detect}     -- Detect a device.
+OPERATION_MODE_IsErased          = ${OPERATION_MODE_IsErased}     -- Check if the specified area of a device is erased.
+OPERATION_MODE_GetEraseArea      = ${OPERATION_MODE_GetEraseArea}     -- Expand an area to the erase block borders.
+OPERATION_MODE_GetBoardInfo      = ${OPERATION_MODE_GetBoardInfo}     -- Get bus and unit information.
 
 
 
-MSK_SQI_CFG_IDLE_IO1_OE          = 0x01
-SRT_SQI_CFG_IDLE_IO1_OE          = 0
-MSK_SQI_CFG_IDLE_IO1_OUT         = 0x02
-SRT_SQI_CFG_IDLE_IO1_OUT         = 1
-MSK_SQI_CFG_IDLE_IO2_OE          = 0x04
-SRT_SQI_CFG_IDLE_IO2_OE          = 2
-MSK_SQI_CFG_IDLE_IO2_OUT         = 0x08
-SRT_SQI_CFG_IDLE_IO2_OUT         = 3
-MSK_SQI_CFG_IDLE_IO3_OE          = 0x10
-SRT_SQI_CFG_IDLE_IO3_OE          = 4
-MSK_SQI_CFG_IDLE_IO3_OUT         = 0x20
-SRT_SQI_CFG_IDLE_IO3_OUT         = 5
+MSK_SQI_CFG_IDLE_IO1_OE          = ${MSK_SQI_CFG_IDLE_IO1_OE}
+SRT_SQI_CFG_IDLE_IO1_OE          = ${SRT_SQI_CFG_IDLE_IO1_OE}
+MSK_SQI_CFG_IDLE_IO1_OUT         = ${MSK_SQI_CFG_IDLE_IO1_OUT}
+SRT_SQI_CFG_IDLE_IO1_OUT         = ${SRT_SQI_CFG_IDLE_IO1_OUT}
+MSK_SQI_CFG_IDLE_IO2_OE          = ${MSK_SQI_CFG_IDLE_IO2_OE}
+SRT_SQI_CFG_IDLE_IO2_OE          = ${SRT_SQI_CFG_IDLE_IO2_OE}
+MSK_SQI_CFG_IDLE_IO2_OUT         = ${MSK_SQI_CFG_IDLE_IO2_OUT}
+SRT_SQI_CFG_IDLE_IO2_OUT         = ${SRT_SQI_CFG_IDLE_IO2_OUT}
+MSK_SQI_CFG_IDLE_IO3_OE          = ${MSK_SQI_CFG_IDLE_IO3_OE}
+SRT_SQI_CFG_IDLE_IO3_OE          = ${SRT_SQI_CFG_IDLE_IO3_OE}
+MSK_SQI_CFG_IDLE_IO3_OUT         = ${MSK_SQI_CFG_IDLE_IO3_OUT}
+SRT_SQI_CFG_IDLE_IO3_OUT         = ${SRT_SQI_CFG_IDLE_IO3_OUT}
 
 
 
@@ -267,6 +267,7 @@ end
 -- Stores parameters in netX memory, calls the flasher and returns the result value
 -- 0 = success, 1 = failure
 function callFlasher(tPlugin, aAttr, aulParams, fnCallbackMessage, fnCallbackProgress)
+	fnCallbackProgress = fnCallbackProgress or default_callback_progress
 	
 	-- set the parameters
 	local aulParameter = {}

@@ -203,6 +203,14 @@ bin_netx10_dbg = env_netx10_dbg.ObjCopy('targets/flasher_netx10_debug.bin', elf_
 
 #----------------------------------------------------------------------------
 #
+# Generate the LUA scripts from the template.
+# This extracts symbols and enumeration values from the ELF file and inserts
+# them into the LUA script.
+#
+lua_flasher = env_netx500_nodbg.GccSymbolTemplate('targets/lua/flasher.lua', elf_netx500_nodbg, GCCSYMBOLTEMPLATE_TEMPLATE='templates/flasher.lua')
+
+#----------------------------------------------------------------------------
+#
 # Build the documentation.
 #
 doc = env_default.Asciidoc('targets/doc/flasher.html', 'doc/flasher.txt')
@@ -232,7 +240,7 @@ tArcList.AddFiles('doc/',
 
 tArcList.AddFiles('lua/',
 	'lua/cli_flash.lua',
-	'lua/flasher.lua',
+	lua_flasher,
 	'lua/demo_getBoardInfo.lua',
 	'lua/erase_complete_flash.lua',
 	'lua/erase_first_flash_sector.lua',
