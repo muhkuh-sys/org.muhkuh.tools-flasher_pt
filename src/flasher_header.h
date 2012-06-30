@@ -73,7 +73,7 @@ typedef struct
 
 	unsigned long ulVersionMaj;
 	unsigned long ulVersionMin;
-	const char    acVersion[64];
+	const char    acVersionVcs[16];
 
 	unsigned long *pulLoadAddress;
 	PFN_START pfnExecutionAddress;

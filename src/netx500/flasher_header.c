@@ -35,7 +35,7 @@ const tFlasherVersion flasher_version =
 
 	.ulVersionMaj = FLASHER_VERSION_MAJ,
 	.ulVersionMin = FLASHER_VERSION_MIN,
-	.acVersion    = FLASHER_VERSION_ALL,
+	.acVersionVcs = FLASHER_VERSION_VCS,
 
 	.pulLoadAddress = __LOAD_ADDRESS__,
 	.pfnExecutionAddress = start,
