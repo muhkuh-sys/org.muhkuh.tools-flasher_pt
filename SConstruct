@@ -231,19 +231,19 @@ tArcList.AddFiles('doc/',
 	doc)
 
 tArcList.AddFiles('lua/',
-	'testbench/cli_flash.lua',
-	'testbench/flasher.lua',
-	'testbench/demo_getBoardInfo.lua',
-	'testbench/erase_complete_flash.lua',
-	'testbench/erase_first_flash_sector.lua',
-	'testbench/flash_parflash.lua',
-	'testbench/flash_serflash.lua',
-	'testbench/flasher_test.lua',
-	'testbench/get_erase_areas_parflash.lua',
-	'testbench/identify_parflash.lua',
-	'testbench/identify_serflash.lua',
-	'testbench/is_erased_parflash.lua',
-	'testbench/read_complete_flash.lua')
+	'lua/cli_flash.lua',
+	'lua/flasher.lua',
+	'lua/demo_getBoardInfo.lua',
+	'lua/erase_complete_flash.lua',
+	'lua/erase_first_flash_sector.lua',
+	'lua/flash_parflash.lua',
+	'lua/flash_serflash.lua',
+	'lua/flasher_test.lua',
+	'lua/get_erase_areas_parflash.lua',
+	'lua/identify_parflash.lua',
+	'lua/identify_serflash.lua',
+	'lua/is_erased_parflash.lua',
+	'lua/read_complete_flash.lua')
 
 tArc = env_default.Archive('targets/flasher.zip', None, ARCHIVE_CONTENTS=tArcList)
 
