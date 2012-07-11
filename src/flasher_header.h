@@ -67,7 +67,7 @@ typedef enum
 
 typedef unsigned long (*PFN_START)(unsigned long ulParameter);
 
-typedef struct
+typedef struct FLASHER_VERSION_STRUCT
 {
 	const char    abMagic[4];
 
@@ -85,7 +85,10 @@ typedef struct
 
 	unsigned long aulChiptyp[2];
 	unsigned long aulIf[4];
-} tFlasherVersion;
+} FLASHER_VERSION_T;
+
+const FLASHER_VERSION_T flasher_version __attribute__ ((section (".version_info")));
+
 
 /*-----------------------------------*/
 

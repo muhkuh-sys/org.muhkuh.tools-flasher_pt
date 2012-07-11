@@ -26,10 +26,7 @@
 #include "netx_consoleapp.h"
 
 
-const tFlasherVersion flasher_version __attribute__ ((section (".version_info")));
-
-
-const tFlasherVersion flasher_version =
+const FLASHER_VERSION_T flasher_version =
 {
 	.abMagic = { FLASHER_MAGIC0, FLASHER_MAGIC1, FLASHER_MAGIC2, FLASHER_MAGIC3 },
 
