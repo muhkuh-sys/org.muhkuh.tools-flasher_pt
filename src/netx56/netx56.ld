@@ -40,7 +40,6 @@ SECTIONS
 	.code :
 	{
 		__LOAD_ADDRESS__ = . ;
-		*(.init_code)
 		KEEP( *(.version_info) )
 		*(.text)
 		*(.glue*)

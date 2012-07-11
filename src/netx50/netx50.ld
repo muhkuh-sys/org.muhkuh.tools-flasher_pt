@@ -40,7 +40,6 @@ SECTIONS
 	.code 0x00008000 :
 	{
 		__LOAD_ADDRESS__ = . ;
-		*(.init_code)
 		KEEP( *(.version_info) )
 		*(.text)
 		*(.glue*)

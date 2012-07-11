@@ -45,7 +45,6 @@ flasher_sources_common = """
 	src/rdyrun.c
 	src/spansion.c
 	src/spi_flash_types.c
-	src/startvector.s
 	src/strata.c
 	src/systime.c
 	src/units.c

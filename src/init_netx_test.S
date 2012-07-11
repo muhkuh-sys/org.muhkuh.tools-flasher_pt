@@ -6,13 +6,13 @@
 
 	.global netx_consoleapp_init
 	.global NetxConsoleParameter_Init
-	.global init
+	.global start
 
 @--------------------------------------
 
-  .func init
+  .func start
 
-init:
+start:
 	stmfd   sp!, {r0, r1, r2, lr}
 
 	@ save pointer to netx parameter block
