@@ -156,7 +156,7 @@ function get_flasher_binary_path(iChiptype, strPathPrefix, fDebug)
 	local strPrefix = strPathPrefix or ""
 	
 	if not strNetxName then
-		error("Unknown chiptyp! " .. tostring(tAsicTyp))
+		error("Unknown chiptyp! " .. tostring(iChiptype))
 	end
 	
 	local strPath = strPrefix .. "flasher_" .. strNetxName .. strDebug .. ".bin"
