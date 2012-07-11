@@ -164,18 +164,23 @@ function get_flasher_binary_path(iChiptype, strPathPrefix, fDebug)
 end
 
 
+local function get_dword(strData, ulOffset)
+	return strData:byte(ulOffset) + strData:byte(ulOffset+1)*0x00000100 + strData:byte(ulOffset+2)*0x00010000 + strData:byte(ulOffset+3)*0x01000000
+end
+
+
 -- Extract header information from the flasher binary
 -- information about code/exec/buffer addresses
 function get_flasher_binary_attributes(strData)
 	local aAttr = {}
 	
 	-- Get the load and exec address from the binary.
-	aAttr.ulLoadAddress = strData:byte(81) + strData:byte(82)*0x00000100 + strData:byte(83)*0x00010000 + strData:byte(84)*0x01000000
-	aAttr.ulExecAddress = strData:byte(85) + strData:byte(86)*0x00000100 + strData:byte(87)*0x00010000 + strData:byte(88)*0x01000000
-	aAttr.ulParameter   = strData:byte(89) + strData:byte(90)*0x00000100 + strData:byte(91)*0x00010000 + strData:byte(92)*0x01000000
-	aAttr.ulDeviceDesc  = strData:byte(93) + strData:byte(94)*0x00000100 + strData:byte(95)*0x00010000 + strData:byte(96)*0x01000000
-	aAttr.ulBufferAdr   = strData:byte(97) + strData:byte(98)*0x00000100 + strData:byte(99)*0x00010000 + strData:byte(100)*0x01000000
-	aAttr.ulBufferEnd   = strData:byte(101) + strData:byte(102)*0x00000100 + strData:byte(103)*0x00010000 + strData:byte(104)*0x01000000
+	aAttr.ulLoadAddress = get_dword(strData, ${OFFSETOF_FLASHER_VERSION_STRUCT_pulLoadAddress})
+	aAttr.ulExecAddress = get_dword(strData, ${OFFSETOF_FLASHER_VERSION_STRUCT_pfnExecutionAddress})
+	aAttr.ulParameter   = get_dword(strData, ${OFFSETOF_FLASHER_VERSION_STRUCT_pucBuffer_Parameter})
+	aAttr.ulDeviceDesc  = get_dword(strData, ${OFFSETOF_FLASHER_VERSION_STRUCT_pucBuffer_DeviceDescription})
+	aAttr.ulBufferAdr   = get_dword(strData, ${OFFSETOF_FLASHER_VERSION_STRUCT_pucBuffer_Data})
+	aAttr.ulBufferEnd   = get_dword(strData, ${OFFSETOF_FLASHER_VERSION_STRUCT_pucBuffer_End})
 	aAttr.ulBufferLen   = aAttr.ulBufferEnd - aAttr.ulBufferAdr
 
 	-- Show the information:
