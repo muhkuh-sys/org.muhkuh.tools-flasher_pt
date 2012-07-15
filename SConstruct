@@ -28,6 +28,10 @@
 SConscript('mbs/SConscript')
 Import('env_default')
 
+import spi_flashes
+spi_flashes.ApplyToEnv(env_default)
+
+
 #----------------------------------------------------------------------------
 # This is the list of sources. The elements must be separated with whitespace
 # (i.e. spaces, tabs, newlines). The amount of whitespace does not matter.
@@ -96,6 +100,13 @@ src_netx10  = flasher_sources_common + flasher_sources_custom_netx10
 # Get the source code version from the VCS.
 #
 env_default.Version('targets/version/flasher_version.h', 'templates/flasher_version.h')
+
+
+#----------------------------------------------------------------------------
+#
+# Create the list of known SPI flashes.
+#
+env_default.SPIFlashes('targets/spi_flash_types.c', 'src/spi_flash_types.xml')
 
 
 #----------------------------------------------------------------------------
