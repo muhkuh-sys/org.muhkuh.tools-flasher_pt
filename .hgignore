@@ -9,3 +9,9 @@ syntax: regexp
 
 # Ignore all files in the targets folder.
 ^targets/
+
+# Switch to glob syntax to get shell style patterns.
+syntax: glob
+
+# Ignore all compiled python modules.
+*.pyc
