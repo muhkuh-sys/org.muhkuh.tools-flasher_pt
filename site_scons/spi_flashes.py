@@ -21,6 +21,7 @@
 
 
 import re
+import string
 import xml.etree.ElementTree
 
 from SCons.Script import *
@@ -58,34 +59,34 @@ const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
 
 
 aTemplateLines = [
-	('                                 .acName = "%s\0",',    '/* name                       */'),
-	('                                 .ulSize = %d,',        '/* size                       */'),
-	('                                .ulClock = %d,',        '/* minClock                   */'),
-	('                             .ulPageSize = %d,',        '/* pageSize                   */'),
-	('                          .ulSectorPages = %d,',        '/* sectorSize                 */'),
-	('                               .tAdrMode = %s,',        '/* address mode               */'),
-	('                           .ucReadOpcode = 0x%02x,',    '/* readOpcode                 */'),
-	('                    .ucReadOpcodeDCBytes = %d,',        '/* readOpcodeDCBytes          */'),
-	('                    .ucWriteEnableOpcode = 0x%02x,',    '/* writeEnableOpcode          */'),
-	('                      .ucErasePageOpcode = 0x%02x,',    '/* erase page                 */'),
-	('                    .ucEraseSectorOpcode = 0x%02x,',    '/* eraseSectorOpcode          */'),
-	('                      .uiEraseChipCmdLen = %d,',        '/* erase chip command length  */'),
-	('                        .aucEraseChipCmd = {0x60},',    '/* erase chip command         */'),
-	('                       .ucPageProgOpcode = 0x%02x,',    '/* pageProgOpcode             */'),
-	('                           .ucBufferFill = 0x%02x,',    '/* buffer fill opcode         */'),
-	('                    .ucBufferWriteOpcode = 0x%02x,',    '/* buffer write opcode        */'),
-	('               .ucEraseAndPageProgOpcode = 0x%02x,',    '/* eraseAndPageProgOpcode     */'),
-	('                     .ucReadStatusOpcode = 0x%02x,',    '/* readStatusOpcode           */'),
-	('                      .ucStatusReadyMask = 0x%02x,',    '/* statusReadyMask            */'),
-	('                     .ucStatusReadyValue = 0x%02x,',    '/* statusReadyValue           */'),
-	('                      .uiInitCmd0_length = %d,',        '/* initCmd0_length            */'),
-	('                            .aucInitCmd0 = {%s},',      '/* initCmd0                   */'),
-	('                      .uiInitCmd1_length = %d,',        '/* initCmd1_length            */'),
-	('                            .aucInitCmd1 = {%s},',      '/* initCmd1                   */'),
-	('                             .uiIdLength = %d,',        '/* id_length                  */'),
-	('                              .aucIdSend = {%s},',      '/* id_send                    */'),
-	('                              .aucIdMask = {%s},',      '/* id_mask                    */'),
-	('                             .aucIdMagic = {%s}',       '/* id_magic                   */')
+	('.@name',                           '                                 .acName = "%s\\0",',    '/* name                       */'),
+	('.@size',                           '                                 .ulSize = %d,',        '/* size                       */'),
+	('.@clock',                          '                                .ulClock = %d,',        '/* minClock                   */'),
+	('Layout@pageSize',                  '                             .ulPageSize = %d,',        '/* pageSize                   */'),
+	('Layout@sectorPages',               '                          .ulSectorPages = %d,',        '/* sectorSize                 */'),
+	('Layout@mode',                      '                               .tAdrMode = %s,',        '/* address mode               */'),
+	('Read@readArrayCommand',            '                           .ucReadOpcode = 0x%02x,',    '/* readOpcode                 */'),
+	('Read@ignoreBytes',                 '                    .ucReadOpcodeDCBytes = %d,',        '/* readOpcodeDCBytes          */'),
+	('Write@writeEnableCommand',         '                    .ucWriteEnableOpcode = 0x%02x,',    '/* writeEnableOpcode          */'),
+	('Erase@erasePageCommand',           '                      .ucErasePageOpcode = 0x%02x,',    '/* erase page                 */'),
+	('Erase@eraseSectorCommand',         '                    .ucEraseSectorOpcode = 0x%02x,',    '/* eraseSectorOpcode          */'),
+	('Erase@eraseChipCommandLen',        '                      .uiEraseChipCmdLen = %d,',        '/* erase chip command length  */'),
+	('Erase@eraseChipCommandHex',        '                        .aucEraseChipCmd = {%s},',      '/* erase chip command         */'),
+	('Write@pageProgramCommand',         '                       .ucPageProgOpcode = 0x%02x,',    '/* pageProgOpcode             */'),
+	('Write@bufferFillCommand',          '                           .ucBufferFill = 0x%02x,',    '/* buffer fill opcode         */'),
+	('Write@bufferWriteCommand',         '                    .ucBufferWriteOpcode = 0x%02x,',    '/* buffer write opcode        */'),
+	('Write@eraseAndPageProgramCommand', '               .ucEraseAndPageProgOpcode = 0x%02x,',    '/* eraseAndPageProgOpcode     */'),
+	('Status@readStatusCommand',         '                     .ucReadStatusOpcode = 0x%02x,',    '/* readStatusOpcode           */'),
+	('Status@statusReadyMask',           '                      .ucStatusReadyMask = 0x%02x,',    '/* statusReadyMask            */'),
+	('Status@statusReadyValue',          '                     .ucStatusReadyValue = 0x%02x,',    '/* statusReadyValue           */'),
+	('Init0@commandLen',                 '                      .uiInitCmd0_length = %d,',        '/* initCmd0_length            */'),
+	('Init0@commandHex',                 '                            .aucInitCmd0 = {%s},',      '/* initCmd0                   */'),
+	('Init1@commandLen',                 '                      .uiInitCmd1_length = %d,',        '/* initCmd1_length            */'),
+	('Init1@commandHex',                 '                            .aucInitCmd1 = {%s},',      '/* initCmd1                   */'),
+	('Id@sendLen',                       '                             .uiIdLength = %d,',        '/* id_length                  */'),
+	('Id@sendHex',                       '                              .aucIdSend = {%s},',      '/* id_send                    */'),
+	('Id@maskHex',                       '                              .aucIdMask = {%s},',      '/* id_mask                    */'),
+	('Id@magicHex',                      '                             .aucIdMagic = {%s}',       '/* id_magic                   */')
 ]
 
 strFooter = """};
@@ -287,8 +288,12 @@ def spiflashes_action(target, source, env):
 			if len(aEntry[strPath])!=1:
 				# No, it has a different size.
 				raise Exception('Device %s: The command %s must be a single-byte command. Change the SPI code to change this.' % (strDeviceName, strPath))
+			else:
+				# Convert the array to a single value.
+				ucByte = aEntry[strPath][0]
+				aEntry[strPath] = ucByte
 		
-
+		
 		# All ID attributes must have the same size.
 		aIdEntries = [
 			'Id@send',
@@ -299,6 +304,22 @@ def spiflashes_action(target, source, env):
 		for strPath in aIdEntries:
 			if len(aEntry[strPath])!=sizId:
 				raise Exception('Device %s: The ID entries must have the same size!' % strDeviceName)
+
+
+		aHexDumpEntries = [
+			'Erase@eraseChipCommand',
+			'Init0@command',
+			'Init1@command',
+			'Id@send',
+			'Id@mask',
+			'Id@magic'
+		]
+		for strPath in aHexDumpEntries:
+			# Set the length of the field.
+			aEntry[strPath+'Len'] = len(aEntry[strPath])
+			# Create the hex dump for this entry.
+			aEntry[strPath+'Hex'] = string.join(['0x%02x'%ucByte for ucByte in aEntry[strPath]], ', ')
+		
 		
 		# Update the maximum size of this entry.
 		for strPath,sizMax in aMaxSize.iteritems():
@@ -310,16 +331,20 @@ def spiflashes_action(target, source, env):
 	
 	# Show the maximum elements:
 	print aMaxSize
-# 		print aEntry
-#		#--------------------------------------------------------------------
-#		# Replace all elements.
-#		#--------------------------------------------------------------------
-#		tGlobalFlashNode = tFlashNode 
-#		strEntry = re.sub('\$\{([^}]+)\}', substitute_entry, strTemplate)
-#		
-#		print strHeader
-#		print strEntry
-		
+	
+	
+	print strHead
+	uiIndent = 89
+	for aEntry in aFlashes.itervalues():
+		for (strPath,strPattern,strComment) in aTemplateLines:
+			strLine = strPattern % aEntry[strPath]
+			sizLine = len(strLine)
+			if sizLine<uiIndent:
+				strLine += ' '*(uiIndent-sizLine)
+			strLine += strComment
+			print strLine
+	print strFooter
+	
 	return None
 
 
