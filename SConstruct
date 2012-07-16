@@ -28,8 +28,17 @@
 SConscript('mbs/SConscript')
 Import('env_default')
 
+import exomizer
 import spi_flashes
+exomizer.ApplyToEnv(env_default)
 spi_flashes.ApplyToEnv(env_default)
+
+
+#----------------------------------------------------------------------------
+#
+# Build exomizer.
+#
+SConscript('exomizer/SConscript')
 
 
 #----------------------------------------------------------------------------

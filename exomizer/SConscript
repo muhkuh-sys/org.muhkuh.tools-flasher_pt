@@ -1,0 +1,37 @@
+# -*- coding: utf-8 -*-
+
+
+sources_shared = """
+	src/getflag.c
+	src/log.c
+	src/membuf.c
+"""
+
+sources_raw = """
+	src/chunkpool.c
+	src/exo_helper.c
+	src/exo_raw.c
+	src/exo_util.c
+	src/exodec.c
+	src/match.c
+	src/membuf_io.c
+	src/optimal.c
+	src/output.c
+	src/progress.c
+	src/radix.c
+	src/search.c
+"""
+
+# Create a default environment with MD5 decider.
+tEnv = Environment()
+tEnv.Decider('MD5')
+
+# Build objects in 'targets'.
+tEnv.VariantDir('targets', 'src', duplicate=0)
+tSrc    = [src.replace('src', 'targets') for src in Split(sources_shared + sources_raw)]
+
+# Compile the executable.
+tExoRaw = tEnv.Program('targets/exoraw', tSrc)
+
+# Export the executable.
+Export('tExoRaw')

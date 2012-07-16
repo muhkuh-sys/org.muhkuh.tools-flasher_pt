@@ -9,6 +9,7 @@ syntax: regexp
 
 # Ignore all files in the targets folder.
 ^targets/
+^exomizer/targets/
 
 # Switch to glob syntax to get shell style patterns.
 syntax: glob
