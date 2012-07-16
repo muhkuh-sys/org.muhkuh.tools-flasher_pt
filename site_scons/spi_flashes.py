@@ -169,6 +169,14 @@ def get_value(tFlashNode, strPath, eType):
 	return tResult
 
 
+aHexDumpEntries = [
+	'Erase@eraseChipCommand',
+	'Init0@command',
+	'Init1@command',
+	'Id@send',
+	'Id@mask',
+	'Id@magic'
+]
 
 def spiflashes_action(target, source, env):
 	global tGlobalFlashNode
@@ -186,7 +194,8 @@ def spiflashes_action(target, source, env):
 	})
 	
 	# Loop over all "SerialFlash" nodes.
-	aFlashes = dict({})
+	aFlashes = []
+	aFlashNames = []
 	for tFlashNode in tXml.findall('SerialFlash'):
 		aEntry = dict({})
 		
@@ -244,8 +253,16 @@ def spiflashes_action(target, source, env):
 		
 		# Is this entry unique?
 		strDeviceName = aEntry['.@name'] 
-		if strDeviceName in aFlashes:
+		if strDeviceName in aFlashNames:
 			raise Exception('Device %s defined multiple times. The device name must be unique!' % strDeviceName)
+		aFlashNames.append(strDeviceName)
+		
+
+		# Set the length for the hexdump entries.
+		# NOTE: this must be done before the assignment of the default values.
+		for strPath in aHexDumpEntries:
+			# Set the length of the field.
+			aEntry[strPath+'Len'] = len(aEntry[strPath])
 		
 		
 		# These commands are optional, replace an empty array with the empty command sequence.
@@ -257,7 +274,9 @@ def spiflashes_action(target, source, env):
 			'Write@eraseAndPageProgramCommand',
 			'Erase@erasePageCommand',
 			'Erase@eraseSectorCommand',
-			'Erase@eraseChipCommand'
+			'Erase@eraseChipCommand',
+			'Init0@command',
+			'Init1@command'
 		]
 		# Loop over all optional commands.
 		for strPath in aOptionalCommands:
@@ -306,19 +325,22 @@ def spiflashes_action(target, source, env):
 				raise Exception('Device %s: The ID entries must have the same size!' % strDeviceName)
 
 
-		aHexDumpEntries = [
-			'Erase@eraseChipCommand',
-			'Init0@command',
-			'Init1@command',
-			'Id@send',
-			'Id@mask',
-			'Id@magic'
-		]
+		# Create a hexdump for the selected commands.
 		for strPath in aHexDumpEntries:
-			# Set the length of the field.
-			aEntry[strPath+'Len'] = len(aEntry[strPath])
 			# Create the hex dump for this entry.
 			aEntry[strPath+'Hex'] = string.join(['0x%02x'%ucByte for ucByte in aEntry[strPath]], ', ')
+		
+		
+		# Convert the layout mode to the enum.
+		aLayoutMode = dict({
+			'linear': 'SPIFLASH_ADR_LINEAR',
+			'pagesize bitshift': 'SPIFLASH_ADR_PAGESIZE_BITSHIFT'
+		})
+		strMode = aEntry['Layout@mode']
+		if not strMode in aLayoutMode:
+			raise Exception('Device %s: Unknown layout mode: %s' % strDeviceName, strMode)
+		# Translate the mode name to the enum element.
+		aEntry['Layout@mode'] = aLayoutMode[strMode]
 		
 		
 		# Update the maximum size of this entry.
@@ -327,23 +349,37 @@ def spiflashes_action(target, source, env):
 			if sizEntry>sizMax:
 				aMaxSize[strPath] = sizEntry
 		
-		aFlashes[strDeviceName] = aEntry
+		aFlashes.append(aEntry)
 	
 	# Show the maximum elements:
 	print aMaxSize
 	
 	
-	print strHead
-	uiIndent = 89
-	for aEntry in aFlashes.itervalues():
+	astrFlashes = []
+	astrFlashes.append(strHead)
+	uiIndent = 88
+	for aEntry in aFlashes:
+		# Append the description.
+		astrFlashes.append('        /* %s */' % aEntry['Description'])
+		# Append all notes.
+		for strNote in aEntry['Note']:
+			astrFlashes.append('        /* %s */' % strNote)
+		astrFlashes.append('        {')
 		for (strPath,strPattern,strComment) in aTemplateLines:
 			strLine = strPattern % aEntry[strPath]
 			sizLine = len(strLine)
 			if sizLine<uiIndent:
 				strLine += ' '*(uiIndent-sizLine)
 			strLine += strComment
-			print strLine
-	print strFooter
+			astrFlashes.append(strLine)
+		astrFlashes.append('        },')
+		astrFlashes.append('        ')
+	astrFlashes.append(strFooter)
+	
+	# Write the result.
+	tFile = open(target[0].get_path(), 'wt')
+	tFile.write(string.join(astrFlashes, '\n'))
+	tFile.close()
 	
 	return None
 
