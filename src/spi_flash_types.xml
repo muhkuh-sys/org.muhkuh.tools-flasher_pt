@@ -116,7 +116,7 @@
 
 	<SerialFlash name="AT45DB321C" size="4325376" clock="33000">
 		<Description>Atmel AT45DB321C</Description>
-		<Note>this must be before the ATDB321B typ, or this will never match</Note>
+		<Note>NOTE: this must be before the ATDB321B typ, or this will never match</Note>
 		<Layout pageSize="528" sectorPages="8" mode="pagesize bitshift" />
 		<Read readArrayCommand="0xe8" ignoreBytes="4" />
 		<Write writeEnableCommand="" pageProgramCommand="" bufferFillCommand="0x84" bufferWriteCommand="0x88" eraseAndPageProgramCommand="0x82" />
@@ -131,7 +131,7 @@
 
 	<SerialFlash name="AT45DB321D" size="4325376" clock="33000">
 		<Description>Atmel AT45DB321D</Description>
-		<Note>this must be before the ATDB321B typ, or this will never match</Note>
+		<Note>NOTE: this must be before the ATDB321B typ, or this will never match</Note>
 		<Layout pageSize="528" sectorPages="8" mode="pagesize bitshift" />
 		<Read readArrayCommand="0xe8" ignoreBytes="4" />
 		<Write writeEnableCommand="" pageProgramCommand="" bufferFillCommand="0x84" bufferWriteCommand="0x88" eraseAndPageProgramCommand="0x82" />
@@ -212,7 +212,7 @@
 		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
 		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
 		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
-		<Init0 command="050" />
+		<Init0 command="0x50" />
 		<Init1 command="0x01, 0x00" />
 		<Id send="0x90, 0x00, 0x00, 0x00, 0x00, 0x00"
 		    mask="0x00, 0x00, 0x00, 0x00, 0xff, 0xff"
@@ -227,7 +227,7 @@
 		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
 		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
 		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
-		<Init0 command="050" />
+		<Init0 command="0x50" />
 		<Init1 command="0x01, 0x00" />
 		<Id send="0x90, 0x00, 0x00, 0x00, 0x00, 0x00"
 		    mask="0x00, 0x00, 0x00, 0x00, 0xff, 0xff"
@@ -242,7 +242,7 @@
 		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
 		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
 		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
-		<Init0 command="050" />
+		<Init0 command="0x50" />
 		<Init1 command="0x01, 0x00" />
 		<Id send="0x90, 0x00, 0x00, 0x00, 0x00, 0x00"
 		    mask="0x00, 0x00, 0x00, 0x00, 0xff, 0xff"
@@ -257,7 +257,7 @@
 		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
 		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
 		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
-		<Init0 command="050" />
+		<Init0 command="0x50" />
 		<Init1 command="0x01, 0x00" />
 		<Id send="0x90, 0x00, 0x00, 0x00, 0x00, 0x00"
 		    mask="0x00, 0x00, 0x00, 0x00, 0xff, 0xff"
@@ -272,7 +272,7 @@
 		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
 		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
 		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
-		<Init0 command="050" />
+		<Init0 command="0x50" />
 		<Init1 command="0x01, 0x00" />
 		<Id send="0x90, 0x00, 0x00, 0x00, 0x00, 0x00"
 		    mask="0x00, 0x00, 0x00, 0x00, 0xff, 0xff"
@@ -326,7 +326,12 @@
 
 	<SerialFlash name="M25P10VP" size="131072" clock="25000">
 		<Description>ST M25P10VP (tested), Numonyx M25P10-A</Description>
-		<Note>This entry must precede the Saifun SA25F010 entry to avoid confusion.</Note>
+		<Note>NOTE: This entry must precede the Saifun SA25F010 entry to avoid confusion.</Note>
+		<Note>alternative id - Saifun SA25F010 and ST M25P10 will also match this one.
+			send = {0xab, 0x00, 0x00, 0x00, 0x00}
+			mask = {0x00, 0x00, 0x00, 0x00, 0xff}
+			magic = {0x00, 0x00, 0x00, 0x00, 0x10}
+		</Note>
 		<Layout pageSize="256" sectorPages="128" mode="linear" />
 		<Read readArrayCommand="0x03" ignoreBytes="0" />
 		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
@@ -339,9 +344,24 @@
 		    magic="0x00, 0x20, 0x20, 0x11" />
 	</SerialFlash>
 
+	<SerialFlash name="SA25F010" size="131072" clock="25000">
+		<Description>Saifun SA25F010</Description>
+		<Note>NOTE: the obsolete ST M25P10 will also match, it is not recommended (has no page erase)</Note>
+		<Layout pageSize="256" sectorPages="128" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="0x81" eraseSectorCommand="0xd8" eraseChipCommand="0xc7" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0xab, 0x00, 0x00, 0x00, 0x00"
+		    mask="0x00, 0x00, 0x00, 0x00, 0xff"
+		    magic="0x00, 0x00, 0x00, 0x00, 0x10" />
+	</SerialFlash>
+
 	<SerialFlash name="SA25F020" size="262144" clock="25000">
 		<Description>Saifun SA25F020</Description>
-		<Note>the obsolete ST M25P20 will also match, it is not recommended (has no page erase)</Note>
+		<Note>NOTE: the obsolete ST M25P20 will also match, it is not recommended (has no page erase)</Note>
 		<Layout pageSize="256" sectorPages="128" mode="linear" />
 		<Read readArrayCommand="0x03" ignoreBytes="0" />
 		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
@@ -356,7 +376,7 @@
 
 	<SerialFlash name="M25P40" size="524288" clock="25000">
 		<Description>M25P40</Description>
-		<Note>this is compatible to the Saifun SA25F040. The only difference is the clock speed.</Note>
+		<Note>NOTE: this is compatible to the Saifun SA25F040. The only difference is the clock speed.</Note>
 		<Note>The SA25F040 supports up to 50MHz, but the M25P40 'only' runs at 25MHz.</Note>
 		<Layout pageSize="256" sectorPages="256" mode="linear" />
 		<Read readArrayCommand="0x03" ignoreBytes="0" />
@@ -435,8 +455,8 @@
 		<Note></Note>
 		<Layout pageSize="256" sectorPages="256" mode="linear" />
 		<Read readArrayCommand="0x03" ignoreBytes="0" />
-		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="0x0a" />
-		<Erase erasePageCommand="0xdb" eraseSectorCommand="0xd8" eraseChipCommand="0xc7" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0xd8" eraseChipCommand="0xc7" />
 		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
 		<Init0 command="" />
 		<Init1 command="" />
@@ -470,7 +490,7 @@
 		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
 		<Init0 command="" />
 		<Init1 command="" />
-		<Id send="0x9e, 0x00, 0x00, 0x00"
+		<Id send="0x9f, 0x00, 0x00, 0x00"
 		    mask="0x00, 0xff, 0xff, 0xff"
 		    magic="0x00, 0x20, 0x20, 0x17" />
 	</SerialFlash>
@@ -485,8 +505,309 @@
 		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
 		<Init0 command="" />
 		<Init1 command="" />
-		<Id send="0x9e, 0x00, 0x00, 0x00"
+		<Id send="0x9f, 0x00, 0x00, 0x00"
 		    mask="0x00, 0xff, 0xff, 0xff"
 		    magic="0x00, 0x20, 0x80, 0x14" />
 	</SerialFlash>
+
+	<SerialFlash name="S25FL016A" size="2097152" clock="33000">
+		<Description>Spansion S25FL016A</Description>
+		<Note></Note>
+		<Layout pageSize="256" sectorPages="256" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0xd8" eraseChipCommand="0xc7" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff"
+		    magic="0x00, 0x01, 0x02, 0x14" />
+	</SerialFlash>
+
+	<SerialFlash name="S25FL032A" size="4194304" clock="33000">
+		<Description>Spansion S25FL032A</Description>
+		<Note></Note>
+		<Layout pageSize="256" sectorPages="256" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0xd8" eraseChipCommand="0xc7" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff"
+		    magic="0x00, 0x01, 0x02, 0x15" />
+	</SerialFlash>
+
+	<SerialFlash name="W25Q80" size="1048576" clock="80000">
+		<Description>Winbond W25Q80</Description>
+		<Note></Note>
+		<Layout pageSize="256" sectorPages="16" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0xc7" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff"
+		    magic="0x00, 0xef, 0x40, 0x14" />
+	</SerialFlash>
+
+	<SerialFlash name="W25Q16" size="2097152" clock="80000">
+		<Description>Winbond W25Q16</Description>
+		<Note></Note>
+		<Layout pageSize="256" sectorPages="16" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0xc7" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff"
+		    magic="0x00, 0xef, 0x40, 0x15" />
+	</SerialFlash>
+
+	<SerialFlash name="W25Q32" size="4194304" clock="80000">
+		<Description>Winbond W25Q32</Description>
+		<Note></Note>
+		<Layout pageSize="256" sectorPages="16" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0xc7" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff"
+		    magic="0x00, 0xef, 0x40, 0x16" />
+	</SerialFlash>
+
+	<SerialFlash name="W25Q128" size="16777216" clock="33000">
+		<Description>Winbond W25Q128</Description>
+		<Note></Note>
+		<Layout pageSize="256" sectorPages="16" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0xc7" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff"
+		    magic="0x00, 0xef, 0x40, 0x18" />
+	</SerialFlash>
+
+	<SerialFlash name="EN25P32" size="4194304" clock="66000">
+		<Description>EON EN25P32</Description>
+		<Note></Note>
+		<Layout pageSize="256" sectorPages="256" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0xd8" eraseChipCommand="0xc7" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff"
+		    magic="0x00, 0x1c, 0x20, 0x16" />
+	</SerialFlash>
+
+	<SerialFlash name="MX25L1605D" size="2097152" clock="66000">
+		<Description>Macronix MX25L1605D</Description>
+		<Note></Note>
+		<Layout pageSize="256" sectorPages="16" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0xc7" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff"
+		    magic="0x00, 0xc2, 0x20, 0x15" />
+	</SerialFlash>
+
+	<SerialFlash name="MX25L3205D" size="4194304" clock="66000">
+		<Description>Macronix MX25L3205D</Description>
+		<Note></Note>
+		<Layout pageSize="256" sectorPages="16" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0xc7" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff"
+		    magic="0x00, 0xc2, 0x20, 0x16" />
+	</SerialFlash>
+
+	<SerialFlash name="MX25L6405D" size="8388608" clock="66000">
+		<Description>Macronix MX25L6405D</Description>
+		<Note></Note>
+		<Layout pageSize="256" sectorPages="16" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0xc7" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff"
+		    magic="0x00, 0xc2, 0x20, 0x17" />
+	</SerialFlash>
+
+	<SerialFlash name="W25X32" size="4194304" clock="75000">
+		<Description>Winbond W25X32</Description>
+		<Note></Note>
+		<Layout pageSize="256" sectorPages="16" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0xc7" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff"
+		    magic="0x00, 0xef, 0x30, 0x16" />
+	</SerialFlash>
+
+	<SerialFlash name="AT25DF321A" size="4194304" clock="20000">
+		<Description>Atmel AT25DF321A</Description>
+		<Note></Note>
+		<Layout pageSize="256" sectorPages="16" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="0x06" />
+		<Init1 command="0x01, 0x02" />
+		<Id send="0x9f, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff"
+		    magic="0x00, 0x1f, 0x47, 0x01" />
+	</SerialFlash>
+
+	<SerialFlash name="AT25F1024A" size="131072" clock="20000">
+		<Description>Atmel AT25F1024A</Description>
+		<Note></Note>
+		<Layout pageSize="256" sectorPages="128" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x52" eraseChipCommand="0x62" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="0x06" />
+		<Init1 command="0x01, 0x02" />
+		<Id send="0x15, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff"
+		    magic="0x00, 0x1f, 0x60" />
+	</SerialFlash>
+
+	<SerialFlash name="AT45DB011B" size="135168" clock="20000">
+		<Description>Atmel AT45DB011B</Description>
+		<Note></Note>
+		<Layout pageSize="264" sectorPages="8" mode="pagesize bitshift" />
+		<Read readArrayCommand="0xe8" ignoreBytes="4" />
+		<Write writeEnableCommand="" pageProgramCommand="" bufferFillCommand="0x84" bufferWriteCommand="0x88" eraseAndPageProgramCommand="0x82" />
+		<Erase erasePageCommand="0x81" eraseSectorCommand="0x50" eraseChipCommand="" />
+		<Status readStatusCommand="0xd7" statusReadyMask="0xbc" statusReadyValue="0x8c" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0xd7, 0x00"
+		    mask="0x00, 0x3c"
+		    magic="0x00, 0x0c" />
+	</SerialFlash>
+
+	<SerialFlash name="AT45DB021B" size="270336" clock="20000">
+		<Description>Atmel AT45DB021B</Description>
+		<Note></Note>
+		<Layout pageSize="264" sectorPages="8" mode="pagesize bitshift" />
+		<Read readArrayCommand="0xe8" ignoreBytes="4" />
+		<Write writeEnableCommand="" pageProgramCommand="" bufferFillCommand="0x84" bufferWriteCommand="0x88" eraseAndPageProgramCommand="0x82" />
+		<Erase erasePageCommand="0x81" eraseSectorCommand="0x50" eraseChipCommand="" />
+		<Status readStatusCommand="0xd7" statusReadyMask="0xbc" statusReadyValue="0x94" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0xd7, 0x00"
+		    mask="0x00, 0x3c"
+		    magic="0x00, 0x14" />
+	</SerialFlash>
+
+	<SerialFlash name="AT45DB041B" size="540672" clock="15000">
+		<Description>Atmel AT45DB041B</Description>
+		<Note></Note>
+		<Layout pageSize="264" sectorPages="8" mode="pagesize bitshift" />
+		<Read readArrayCommand="0xe8" ignoreBytes="4" />
+		<Write writeEnableCommand="" pageProgramCommand="" bufferFillCommand="0x84" bufferWriteCommand="0x88" eraseAndPageProgramCommand="0x82" />
+		<Erase erasePageCommand="0x81" eraseSectorCommand="0x50" eraseChipCommand="" />
+		<Status readStatusCommand="0xd7" statusReadyMask="0xbc" statusReadyValue="0x9c" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0xd7, 0x00"
+		    mask="0x00, 0x3c"
+		    magic="0x00, 0x1c" />
+	</SerialFlash>
+
+	<SerialFlash name="AT45DB081B" size="1081344" clock="15000">
+		<Description>Atmel AT45DB081B</Description>
+		<Note></Note>
+		<Layout pageSize="264" sectorPages="8" mode="pagesize bitshift" />
+		<Read readArrayCommand="0xe8" ignoreBytes="4" />
+		<Write writeEnableCommand="" pageProgramCommand="" bufferFillCommand="0x84" bufferWriteCommand="0x88" eraseAndPageProgramCommand="0x82" />
+		<Erase erasePageCommand="0x81" eraseSectorCommand="0x50" eraseChipCommand="" />
+		<Status readStatusCommand="0xd7" statusReadyMask="0xbc" statusReadyValue="0xa4" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0xd7, 0x00"
+		    mask="0x00, 0x3c"
+		    magic="0x00, 0x24" />
+	</SerialFlash>
+
+	<SerialFlash name="AT45DB161B" size="2162688" clock="15000">
+		<Description>Atmel AT45DB161B</Description>
+		<Note></Note>
+		<Layout pageSize="528" sectorPages="8" mode="pagesize bitshift" />
+		<Read readArrayCommand="0xe8" ignoreBytes="4" />
+		<Write writeEnableCommand="" pageProgramCommand="" bufferFillCommand="0x84" bufferWriteCommand="0x88" eraseAndPageProgramCommand="0x82" />
+		<Erase erasePageCommand="0x81" eraseSectorCommand="0x50" eraseChipCommand="" />
+		<Status readStatusCommand="0xd7" statusReadyMask="0xbc" statusReadyValue="0xac" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0xd7, 0x00"
+		    mask="0x00, 0x3c"
+		    magic="0x00, 0x2c" />
+	</SerialFlash>
+
+	<SerialFlash name="AT45DB321B" size="4325376" clock="20000">
+		<Description>Atmel AT45DB321B</Description>
+		<Note>NOTE: this must be after the AT45DB321C and D typ, or both will match here</Note>
+		<Layout pageSize="528" sectorPages="8" mode="pagesize bitshift" />
+		<Read readArrayCommand="0xe8" ignoreBytes="4" />
+		<Write writeEnableCommand="" pageProgramCommand="" bufferFillCommand="0x84" bufferWriteCommand="0x88" eraseAndPageProgramCommand="0x82" />
+		<Erase erasePageCommand="0x81" eraseSectorCommand="0x50" eraseChipCommand="" />
+		<Status readStatusCommand="0xd7" statusReadyMask="0xbc" statusReadyValue="0xb4" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0xd7, 0x00"
+		    mask="0x00, 0x3c"
+		    magic="0x00, 0x34" />
+	</SerialFlash>
+        
+	<SerialFlash name="EN25Q128" size="16777216" clock="66000">
+		<Description>EON EN25Q128</Description>
+		<Note></Note>
+		<Layout pageSize="256" sectorPages="16" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0xc7" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff"
+		    magic="0x00, 0x1c, 0x30, 0x18" />
+	</SerialFlash>
+
 </KnownSerialFlashes>
