@@ -20,9 +20,12 @@
 #-------------------------------------------------------------------------#
 
 
+import os.path
 import re
 import string
 import xml.etree.ElementTree
+
+from string import Template
 
 from SCons.Script import *
 
@@ -59,7 +62,7 @@ const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[] =
 
 
 aTemplateLines = [
-	('.@name',                           '                                 .acName = "%s\\0",',    '/* name                       */'),
+	('.@name',                           '                                 .acName = "%s\\0",',   '/* name                       */'),
 	('.@size',                           '                                 .ulSize = %d,',        '/* size                       */'),
 	('.@clock',                          '                                .ulClock = %d,',        '/* minClock                   */'),
 	('Layout@pageSize',                  '                             .ulPageSize = %d,',        '/* pageSize                   */'),
@@ -97,34 +100,93 @@ const size_t sizKnownSpiFlashTypes_len = sizeof(atKnownSpiFlashTypes)/sizeof(SPI
 """
 
 
-tGlobalFlashNode = None
+strHeaderTemplate = """
+#ifndef ${DEFINE}
+#define ${DEFINE}
 
-def substitute_entry(tMatchObj):
-	# Get the complete path.
-	strAllPath = tMatchObj.group(1)
-	
-	# Split any attributes from the path.
-	aPath = strAllPath.split("@")
-	if len(aPath)>2:
-		raise Exception("Malformed path: %s" % strAllPath)
-	
-	# Find the node.
-	tNode = tGlobalFlashNode.find(aPath[0])
-	if tNode is None:
-		raise Exception("Could not find node at path: %s" % strAllPath)
-	
-	# Is this a text or attribute request?
-	if len(aPath)==1:
-		# This is a text request.
-		strValue = tNode.text
-	else:
-		# This is an attribute request.
-		if not aPath[1] in tNode.attrib:
-			 raise Exception("Node at path %s has no attribute %s" % (aPath[0], aPath[1]))
-		strValue = tNode.attrib[aPath[1]]
-	
-	return strValue
 
+#include <stddef.h>
+
+
+/*
+   The T_SPIFLASH_ADR enumeration defines the addressing mode for a spi flash.
+
+   * SPIFLASH_ADR_LINEAR is linear addressing, it's like a normal memory. It is
+     used for devices with a power-of-2 pagesize.
+   * SPIFLASH_ADR_PAGESIZE_BITSHIFT is used for devices with other pagesizes
+     than power-of-2. The address is a combination of the page offset and the
+     shifted page number. The page number is shifted by the maximum number of
+     bits the page offset can occupy.
+     This addressing mode is used for Atmel flashes.
+*/
+typedef enum SPIFLASH_ADR_Ttag
+{
+	SPIFLASH_ADR_LINEAR,					    /* linear addressing */
+	SPIFLASH_ADR_PAGESIZE_BITSHIFT		/* bitshift derived from the pagesize */
+} SPIFLASH_ADR_T;
+
+
+/*
+   The structure SPIFLASH_ATTRIBUTES_T defines the attributes and commands for
+   an spi flash. It provides the identify sequence for the device and the
+   commands to erase, read and write data.
+*/
+
+/* size of the spiFlashAttributes name field */
+#define SPIFLASH_NAME_SIZE ${SIZEOF_NAME}
+
+/* size of the erase chip command field */
+#define SPIFLASH_ERASECHIP_SIZE ${SIZEOF_ERASE_CHIP}
+
+/* size of the spiFlashAttributes init fields */
+#define SPIFLASH_INIT0_SIZE ${SIZEOF_INIT0}
+#define SPIFLASH_INIT1_SIZE ${SIZEOF_INIT1}
+
+/* size of the spiFlashAttributes id fields */
+#define SPIFLASH_ID_SIZE ${SIZEOF_ID}
+
+
+typedef struct SPIFLASH_ATTRIBUTES_Ttag
+{
+	char            acName[SPIFLASH_NAME_SIZE+1];                   /* name of the flash, 0 terminated                              */
+	unsigned long   ulSize;                                         /* size of the flash memory in bytes                            */
+	unsigned long   ulClock;                                        /* maximum speed in kHz                                         */
+	unsigned long   ulPageSize;                                     /* size of one page in bytes                                    */
+	unsigned long   ulSectorPages;                                  /* size of one sector in pages                                  */
+	SPIFLASH_ADR_T  tAdrMode;                                       /* addressing mode                                              */
+	unsigned char   ucReadOpcode;                                   /* opcode for 'continuous array read' command                   */
+	unsigned char   ucReadOpcodeDCBytes;                            /* don't care bytes after readOpcode and address                */
+	unsigned char   ucWriteEnableOpcode;                            /* opcode for 'write enable' command, 0x00 means no write protect mechanism */
+	unsigned char   ucErasePageOpcode;                              /* opcode for 'erase page'                                      */
+	unsigned char   ucEraseSectorOpcode;                            /* opcode for 'erase sector'                                    */
+	unsigned char   ucEraseChipCmdLen;                              /* length of the 'erase chip' command, 0 means not available    */
+	unsigned char   aucEraseChipCmd[SPIFLASH_ERASECHIP_SIZE];       /* command to erase the complete chip                           */
+	unsigned char   ucPageProgOpcode;                               /* opcode for 'page program (without buildin erase)'            */
+	unsigned char   ucBufferFill;                                   /* opcode for 'fill buffer with data'                           */
+	unsigned char   ucBufferWriteOpcode;                            /* opcode for 'write buffer to flash'                           */
+	unsigned char   ucEraseAndPageProgOpcode;                       /* opcode for 'page program with buildin erase'                 */
+	unsigned char   ucReadStatusOpcode;                             /* opcode for 'read status register'                            */
+	unsigned char   ucStatusReadyMask;                              /* the bitmask indicating device busy                           */
+	unsigned char   ucStatusReadyValue;                             /* eor bitmask for device busy                                  */
+	unsigned char   ucInitCmd0_length;                              /* length of the first init command in bytes                    */
+	unsigned char   aucInitCmd0[SPIFLASH_INIT0_SIZE];               /* first command string to init the device                      */
+	unsigned char   ucInitCmd1_length;                              /* length of the second init command in bytes                   */
+	unsigned char   aucInitCmd1[SPIFLASH_INIT1_SIZE];               /* second command string to init the device                     */
+	unsigned char   ucIdLength;                                     /* length in bytes of the id_send, id_mask and id_magic fields  */
+	unsigned char   aucIdSend[SPIFLASH_ID_SIZE];                    /* command string to request the id                             */
+	unsigned char   aucIdMask[SPIFLASH_ID_SIZE];                    /* mask for the device id. the data received from the id_send command will be anded with this field */
+	unsigned char   aucIdMagic[SPIFLASH_ID_SIZE];                   /* magic sequence of this device                                */
+} SPIFLASH_ATTRIBUTES_T;
+
+/* array of all known flash types */
+extern const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[];
+
+/* number of elements in the array */
+extern const size_t sizKnownSpiFlashTypes_len;
+
+
+#endif  /* ${DEFINE} */
+"""
 
 
 DATATYPE_STRING = 0
@@ -179,14 +241,13 @@ aHexDumpEntries = [
 ]
 
 def spiflashes_action(target, source, env):
-	global tGlobalFlashNode
-	
 	# Read the XML flash descriptions.
 	tXml = xml.etree.ElementTree.ElementTree()
 	tXml.parse(source[0].get_path())
 
 	# Get the maximum sizes for the following arrays.
 	aMaxSize = dict({
+		'.@name': 0,
 		'Erase@eraseChipCommand': 0,
 		'Init0@command': 0,
 		'Init1@command': 0,
@@ -351,9 +412,6 @@ def spiflashes_action(target, source, env):
 		
 		aFlashes.append(aEntry)
 	
-	# Show the maximum elements:
-	print aMaxSize
-	
 	
 	astrFlashes = []
 	astrFlashes.append(strHead)
@@ -380,13 +438,37 @@ def spiflashes_action(target, source, env):
 	tFile = open(target[0].get_path(), 'wt')
 	tFile.write(string.join(astrFlashes, '\n'))
 	tFile.close()
+
+
+	# Create the header for the array.
+	strDefine = '__' + os.path.basename(target[1].get_path()).upper().replace('.', '_') + '__'
+	aReplaceDict = dict({
+		'DEFINE':             strDefine,
+
+		'SIZEOF_NAME':        aMaxSize['.@name'],
+		'SIZEOF_ERASE_CHIP':  aMaxSize['Erase@eraseChipCommand'],
+		'SIZEOF_INIT0':       aMaxSize['Init0@command'],
+		'SIZEOF_INIT1':       aMaxSize['Init1@command'],
+		'SIZEOF_ID':          aMaxSize['Id@send']
+	})
+	strHeader = string.Template(strHeaderTemplate).safe_substitute(aReplaceDict)
+
+	tFile = open(target[1].get_path(), 'wt')
+	tFile.write(strHeader)
+	tFile.close()
 	
 	return None
 
 
 
 def spiflashes_emitter(target, source, env):
-	# Nothing yet.
+	# This rule also builds a header.
+	strPath = os.path.splitext(target[0].get_path())[0] + '.h'
+	target.append(File(strPath))
+	
+	# Depend on this builder.
+	Depends(target, __file__)
+
 	return target, source
 
 
