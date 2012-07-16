@@ -254,7 +254,7 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 	int           iResult = 1;
 	int           fFoundId;
 	unsigned int  uiCnt;
-	unsigned char aucIdResp[SPIFLASH_IDSIZE];
+	unsigned char aucIdResp[SPIFLASH_ID_SIZE];
 	const SPIFLASH_ATTRIBUTES_T *ptSc, *ptSe, *ptSr;
 	SPI_CFG_T *ptSpiDev;
 
@@ -291,7 +291,7 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 		/* send id magic and receive response */
 		DEBUGMSG(ZONE_VERBOSE, ("detect_flash: probe for %s\n", ptSc->acName));
 
-		iResult = ptSpiDev->pfnExchangeData(ptSpiDev, ptSc->aucIdSend, aucIdResp, ptSc->uiIdLength);
+		iResult = ptSpiDev->pfnExchangeData(ptSpiDev, ptSc->aucIdSend, aucIdResp, ptSc->ucIdLength);
 
 		/* deselect slave */
 		ptSpiDev->pfnSelect(ptSpiDev, 0);
@@ -309,28 +309,28 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 		{
 			uprintf("Send     : ");
 			uiCnt = 0;
-			while( uiCnt<ptSc->uiIdLength )
+			while( uiCnt<ptSc->ucIdLength )
 			{
 				uprintf("%02x ", ptSc->aucIdSend[uiCnt]);
 				++uiCnt;
 			}
 			uprintf("\nReceived : ");
 			uiCnt = 0;
-			while( uiCnt<ptSc->uiIdLength )
+			while( uiCnt<ptSc->ucIdLength )
 			{
 				uprintf("%02x ", aucIdResp[uiCnt]);
 				++uiCnt;
 			}
 			uprintf("\nMasked   : ");
 			uiCnt = 0;
-			while( uiCnt<ptSc->uiIdLength )
+			while( uiCnt<ptSc->ucIdLength )
 			{
 				uprintf("%02x ", aucIdResp[uiCnt]&ptSc->aucIdMask[uiCnt]);
 				++uiCnt;
 			}
 			uprintf("\nMagic    : ");
 			uiCnt = 0;
-			while( uiCnt<ptSc->uiIdLength )
+			while( uiCnt<ptSc->ucIdLength )
 			{
 				uprintf("%02x ", ptSc->aucIdMagic[uiCnt]);
 				++uiCnt;
@@ -344,7 +344,7 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 
 		/* do a bitwise 'and' of the input data and the mask IdMask and compare */
 		/* the result to the magic sequence IdMagic */
-		uiCnt = ptSc->uiIdLength;
+		uiCnt = ptSc->ucIdLength;
 		while(uiCnt > 0)
 		{
 			--uiCnt;
@@ -629,7 +629,7 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 				ptSpiDev->pfnSetNewSpeed(ptSpiDev, ptSpiDev->ulSpeed);
 
 				/* send the init commands */
-				uiCmdLen = ptFlash->tAttributes.uiInitCmd0_length;
+				uiCmdLen = ptFlash->tAttributes.ucInitCmd0_length;
 				if( uiCmdLen!=0 )
 				{
 					iResult = send_simple_cmd(ptFlash, ptFlash->tAttributes.aucInitCmd0, uiCmdLen);
@@ -639,7 +639,7 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 						DBG_CALL_FAILED_VAL("send_simple_cmd", iResult)
 					}
 				}
-				uiCmdLen = ptFlash->tAttributes.uiInitCmd1_length;
+				uiCmdLen = ptFlash->tAttributes.ucInitCmd1_length;
 				if( iResult==0 && uiCmdLen!=0 )
 				{
 					iResult = send_simple_cmd(ptFlash, ptFlash->tAttributes.aucInitCmd1, uiCmdLen);
