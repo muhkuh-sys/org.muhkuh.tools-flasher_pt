@@ -39,6 +39,7 @@ spi_flashes.ApplyToEnv(env_default)
 # Build exomizer.
 #
 SConscript('exomizer/SConscript')
+Import('tExoRaw')
 
 
 #----------------------------------------------------------------------------
@@ -113,13 +114,6 @@ env_default.Version('targets/version/flasher_version.h', 'templates/flasher_vers
 
 #----------------------------------------------------------------------------
 #
-# Create the list of known SPI flashes.
-#
-env_default.SPIFlashes('targets/spi_flash_types.c', 'src/spi_flash_types.xml')
-
-
-#----------------------------------------------------------------------------
-#
 # Create the compiler environments.
 #
 
@@ -140,6 +134,20 @@ env_netx50_default.Append(CPPPATH = ['src', 'src/netx50', 'src/sha1_arm', 'targe
 env_netx10_default  = env_default.CreateCompilerEnv('10',  ['cpu=arm966e-s'])
 env_netx10_default.Replace(LDFILE = File('src/netx10/netx10.ld'))
 env_netx10_default.Append(CPPPATH = ['src', 'src/netx10', 'src/sha1_arm', 'targets/version'])
+
+
+#----------------------------------------------------------------------------
+#
+# Create the list of known SPI flashes.
+#
+srcSpiFlashes = env_netx500_default.SPIFlashes('targets/spi_flash_types.c', 'src/spi_flash_types.xml')
+objSpiFlashes = env_netx500_default.Object('targets/spi_flash_types.o', srcSpiFlashes[0])
+# Extract the binary.
+binSpiFlashes = env_netx500_default.ObjCopy('targets/spi_flash_types.bin', objSpiFlashes)
+# Pack the binary with exomizer.
+exoSpiFlashes = env_netx500_default.Exoraw('targets/spi_flash_types.exo', binSpiFlashes, EXORAW=tExoRaw[0].get_path())
+# Convert the packed binary to an object.
+objExoSpiFlashes = env_netx500_default.ObjImport('targets/spi_flash_types_exo.o', exoSpiFlashes)
 
 
 #----------------------------------------------------------------------------
