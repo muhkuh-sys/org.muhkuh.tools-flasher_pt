@@ -94,9 +94,6 @@ aTemplateLines = [
 
 strFooter = """};
 
-
-const size_t sizKnownSpiFlashTypes_len = sizeof(atKnownSpiFlashTypes)/sizeof(SPIFLASH_ATTRIBUTES_T);
-
 """
 
 
@@ -178,12 +175,7 @@ typedef struct SPIFLASH_ATTRIBUTES_Ttag
 	unsigned char   aucIdMagic[SPIFLASH_ID_SIZE];                   /* magic sequence of this device                                */
 } SPIFLASH_ATTRIBUTES_T;
 
-/* array of all known flash types */
-extern const SPIFLASH_ATTRIBUTES_T atKnownSpiFlashTypes[];
-
-/* number of elements in the array */
-extern const size_t sizKnownSpiFlashTypes_len;
-
+#define NUMBER_OF_SPIFLASH_ATTRIBUTES ${ELEMENTS}
 
 #endif  /* ${DEFINE} */
 """
@@ -444,6 +436,7 @@ def spiflashes_action(target, source, env):
 	strDefine = '__' + os.path.basename(target[1].get_path()).upper().replace('.', '_') + '__'
 	aReplaceDict = dict({
 		'DEFINE':             strDefine,
+		'ELEMENTS':           len(aFlashes),
 
 		'SIZEOF_NAME':        aMaxSize['.@name'],
 		'SIZEOF_ERASE_CHIP':  aMaxSize['Erase@eraseChipCommand'],

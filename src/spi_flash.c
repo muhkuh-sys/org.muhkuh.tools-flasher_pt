@@ -19,6 +19,8 @@
  ***************************************************************************/
 
 #include <string.h>
+
+#include "exodecr.h"
 #include "uprintf.h"
 
 #include "spi_flash.h"
@@ -241,6 +243,10 @@ static int print_status(const SPI_FLASH_T *ptFlash)
 #endif
 
 
+/* NOTE: the external is defined in the imported object. */
+extern const char _binary_spi_flash_types_exo_end[];
+extern char __BUFFER_END__[];
+
 /*! detect_flash
 *   Convert the linear input address to the device's addressing mode
 *
@@ -257,16 +263,24 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 	unsigned char aucIdResp[SPIFLASH_ID_SIZE];
 	const SPIFLASH_ATTRIBUTES_T *ptSc, *ptSe, *ptSr;
 	SPI_CFG_T *ptSpiDev;
+	union
+	{
+		char *pc;
+		const SPIFLASH_ATTRIBUTES_T *pt;
+	} uSpiTypes;
 
 
 	DEBUGMSG(ZONE_FUNCTION, ("+detect_flash(): ptFlash=0x%08x\n", ptFlash));
+
+	/* Depack the list of known flash devices. */
+	uSpiTypes.pc = exo_decrunch(_binary_spi_flash_types_exo_end, __BUFFER_END__);
 
 	/* get spi device */
 	ptSpiDev = &ptFlash->tSpiDev;
 
 	/* loop over all entries in the list of known flash types */
-	ptSc = atKnownSpiFlashTypes;
-	ptSe = ptSc + sizKnownSpiFlashTypes_len;
+	ptSc = uSpiTypes.pt;
+	ptSe = ptSc + NUMBER_OF_SPIFLASH_ATTRIBUTES;
 	ptSr = NULL;
 
 	/* init found flag in case of an empty list */
