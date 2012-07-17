@@ -29,7 +29,7 @@
 		<Layout pageSize="256" sectorPages="16" mode="linear" />
 		<Read readArrayCommand="0x03" ignoreBytes="0" />
 		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
-		<Erase erasePageCommand="0x00" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
 		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
 		<Init0 command="0x06" />
 		<Init1 command="0x01, 0x00" />
@@ -44,7 +44,7 @@
 		<Layout pageSize="256" sectorPages="16" mode="linear" />
 		<Read readArrayCommand="0x03" ignoreBytes="0" />
 		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
-		<Erase erasePageCommand="0x00" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
 		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
 		<Init0 command="0x06" />
 		<Init1 command="0x01, 0x00" />
@@ -59,7 +59,7 @@
 		<Layout pageSize="256" sectorPages="16" mode="linear" />
 		<Read readArrayCommand="0x03" ignoreBytes="0" />
 		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
-		<Erase erasePageCommand="0x00" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
 		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
 		<Init0 command="0x06" />
 		<Init1 command="0x01, 0x00" />
@@ -74,7 +74,7 @@
 		<Layout pageSize="256" sectorPages="16" mode="linear" />
 		<Read readArrayCommand="0x03" ignoreBytes="0" />
 		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
-		<Erase erasePageCommand="0x00" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
 		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
 		<Init0 command="0x06" />
 		<Init1 command="0x01, 0x00" />
