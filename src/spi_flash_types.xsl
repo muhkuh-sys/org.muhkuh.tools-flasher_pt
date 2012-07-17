@@ -9,7 +9,7 @@
 		<xsl:apply-templates select="KnownSerialFlashes"/>
 
 		<style type="text/css">
-.result_ok {
+.result_true {
         display: inline;
         width: 16px;
         height: 16px;
@@ -19,17 +19,7 @@
         padding-left: 20px;
 }
 
-.result_failed {
-        display: inline;
-        width: 16px;
-        height: 16px;
-        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9sMAQwIIUTLrxoAAAKQSURBVDjLfZM9SJtRFIbf77Mx0RqCRqkGEbQWRSsBQTAKBZFCR+0kLSIOCg4dRFvoUBAUUTAiksWxVHAR4uAPOBTbQYtCJ6lY/ENbK2pTTUK+JPeeczoUf2pjH7jD4d73uXDOvRAR3LbOAgH5NT7eICL46fc//TkyYt08Y+Ia4YmJ+9drIYJo3X3c318iWrtZKYUbmDcCW2eBQO9FzUolWOv6ZDTab52ejlMikbXV1TV8u0DrcyEaAICQ33/OWttF65x0p/NZrs/nyGtpMVyFha/WW1tfXmQMEbkUhEZHG8D8XkTOzfR0l7O2FobNBn14iOOlJWRXVMBeXIwfs7NgIggRjNDY2DmYq7O7u7cB4HRoiGEYhsvngzo8BCcSgAiiOzuIh8NwFRdjY3Fxq25u7gEA3BGtM4R563R4+B1EnticTiOzshLJ/X2wZUFFIjBtNrgbG8GRCL4tLMBms61f9iCnpyedlfrESrVSMpmX6fUieXAAisWgwmEYpomMkhJYGxuACIQITrf78UZ7+4u/enDU1xd3uN12u8cDdXICFYnAMAzcLSuDtbcHiseRVV6O3WAQpLUIs0FEV1Ngpci022GkpUFHo4AIHIWFiO3sgOJxOAoKYO3tQSsFrVTuw8lJg5R6czVGkfGzzU2wZYGJkFFUhMTR0Z9wfj6Olpexv7ICUqrDOzUVAoDq6emBS4FncPA1E33cXViAs6oKkkxCiJDh8YAsC9FQ6OL2wFpzc2/KdwAAXzs7Pwjzo3teLwzTxPfVVcRjMUCkg4i2mSjIzC5mLq2fn9/+RwAAX9ra3mqlnpPWacIMIlquCQbrkYKUguusNTWtEFEtM5fWzc1t//czpaJmZsZHWism+pxq/zdPcqJhkKOO1AAAAABJRU5ErkJggg==);
-        background-repeat: no-repeat;
-        background-position: 0px - 16px;
-        padding-left: 20px;
-}
-
-.result_error {
+.result_false {
         display: inline;
         width: 16px;
         height: 16px;
@@ -66,13 +56,54 @@
 			Sector size: <xsl:value-of select="Layout/@pageSize * Layout/@sectorPages"/> bytes<br/>
 			
 			</td><td>
-			<div class="result_ok">
-				Test1
-			</div>
-			</td><td>
-			<div class="result_error">
-				Test2
-			</div>
+				<xsl:variable name="isPageSizeOk" select="(Layout/@pageSize &gt;= 256) and (Layout/@pageSize &lt;= 4096)" />
+				<xsl:variable name="isPageEraseOk" select="(Write/@eraseAndPageProgramCommand != '') or (Erase/@erasePageCommand != '')" />
+				<xsl:variable name="isSectorSizeOk" select="(Layout/@pageSize*Layout/@sectorPages &gt;= 256) and (Layout/@pageSize*Layout/@sectorPages &lt;= 4096)" />
+				<xsl:variable name="isSectorEraseOk" select="Erase/@eraseSectorCommand != ''" />
+				<xsl:variable name="isRcxCompatible" select="($isPageSizeOk and $isPageEraseOk) or ($isSectorSizeOk and $isSectorEraseOk)" />
+				<div class="{concat('result_', string($isRcxCompatible))}">
+					rcX Compatibility:<br/>
+					Page size: <xsl:value-of select="number($isRcxCompatible)" />
+					<xsl:choose>
+						<xsl:when test="$isPageSizeOk">
+							OK
+						</xsl:when>
+						<xsl:otherwise>
+							ERROR
+						</xsl:otherwise>
+					</xsl:choose>
+					<br/>
+					Page Erase:
+					<xsl:choose>
+						<xsl:when test="$isPageEraseOk">
+							OK
+						</xsl:when>
+						<xsl:otherwise>
+							ERROR
+						</xsl:otherwise>
+					</xsl:choose>
+					<br/>
+					<br/>
+					Sector size:
+					<xsl:choose>
+						<xsl:when test="$isSectorSizeOk">
+							OK
+						</xsl:when>
+						<xsl:otherwise>
+							ERROR
+						</xsl:otherwise>
+					</xsl:choose>
+					<br/>
+					Sector Erase:
+					<xsl:choose>
+						<xsl:when test="$isSectorEraseOk">
+							OK
+						</xsl:when>
+						<xsl:otherwise>
+							ERROR
+						</xsl:otherwise>
+					</xsl:choose>
+				</div>
 			</td></tr>
 		</xsl:for-each>
 	</table>
