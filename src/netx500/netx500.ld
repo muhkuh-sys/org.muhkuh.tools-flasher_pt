@@ -22,8 +22,8 @@ ENTRY(start)
 
 MEMORY
 {
-	INTRAM(rwx)		: ORIGIN = 0x00000000, LENGTH = 0x00020000
-	DATATCM(rw)		: ORIGIN = 0x10000000, LENGTH = 0x00002000
+	INTRAM(rwx)     : ORIGIN = 0x00000000, LENGTH = 0x00020000
+	DATATCM(rw)     : ORIGIN = 0x10000000, LENGTH = 0x00002000
 }
 
 
@@ -33,7 +33,7 @@ SECTIONS
 	/* bootloader reserved area */
 	.bootloader 0x00000000 :
 	{
-		. = . + 0x2000;
+		. = . + 0x4000;
 	} >INTRAM
 
 
