@@ -6,6 +6,8 @@
 --
 --  Changes:
 --    Date      Author   Description
+--  14 mar 12   SL       argument handling, usage text
+--                       removed dependency from tester
 --  01 mar 12   SL       adapted to use the extended routines in flasher.lua
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
@@ -15,26 +17,17 @@ SVN_VERSION="$Revision$"
 SVN_AUTHOR ="$Author$"
 -----------------------------------------------------------------------------
 
--- paths
-package.cpath= "muhkuh/lua_plugins/?.dll;"..package.cpath
-
 FLASHER_PATH = "../targets/"
---FLASHER_PATH = "./"
 _G.__MUHKUH_WORKING_FOLDER = ""
 
-
 -- flasher-related
---require("bit")
 require("mhash")
---require("system_cli")
 require("flasher")
 require("flasher_test")
 
-
 -- plugin-related
 require("select_plugin_cli")
-require("tester_cli")   -- kommt man evtl. nur mit select_plugin aus?
---require("romloader_eth")
+require("romloader_eth")
 require("romloader_usb")
 require("romloader_uart")
 
@@ -45,32 +38,47 @@ require("romloader_uart")
 
 strUsage = [==[
 Usage: lua cli_flash.lua mode parameters
-
-                   Mode        Parameters
-flash a file:      flash       [plugin] device [offset] filename
-read flash:        read        [plugin] device [offset] size filename
-erase flash:       erase       [plugin] device [offset] size
-verify flash:      verify      [plugin] device [offset] filename
-verify using hash: verify_hash [plugin] device [offset] filename
-compute SHA1:      hash        [plugin] device [offset] size
-get board info:    info
-detect flash:      detect      [plugin] device
-test flasher:      test        [plugin] device
-test cli flasher:  testcli     [plugin] device
-show this help:    -h
-
-plugin: -p plugin_name
-        example: -p romloader_usb_00_00
         
-device: -b bus -u unit -cs chip_select
-        example: -b 0 -u 0 -cs 0
-        unit and chip select default to 0, 0
+Mode        Parameters                                                  
+flash       [p] dev [offset]      file   Write file to flash    
+read        [p] dev [offset] size file   Read flash and write to file      
+erase       [p] dev [offset] size        Erase area or whole flash       
+verify      [p] dev [offset]      file   Byte-by-byte compare
+verify_hash [p] dev [offset]      file   Quick compare using checksums
+hash        [p] dev [offset] size        Compute SHA1
+info        [p]                          Show busses/units/chip selects
+detect      [p] dev                      Check if flash is recognized
+test        [p] dev                      Test flasher      
+testcli     [p] dev                      Test cli flasher  
+-h                                       Show this help    
+        
+p:    -p plugin_name
+      select plugin
+      example: -p romloader_usb_00_01
+        
+dev:  -b bus [-u unit -cs chip_select]
+      select flash device
+      default: -u 0 -cs 0
        
-offset: -s device_start_offset
-        offset in the flash device, defaults to 0
+off:  -s device_start_offset
+      offset in the flash device, defaults to 0
        
-size:   -l length
-        read/erase: 0xffffffff = read/erase from offset to end of chip
+size: -l length
+      number of bytes to read/erase/hash
+      read/erase: 0xffffffff = from offset to end of chip
+
+                        
+Examples:
+
+Write file to serial flash:
+lua cli_flash.lua flash -b 1 NETX100-BSL.bin
+
+Erase boot cookie from serial flash:
+lua cli_flash.lua erase -b 1 -l 4 
+
+Erase boot cookie from parallel flash:
+lua cli_flash.lua erase -b 0 -l 4
+
 ]==]
 
 --------------------------------------------------------------------------
@@ -127,7 +135,6 @@ function getPluginByName(strName)
 					print("found plugin")
 					local tPlugin = v:Create()
 					if tPlugin then 
-						tPlugin:Connect()
 						return tPlugin
 					else
 						return nil, "Error creating plugin instance"
@@ -146,7 +153,7 @@ function getPlugin(strPluginName)
 		tPlugin, strError = getPluginByName(strPluginName)
 	else
 		-- Ask the user to pick a plugin.
-		tPlugin = tester.getCommonPlugin()
+		tPlugin = select_plugin.SelectPlugin()
 		if tPlugin == nil then
 			strError = "No plugin selected!"
 		end
@@ -154,6 +161,27 @@ function getPlugin(strPluginName)
 	
 	return tPlugin, strError
 end
+
+--[[
+function getPlugin(strPluginName)
+	local tPlugin, strError
+	if strPluginName then
+		-- get the plugin by name
+		tPlugin = select_plugin.GetPluginByName(strPluginName)
+		if tPlugin == nil then
+			strError = "Plugin not found or failed to create instance"
+		end
+	else
+		-- Ask the user to pick a plugin.
+		tPlugin = select_plugin.SelectPlugin()
+		if tPlugin == nil then
+			strError = "No plugin selected"
+		end
+	end
+	
+	return tPlugin, strError
+end
+--]]
 
 --------------------------------------------------------------------------
 -- handle command line arguments
@@ -169,20 +197,38 @@ MODE_VERIFY_HASH = 7
 MODE_INFO = 8
 MODE_HELP = 10
 
-MODE_TEST = 11 -- test
-MODE_TEST_CLI = 12 -- test
-MODE_IS_ERASED = 13 -- test
-MODE_GET_DEVICE_SIZE = 14 -- test
+-- test modes
+MODE_TEST = 11
+MODE_TEST_CLI = 12
+
+-- used by test modes
+MODE_IS_ERASED = 13
+MODE_GET_DEVICE_SIZE = 14
+
+
+arg2Mode = {
+	flash       = MODE_FLASH,
+	read        = MODE_READ,
+	erase       = MODE_ERASE,
+	verify      = MODE_VERIFY,
+	verify_hash = MODE_VERIFY_HASH,
+	hash        = MODE_HASH,
+	detect      = MODE_DETECT,
+	test        = MODE_TEST,
+	testcli     = MODE_TEST_CLI,
+	info        = MODE_INFO,
+	["-h"]      = MODE_HELP
+}
 
 
 argdefs = {
-b  = {argkey = "iBus",              clkey ="-b",  name="bus number"},
-u  = {argkey = "iUnit",             clkey ="-u",  name="unit number"},
-cs = {argkey = "iChipSelect",       clkey ="-cs", name="chip select number"},
-p  = {argkey = "strPluginName",     clkey ="-p",  name="plugin name"},
-s  = {argkey = "ulStartOffset",     clkey ="-s",  name="start offset"},
-l  = {argkey = "ulLen",             clkey ="-l",  name="number of bytes to read"},
-f  = {argkey = "strDataFileName",   clkey = "",   name="file name"}
+b  = {type = "number", clkey ="-b",  argkey = "iBus",              name="bus number"},
+u  = {type = "number", clkey ="-u",  argkey = "iUnit",             name="unit number"},
+cs = {type = "number", clkey ="-cs", argkey = "iChipSelect",       name="chip select number"},
+p  = {type = "string", clkey ="-p",  argkey = "strPluginName",     name="plugin name"},
+s  = {type = "number", clkey ="-s",  argkey = "ulStartOffset",     name="start offset"},
+l  = {type = "number", clkey ="-l",  argkey = "ulLen",             name="number of bytes to read"},
+f  = {type = "string", clkey = "",   argkey = "strDataFileName",   name="file name"}
 }
 
 requiredargs = {
@@ -209,10 +255,8 @@ function checkArgs(aArgs)
 	
 	local fOk = true
 	
-	--show_args(aArgs)
 	for i, strKey in pairs(required) do
 		local argdef = argdefs[strKey]
-		--print(strKey, argdef.argkey)
 		if not aArgs[argdef.argkey] then
 			printf("please specify %s (%s)", argdef.name, argdef.clkey)
 			fOk = false
@@ -222,10 +266,44 @@ function checkArgs(aArgs)
 	return fOk
 end
 
+
+function parseArg(aArgs, strKey, strVal)
+	local iVal
+	local tArgdef
+	
+	for k,argdef in pairs(argdefs) do
+		if strKey == argdef.clkey then
+			tArgdef = argdef
+			break
+		end
+	end
+	
+	if not tArgdef then
+		return false, string.format("Unknown argument: %s", strKey)
+		
+	elseif strVal == nil then
+		return false, string.format("argument to %s is missing", strKey)
+		
+	elseif tArgdef.type == "string" then
+		aArgs[tArgdef.argkey] = strVal
+		return true
+		
+	elseif tArgdef.type == "number" then
+		iVal = tonumber(strVal)
+		if iVal then
+			aArgs[tArgdef.argkey] = iVal
+			return true
+		else
+			return false, string.format("Error parsing %s (%s)", tArgdef.name, tArgdef.clkey)
+		end
+	end
+end
+
+
 -- Evaluate command line arguments.
 -- returns list of arguments or nil and error message.
 -- Entries returned in aArgs:
--- iMode              MODE_FLASH/MODE_READ/MODE_INFO/MODE_HELP
+-- iMode              MODE_FLASH etc.
 -- strPluginName      plugin name
 -- iBus               bus number
 -- iUnit              unit number 
@@ -237,101 +315,50 @@ end
 
 function evalArg()
 	local aArgs = {}
-	local iMode
-	local iArg = 2
 	local nArgs = #arg
+	local iArg = 2
 	
-	if nArgs>=2 and arg[1] == "flash" then
-		aArgs.iMode = MODE_FLASH
-	elseif nArgs>=2 and arg[1] == "read" then
-		aArgs.iMode = MODE_READ
-	elseif nArgs>=2 and arg[1] == "erase" then
-		aArgs.iMode = MODE_ERASE
-	elseif nArgs>=2 and arg[1] == "verify" then
-		aArgs.iMode = MODE_VERIFY
-	elseif nArgs>=2 and arg[1] == "verify_hash" then
-		aArgs.iMode = MODE_VERIFY_HASH
-	elseif nArgs>=2 and arg[1] == "hash" then
-		aArgs.iMode = MODE_HASH
-	elseif nArgs>=2 and arg[1] == "detect" then
-		aArgs.iMode = MODE_DETECT
-	elseif nArgs>=2 and arg[1] == "test" then
-		aArgs.iMode = MODE_TEST
-	elseif nArgs>=2 and arg[1] == "testcli" then
-		aArgs.iMode = MODE_TEST_CLI
-	elseif nArgs>=1 and arg[1] == "info" then
-		aArgs.iMode = MODE_INFO
-	elseif nArgs>=1 and arg[1] == "-h" then
+	-- First arg is the mode.
+	-- If no args are given, set help mode
+	if nArgs == 0 then
 		aArgs.iMode = MODE_HELP
+		return aArgs
+	elseif arg[1] and arg2Mode[arg[1]] then 
+		aArgs.iMode = arg2Mode[arg[1]]
 	else
 		return nil
 	end
-	
-	
-	while (iArg <= nArgs) do
-		local iRemArgs = nArgs - iArg + 1
-		if arg[iArg] == "-p" and iRemArgs >=2 then
-			aArgs.strPluginName = arg[iArg+1]
-			iArg = iArg + 2
-			
-		elseif arg[iArg] == "-b" and iRemArgs >=2 then
-			aArgs.iBus  = tonumber(arg[iArg+1])
-			if not aArgs.iBus then
-				return nil, "Error parsing bus number (-b)"
-			end
-			iArg = iArg + 2
-			
-		elseif arg[iArg] == "-u" and iRemArgs >=2 then
-			aArgs.iUnit  = tonumber(arg[iArg+1])
-			if not aArgs.iUnit then
-				return nil, "Error parsing unit number (-u)"
-			end
-			iArg = iArg + 2
-			
-		elseif arg[iArg] == "-cs" and iRemArgs >=2 then
-			aArgs.iChipSelect  = tonumber(arg[iArg+1])
-			if not aArgs.iChipSelect then
-				return nil, "Error parsing chip select number (-cs)"
-			end
-			iArg = iArg + 2
-			
-		elseif arg[iArg] == "-s" and iRemArgs >=2 then
-			aArgs.ulStartOffset  = tonumber(arg[iArg+1])
-			if not aArgs.ulStartOffset then
-				return nil, "Error parsing start offset (-s)"
-			end
-			iArg = iArg + 2
 
-		elseif arg[iArg] == "-l" and iRemArgs >=2 then
-			aArgs.ulLen  = tonumber(arg[iArg+1])
-			if not aArgs.ulLen then
-				return nil, "Error parsing length (-l)"
-			end
+	-- Parse the arguments.
+	-- The last argument may be the file name and has no key.
+	while (iArg <= nArgs) do
+		local strKey = arg[iArg]
+		local strVal = arg[iArg+1]
+		local fOk, strMsg = parseArg(aArgs, strKey, strVal)
+		
+		if fOk then
 			iArg = iArg + 2
-			
-		elseif iRemArgs == 1 then
+		elseif iArg == nArgs then
 			aArgs.strDataFileName = arg[iArg]
 			iArg = iArg + 1
 		else
-			return nil, string.format("unknown argument: %s", arg[iArg])
+			return nil, strMsg
 		end
 	end
 		
-	-- set defaults
+	-- Add defaults
 	aArgs.iUnit = aArgs.iUnit or 0
 	aArgs.iChipSelect = aArgs.iChipSelect or 0
 	aArgs.ulStartOffset = aArgs.ulStartOffset or 0
 	
-	
-	-- check for missing args
+	-- Check if all necessary args for the mode are present.
 	if checkArgs(aArgs) then
 		return aArgs
 	else
 		return nil
 	end
-	
-	return aArgs
 end
+
 
 function show_args(aArgs)
 	for k,v in pairs(aArgs) do 
@@ -422,6 +449,7 @@ function exec(aArgs)
 	-- open the plugin
 	tPlugin, strMsg = getPlugin(strPluginName)
 	if tPlugin then
+		tPlugin:Connect()
 		fOk = true
 		
 		-- load input file  strDataFileName --> strData
@@ -711,7 +739,6 @@ if aArgs == nil then
 	if strMsg then
 		print(strMsg)
 	end
-	print(strUsage)
 	os.exit(1)
 	
 elseif aArgs.iMode == MODE_HELP then
