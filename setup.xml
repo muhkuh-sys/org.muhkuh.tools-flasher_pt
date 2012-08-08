@@ -11,7 +11,7 @@
 		<group>org.scons</group>
 		<name>scons-local</name>
 		<package>scons-local</package>
-		<version>2.1.0_1</version>
+		<version>2.2.0_1</version>
 		<typ>tar.bz2</typ>
 	</scons>
 
@@ -20,7 +20,7 @@
 			<group>nz.co.methods</group>
 			<name>asciidoc</name>
 			<package>asciidoc</package>
-			<version>8.6.6_1</version>
+			<version>8.6.8_1</version>
 			<typ>tar.bz2</typ>
 		</tool>
 		<tool>
