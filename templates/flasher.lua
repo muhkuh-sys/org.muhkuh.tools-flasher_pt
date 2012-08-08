@@ -496,7 +496,7 @@ end
 
 -- Determines the smallest interval of sectors which has to be
 -- erased in order to erase ulStartAdr to ulEndAdr-1.
-
+-- returns nil if the call fails.
 function getEraseArea(tPlugin, aAttr, ulStartAdr, ulEndAdr, fnCallbackMessage, fnCallbackProgress)
 	local ulValue
 	local aulParameter
@@ -532,6 +532,7 @@ end
 
 
 -- Checks if the area from ulEraseStart to ulEraseEnd is 0xff.
+-- TODO: return nil if the call fails (e.g. because ulEraseEnd is too large)
 function isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
 	local fIsErased = false
 
