@@ -27,7 +27,7 @@
 			<group>org.gnu.gcc</group>
 			<name>gcc-arm-elf</name>
 			<package>gcc-arm-elf_${platform}_${machine}</package>
-			<version>4.3.3_6</version>
+			<version>4.3.3_7</version>
 			<typ>tar.bz2</typ>
 		</tool>
 	</tools>
