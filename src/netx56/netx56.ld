@@ -33,7 +33,7 @@ SECTIONS
 	/* bootloader reserved area */
 	.bootloader 0x08000000 :
 	{
-		. = . + 0x2000;
+		. = . + 0x4000;
 	} >INTRAM
 
 
