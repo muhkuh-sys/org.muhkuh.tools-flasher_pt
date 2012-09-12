@@ -22,7 +22,8 @@
  ***************************************************************************/
 -->
 
-<KnownSerialFlashes>
+<KnownSerialFlashes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:noNamespaceSchemaLocation="spi_flash_types.xsd">
 	<SerialFlash name="AT25DF161" size="2097152" clock="50000">
 		<Description>Atmel AT25DF161</Description>
 		<Note>tested by customer</Note>
