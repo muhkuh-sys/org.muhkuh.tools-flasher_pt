@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://muhkuh.sourceforge.net"
+           xmlns="http://muhkuh.sourceforge.net"
+           elementFormDefault="qualified">
+
+<xs:simpleType name="hexByte">
+	<xs:restriction base="xs:string">
+		<xs:pattern value="0x[a-fA-F0-9]{2}"/>
+	</xs:restriction>
+</xs:simpleType>
+
+
+<xs:simpleType name="optionalHexByte">
+	<xs:restriction base="xs:string">
+		<xs:pattern value="(0x[a-fA-F0-9]{2})?"/>
+	</xs:restriction>
+</xs:simpleType>
+
+
+<xs:simpleType name="hexArray">
+	<xs:restriction base="xs:string">
+		<xs:pattern value="0x[a-fA-F0-9]{2}(, *0x[a-fA-F0-9]{2})*"/>
+	</xs:restriction>
+</xs:simpleType>
+
+
+<xs:simpleType name="optionalHexArray">
+	<xs:restriction base="xs:string">
+		<xs:pattern value="(0x[a-fA-F0-9]{2}(, *0x[a-fA-F0-9]{2})*)?"/>
+	</xs:restriction>
+</xs:simpleType>
+
+
+<xs:element name="KnownSerialFlashes">
+	<xs:complexType>
+		<xs:sequence>
+			<xs:element name="SerialFlash" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+
+						<xs:element name="Description" type="xs:string"/>
+
+						<xs:element name="Note" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+
+						<xs:element name="Layout">
+							<xs:complexType>
+								<xs:attribute name="pageSize" type="xs:nonNegativeInteger" use="required"/>
+								<xs:attribute name="sectorPages" type="xs:nonNegativeInteger" use="required"/>
+								<xs:attribute name="mode" use="required">
+									<xs:simpleType>
+										<xs:restriction base="xs:string">
+											<xs:enumeration value="linear"/>
+											<xs:enumeration value="pagesize bitshift"/>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:attribute>
+							</xs:complexType>
+						</xs:element>
+
+						<xs:element name="Read">
+							<xs:complexType>
+								<xs:attribute name="readArrayCommand" type="hexByte" use="required"/>
+								<xs:attribute name="ignoreBytes" type="xs:nonNegativeInteger" use="required"/>
+							</xs:complexType>
+						</xs:element>
+	
+						<xs:element name="Write">
+							<xs:complexType>
+								<xs:attribute name="writeEnableCommand" type="optionalHexByte" use="required"/>
+								<xs:attribute name="pageProgramCommand" type="optionalHexByte" use="required"/>
+								<xs:attribute name="bufferFillCommand" type="optionalHexByte" use="required"/>
+								<xs:attribute name="bufferWriteCommand" type="optionalHexByte" use="required"/>
+								<xs:attribute name="eraseAndPageProgramCommand" type="optionalHexByte" use="required"/>
+							</xs:complexType>
+						</xs:element>
+	
+						<xs:element name="Erase">
+							<xs:complexType>
+								<xs:attribute name="erasePageCommand" type="optionalHexByte" use="required"/>
+								<xs:attribute name="eraseSectorCommand" type="hexByte" use="required"/>
+								<xs:attribute name="eraseChipCommand" type="optionalHexArray" use="required"/>
+							</xs:complexType>
+						</xs:element>
+	
+						<xs:element name="Status">
+							<xs:complexType>
+								<xs:attribute name="readStatusCommand" type="hexByte" use="required"/>
+								<xs:attribute name="statusReadyMask" type="hexByte" use="required"/>
+								<xs:attribute name="statusReadyValue" type="hexByte" use="required"/>
+							</xs:complexType>
+						</xs:element>
+	
+						<xs:element name="Init0">
+							<xs:complexType>
+								<xs:attribute name="command" type="optionalHexArray" use="required"/>
+							</xs:complexType>
+						</xs:element>
+	
+						<xs:element name="Init1">
+							<xs:complexType>
+								<xs:attribute name="command" type="optionalHexArray" use="required"/>
+							</xs:complexType>
+						</xs:element>
+	
+						<xs:element name="Id">
+							<xs:complexType>
+								<xs:attribute name="send" type="hexArray" use="required"/>
+								<xs:attribute name="mask" type="hexArray" use="required"/>
+								<xs:attribute name="magic" type="hexArray" use="required"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="name" type="xs:string" use="required"/>
+					<xs:attribute name="size" type="xs:nonNegativeInteger" use="required"/>
+					<xs:attribute name="clock" type="xs:nonNegativeInteger" use="required"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+</xs:element>
+</xs:schema>
