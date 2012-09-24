@@ -748,6 +748,8 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 	tFlasherInputParameter *ptAppParams;
 	OPERATION_MODE_T tOpMode;
 	
+	ptAppParams = (tFlasherInputParameter*)ptTestParam->pvInitParams;
+	tOpMode = ptAppParams->tOperationMode;
 	
 	/* init the board */
 	tResult = board_init();
@@ -764,27 +766,26 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 		/* configure systime, used by progress functions */
 		systime_init();  
 
-		/* say hi */
-		uprintf(
-		"\f\n\n\n\nFlasher v" FLASHER_VERSION_ALL "\n\n"
-		"Copyright (C) 2005-2011 C.Thelen (cthelen@hilscher.com)\n"
-		"and M.Trensch.\n"
-		"There is NO warranty.  You may redistribute this software\n"
-		"under the terms of the GNU Library General Public License.\n"
-		"For more information about these matters, see the files\n"
-		"named COPYING.\n");
-		
-		uprintf("\n");
-		uprintf(". Data pointer:    0x%08x\n", (unsigned long)ptTestParam);
-		uprintf(". Init parameter:  0x%08x\n", (unsigned long)ptTestParam->pvInitParams);
-		uprintf("\n");
-
+		if (tOpMode == OPERATION_MODE_Detect || tOpMode == OPERATION_MODE_GetBoardInfo) {
+		/* say hi if mode is Detect or GetBoardInfo*/
+			uprintf(
+			"\f\n\n\n\nFlasher v" FLASHER_VERSION_ALL "\n\n"
+			"Copyright (C) 2005-2011 C.Thelen (cthelen@hilscher.com)\n"
+			"and M.Trensch.\n"
+			"There is NO warranty.  You may redistribute this software\n"
+			"under the terms of the GNU Library General Public License.\n"
+			"For more information about these matters, see the files\n"
+			"named COPYING.\n");
+			
+			uprintf("\n");
+			uprintf(". Data pointer:    0x%08x\n", (unsigned long)ptTestParam);
+			uprintf(". Init parameter:  0x%08x\n", (unsigned long)ptTestParam->pvInitParams);
+			uprintf("\n");
+		}
 		tResult = check_params(ptTestParam);
 		if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 		{
 			/*  run operation */
-			ptAppParams = (tFlasherInputParameter*)ptTestParam->pvInitParams;
-			tOpMode = ptAppParams->tOperationMode;
 			switch( tOpMode )
 			{
 			case OPERATION_MODE_Detect:
