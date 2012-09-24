@@ -22,7 +22,8 @@
  ***************************************************************************/
 -->
 
-<KnownSerialFlashes>
+<KnownSerialFlashes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:noNamespaceSchemaLocation="spi_flash_types.xsd">
 	<SerialFlash name="AT25DF161" size="2097152" clock="50000">
 		<Description>Atmel AT25DF161</Description>
 		<Note>tested by customer</Note>
@@ -36,6 +37,22 @@
 		<Id send="0x9f, 0x00, 0x00, 0x00, 0x00"
 		    mask="0x00, 0xff, 0xff, 0xff, 0xff"
 		    magic="0x00, 0x1f, 0x46, 0x02, 0x00" />
+	</SerialFlash>
+
+	<SerialFlash name="AT25DF321A" size="4194304" clock="50000">
+		<Description>Atmel AT25DF321A</Description>
+		<Note>No production device yet, only samples available.</Note>
+		<Note>To be tested by customer.</Note>
+		<Layout pageSize="256" sectorPages="16" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff, 0xff"
+		    magic="0x00, 0x1f, 0x47, 0x01, 0x00" />
 	</SerialFlash>
 
 	<SerialFlash name="AT26DF161A" size="2097152" clock="33000">
@@ -673,21 +690,6 @@
 		<Id send="0x9f, 0x00, 0x00, 0x00"
 		    mask="0x00, 0xff, 0xff, 0xff"
 		    magic="0x00, 0xef, 0x30, 0x16" />
-	</SerialFlash>
-
-	<SerialFlash name="AT25DF321A" size="4194304" clock="20000">
-		<Description>Atmel AT25DF321A</Description>
-		<Note></Note>
-		<Layout pageSize="256" sectorPages="16" mode="linear" />
-		<Read readArrayCommand="0x03" ignoreBytes="0" />
-		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
-		<Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0x60" />
-		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
-		<Init0 command="0x06" />
-		<Init1 command="0x01, 0x02" />
-		<Id send="0x9f, 0x00, 0x00, 0x00"
-		    mask="0x00, 0xff, 0xff, 0xff"
-		    magic="0x00, 0x1f, 0x47, 0x01" />
 	</SerialFlash>
 
 	<SerialFlash name="AT25F1024A" size="131072" clock="20000">
