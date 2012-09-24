@@ -23,7 +23,7 @@ ENTRY(start)
 MEMORY
 {
 	INTRAM(rwx)    : ORIGIN = 0x08000000, LENGTH = 0x00080000
-	IOVECTORS(rw)  : ORIGIN = 0x0809fff0, LENGTH = 0x00000010
+	IOVECTORS(rw)  : ORIGIN = 0x08000100, LENGTH = 0x00000010
 }
 
 
@@ -80,7 +80,8 @@ SECTIONS
 	} >INTRAM
 
 
-	.serialvectors 0x0809fff0 (NOLOAD) :
+	/*.serialvectors 0x0809fff0 (NOLOAD) :*/
+	.serialvectors ORIGIN(IOVECTORS) (NOLOAD) :
 	{
 		PROVIDE ( tSerialVectors = . );
 		. = . + 0x10;
