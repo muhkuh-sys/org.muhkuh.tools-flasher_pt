@@ -22,7 +22,7 @@ ENTRY(start)
 
 MEMORY
 {
-	INTRAM(rwx)    : ORIGIN = 0x08000000, LENGTH = 0x00080000
+	INTRAM(rwx)    : ORIGIN = 0x08004000, LENGTH = 0x0007c000
 	IOVECTORS(rw)  : ORIGIN = 0x08000100, LENGTH = 0x00000010
 }
 
@@ -30,13 +30,6 @@ MEMORY
 /* Section Definitions */
 SECTIONS
 {
-	/* bootloader reserved area */
-	.bootloader 0x08000000 :
-	{
-		. = . + 0x4000;
-	} >INTRAM
-
-
 	.code :
 	{
 		__LOAD_ADDRESS__ = . ;
