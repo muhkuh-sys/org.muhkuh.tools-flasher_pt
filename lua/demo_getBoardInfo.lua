@@ -18,19 +18,7 @@
 --   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             --
 -----------------------------------------------------------------------------
 
-require("romloader_eth")
-require("romloader_usb")
-require("romloader_uart")
-
-require("muhkuh")
-require("select_plugin_cli")
-require("tester_cli")
-
 require("flasher")
-
-
-__MUHKUH_WORKING_FOLDER = "./"
-
 
 tPlugin = tester.getCommonPlugin()
 if not tPlugin then
@@ -38,7 +26,7 @@ if not tPlugin then
 end
 
 -- Download the flasher binary.
-aAttr = flasher.download(tPlugin, "../targets/", tester.callback_progress)
+aAttr = flasher.download(tPlugin, "netx/", tester.callback_progress)
 
 -- Get the board info table.
 aBoardInfo = flasher.getBoardInfo(tPlugin, aAttr)

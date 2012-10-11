@@ -1,15 +1,4 @@
-require("romloader_eth")
-require("romloader_usb")
-require("romloader_uart")
-
-require("muhkuh")
-require("select_plugin_cli")
-require("tester_cli")
-
 require("flasher")
-
-
-__MUHKUH_WORKING_FOLDER = "./"
 
 
 if #arg~=1 then
@@ -25,10 +14,10 @@ end
 
 
 -- Flash the file.
-tBus = flasher.BUS_Spi
-ulUnit = 0
-ulChipSelect = 0
-flasher.simple_flasher(tPlugin, strFileName, tBus, ulUnit, ulChipSelect, "../targets/")
+local tBus = flasher.BUS_Spi
+local ulUnit = 0
+local ulChipSelect = 0
+flasher.simple_flasher(tPlugin, strFileName, tBus, ulUnit, ulChipSelect, "netx/")
 
 print("")
 print(" #######  ##    ## ")
