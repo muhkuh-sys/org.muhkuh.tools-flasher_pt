@@ -58,6 +58,7 @@ flasher_sources_common = """
 	src/netx_consoleapp.c
 	src/progress_bar.c
 	src/rdyrun.c
+	src/sfdp.c
 	src/spansion.c
 	src/strata.c
 	src/systime.c
@@ -298,3 +299,35 @@ env_default.AddArtifact(tArc, aServer, strGroupID, 'flasher', 'zip', GOOD=bCanRe
 tArtifacts = env_default.Artifact('targets/artifacts.xml', None)
 
 
+#----------------------------------------------------------------------------
+#
+# Make a local demo installation.
+#
+# Copy all binaries.
+Command('targets/testbench/netx/flasher_netx500.bin', bin_netx500_nodbg, Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/flasher_netx56.bin',  bin_netx56_nodbg,  Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/flasher_netx50.bin',  bin_netx50_nodbg,  Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/flasher_netx10.bin',  bin_netx10_nodbg,  Copy("$TARGET", "$SOURCE"))
+
+# Copy all debug binaries.
+Command('targets/testbench/netx/debug/flasher_netx500_debug.bin', bin_netx500_dbg, Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/debug/flasher_netx56_debug.bin',  bin_netx56_dbg,  Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/debug/flasher_netx50_debug.bin',  bin_netx50_dbg,  Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/debug/flasher_netx10_debug.bin',  bin_netx10_dbg,  Copy("$TARGET", "$SOURCE"))
+
+# Copy all LUA modules.
+Command('targets/testbench/lua/flasher.lua', lua_flasher, Copy("$TARGET", "$SOURCE"))
+
+# Copy all LUA scripts.
+Command('targets/testbench/cli_flash.lua',                'lua/cli_flash.lua', Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/demo_getBoardInfo.lua',        'lua/demo_getBoardInfo.lua', Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/erase_complete_flash.lua',     'lua/erase_complete_flash.lua', Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/erase_first_flash_sector.lua', 'lua/erase_first_flash_sector.lua', Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/flash_parflash.lua',           'lua/flash_parflash.lua', Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/flash_serflash.lua',           'lua/flash_serflash.lua', Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/flasher_test.lua',             'lua/flasher_test.lua', Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/get_erase_areas_parflash.lua', 'lua/get_erase_areas_parflash.lua', Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/identify_parflash.lua',        'lua/identify_parflash.lua', Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/identify_serflash.lua',        'lua/identify_serflash.lua', Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/is_erased_parflash.lua',       'lua/is_erased_parflash.lua', Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/read_complete_flash.lua',      'lua/read_complete_flash.lua', Copy("$TARGET", "$SOURCE"))

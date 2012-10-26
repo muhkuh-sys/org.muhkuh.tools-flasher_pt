@@ -24,6 +24,8 @@
 #include "uprintf.h"
 
 #include "spi_flash.h"
+#include "sfdp.h"
+
 
 #if ASIC_TYP==10 || ASIC_TYP==56
 /* netX10 and netX56 have a SQI and a SPI unit. */
@@ -261,129 +263,150 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 	int           fFoundId;
 	unsigned int  uiCnt;
 	unsigned char aucIdResp[SPIFLASH_ID_SIZE];
-	const SPIFLASH_ATTRIBUTES_T *ptSc, *ptSe, *ptSr;
+	const SPIFLASH_ATTRIBUTES_T *ptSc;
+	const SPIFLASH_ATTRIBUTES_T *ptSe;
+	const SPIFLASH_ATTRIBUTES_T *ptSr;
 	SPI_CFG_T *ptSpiDev;
 	union
 	{
 		char *pc;
 		const SPIFLASH_ATTRIBUTES_T *pt;
 	} uSpiTypes;
+	const unsigned int uiUseDetectList = 1;
+	const unsigned int uiUseSfdp = 1;
 
 
 	DEBUGMSG(ZONE_FUNCTION, ("+detect_flash(): ptFlash=0x%08x\n", ptFlash));
 
-	/* Depack the list of known flash devices. */
-	uSpiTypes.pc = exo_decrunch(_binary_spi_flash_types_exo_end, __BUFFER_END__);
-
-	/* get spi device */
-	ptSpiDev = &ptFlash->tSpiDev;
-
-	/* loop over all entries in the list of known flash types */
-	ptSc = uSpiTypes.pt;
-	ptSe = ptSc + NUMBER_OF_SPIFLASH_ATTRIBUTES;
+	/* No parameters yet. */
 	ptSr = NULL;
 
-	/* init found flag in case of an empty list */
-	fFoundId = (1==0);
-	while(ptSc < ptSe)
+	iResult = 0;
+
+	if( uiUseDetectList!=0 )
 	{
-		/* deselect all chips */
-		ptSpiDev->pfnSelect(ptSpiDev, 0);
+		/* Depack the list of known flash devices. */
+		uSpiTypes.pc = exo_decrunch(_binary_spi_flash_types_exo_end, __BUFFER_END__);
 
-		/* send 8 idle bytes to clear the bus */
-		iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 8);
-		if( iResult!=0 )
+		/* get spi device */
+		ptSpiDev = &ptFlash->tSpiDev;
+
+		/* loop over all entries in the list of known flash types */
+		ptSc = uSpiTypes.pt;
+		ptSe = ptSc + NUMBER_OF_SPIFLASH_ATTRIBUTES;
+
+		/* init found flag in case of an empty list */
+		fFoundId = (1==0);
+		while(ptSc < ptSe)
 		{
-			//uprintf("ERROR: detect_flash: HalSPI_SendIdles failed with %d.\n", iResult);
-			DBG_CALL_FAILED_VAL("pfnSendIdle", iResult)
-			break;
-		}
+			/* deselect all chips */
+			ptSpiDev->pfnSelect(ptSpiDev, 0);
 
-		/* select the slave */
-		ptSpiDev->pfnSelect(ptSpiDev, 1);
+			/* send 8 idle bytes to clear the bus */
+			iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 8);
+			if( iResult!=0 )
+			{
+				//uprintf("ERROR: detect_flash: HalSPI_SendIdles failed with %d.\n", iResult);
+				DBG_CALL_FAILED_VAL("pfnSendIdle", iResult)
+					break;
+			}
 
-		/* send id magic and receive response */
-		DEBUGMSG(ZONE_VERBOSE, ("detect_flash: probe for %s\n", ptSc->acName));
+			/* select the slave */
+			ptSpiDev->pfnSelect(ptSpiDev, 1);
 
-		iResult = ptSpiDev->pfnExchangeData(ptSpiDev, ptSc->aucIdSend, aucIdResp, ptSc->ucIdLength);
+			/* send id magic and receive response */
+			DEBUGMSG(ZONE_VERBOSE, ("detect_flash: probe for %s\n", ptSc->acName));
 
-		/* deselect slave */
-		ptSpiDev->pfnSelect(ptSpiDev, 0);
+			iResult = ptSpiDev->pfnExchangeData(ptSpiDev, ptSc->aucIdSend, aucIdResp, ptSc->ucIdLength);
 
-		/* did the send and receive operation fail? */
-		if( iResult!=0 )
-		{
-			//uprintf("ERROR: detect_flash: HalSPI_BlockIo failed with %d.\n", iResult);
-			DBG_CALL_FAILED_VAL("pfnExchangeData", iResult)
-			break;
-		}
+			/* deselect slave */
+			ptSpiDev->pfnSelect(ptSpiDev, 0);
+
+			/* did the send and receive operation fail? */
+			if( iResult!=0 )
+			{
+				//uprintf("ERROR: detect_flash: HalSPI_BlockIo failed with %d.\n", iResult);
+				DBG_CALL_FAILED_VAL("pfnExchangeData", iResult)
+					break;
+			}
 
 #if CFG_DEBUGMSG!=0
-		if( ZONE_VERBOSE )
-		{
-			uprintf("Send     : ");
-			uiCnt = 0;
-			while( uiCnt<ptSc->ucIdLength )
+			if( ZONE_VERBOSE )
 			{
-				uprintf("%02x ", ptSc->aucIdSend[uiCnt]);
-				++uiCnt;
+				uprintf("Send     : ");
+				uiCnt = 0;
+				while( uiCnt<ptSc->ucIdLength )
+				{
+					uprintf("%02x ", ptSc->aucIdSend[uiCnt]);
+					++uiCnt;
+				}
+				uprintf("\nReceived : ");
+				uiCnt = 0;
+				while( uiCnt<ptSc->ucIdLength )
+				{
+					uprintf("%02x ", aucIdResp[uiCnt]);
+					++uiCnt;
+				}
+				uprintf("\nMasked   : ");
+				uiCnt = 0;
+				while( uiCnt<ptSc->ucIdLength )
+				{
+					uprintf("%02x ", aucIdResp[uiCnt]&ptSc->aucIdMask[uiCnt]);
+					++uiCnt;
+				}
+				uprintf("\nMagic    : ");
+				uiCnt = 0;
+				while( uiCnt<ptSc->ucIdLength )
+				{
+					uprintf("%02x ", ptSc->aucIdMagic[uiCnt]);
+					++uiCnt;
+				}
+				uprintf("\n");
 			}
-			uprintf("\nReceived : ");
-			uiCnt = 0;
-			while( uiCnt<ptSc->ucIdLength )
-			{
-				uprintf("%02x ", aucIdResp[uiCnt]);
-				++uiCnt;
-			}
-			uprintf("\nMasked   : ");
-			uiCnt = 0;
-			while( uiCnt<ptSc->ucIdLength )
-			{
-				uprintf("%02x ", aucIdResp[uiCnt]&ptSc->aucIdMask[uiCnt]);
-				++uiCnt;
-			}
-			uprintf("\nMagic    : ");
-			uiCnt = 0;
-			while( uiCnt<ptSc->ucIdLength )
-			{
-				uprintf("%02x ", ptSc->aucIdMagic[uiCnt]);
-				++uiCnt;
-			}
-			uprintf("\n");
-		}
 #endif
 
-		/* assume success */
-		fFoundId = (1==1);
+			/* assume success */
+			fFoundId = (1==1);
 
-		/* do a bitwise 'and' of the input data and the mask IdMask and compare */
-		/* the result to the magic sequence IdMagic */
-		uiCnt = ptSc->ucIdLength;
-		while(uiCnt > 0)
-		{
-			--uiCnt;
-			fFoundId &= ((aucIdResp[uiCnt]&ptSc->aucIdMask[uiCnt]) == ptSc->aucIdMagic[uiCnt]);
-			if(!fFoundId )
+			/* do a bitwise 'and' of the input data and the mask IdMask and compare */
+			/* the result to the magic sequence IdMagic */
+			uiCnt = ptSc->ucIdLength;
+			while(uiCnt > 0)
 			{
-				/* magic does not match */
+				--uiCnt;
+				fFoundId &= ((aucIdResp[uiCnt]&ptSc->aucIdMask[uiCnt]) == ptSc->aucIdMagic[uiCnt]);
+				if(!fFoundId )
+				{
+					/* magic does not match */
+					break;
+				}
+			}
+
+			/* did the complete magic match? */
+			if(fFoundId)
+			{
+				/* yes */
+				ptSr = ptSc;
 				break;
 			}
-		}
 
-		/* did the complete magic match? */
-		if(fFoundId)
+			/* no, magic did not match. try next type */
+			++ptSc;
+		}
+	}
+
+	/* Do not override optimized settings from the detect list. */
+	if( ptSr==NULL )
+	{
+		if( uiUseSfdp!=0 )
 		{
-			/* yes */
-			ptSr = ptSc;
-			break;
+			/* Try to detect the device parameters with SFDP. */
+			ptSr = sfdp_detect(ptFlash);
 		}
-
-		/* no, magic did not match. try next type */
-		++ptSc;
 	}
 
 	/* return result only if the pointer is not NULL */
-	if(NULL != pptFlashAttr)
+	if( pptFlashAttr!=NULL )
 	{
 		/* return detected flash */
 		*pptFlashAttr = ptSr;

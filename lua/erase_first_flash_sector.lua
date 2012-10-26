@@ -1,37 +1,18 @@
-require("romloader_eth")
-require("romloader_usb")
-require("romloader_uart")
-
-require("muhkuh")
-require("select_plugin_cli")
-require("tester_cli")
-
 require("flasher")
-
-
-__MUHKUH_WORKING_FOLDER = "./"
 
 tPlugin = tester.getCommonPlugin()
 if not tPlugin then
 	error("No plugin selected, nothing to do!")
 end
 
-local strDevDesc
-local ulEraseStart
-local ulEraseEnd
-
-
 -- Download the binary.
-aAttr = flasher.download(tPlugin, "../targets/", tester.progress)
+local aAttr = flasher.download(tPlugin, "netx/", tester.progress)
 
 -- Use SPI Flash CS0.
-strDevDesc = flasher.detect(tPlugin, aAttr, flasher.BUS_Spi, 0, 0, ulDevDescAdr)
-if not strDevDesc then
+local fOk = flasher.detect(tPlugin, aAttr, flasher.BUS_Spi, 0, 0, ulDevDescAdr)
+if not fOk then
 	error("Failed to get a device description!")
 end
-
--- show the device description
---hexdump(strDevDesc)
 
 -- Get the erase area for the range 0 .. 1.
 ulEraseStart, ulEraseEnd = flasher.getEraseArea(tPlugin, aAttr, 0, 1)

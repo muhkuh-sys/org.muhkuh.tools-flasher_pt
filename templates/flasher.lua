@@ -134,7 +134,7 @@ function call(tPlugin, ulExecAddress, ulParameterAddress, fnCallbackMessage)
 	return tPlugin:call(ulExecAddress, ulParameterAddress, fnCallbackMessage or default_callback_message, 2)
 end
 
---------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 --                    Downloading the flasher
 -----------------------------------------------------------------------------
 
@@ -142,11 +142,10 @@ end
 local chiptyp2name = {
 	[romloader.ROMLOADER_CHIPTYP_NETX500] = "netx500",
 	[romloader.ROMLOADER_CHIPTYP_NETX100] = "netx500",
-	[romloader.ROMLOADER_CHIPTYP_NETX50] = "netx50",
-	[romloader.ROMLOADER_CHIPTYP_NETX10] = "netx10",
-	--[romloader.ROMLOADER_CHIPTYP_NETX51] = "netx56",
-	--[romloader.ROMLOADER_CHIPTYP_NETX52] = "netx56",
-	[romloader.ROMLOADER_CHIPTYP_NETX56] = "netx56",
+	[romloader.ROMLOADER_CHIPTYP_NETX50]  = "netx50",
+	[romloader.ROMLOADER_CHIPTYP_NETX10]  = "netx10",
+	[romloader.ROMLOADER_CHIPTYP_NETX56]  = "netx56",
+	[romloader.ROMLOADER_CHIPTYP_NETX56B] = "netx56"
 }
 
 -- prefix must include a trailing backslash if it's a directory
