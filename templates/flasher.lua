@@ -799,8 +799,8 @@ end
 
 
 --------------------------------------------------------------------------
--- simple_flasher
--- This is a simple routine to flash one file.
+-- simple_flasher_string
+-- This is a simple routine to flash the data in a string.
 -- Load file from strDataFileName and write it to offset 0
 -- Raise an error in case of any errors
 --
@@ -816,19 +816,12 @@ end
 --   fnCallbackMessage
 --------------------------------------------------------------------------
 
-function simple_flasher(tPlugin, strDataFileName, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)
+function simple_flasher_string(tPlugin, strData, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)
 	strFlasherPrefix = strFlasherPrefix or ""
 	
 	local fOk
 	local strMsg
-	local strData
 	local ulDeviceOffset = 0
-	
-	-- Load the data.
-	strData, strMsg = muhkuh.load(strDataFileName)
-	if not strData then
-		error("Failed to load binary '" .. strDataFileName .. "': " .. strMsg)
-	end
 	
 	-- Download the binary.
 	local aAttr = download(tPlugin, strFlasherPrefix, fnCallbackProgress)
@@ -848,5 +841,39 @@ function simple_flasher(tPlugin, strDataFileName, tBus, ulUnit, ulChipSelect, st
 	assert(fOk, strMsg or "Error while erasing area")
 	
 	print("*** Flashing ok ***")
+end
+
+
+
+--------------------------------------------------------------------------
+-- simple_flasher
+-- This is a simple routine to flash one file.
+-- Load file from strDataFileName and write it to offset 0
+-- Raise an error in case of any errors
+--
+--   tPlugin
+--   strDataFileName
+--
+--   tBus
+--   ulUnit
+--   ulChipSelect
+--
+--   strFlasherPrefix
+--   fnCallbackProgress
+--   fnCallbackMessage
+--------------------------------------------------------------------------
+
+function simple_flasher(tPlugin, strDataFileName, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)
+	local strMsg
+	local strData
+
+
+	-- Load the data.
+	strData, strMsg = muhkuh.load(strDataFileName)
+	if not strData then
+		error("Failed to load binary '" .. strDataFileName .. "': " .. strMsg)
+	end
+	
+	simple_flasher_string(tPlugin, strData, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)
 end
 
