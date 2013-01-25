@@ -22,7 +22,7 @@ ENTRY(start)
 
 MEMORY
 {
-	INTRAM(rwx)     : ORIGIN = 0x00000000, LENGTH = 0x00020000
+	SDRAM(rwx)      : ORIGIN = 0x80000000, LENGTH = 0x00400000
 	IOVECTORS(rw)   : ORIGIN = 0x10001ff0, LENGTH = 0x00000010
 }
 
@@ -37,11 +37,11 @@ SECTIONS
 	} >IOVECTORS
 
 
-	/* bootloader reserved area */
-	.bootloader 0x00000000 :
+	/* Reserved area for BOB. */
+	.reserved ORIGIN(SDRAM) :
 	{
-		. = . + 0x4000;
-	} >INTRAM
+		. = . + 0x00020000;
+	} >SDRAM
 
 
 	.code :
@@ -55,14 +55,14 @@ SECTIONS
 
 		/* .rodata section which is used for read-only data (constants) */
 		*(.rodata*)
-	} >INTRAM
+	} >SDRAM
 
 
 	/* .data section which is used for initialized data */
 	.data :
 	{
 		*(.data)
-	} >INTRAM
+	} >SDRAM
 
 
 	.bss :
@@ -75,16 +75,16 @@ SECTIONS
 
 		__bss_end__ = . ;
 		__BUFFER_START__ = .;
-	} >INTRAM
+	} >SDRAM
 
 	/* NOTE: do not put anything between the bss and the stack section. Here goes the buffer. */
 
-	.stack ORIGIN(INTRAM)+LENGTH(INTRAM)-0x1000 :
+	.stack ORIGIN(SDRAM)+LENGTH(SDRAM)-0x1000 :
 	{
 		__BUFFER_END__ = .;
 		. = . + 0x1000;
 		PROVIDE (stack_top = .);
-	} >INTRAM
+	} >SDRAM
 
 
 	/* Stabs debugging sections.  */
