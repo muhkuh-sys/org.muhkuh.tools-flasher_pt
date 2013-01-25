@@ -177,25 +177,25 @@ bin_netx10_oldio_dbg = env_netx10_oldio_dbg.ObjCopy('targets/oldio/flasher_netx1
 env_netx500_nodbg = env_netx500_default.Clone()
 env_netx500_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
 src_netx500_nodbg = env_netx500_nodbg.SetBuildPath('targets/netx500_nodbg', 'src', src_netx500)
-elf_netx500_nodbg = env_netx500_nodbg.Elf('targets/flasher_netx500.elf', src_netx500_nodbg + objExoSpiFlashes)
+elf_netx500_nodbg = env_netx500_nodbg.Elf('targets/netx500_nodbg/flasher_netx500.elf', src_netx500_nodbg + objExoSpiFlashes)
 bin_netx500_nodbg = env_netx500_nodbg.ObjCopy('targets/flasher_netx500.bin', elf_netx500_nodbg)
 
 env_netx56_nodbg = env_netx56_default.Clone()
 env_netx56_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
 src_netx56_nodbg = env_netx56_nodbg.SetBuildPath('targets/netx56_nodbg', 'src', src_netx56)
-elf_netx56_nodbg = env_netx56_nodbg.Elf('targets/flasher_netx56.elf', src_netx56_nodbg + objExoSpiFlashes)
+elf_netx56_nodbg = env_netx56_nodbg.Elf('targets/netx56_nodbg/flasher_netx56.elf', src_netx56_nodbg + objExoSpiFlashes)
 bin_netx56_nodbg = env_netx56_nodbg.ObjCopy('targets/flasher_netx56.bin', elf_netx56_nodbg)
 
 env_netx50_nodbg = env_netx50_default.Clone()
 env_netx50_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
 src_netx50_nodbg = env_netx50_nodbg.SetBuildPath('targets/netx50_nodbg', 'src', src_netx50)
-elf_netx50_nodbg = env_netx50_nodbg.Elf('targets/flasher_netx50.elf', src_netx50_nodbg + objExoSpiFlashes)
+elf_netx50_nodbg = env_netx50_nodbg.Elf('targets/netx50_nodbg/flasher_netx50.elf', src_netx50_nodbg + objExoSpiFlashes)
 bin_netx50_nodbg = env_netx50_nodbg.ObjCopy('targets/flasher_netx50.bin', elf_netx50_nodbg)
 
 env_netx10_nodbg = env_netx10_default.Clone()
 env_netx10_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
 src_netx10_nodbg = env_netx10_nodbg.SetBuildPath('targets/netx10_nodbg', 'src', src_netx10)
-elf_netx10_nodbg = env_netx10_nodbg.Elf('targets/flasher_netx10.elf', src_netx10_nodbg + objExoSpiFlashes)
+elf_netx10_nodbg = env_netx10_nodbg.Elf('targets/netx10_nodbg/flasher_netx10.elf', src_netx10_nodbg + objExoSpiFlashes)
 bin_netx10_nodbg = env_netx10_nodbg.ObjCopy('targets/flasher_netx10.bin', elf_netx10_nodbg)
 
 
@@ -207,25 +207,25 @@ bin_netx10_nodbg = env_netx10_nodbg.ObjCopy('targets/flasher_netx10.bin', elf_ne
 env_netx500_dbg = env_netx500_default.Clone()
 env_netx500_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
 src_netx500_dbg = env_netx500_dbg.SetBuildPath('targets/netx500_dbg', 'src', src_netx500)
-elf_netx500_dbg = env_netx500_dbg.Elf('targets/flasher_netx500_debug.elf', src_netx500_dbg + objExoSpiFlashes)
+elf_netx500_dbg = env_netx500_dbg.Elf('targets/netx500_dbg/flasher_netx500_debug.elf', src_netx500_dbg + objExoSpiFlashes)
 bin_netx500_dbg = env_netx500_dbg.ObjCopy('targets/flasher_netx500_debug.bin', elf_netx500_dbg)
 
 env_netx56_dbg = env_netx56_default.Clone()
 env_netx56_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
 src_netx56_dbg = env_netx56_dbg.SetBuildPath('targets/netx56_dbg', 'src', src_netx56)
-elf_netx56_dbg = env_netx56_dbg.Elf('targets/flasher_netx56_debug.elf', src_netx56_dbg + objExoSpiFlashes)
+elf_netx56_dbg = env_netx56_dbg.Elf('targets/netx56_dbg/flasher_netx56_debug.elf', src_netx56_dbg + objExoSpiFlashes)
 bin_netx56_dbg = env_netx56_dbg.ObjCopy('targets/flasher_netx56_debug.bin', elf_netx56_dbg)
 
 env_netx50_dbg = env_netx50_default.Clone()
 env_netx50_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
 src_netx50_dbg = env_netx50_dbg.SetBuildPath('targets/netx50_dbg', 'src', src_netx50)
-elf_netx50_dbg = env_netx50_dbg.Elf('targets/flasher_netx50_debug.elf', src_netx50_dbg + objExoSpiFlashes)
+elf_netx50_dbg = env_netx50_dbg.Elf('targets/netx50_dbg/flasher_netx50_debug.elf', src_netx50_dbg + objExoSpiFlashes)
 bin_netx50_dbg = env_netx50_dbg.ObjCopy('targets/flasher_netx50_debug.bin', elf_netx50_dbg)
 
 env_netx10_dbg = env_netx10_default.Clone()
 env_netx10_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
 src_netx10_dbg = env_netx10_dbg.SetBuildPath('targets/netx10_dbg', 'src', src_netx10)
-elf_netx10_dbg = env_netx10_dbg.Elf('targets/flasher_netx10_debug.elf', src_netx10_dbg + objExoSpiFlashes)
+elf_netx10_dbg = env_netx10_dbg.Elf('targets/netx10_dbg/flasher_netx10_debug.elf', src_netx10_dbg + objExoSpiFlashes)
 bin_netx10_dbg = env_netx10_dbg.ObjCopy('targets/flasher_netx10_debug.bin', elf_netx10_dbg)
 
 
