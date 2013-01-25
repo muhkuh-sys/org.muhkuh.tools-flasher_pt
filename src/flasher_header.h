@@ -87,7 +87,7 @@ typedef struct FLASHER_VERSION_STRUCT
 	unsigned long aulIf[4];
 } FLASHER_VERSION_T;
 
-const FLASHER_VERSION_T flasher_version __attribute__ ((section (".version_info")));
+extern const FLASHER_VERSION_T flasher_version __attribute__ ((section (".version_info")));
 
 
 /*-----------------------------------*/
