@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "exodecr.h"
+#include "flasher_header.h"
 #include "uprintf.h"
 
 #include "spi_flash.h"
@@ -247,7 +248,6 @@ static int print_status(const SPI_FLASH_T *ptFlash)
 
 /* NOTE: the external is defined in the imported object. */
 extern const char _binary_spi_flash_types_exo_end[];
-extern char __BUFFER_END__[];
 
 /*! detect_flash
 *   Convert the linear input address to the device's addressing mode
@@ -286,7 +286,7 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 	if( uiUseDetectList!=0 )
 	{
 		/* Depack the list of known flash devices. */
-		uSpiTypes.pc = exo_decrunch(_binary_spi_flash_types_exo_end, __BUFFER_END__);
+		uSpiTypes.pc = exo_decrunch(_binary_spi_flash_types_exo_end, (char*)(flasher_version.pucBuffer_End));
 
 		/* get spi device */
 		ptSpiDev = &ptFlash->tSpiDev;
