@@ -231,6 +231,20 @@ bin_netx10_dbg = env_netx10_dbg.ObjCopy('targets/flasher_netx10_debug.bin', elf_
 
 #----------------------------------------------------------------------------
 #
+# Build the BOB flasher without debug messages.
+# This version runs from SDRAM starting at 0x8002000 to save the INTRAM for
+# the 2ndStageLoader.
+#
+env_netx500_bob = env_netx500_default.Clone()
+env_netx500_bob.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+env_netx500_bob.Replace(LDFILE = File('src/netx500/netx500_bob.ld'))
+src_netx500_bob = env_netx500_bob.SetBuildPath('targets/netx500_bob', 'src', src_netx500)
+elf_netx500_bob = env_netx500_bob.Elf('targets/netx500_bob/flasher_netx500_sdram.elf', src_netx500_bob + objExoSpiFlashes)
+bin_netx500_bob = env_netx500_bob.ObjCopy('targets/flasher_netx500_bob.bin', elf_netx500_bob)
+
+
+#----------------------------------------------------------------------------
+#
 # Generate the LUA scripts from the template.
 # This extracts symbols and enumeration values from the ELF file and inserts
 # them into the LUA script.
