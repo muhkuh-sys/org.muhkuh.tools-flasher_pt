@@ -272,6 +272,7 @@ end
 -- Stores parameters in netX memory, calls the flasher and returns the result value
 -- 0 = success, 1 = failure
 function callFlasher(tPlugin, aAttr, aulParams, fnCallbackMessage, fnCallbackProgress)
+	fnCallbackMessage = fnCallbackMessage or default_callback_message
 	fnCallbackProgress = fnCallbackProgress or default_callback_progress
 	
 	-- set the parameters
