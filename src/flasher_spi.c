@@ -358,6 +358,7 @@ static NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFla
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	unsigned long ulSectorSize;
+	unsigned long ulSectorOffset;
 	unsigned long ulAddress;
 	unsigned long ulProgressCnt;
 	int iResult;
@@ -365,54 +366,60 @@ static NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFla
 
 	uprintf("# Erase flash...\n");
 
-	/* assume success */
+	/* Assume success. */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
-	/* get the sector start and end address */
+	/* Get the sector size. */
 	ulSectorSize = ptFlashDev->ulSectorSize;
-	if( (ulStartAdr%ulSectorSize)!=0 )
+	/* Get the offset in the first sector. */
+	ulSectorOffset = ulStartAdr % ulSectorSize;
+	if( ulSectorOffset!=0 )
 	{
-		uprintf("! The start address is not aligned to a sector!\n");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		uprintf("Warning: the start address is not aligned to a sector border!\n");
+		uprintf("Warning: changing the start address from 0x%08x", ulStartAdr);
+		ulStartAdr -= ulSectorOffset;
+		uprintf(" to 0x%08x.\n", ulStartAdr);
 	}
-	else if( (ulEndAdr%ulSectorSize)!=0 )
+	/* Get the offset in the last sector. */
+	ulSectorOffset = ulEndAdr % ulSectorSize;
+	if( ulSectorOffset!=0 )
 	{
-		uprintf("! The end address is not aligned to a sector!\n");
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		uprintf("Warning: the end address is not aligned to a sector border!\n");
+		uprintf("Warning: changing the end address from 0x%08x", ulEndAdr);
+		ulEndAdr += ulSectorSize - ulSectorOffset;
+		uprintf(" to 0x%08x.\n", ulEndAdr);
 	}
-	else
+
+	/* Show the start and the end address of the erase area. */
+	uprintf(". erase 0x%08x - 0x%08x\n", ulStartAdr, ulEndAdr);
+
+	ulProgressCnt = 0;
+	progress_bar_init( ulEndAdr-ulStartAdr );
+
+	/* Erase the complete area. */
+	ulAddress = ulStartAdr;
+	while( ulAddress<ulEndAdr )
 	{
-		/* show start and end of erase area */
-		uprintf(". erase 0x%08x - 0x%08x\n", ulStartAdr, ulEndAdr);
-
-		ulProgressCnt = 0;
-		progress_bar_init( ulEndAdr-ulStartAdr );
-
-		/* erase the complete area */
-		ulAddress = ulStartAdr;
-		while( ulAddress<ulEndAdr )
+		iResult = Drv_SpiEraseFlashSector(ptFlashDev, ulAddress);
+		if( iResult!=0 )
 		{
-			iResult = Drv_SpiEraseFlashSector(ptFlashDev, ulAddress);
-			if( iResult!=0 )
-			{
-				uprintf("! erase failed at address 0x%08x\n", ulAddress);
-				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-				break;
-			}
-
-			/* next segment */
-			ulAddress += ulSectorSize;
-
-			/* inc progress */
-			ulProgressCnt += ulSectorSize;
-			progress_bar_set_position(ulProgressCnt);
+			uprintf("! erase failed at address 0x%08x\n", ulAddress);
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+			break;
 		}
 
-		progress_bar_finalize();
-		uprintf(". erase ok\n");
+		/* Move to the next segment. */
+		ulAddress += ulSectorSize;
+
+		/* Increment the progress bar. */
+		ulProgressCnt += ulSectorSize;
+		progress_bar_set_position(ulProgressCnt);
 	}
 
-	/* return result */
+	progress_bar_finalize();
+	uprintf(". erase ok\n");
+
+	/* Return the result. */
 	return tResult;
 }
 
