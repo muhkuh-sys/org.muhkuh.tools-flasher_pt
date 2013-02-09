@@ -295,7 +295,8 @@ tArcList.AddFiles('lua/',
 	'lua/is_erased_parflash.lua',
 	'lua/read_complete_flash.lua')
 
-tArc = env_default.Archive('targets/flasher.zip', None, ARCHIVE_CONTENTS=tArcList)
+strArchiveVersion = '%s_%s' % (env_default['PROJECT_VERSION_LAST_COMMIT'], env_default['PROJECT_VERSION_VCS'])
+tArc = env_default.Archive('targets/flasher_%s.zip' % strArchiveVersion, None, ARCHIVE_CONTENTS=tArcList)
 
 
 #----------------------------------------------------------------------------
