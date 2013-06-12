@@ -65,4 +65,7 @@ int Drv_SpiReadFlash              (const SPI_FLASH_T *ptFlash, unsigned long ulL
 int Drv_SpiEraseAndWritePage      (const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pucData, size_t sizData);
 int Drv_SpiWritePage              (const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pucData, size_t sizData);
 
+const char *spi_flash_get_adr_mode_name(SPIFLASH_ADR_T tAdrMode);
+
+
 #endif

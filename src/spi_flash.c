@@ -1567,3 +1567,41 @@ int Drv_SpiWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiWritePage(): iResult=%d.\n", iResult));
 	return iResult;
 }
+
+
+typedef struct ADR_MODE_NAME_STRUCT
+{
+	SPIFLASH_ADR_T tAdrMode;
+	const char *pcAdrMode;
+} ADR_MODE_NAME_T;
+
+
+static const ADR_MODE_NAME_T atAdrModeName[2] =
+{
+	{ SPIFLASH_ADR_LINEAR,              "linear" },
+	{ SPIFLASH_ADR_PAGESIZE_BITSHIFT,   "pagesize bitshift" }
+};
+
+
+const char *spi_flash_get_adr_mode_name(SPIFLASH_ADR_T tAdrMode)
+{
+	const char *pcResult = "";
+	const ADR_MODE_NAME_T *ptCnt;
+	const ADR_MODE_NAME_T *ptEnd;
+
+
+	ptCnt = atAdrModeName;
+	ptEnd = ptCnt + (sizeof(atAdrModeName) / sizeof(atAdrModeName[0]));
+	while( ptCnt<ptEnd )
+	{
+		if( tAdrMode==ptCnt->tAdrMode )
+		{
+			pcResult = ptCnt->pcAdrMode;
+			break;
+		}
+	}
+
+	return pcResult;
+}
+
+
