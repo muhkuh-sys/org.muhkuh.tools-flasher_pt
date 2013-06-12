@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "spi_flash_types.h"
+#include "spi_flash.h"
 #include "uprintf.h"
 
 
@@ -244,7 +245,6 @@ static int read_jedec_flash_parameter(SPI_FLASH_T *ptFlash, unsigned long ulAddr
 				/* Get the sector size. */
 				tSfdpAttributes.ulSectorPages = ulBestSectorSize >> uiPageSizePow;
 				tSfdpAttributes.ucEraseSectorOpcode = atSectorTypes[sizBestSectorIdx].ucOpcode;
-				uprintf("Sector pages: %d\n", tSfdpAttributes.ulSectorPages);
 			}
 		}
 	}
@@ -317,6 +317,28 @@ static int read_parameter_headers(SPI_FLASH_T *ptFlash, size_t sizSfdpHeaders)
 }
 
 
+#if CFG_DEBUGMSG!=0
+static void hexdump_line(const unsigned char *pucData, size_t sizData)
+{
+	const unsigned char *pucCnt;
+	const unsigned char *pucEnd;
+
+
+	pucCnt = pucData;
+	pucEnd = pucCnt + sizData;
+	while( pucCnt<pucEnd )
+	{
+		uprintf("0x%02x", *pucCnt);
+		++pucCnt;
+		if( pucCnt<pucEnd )
+		{
+			uprintf(", ");
+		}
+	}
+}
+#endif
+
+
 const SPIFLASH_ATTRIBUTES_T *sfdp_detect(SPI_FLASH_T *ptFlash)
 {
 	SPI_CFG_T *ptSpiDev;
@@ -367,6 +389,39 @@ const SPIFLASH_ATTRIBUTES_T *sfdp_detect(SPI_FLASH_T *ptFlash)
 
 				iResult = read_parameter_headers(ptFlash, sizSfdpHeaders);
 				uprintf("read_parameter_headers: %d\n", iResult);
+				if( iResult==0 )
+				{
+#if CFG_DEBUGMSG!=0
+					if( ZONE_VERBOSE )
+					{
+						uprintf("SFDP flash parameters:\n");
+						uprintf("<SerialFlash name=\"SFDP\" size=\"%d\" clock=\"%d\">\n", tSfdpAttributes.ulSize, tSfdpAttributes.ulClock);
+						uprintf("\t<Description>SFDP flash</Description>\n");
+						uprintf("\t<Note>This flash was auto-detected with SFDP</Note>\n");
+						uprintf("\t<Layout pageSize=\"%d\" sectorPages=\"%d\" mode=\"linear\" />\n", tSfdpAttributes.ulPageSize, tSfdpAttributes.ulSectorPages, spi_flash_get_adr_mode_name(tSfdpAttributes.tAdrMode));
+						uprintf("\t<Read readArrayCommand=\"0x%02x\" ignoreBytes=\"%d\" />\n", tSfdpAttributes.ucReadOpcode, tSfdpAttributes.ucReadOpcodeDCBytes);
+						uprintf("\t<Write writeEnableCommand=\"0x%02x\" pageProgramCommand=\"0x%02x\" bufferFillCommand=\"0x%02x\" bufferWriteCommand=\"0x%02x\" eraseAndPageProgramCommand=\"0x%02x\" />\n", tSfdpAttributes.ucWriteEnableOpcode, tSfdpAttributes.ucPageProgOpcode, tSfdpAttributes.ucBufferFill, tSfdpAttributes.ucBufferWriteOpcode, tSfdpAttributes.ucEraseAndPageProgOpcode);
+						uprintf("\t<Erase erasePageCommand=\"0x%02x\" eraseSectorCommand=\"0x%02x\" eraseChipCommand=\"", tSfdpAttributes.ucErasePageOpcode, tSfdpAttributes.ucEraseSectorOpcode);
+						hexdump_line(tSfdpAttributes.aucEraseChipCmd, tSfdpAttributes.ucEraseChipCmdLen);
+						uprintf("\" />\n");
+						uprintf("\t<Status readStatusCommand=\"0x%02x\" statusReadyMask=\"0x%02x\" statusReadyValue=\"0x%02x\" />\n", tSfdpAttributes.ucReadStatusOpcode, tSfdpAttributes.ucStatusReadyMask, tSfdpAttributes.ucStatusReadyValue);
+						uprintf("\t<Init0 command=\"");
+						hexdump_line(tSfdpAttributes.aucInitCmd0, tSfdpAttributes.ucInitCmd0_length);
+						uprintf("\" />\n");
+						uprintf("\t<Init1 command=\"");
+						hexdump_line(tSfdpAttributes.aucInitCmd1, tSfdpAttributes.ucInitCmd1_length);
+						uprintf("\" />\n");
+						uprintf("\t<Id send=\"");
+						hexdump_line(tSfdpAttributes.aucIdSend, tSfdpAttributes.ucIdLength);
+						uprintf("\"\n\t    mask=\"");
+						hexdump_line(tSfdpAttributes.aucIdMask, tSfdpAttributes.ucIdLength);
+						uprintf("\"\n\t    magic=\"");
+						hexdump_line(tSfdpAttributes.aucIdMagic, tSfdpAttributes.ucIdLength);
+						uprintf("\" />\n");
+						uprintf("</SerialFlash>\n");
+					}
+#endif
+				}
 			}
 		}
 	}
