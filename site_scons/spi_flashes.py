@@ -118,8 +118,8 @@ strHeaderTemplate = """
 */
 typedef enum SPIFLASH_ADR_Ttag
 {
-	SPIFLASH_ADR_LINEAR,					    /* linear addressing */
-	SPIFLASH_ADR_PAGESIZE_BITSHIFT		/* bitshift derived from the pagesize */
+	SPIFLASH_ADR_LINEAR,              /* linear addressing */
+	SPIFLASH_ADR_PAGESIZE_BITSHIFT    /* bitshift derived from the pagesize */
 } SPIFLASH_ADR_T;
 
 
