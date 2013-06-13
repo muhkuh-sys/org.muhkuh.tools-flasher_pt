@@ -313,7 +313,7 @@ static unsigned long getFlashSize(const DEVICE_DESCRIPTION_T *ptDeviceDescriptio
 	case BUS_SPI:
 		return ptDeviceDescription->uInfo.tSpiInfo.tAttributes.ulSize;
 		break;
-		
+
 	default:
 		return 0;
 	}
@@ -392,6 +392,34 @@ static NETX_CONSOLEAPP_RESULT_T opMode_getBoardInfo(tFlasherInputParameter *ptAp
 		ptConsoleParams->pvReturnMessage = NULL;
 
 		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+
+	return tResult;
+}
+
+
+/* ------------------------------------- */
+
+
+static NETX_CONSOLEAPP_RESULT_T opMode_easyErase(tFlasherInputParameter *ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+
+
+	/* Adapt the erase area to the sector boundaries. */
+	tResult = opMode_getEraseArea(ptAppParams);
+	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+	{
+		/* Is the erase area already clean? */
+		tResult = opMode_isErased(ptAppParams, ptConsoleParams);
+		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+		{
+			/* The erase area is not clean. Erase it now. */
+			if( ptConsoleParams->pvReturnMessage!=((void*)0xff) )
+			{
+				tResult = opMode_erase(ptAppParams);
+			}
+		}
 	}
 
 	return tResult;
@@ -516,6 +544,15 @@ static NETX_CONSOLEAPP_RESULT_T check_params(NETX_CONSOLEAPP_PARAMETER_T *ptCons
 	case OPERATION_MODE_GetBoardInfo:
 		ulPars = 0;
 		uprintf(".Mode: Get Board Info\n");
+		break;
+
+	case OPERATION_MODE_EasyErase:
+		ulPars = FLAG_STARTADR + FLAG_ENDADR + FLAG_DEVICE;
+		ulStartAdr          = ptAppParams->uParameter.tGetEraseArea.ulStartAdr;
+		ulEndAdr            = ptAppParams->uParameter.tGetEraseArea.ulEndAdr;
+		ptDeviceDescription = ptAppParams->uParameter.tGetEraseArea.ptDeviceDescription;
+		uprintf(". Mode: Get Erase Area\n");
+		uprintf(". Flash offset [0x%08x, 0x%08x[\n", ulStartAdr, ulEndAdr);
 		break;
 
 	default:
@@ -826,6 +863,9 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 				tResult = opMode_getBoardInfo(ptAppParams, ptTestParam);
 				break;
 
+			case OPERATION_MODE_EasyErase:
+				tResult = opMode_easyErase(ptAppParams, ptTestParam);
+				break;
 			}
 		}
 	}

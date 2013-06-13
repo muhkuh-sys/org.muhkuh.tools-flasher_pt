@@ -48,7 +48,8 @@ typedef enum
 	OPERATION_MODE_Detect           = 5,    /* detect a device */
 	OPERATION_MODE_IsErased         = 6,    /* check if the specified area of a device is erased */
 	OPERATION_MODE_GetEraseArea     = 7,    /* expand an area to the erase block borders */
-	OPERATION_MODE_GetBoardInfo     = 8     /* get bus and unit information */
+	OPERATION_MODE_GetBoardInfo     = 8,    /* get bus and unit information */
+	OPERATION_MODE_EasyErase        = 9     /* A combination of GetEraseArea, IsErased and Erase. */
 } OPERATION_MODE_T;
 
 

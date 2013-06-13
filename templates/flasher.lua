@@ -53,6 +53,7 @@ OPERATION_MODE_Detect            = ${OPERATION_MODE_Detect}     -- Detect a devi
 OPERATION_MODE_IsErased          = ${OPERATION_MODE_IsErased}     -- Check if the specified area of a device is erased.
 OPERATION_MODE_GetEraseArea      = ${OPERATION_MODE_GetEraseArea}     -- Expand an area to the erase block borders.
 OPERATION_MODE_GetBoardInfo      = ${OPERATION_MODE_GetBoardInfo}     -- Get bus and unit information.
+OPERATION_MODE_EasyErase         = ${OPERATION_MODE_EasyErase}        -- A combination of GetEraseArea, IsErased and Erase.
 
 
 
@@ -572,6 +573,22 @@ end
 
 
 
+-- Easy erase.
+-- A combination of GetEraseArea, IsErased and Erase.
+-- NOTE: This is an equivalent of the eraseArea function (see below) for
+--       environments without scripting capabilities. This function exists
+--       just for the sake of a complete API.
+function easy_erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
+	local aulParameter = 
+	{
+		OPERATION_MODE_EasyErase,                      -- operation mode: easy erase
+		aAttr.ulDeviceDesc,                            -- data block for the device description
+		ulEraseStart,
+		ulEraseEnd
+	}
+	local ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
+	return ulValue == 0
+end
 
 
 
