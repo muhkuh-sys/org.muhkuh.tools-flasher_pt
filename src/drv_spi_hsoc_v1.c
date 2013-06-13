@@ -222,16 +222,8 @@ static int spi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size
 
 static int spi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucOutData, unsigned char *pucInData, size_t sizData)
 {
-	HOSTADEF(SPI) *ptSpiUnit;
-	unsigned char ucIdleChar;
 	unsigned char *pucInDataEnd;
 
-
-	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
-
-	/* get the idle byte */
-	ucIdleChar = ptCfg->ucIdleChar;
 
 	/* send data */
 	pucInDataEnd = pucInData + sizData;
