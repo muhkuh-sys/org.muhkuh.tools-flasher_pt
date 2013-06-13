@@ -165,6 +165,10 @@ static NETX_CONSOLEAPP_RESULT_T opMode_erase(tFlasherInputParameter *ptAppParams
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
 
+
+	/* Be pessimistic. */
+	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
 	/* get the source type */
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 	switch(tSourceTyp)
@@ -279,6 +283,10 @@ static NETX_CONSOLEAPP_RESULT_T opMode_isErased(tFlasherInputParameter *ptAppPar
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
 
+
+	/* Be pessimistic. */
+	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 	switch(tSourceTyp)
 	{
@@ -324,6 +332,10 @@ static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(tFlasherInputParameter *ptAp
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSrcType;
+
+
+	/* Be pessimistic. */
+	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 
 	tSrcType = ptAppParams->uParameter.tGetEraseArea.ptDeviceDescription->tSourceTyp;
 
