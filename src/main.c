@@ -310,21 +310,26 @@ static NETX_CONSOLEAPP_RESULT_T opMode_isErased(tFlasherInputParameter *ptAppPar
 static unsigned long getFlashSize(const DEVICE_DESCRIPTION_T *ptDeviceDescription)
 {
 	BUS_T tSrcType;
+	unsigned long ulFlashSize;
+
+
 	tSrcType = ptDeviceDescription->tSourceTyp;
 	
+	/* This is the default value for the error case. */
+	ulFlashSize = 0;
+
 	switch(tSrcType)
 	{
 	case BUS_ParFlash:
-		return ptDeviceDescription->uInfo.tParFlash.ulFlashSize;
+		ulFlashSize = ptDeviceDescription->uInfo.tParFlash.ulFlashSize;
 		break;
 
 	case BUS_SPI:
-		return ptDeviceDescription->uInfo.tSpiInfo.tAttributes.ulSize;
+		ulFlashSize = ptDeviceDescription->uInfo.tSpiInfo.tAttributes.ulSize;
 		break;
-
-	default:
-		return 0;
 	}
+
+	return ulFlashSize;
 }
 
 
