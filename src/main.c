@@ -137,6 +137,10 @@ static NETX_CONSOLEAPP_RESULT_T opMode_flash(tFlasherInputParameter *ptAppParams
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
 
+
+	/* Be pessimistic. */
+	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
 	/* get the source type */
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 	switch(tSourceTyp)
@@ -195,6 +199,10 @@ static NETX_CONSOLEAPP_RESULT_T opMode_read(tFlasherInputParameter *ptAppParams)
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
 
+
+	/* Be pessimistic. */
+	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
 	/* get the source type */
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 	switch(tSourceTyp)
@@ -222,6 +230,10 @@ static NETX_CONSOLEAPP_RESULT_T opMode_verify(tFlasherInputParameter *ptAppParam
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
 
+
+	/* Be pessimistic. */
+	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
 	/* get the source type */
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 
@@ -248,6 +260,10 @@ static NETX_CONSOLEAPP_RESULT_T opMode_checksum(tFlasherInputParameter *ptAppPar
 	BUS_T tSourceTyp;
 	SHA_CTX tShaContext;
 	
+
+	/* Be pessimistic. */
+	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
 	SHA1_Init(&tShaContext);
 	
 	/* get the source type */
