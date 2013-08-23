@@ -74,10 +74,16 @@ Open a command line window and change to the folder where you unpacked the flash
 
 
 .List of produced files
+ * `targets/flasher_netx10.bin` : the netX10 version
+ * `targets/flasher_netx10_debug.bin` : the netX10 version with a lot of debug output
  * `targets/flasher_netx500.bin` : the netX500 version
- * `targets/flasher_netx50.bin` : the netX50 version
+ * `targets/flasher_netx500_bob.bin` : the netX500 version for the BOB project
  * `targets/flasher_netx500_debug.bin` : the netX500 version with a lot of debug output
+ * `targets/flasher_netx50.bin` : the netX50 version
  * `targets/flasher_netx50_debug.bin` : the netX50 version with a lot of debug output
+ * `targets/flasher_netx56.bin` : the netX51/52 version
+ * `targets/flasher_netx56_debug.bin` : the netX51/52 version with a lot of debug output
+ * `targets/lua/flasher.lua` : LUA support routines for the Muhkuh testing environment
  * `targets/doc/flasher.html` : this documentation
 
 
