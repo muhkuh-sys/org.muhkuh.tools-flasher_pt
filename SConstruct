@@ -28,18 +28,11 @@
 SConscript('mbs/SConscript')
 Import('env_default')
 
-import exomizer
+tExoRaw = env_default.GetTool('exoraw-2.0.7_1')
+tExoRaw.ApplyToEnv(env_default)
+
 import spi_flashes
-exomizer.ApplyToEnv(env_default)
 spi_flashes.ApplyToEnv(env_default)
-
-
-#----------------------------------------------------------------------------
-#
-# Build exomizer.
-#
-SConscript('exomizer/SConscript')
-Import('tExoRaw')
 
 
 #----------------------------------------------------------------------------
@@ -151,7 +144,7 @@ objSpiFlashes = env_netx500_default.Object('targets/spi_flash_types/spi_flash_ty
 # Extract the binary.
 binSpiFlashes = env_netx500_default.ObjCopy('targets/spi_flash_types/spi_flash_types.bin', objSpiFlashes)
 # Pack the binary with exomizer.
-exoSpiFlashes = env_netx500_default.Exoraw('targets/spi_flash_types/spi_flash_types.exo', binSpiFlashes, EXORAW=tExoRaw[0].get_path())
+exoSpiFlashes = env_netx500_default.Exoraw('targets/spi_flash_types/spi_flash_types.exo', binSpiFlashes)
 # Convert the packed binary to an object.
 objExoSpiFlashes = env_netx500_default.ObjImport('targets/spi_flash_types/spi_flash_types_exo.o', exoSpiFlashes)
 
