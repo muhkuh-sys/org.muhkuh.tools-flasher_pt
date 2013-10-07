@@ -291,6 +291,7 @@ tArcList.AddFiles('lua/',
 	'lua/identify_parflash.lua',
 	'lua/identify_serflash.lua',
 	'lua/is_erased_parflash.lua',
+	'lua/read_bootimage.lua',
 	'lua/read_complete_flash.lua')
 
 strArchiveVersion = '%s_%s' % (env_default['PROJECT_VERSION_LAST_COMMIT'], env_default['PROJECT_VERSION_VCS'])
@@ -343,4 +344,5 @@ Command('targets/testbench/get_erase_areas_parflash.lua', 'lua/get_erase_areas_p
 Command('targets/testbench/identify_parflash.lua',        'lua/identify_parflash.lua', Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/identify_serflash.lua',        'lua/identify_serflash.lua', Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/is_erased_parflash.lua',       'lua/is_erased_parflash.lua', Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/read_bootimage.lua',           'lua/read_bootimage.lua', Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/read_complete_flash.lua',      'lua/read_complete_flash.lua', Copy("$TARGET", "$SOURCE"))
