@@ -5,7 +5,6 @@
 
 <xsl:template match="/">
 	<html>
-		<xsl:comment>XSLT stylesheet used to transform this file:  spi_flash_types.xsl</xsl:comment>
 		<xsl:apply-templates select="KnownSerialFlashes"/>
 
 		<style type="text/css">
