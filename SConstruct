@@ -253,6 +253,11 @@ lua_flasher = env_netx500_nodbg.GccSymbolTemplate('targets/lua/flasher.lua', elf
 #
 # Build the documentation.
 #
+
+env_default.XSLT('targets/doc/spi_flash_types.html', ['src/spi_flash_types.xml', 'src/spi_flash_types.xsl'])
+env_default.XSLT('targets/doc/spi_flash_list.txt', ['src/spi_flash_types.xml', 'src/spi_flash_list.xsl'])
+
+
 doc = env_default.Asciidoc('targets/doc/flasher.html', 'doc/flasher.txt')
 
 
