@@ -3,11 +3,13 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:output method="html" indent="no" omit-xml-declaration="yes" encoding="UTF-8"/>
 
+<xsl:include href="../targets/version/flasher_version.xsl"/>
+
 <xsl:template match="/">
 	<html>
-		<xsl:apply-templates select="KnownSerialFlashes"/>
-
-		<style type="text/css">
+		<head>
+			<title>SPI flash devices for flasher <xsl:value-of select="$FLASHER_VERSION_ALL"/></title>
+			<style type="text/css">
 .result_true {
         display: inline;
         width: 16px;
@@ -29,15 +31,16 @@
 }
 
 
-		</style>
+			</style>
+		</head>
+		<body bgcolor="#ffffff" marginheight="2" marginwidth="2" topmargin="2" leftmargin="2">
+			<h1>SPI flash devices for flasher <xsl:value-of select="$FLASHER_VERSION_ALL"/></h1>
+			<xsl:apply-templates select="KnownSerialFlashes"/>
+		</body>
 	</html>
 </xsl:template>
 
 <xsl:template match="KnownSerialFlashes">
-	<head>
-		<title>SPI flash devices</title>
-	</head>
-	<body bgcolor="#ffffff" marginheight="2" marginwidth="2" topmargin="2" leftmargin="2">
 
 	<table border="1">
 		<xsl:for-each select="SerialFlash">
@@ -106,7 +109,6 @@
 			</td></tr>
 		</xsl:for-each>
 	</table>
-	</body>
 </xsl:template>
 
 </xsl:stylesheet>

@@ -104,6 +104,7 @@ src_netx10  = flasher_sources_common + flasher_sources_custom_netx10
 # Get the source code version from the VCS.
 #
 env_default.Version('targets/version/flasher_version.h', 'templates/flasher_version.h')
+env_default.Version('targets/version/flasher_version.xsl', 'templates/flasher_version.xsl')
 env_default.Version('targets/doc/README.rst', 'templates/README.rst')
 
 
