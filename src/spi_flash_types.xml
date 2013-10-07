@@ -162,9 +162,8 @@
 	</SerialFlash>
 
 	<SerialFlash name="AT45DB321E" size="4325376" clock="50000">
-		<Description>Atmel AT45DB321E</Description>
-		<Note>These settings are not tested!</Note>
-		<Note>NOTE: this must be before the ATDB321B typ, or this will never match</Note>
+		<Description>Adesto AT45DB321E</Description>
+		<Note>NOTE: this must be before the Atmel ATDB321B type, or this will never match</Note>
 		<Layout pageSize="528" sectorPages="8" mode="pagesize bitshift" />
 		<Read readArrayCommand="0x03" ignoreBytes="0" />
 		<Write writeEnableCommand="" pageProgramCommand="" bufferFillCommand="0x84" bufferWriteCommand="0x88" eraseAndPageProgramCommand="0x82" />
@@ -174,7 +173,7 @@
 		<Init1 command="" />
 		<Id send="0x9f, 0x00, 0x00, 0x00, 0x00, 0x00"
 		    mask="0x00, 0xff, 0xff, 0xff, 0xff, 0xff"
-		    magic="0x00, 0x1f, 0x27, 0x00, 0x01, 0x00" />
+		    magic="0x00, 0x1f, 0x27, 0x01, 0x01, 0x00" />
 	</SerialFlash>
 
 	<SerialFlash name="AT45DB642D" size="8650752" clock="50000">
