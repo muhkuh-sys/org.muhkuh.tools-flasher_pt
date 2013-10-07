@@ -662,9 +662,9 @@
 		    magic="0x00, 0xc2, 0x20, 0x15" />
 	</SerialFlash>
 
-	<SerialFlash name="MX25L3205D" size="4194304" clock="66000">
-		<Description>Macronix MX25L3205D</Description>
-		<Note></Note>
+	<SerialFlash name="MX25L32xx" size="4194304" clock="50000">
+		<Description>Macronix MX25L32xx</Description>
+		<Note>Many Macronix MX25L32xx devices share the same JEDEC ID. This entry is tested with MX25L3205D and MX25L3235E.</Note>
 		<Layout pageSize="256" sectorPages="16" mode="linear" />
 		<Read readArrayCommand="0x03" ignoreBytes="0" />
 		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
