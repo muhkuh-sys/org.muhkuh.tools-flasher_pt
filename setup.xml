@@ -20,7 +20,7 @@
 			<group>nz.co.methods</group>
 			<name>asciidoc</name>
 			<package>asciidoc</package>
-			<version>8.6.8_1</version>
+			<version>8.6.8_2</version>
 			<typ>tar.bz2</typ>
 		</tool>
 		<tool>
