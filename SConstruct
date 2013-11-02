@@ -259,7 +259,30 @@ env_default.XSLT('targets/doc/spi_flash_types.html', ['src/spi_flash_types.xml',
 env_default.XSLT('targets/doc/spi_flash_list.txt', ['src/spi_flash_types.xml', 'src/spi_flash_list.xsl'])
 
 
-doc = env_default.Asciidoc('targets/doc/flasher.html', 'doc/flasher.txt')
+# Get the default attributes.
+aAttribs = env_default['ASCIIDOC_ATTRIBUTES']
+# Add some custom attributes.
+aAttribs.update(dict({
+	# Use ASCIIMath formulas.
+	'asciimath': True,
+
+	# Embed images into the HTML file as data URIs.
+	'data-uri': True,
+
+	# Use icons instead of text for markers and callouts.
+	'icons': True,
+
+	# Use numbers in the table of contents.
+	'numbered': True,
+	
+	# Generate a scrollable table of contents on the left of the text.
+	'toc2': True,
+
+	# Use 4 levels in the table of contents.
+	'toclevels': 4
+}))
+
+doc = env_default.Asciidoc('targets/doc/flasher.html', 'doc/flasher.txt', ASCIIDOC_BACKEND='html5', ASCIIDOC_ATTRIBUTES=aAttribs)
 
 
 #----------------------------------------------------------------------------
