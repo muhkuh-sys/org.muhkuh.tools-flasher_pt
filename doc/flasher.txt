@@ -6,14 +6,34 @@ Doc Bacardi <doc_bacardi@sourceforge.net>
 
 == About
 
-The netX flasher writes data to flash or eeprom devices. It is a standalone application (i.e. it does not require an OS like rcX or WindowsCE). It's main use is writing bootable images to SPI or parallel flashes, but it can also be used to:
+The flasher is a program for the netX network controllers from Hilscher (http://www.hilscher.com).
+It's main use case is writing a bootable image to an SPI or parallel flash.
 
- * write flashdisk images or application specific data
- * erase a bootable image
- * read the contents of a flash device
+In general the flasher works with flash devices. It can...
+
+ * Read data from the device
+ * Write data from the device
+ * Erase the complete device or parts of it
+ * Build a checksum over the device contents
+
+Some common use cases are:
+
+ * Write a Hilscher 2ndStage loader to the SPI flash.
+ * Write a custom firmware.
+ * Add a serial number to a pre-burned flash image.
+
+The flasher is a stand-alone application. It does not require an OS like rcX or WindowsCE.
+
+The recommended way to use the flasher is a LUA script on a standard PC. The chapter XYZ has more details on this topic.
+
+It is also possible to run the flasher without LUA. This is described in the chapter XYZ.
+
+If you would like to modify the flasher, it is necessary to build it from the sources. The chapter <<Building_the_flasher_from_source>> gives more details on the build process.
+The most common modification is the addition of new SPI flash types. Please see chapter XYZ for more details about this task.
 
 
-== Prerequisites
+[[Building_the_flasher_from_source, Building the flasher from source]]
+== Building the flasher from source
 
 Building the netX flasher is currently supported on Linux operating systems and some versions of Windows. Please note that the following versions of Windows are not supported:
 
@@ -25,7 +45,11 @@ To compile the netX flasher you need only 1 tool: Python. A small python script 
 
 Recommended versions:
 
- * Python >= 2.5
+ * Python >= 2.6
+
+[IMPORTANT]
+Please note that Python3 is not yet supported. At the time of writing most tools used in the build process are not ready for Python3.
+
 
 === Setting up the build system on Linux
 
@@ -39,7 +63,9 @@ Most distributions have python preinstalled. Try to execute the command `python 
 If no python is installed, search the list of available software packets for the term 'python'.
 
 .Example for debian based systems
+-----------------------------------------------------------------------------
  apt-get install python
+-----------------------------------------------------------------------------
 
 If you prefer to install python by hand:
 
@@ -53,22 +79,27 @@ Download and install the packages from the following locations:
  1. Python 2.x.x: http://www.python.org/download . The installer presents several features to be installed. You can save disk space and select only "Register Extensions". You do not need "Tcl/Tk", "Documentation", "Utility Scripts" and the "Test Suite".
 
 
-== Compile
+=== Compile
 
-Open a command line window and change to the folder where you unpacked the flasher sources. There is a file named 'setup.xml'. Run the command 'python mbs/setup.py' there. After some time and a lot of output, the target folder contains the binaries and this documentation.
+Open a command line window and change to the folder where you unpacked the flasher sources. There is a file named 'setup.xml'. Run the command 'python mbs/mbs' there. After some time and a lot of output, the target folder contains the binaries and this documentation.
 
-
+.Example output of the build process on linux
 -----------------------------------------------------------------------------
- hindin:/home/brynhild/flasher$ python mbs/setup.py
- Processing package scons-local, version 2.0.1_1
- The package is not installed yet.
- The package must be downloaded.
+ hindin:/home/brynhild/flasher$ python mbs/mbs
+ Processing package scons-local, version 2.3.0_1
+ The package is not in the repository. It must be downloaded.
  Trying repository at http://downloads.sourceforge.net/project/muhkuh/mbs/...
- 100% (87/87)
- 0% (2048/128433386)
- 0% (4096/128433386)
- 0% (6144/128433386)
- 0% (8192/128433386)
+ sizTotal 41
+   0% 
+ sizTotal 318035
+   0% ..................................................
+  32% ..................................................
+  64% ..................................................
+  96% .....
+ The checksums match: OK!
+ Unpacking...
+ Installed package.
+ Processing package asciidoc, version 8.6.8_1
 [...]
 -----------------------------------------------------------------------------
 
@@ -85,10 +116,56 @@ Open a command line window and change to the folder where you unpacked the flash
  * `targets/flasher_netx56_debug.bin` : the netX51/52 version with a lot of debug output
  * `targets/lua/flasher.lua` : LUA support routines for the Muhkuh testing environment
  * `targets/doc/flasher.html` : this documentation
+ * `targets/doc/README.rst` : a short introduction of the flasher for the Sourceforge download page
+ * `targets/doc/spi_flash_list.txt` : a list of all supported SPI flashes which do not support the SFDP autodetection (this list contains only the names)
+ * `targets/doc/spi_flash_types.html` : a list of all supported SPI flashes which do not support the SFDP autodetection (this list contains a lot of details)
 
 
 == Using the flasher
 
+The flasher itself is a program for
+
+
+=== Using the flasher with LUA.
+
+[source,lua]
+-----------------------------------------------------------------------------
+require("flasher")
+
+
+if #arg~=1 then
+	error("Missing parameter: file to flash.")
+end
+strFileName = arg[1]
+
+
+tPlugin = tester.getCommonPlugin()
+if not tPlugin then
+	error("No plugin selected, nothing to do!")
+end
+
+
+-- Flash the file.
+local tBus = flasher.BUS_Spi
+local ulUnit = 0
+local ulChipSelect = 0
+flasher.simple_flasher(tPlugin, strFileName, tBus, ulUnit, ulChipSelect, "netx/")
+
+print("")
+print(" #######  ##    ## ")
+print("##     ## ##   ##  ")
+print("##     ## ##  ##   ")
+print("##     ## #####    ")
+print("##     ## ##  ##   ")
+print("##     ## ##   ##  ")
+print(" #######  ##    ## ")
+print("")
+
+-- Disconnect the plugin.
+tester.closeCommonPlugin()
+-----------------------------------------------------------------------------
+
+ 
 === Using the flasher as a standalone application:
 
  1. Download the flasher to the netx with the a jtag debugger or the netxusbmon tool. The load address is 0x8000.
