@@ -173,8 +173,17 @@ Please check the datasheet of the flash device for the SFDP protocol. If the
 device supports it, there is no need to add the device to the XML file. It
 will be completely autodetected with the SFDP protocol.
 
+The name of the XML file is `spi_flash_types.xml`. It is located in the `src`
+subfolder of the source distribution of the flasher. It is not part of the
+executable distribution of the flasher. Here is a link the latest version in
+the Mercurial repository: http://hg.code.sf.net/p/muhkuh/flasher/raw-file/tip/src/spi_flash_types.xml[src/spi_flash_types.xml].
+
+The root node of the XML file is named `KnownSerialFlashes`. All flash
+definitions are direct child nodes of the root node. They are named
+`SerialFlash`.
+
 Here are example definitions for two common devices in netX designs: the
-Winbond W25Q32 and the Atmel AT45DB321E:
+Winbond W25Q32 and the Atmel AT45DB321E.
 
 [source,xml]
 .XML definition for the Winbond W25Q32
@@ -182,11 +191,21 @@ Winbond W25Q32 and the Atmel AT45DB321E:
         <SerialFlash name="W25Q32" size="4194304" clock="80000">
                 <Description>Winbond W25Q32</Description>
                 <Note></Note>
-                <Layout pageSize="256" sectorPages="16" mode="linear" />
+                <Layout pageSize="256"
+                        sectorPages="16"
+                        mode="linear" />
                 <Read readArrayCommand="0x03" ignoreBytes="0" />
-                <Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
-                <Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0xc7" />
-                <Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+                <Write writeEnableCommand="0x06"
+                       pageProgramCommand="0x02"
+                       bufferFillCommand=""
+                       bufferWriteCommand=""
+                       eraseAndPageProgramCommand="" />
+                <Erase erasePageCommand=""
+                       eraseSectorCommand="0x20"
+                       eraseChipCommand="0xc7" />
+                <Status readStatusCommand="0x05"
+                        statusReadyMask="0x01"
+                        statusReadyValue="0x00" />
                 <Init0 command="" />
                 <Init1 command="" />
                 <Id send="0x9f, 0x00, 0x00, 0x00"
@@ -200,12 +219,23 @@ Winbond W25Q32 and the Atmel AT45DB321E:
 -----------------------------------------------------------------------------
         <SerialFlash name="AT45DB321E" size="4325376" clock="50000">
                 <Description>Adesto AT45DB321E</Description>
-                <Note>NOTE: this must be before the Atmel ATDB321B type, or this will never match</Note>
-                <Layout pageSize="528" sectorPages="8" mode="pagesize bitshift" />
+                <Note>NOTE: this must be before the Atmel ATDB321B type,
+                      or this will never match</Note>
+                <Layout pageSize="528"
+                        sectorPages="8"
+                        mode="pagesize bitshift" />
                 <Read readArrayCommand="0x03" ignoreBytes="0" />
-                <Write writeEnableCommand="" pageProgramCommand="" bufferFillCommand="0x84" bufferWriteCommand="0x88" eraseAndPageProgramCommand="0x82" />
-                <Erase erasePageCommand="0x81" eraseSectorCommand="0x50" eraseChipCommand="0xc7, 0x94, 0x80, 0x9a" />
-                <Status readStatusCommand="0xd7" statusReadyMask="0xbc" statusReadyValue="0xb4" />
+                <Write writeEnableCommand=""
+                       pageProgramCommand=""
+                       bufferFillCommand="0x84"
+                       bufferWriteCommand="0x88"
+                       eraseAndPageProgramCommand="0x82" />
+                <Erase erasePageCommand="0x81"
+                       eraseSectorCommand="0x50"
+                       eraseChipCommand="0xc7, 0x94, 0x80, 0x9a" />
+                <Status readStatusCommand="0xd7"
+                        statusReadyMask="0xbc"
+                        statusReadyValue="0xb4" />
                 <Init0 command="" />
                 <Init1 command="" />
                 <Id send="0x9f, 0x00, 0x00, 0x00, 0x00, 0x00"
@@ -228,6 +258,11 @@ In general a definition covers the following topics:
 
 All of these values can be extracted straight forward from the datasheet. The following chapters give more information about each topic.
 
+[TIP]
+In the `src` folder is also a schema definition in the file
+`spi_flash_types.xsd`. Some editors support a validation of an XML file with
+the help of such a schema file. Use it to check your modifications.
+
 
 ==== name and description
 
@@ -239,16 +274,148 @@ The description is a full text description of the flash device. In general this 
 The following example shows the position of the name and description.
 
 [source,xml,numbered]
-.XML definition for the Winbond W25Q32
+.Position of the name and description in the XML definition
 -----------------------------------------------------------------------------
         <SerialFlash name="W25Q32<1>" size="4194304" clock="80000">
-                <Description>Winbond W25Q32<2></Description>
+                <Description>Winbond W25Q32</Description><2>
                 <Note></Note>
-                <Layout pageSize="256" sectorPages="16" mode="linear" />
+                <Layout pageSize="256"
+                        sectorPages="16"
+                        mode="linear" />
 -----------------------------------------------------------------------------
 
 <1> The name of the device
 <2> The description of the device
+
+
+==== notes
+
+Notes are informative entries meant for developers. They are not shown to the users of the flasher, but they are part of the HTML list of the build-in devices.
+One flash description can have more than one note in separate `Note` nodes.
+
+The following example shows the position of the notes:
+
+[source,xml]
+.Position of the notes in the XML definition
+-----------------------------------------------------------------------------
+        <SerialFlash name="AT45DB321E" size="4325376" clock="50000">
+                <Description>Adesto AT45DB321E</Description>
+                <Note>NOTE: this must be before the Atmel ATDB321B type,
+                      or this will never match</Note><1>
+                <Layout pageSize="528" sectorPages="8" mode="pagesize bitshift" />
+                <Read readArrayCommand="0x03" ignoreBytes="0" />
+-----------------------------------------------------------------------------
+
+<1> A note entry for the device.
+
+
+==== capacity
+
+The capacity in bytes is simply the amout of bytes the device can store. The following example shows the capacity for the Winbond W25Q32. It has 4194304 bytes, which is exactly 4MB.
+
+[NOTE]
+Please note that the capacity must be specified as a single number. Any
+suffixes like "kB" or "MB" can not be used.
+
+[source,xml,numbered]
+.Position of the capacity in the XML definition
+-----------------------------------------------------------------------------
+        <SerialFlash name="W25Q32" size="4194304<1>" clock="80000">
+                <Description>Winbond W25Q32</Description>
+                <Note></Note>
+                <Layout pageSize="256"
+                        sectorPages="16"
+                        mode="linear" />
+-----------------------------------------------------------------------------
+
+<1> The capacity in bytes.
+
+[NOTE]
+Not all devices have a capacity which equals asciimath:[2^x]. Atmel data flashes for example have a capacity which is a multiple of 528 bytes.
+
+
+==== maximum frequency
+
+The maximum frequency is specified in kHz. The following example has a value
+of `80000`. This means the W25Q32 has a maximum operating frequency of
+80000kHz, which equals 80MHz.
+
+[IMPORTANT]
+Some flash devices have more than one maximum operating frequency. A common
+example for this case are read commands which have several "don't care bytes"
+before the data. These special read commands can operate at a higher speed
+than the rest of the commands. Please note that the flasher uses only one
+maximum frequency. It must fit for all commands - also the slow ones.
+
+[source,xml,numbered]
+.Position of the maximum frequency in the XML definition
+-----------------------------------------------------------------------------
+        <SerialFlash name="W25Q32" size="4194304" clock="80000<1>">
+                <Description>Winbond W25Q32</Description>
+                <Note></Note>
+                <Layout pageSize="256"
+                        sectorPages="16"
+                        mode="linear" />
+-----------------------------------------------------------------------------
+
+<1> The maximum frequency.
+
+[NOTE]
+The flasher will use the highest possible frequency to access the device. This
+is limitated by the netX SPI controller. In general it is only 25 or 33MHz
+depending on the netX type (netX500, netX100, netX50, etc.). However this does
+not affect the overall performance of the flasher very much. The transfer times
+on the SPI bus are minimal compared to the write and especially erase times for
+current flash devices.
+
+
+==== Geometry options
+
+The geometry options of a flash describe the addressing scheme and the
+organisation of the data in erase and write groups.
+
+The first parameter is the page size. This describes how many bytes can be
+written to the flash in one chunk. This is not unlimited as the data must be
+buffered in the device for the flashing procedure. The value is specified in
+bytes. It can be found in the datasheet at the description of the write command.
+
+In contrast to EEPROM devices most flash devices can not erase a single byte
+without touching the rest of the data. The flash is rather organized in so
+called erase blocks. An erase block can only be erased completely.
+
+The second parameter is the size of the erase area. It is called `sectorPages`
+and is specified as multiples of the page size. A value of "16" means 16 times
+the size of a page. In the example below this results in asciimath:[16 * 256 = 4096].
+An erase area is the minimum 
+
+
+
+[source,xml,numbered]
+.The geometry options in the XML definition
+-----------------------------------------------------------------------------
+        <SerialFlash name="W25Q32" size="4194304" clock="80000">
+                <Description>Winbond W25Q32</Description>
+                <Note></Note>
+                <Layout pageSize="256<1>"
+                        sectorPages="16<2>"
+                        mode="linear<3>" />
+                <Read readArrayCommand="0x03" ignoreBytes="0" />
+                <Write writeEnableCommand="0x06"
+                       pageProgramCommand="0x02<4>"
+                       bufferFillCommand="<5>"
+                       bufferWriteCommand="<6>"
+                       eraseAndPageProgramCommand="" />
+                <Erase erasePageCommand=""
+                       eraseSectorCommand="0x20"
+                       eraseChipCommand="0xc7" />
+                <Status readStatusCommand="0x05"
+-----------------------------------------------------------------------------
+
+<1> The page size in bytes.
+<2> The number of pages per sector.
+<3> The addressing mode.
+
+
 
 
 
