@@ -145,12 +145,111 @@ If you have an SPI flash and would like to use it with the flasher there are sev
 just run the LUA script `identify_serflash.lua` from the flasher distribution. If the flash is supported, a big OK appears.
 
 Doing a test run is the prefered way to check if a flash device is supported by the flasher. If this works, there is no doubt left. Unfortunately in some cases this is not possible.
-Still there are some ways to check if a flash device is already supported by the flasher:
+Still there are some ways:
 
  . Check the datasheet of the device for SFDP support.
  . Every release of the flasher comes with a file named `spi_flash_list.txt`. This file shows all flash devices in the build-in list. Check if the flash is listed there.
 
-If both 
+If both approaches failed, it looks like the device is not supported yet. As it does not support the SFDP protocol, it must be added to the build-in list. The chapter <<The_build_in_list_of_known_devices>> describes
+how to do this. Please consider to contribute your changes back to the flasher project. This has the benefit that all future releases will support your flash device out of the box.
+
+If you run into problems adding the description, you can ask for help on the
+flasher mailing (TODO: add link) list or issue a feature request (TODO: add link).
+But please note that this is a non-profit open source project. We can not
+guarantee a response time of X hours or such things. The netX support at
+Hilscher will be happy to help you in these cases (TODO: add link).
+
+
+[[The_build_in_list_of_known_devices,The build-in list of known devices]]
+==== The build-in list of known devices
+
+Adding a new SPI flash device to the flasher is a real simple task. All
+definitions are stored in a simple XML file. There is no need to write C code.
+It is required to run the build system though, which is described in the
+chapter <<Building the flasher from source>>.
+
+[TIP]
+Please check the datasheet of the flash device for the SFDP protocol. If the
+device supports it, there is no need to add the device to the XML file. It
+will be completely autodetected with the SFDP protocol.
+
+Here are example definitions for two common devices in netX designs: the
+Winbond W25Q32 and the Atmel AT45DB321E:
+
+[source,xml]
+.XML definition for the Winbond W25Q32
+-----------------------------------------------------------------------------
+        <SerialFlash name="W25Q32" size="4194304" clock="80000">
+                <Description>Winbond W25Q32</Description>
+                <Note></Note>
+                <Layout pageSize="256" sectorPages="16" mode="linear" />
+                <Read readArrayCommand="0x03" ignoreBytes="0" />
+                <Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="" bufferWriteCommand="" eraseAndPageProgramCommand="" />
+                <Erase erasePageCommand="" eraseSectorCommand="0x20" eraseChipCommand="0xc7" />
+                <Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+                <Init0 command="" />
+                <Init1 command="" />
+                <Id send="0x9f, 0x00, 0x00, 0x00"
+                    mask="0x00, 0xff, 0xff, 0xff"
+                    magic="0x00, 0xef, 0x40, 0x16" />
+        </SerialFlash>
+-----------------------------------------------------------------------------
+
+[source,xml]
+.XML definition for the Atmel AT45DB321E
+-----------------------------------------------------------------------------
+        <SerialFlash name="AT45DB321E" size="4325376" clock="50000">
+                <Description>Adesto AT45DB321E</Description>
+                <Note>NOTE: this must be before the Atmel ATDB321B type, or this will never match</Note>
+                <Layout pageSize="528" sectorPages="8" mode="pagesize bitshift" />
+                <Read readArrayCommand="0x03" ignoreBytes="0" />
+                <Write writeEnableCommand="" pageProgramCommand="" bufferFillCommand="0x84" bufferWriteCommand="0x88" eraseAndPageProgramCommand="0x82" />
+                <Erase erasePageCommand="0x81" eraseSectorCommand="0x50" eraseChipCommand="0xc7, 0x94, 0x80, 0x9a" />
+                <Status readStatusCommand="0xd7" statusReadyMask="0xbc" statusReadyValue="0xb4" />
+                <Init0 command="" />
+                <Init1 command="" />
+                <Id send="0x9f, 0x00, 0x00, 0x00, 0x00, 0x00"
+                    mask="0x00, 0xff, 0xff, 0xff, 0xff, 0xff"
+                    magic="0x00, 0x1f, 0x27, 0x01, 0x01, 0x00" />
+        </SerialFlash>
+-----------------------------------------------------------------------------
+
+
+In general a definition covers the following topics:
+
+ * A short name and a description of the device
+ * Notes
+ * The capacity in bytes
+ * The maximum clock frequency
+ * Geometry options (page and sector size)
+ * Command bytes
+ * Initialisation sequences
+ * Identification sequences
+
+All of these values can be extracted straight forward from the datasheet. The following chapters give more information about each topic.
+
+
+==== name and description
+
+The name is a short identifier for the device. It must only contain alphanumeric characters and underscores. Furthermore it must be unique in the complete list.
+The name is used in some other tools like the Bootwizzard (TODO: add link) to select an entry.
+
+The description is a full text description of the flash device. In general this should be the more verbose form of the name. There are no limitations for the text.
+
+The following example shows the position of the name and description.
+
+[source,xml,numbered]
+.XML definition for the Winbond W25Q32
+-----------------------------------------------------------------------------
+        <SerialFlash name="W25Q32<1>" size="4194304" clock="80000">
+                <Description>Winbond W25Q32<2></Description>
+                <Note></Note>
+                <Layout pageSize="256" sectorPages="16" mode="linear" />
+-----------------------------------------------------------------------------
+
+<1> The name of the device
+<2> The description of the device
+
 
 
 == Using the flasher
