@@ -121,6 +121,38 @@ Open a command line window and change to the folder where you unpacked the flash
  * `targets/doc/spi_flash_types.html` : a list of all supported SPI flashes which do not support the SFDP autodetection (this list contains a lot of details)
 
 
+== Adding new flash devices
+
+The flasher works with 2 types of flash devices:
+
+ * serial flashes on the SPI bus
+ * parallel NOR flashes
+
+Both types are auto-detected by the flasher. The following chapters describe how this works and how new flashes are added.
+
+
+=== SPI flashes
+
+SPI flashes are detected in 2 steps: first the flasher tries a built-in list of known devices. Every entry in the list has a description how the flash can be identified in a hopefully unambiguous way.
+If no entry in this list matches, the SFDP protocol is used. SFDP is a JEDEC standard (JESD216A) and provides all kind information about the flash: the capacity, the maximum clock
+frequency, command bytes for common operations and information about multiline capabilities of the device (2bit or 4bit modes).
+
+SFDP is exactly the standard which a tool like the flasher needs. It is easy to implement as it is not (yet) cluttered with vendor specific extensions like CFI. It looks like the perfect replacement for
+the big and clumsy build-in list of known devices. Unfortunately this is not possible at the moment. SFDP came out in 20XX (TODO: Add year here). This means there are still a lot of flash devices on the market which
+do not support this protocol. We still need the build-in list.
+
+If you have an SPI flash and would like to use it with the flasher there are several ways to find out if it is already supported. If you have a netX board assembled with the flash, it is simple:
+just run the LUA script `identify_serflash.lua` from the flasher distribution. If the flash is supported, a big OK appears.
+
+Doing a test run is the prefered way to check if a flash device is supported by the flasher. If this works, there is no doubt left. Unfortunately in some cases this is not possible.
+Still there are some ways to check if a flash device is already supported by the flasher:
+
+ . Check the datasheet of the device for SFDP support.
+ . Every release of the flasher comes with a file named `spi_flash_list.txt`. This file shows all flash devices in the build-in list. Check if the flash is listed there.
+
+If both 
+
+
 == Using the flasher
 
 The flasher itself is a program for
