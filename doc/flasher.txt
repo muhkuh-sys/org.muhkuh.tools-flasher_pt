@@ -372,22 +372,35 @@ current flash devices.
 ==== Geometry options
 
 The geometry options of a flash describe the addressing scheme and the
-organisation of the data in erase and write groups.
+organisation of the data in erase and write blocks.
 
-The first parameter is the page size. This describes how many bytes can be
-written to the flash in one chunk. This is not unlimited as the data must be
-buffered in the device for the flashing procedure. The value is specified in
-bytes. It can be found in the datasheet at the description of the write command.
+The first geometry option is the page size. This describes how many bytes can
+be written to the flash in one chunk. This is not unlimited as the data must
+be buffered in the device for the flashing procedure. The value is specified
+in bytes. It can be found in the datasheet at the description of the write
+command. The Winbond W25Q32 for example can write up to 256 bytes at once.
 
 In contrast to EEPROM devices most flash devices can not erase a single byte
 without touching the rest of the data. The flash is rather organized in so
 called erase blocks. An erase block can only be erased completely.
+The second geometry option describes the size of an erase block. It is called
+`sectorPages` and is specified as a multiplier for the page size. A value of
+"16" means 16 times the size of a page. In the example below this results in
+asciimath:[16 * 256 = 4096].
 
-The second parameter is the size of the erase area. It is called `sectorPages`
-and is specified as multiples of the page size. A value of "16" means 16 times
-the size of a page. In the example below this results in asciimath:[16 * 256 = 4096].
-An erase area is the minimum 
-
+[NOTE]
+Modern flash devices provide several different sized erase blocks. The Winbond
+W25Q32 for example has 3 different ones: 4kB, 32kB and 64kB. The best practice
+in this case is to choose the smallest value which is larger than or equal to
+the page size. For the W25Q32 this is 4kB which equals 4096 bytes. The reason
+for this is the best tradeoff between speed and granularity. If the erase
+block is too small, it will take a lot of commands to erase a large area. More
+commands means that more time is needed. A large erase block would take not so
+many commands. It is faster. On the other hand the granularity goes down with
+a large erase block. This comes into account if an erase operation does not
+start or end at the border of an erase block. In this case the rest of the
+affected blocks must also be erased. If there is important content, it must be
+preserved "by hand". This takes more time for larger blocks.
 
 
 [source,xml,numbered]
