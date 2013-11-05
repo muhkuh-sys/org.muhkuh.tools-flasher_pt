@@ -556,30 +556,10 @@ static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 }
 
 
-/*! Drv_SpiInitializeFlash
-*   Initializes the FLASH
-*               
-*   \param  ptFls   Pointer to FLASH Control Block
-*                                                                              
-*   \return  RX_OK                   FLASH successfully initialized
-*            Drv_SpiS_INVALID        Specified Flash Control Block invalid
-*            Drv_SpiS_UNKNOWN_FLASH  failed to detect the serial FLASH
-*/
-int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptFlash)
+/* TODO: move this to the board.c file. */
+int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDev)
 {
-	int   iResult;
-	const SPIFLASH_ATTRIBUTES_T *ptFlashAttr;
-	SPI_CFG_T *ptSpiDev;
-	unsigned int uiCmdLen;
-
-
-	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiInitializeFlash(): ptSpiCfg=%08x, ptFlash=0x%08x\n", ptSpiCfg, ptFlash));
-
-	/* no flash detected yet */
-	ptFlashAttr = NULL;
-
-	/* get device */
-	ptSpiDev = &ptFlash->tSpiDev;
+	int iResult;
 
 
 #if ASIC_TYP==500 || ASIC_TYP==100
@@ -633,7 +613,37 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 	iResult = -1;
 #endif
 
+	return iResult;
+}
 
+
+/*! Drv_SpiInitializeFlash
+*   Initializes the FLASH
+*               
+*   \param  ptFls   Pointer to FLASH Control Block
+*                                                                              
+*   \return  RX_OK                   FLASH successfully initialized
+*            Drv_SpiS_INVALID        Specified Flash Control Block invalid
+*            Drv_SpiS_UNKNOWN_FLASH  failed to detect the serial FLASH
+*/
+int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptFlash)
+{
+	int   iResult;
+	const SPIFLASH_ATTRIBUTES_T *ptFlashAttr;
+	SPI_CFG_T *ptSpiDev;
+	unsigned int uiCmdLen;
+
+
+	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiInitializeFlash(): ptSpiCfg=%08x, ptFlash=0x%08x\n", ptSpiCfg, ptFlash));
+
+	/* no flash detected yet */
+	ptFlashAttr = NULL;
+
+	/* get device */
+	ptSpiDev = &ptFlash->tSpiDev;
+
+	/* Get the driver. */
+	iResult = board_get_spi_driver(ptSpiCfg, ptSpiDev);
 	if( iResult!=0 )
 	{
 		//uprintf("ERROR: Drv_SpiInitializeFlash: HalSPI_Init failed with %d.\n", iResult);

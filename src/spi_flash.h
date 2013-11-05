@@ -67,5 +67,7 @@ int Drv_SpiWritePage              (const SPI_FLASH_T *ptFlash, unsigned long ulL
 
 const char *spi_flash_get_adr_mode_name(SPIFLASH_ADR_T tAdrMode);
 
+int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDev);
 
 #endif
+
