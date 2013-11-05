@@ -28,6 +28,7 @@
 #include "flasher_parflash.h"
 /* Serial flash on SPI. */
 #include "flasher_spi.h"
+#include "spi_macro_player.h"
 #include "sha1.h"
 
 #include "flasher_interface.h"
@@ -461,6 +462,19 @@ static NETX_CONSOLEAPP_RESULT_T opMode_easyErase(tFlasherInputParameter *ptAppPa
 
 /* ------------------------------------- */
 
+
+static NETX_CONSOLEAPP_RESULT_T opMode_spiMacroPlayer(tFlasherInputParameter *ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+
+
+	tResult = spi_macro_player(&(ptAppParams->uParameter.tSpiMacroPlayer));
+	return tResult;
+}
+
+
+/* ------------------------------------- */
+
 #define FLAG_STARTADR 1
 #define FLAG_ENDADR 2
 #define FLAG_SIZE 4
@@ -586,6 +600,11 @@ static NETX_CONSOLEAPP_RESULT_T check_params(NETX_CONSOLEAPP_PARAMETER_T *ptCons
 		ptDeviceDescription = ptAppParams->uParameter.tGetEraseArea.ptDeviceDescription;
 		uprintf(". Mode: Get Erase Area\n");
 		uprintf(". Flash offset [0x%08x, 0x%08x[\n", ulStartAdr, ulEndAdr);
+		break;
+
+	case OPERATION_MODE_SpiMacroPlayer:
+		ulPars = 0;
+		uprintf(". Mode: SPI Macro Player\n");
 		break;
 
 	default:
@@ -898,6 +917,10 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 
 			case OPERATION_MODE_EasyErase:
 				tResult = opMode_easyErase(ptAppParams, ptTestParam);
+				break;
+
+			case OPERATION_MODE_SpiMacroPlayer:
+				tResult = opMode_spiMacroPlayer(ptAppParams, ptTestParam);
 				break;
 			}
 		}

@@ -53,8 +53,8 @@ OPERATION_MODE_Detect            = ${OPERATION_MODE_Detect}     -- Detect a devi
 OPERATION_MODE_IsErased          = ${OPERATION_MODE_IsErased}     -- Check if the specified area of a device is erased.
 OPERATION_MODE_GetEraseArea      = ${OPERATION_MODE_GetEraseArea}     -- Expand an area to the erase block borders.
 OPERATION_MODE_GetBoardInfo      = ${OPERATION_MODE_GetBoardInfo}     -- Get bus and unit information.
-OPERATION_MODE_EasyErase         = ${OPERATION_MODE_EasyErase}        -- A combination of GetEraseArea, IsErased and Erase.
-
+OPERATION_MODE_EasyErase         = ${OPERATION_MODE_EasyErase}     -- A combination of GetEraseArea, IsErased and Erase.
+OPERATION_MODE_SpiMacroPlayer    = ${OPERATION_MODE_SpiMacroPlayer}    -- A debug mode to send commands to a SPI flash.
 
 
 MSK_SQI_CFG_IDLE_IO1_OE          = ${MSK_SQI_CFG_IDLE_IO1_OE}
@@ -893,5 +893,38 @@ function simple_flasher(tPlugin, strDataFileName, tBus, ulUnit, ulChipSelect, st
 	end
 	
 	simple_flasher_string(tPlugin, strData, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)
+end
+
+
+
+--------------------------------------------------------------------------
+-- SPI macro player
+--------------------------------------------------------------------------
+
+function spi_macro_player(tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, fnCallbackProgress, fnCallbackMessage)
+	local ulValue
+	local aulParameter
+	local ulIdleCfg
+	
+	ulIdleCfg = MSK_SQI_CFG_IDLE_IO1_OE + MSK_SQI_CFG_IDLE_IO1_OUT
+	          + MSK_SQI_CFG_IDLE_IO2_OE + MSK_SQI_CFG_IDLE_IO2_OUT
+	          + MSK_SQI_CFG_IDLE_IO3_OE + MSK_SQI_CFG_IDLE_IO3_OUT
+	
+	aulParameter =
+	{
+		OPERATION_MODE_SpiMacroPlayer,        -- operation mode: SPI macro player
+		ulUnit,                               -- the SPI unit
+		ulChipSelect,                         -- the SPI chip select
+		ulSpeed_kHz,                          -- the speed in kHz (1000 -> 1MHz)
+		ulIdleCfg,                            -- idle config
+		3,                                    -- mode
+		0xffffffff,                           -- mmio config
+		
+		0,                                    -- A pointer to the macro block.
+		0                                     -- The size of the macro in bytes.
+	}
+	
+	ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
+	return ulValue == 0
 end
 

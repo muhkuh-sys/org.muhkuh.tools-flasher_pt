@@ -53,6 +53,7 @@ flasher_sources_common = """
 	src/rdyrun.c
 	src/sfdp.c
 	src/spansion.c
+	src/spi_macro_player.c
 	src/strata.c
 	src/systime.c
 	src/units.c

@@ -49,7 +49,8 @@ typedef enum
 	OPERATION_MODE_IsErased         = 6,    /* check if the specified area of a device is erased */
 	OPERATION_MODE_GetEraseArea     = 7,    /* expand an area to the erase block borders */
 	OPERATION_MODE_GetBoardInfo     = 8,    /* get bus and unit information */
-	OPERATION_MODE_EasyErase        = 9     /* A combination of GetEraseArea, IsErased and Erase. */
+	OPERATION_MODE_EasyErase        = 9,    /* A combination of GetEraseArea, IsErased and Erase. */
+	OPERATION_MODE_SpiMacroPlayer   = 10    /* Play an SPI macro. */
 } OPERATION_MODE_T;
 
 
@@ -154,6 +155,14 @@ typedef struct
 } CMD_PARAMETER_GETBOARDINFO_T;
 
 
+typedef struct CMD_PARAMETER_SPIMACROPLAYER_STRUCT
+{
+	SPI_CONFIGURATION_T tSpi;
+	unsigned char *pucBuffer;
+	size_t sizBuffer;
+} CMD_PARAMETER_SPIMACROPLAYER_T;
+
+
 typedef struct
 {
 	unsigned long ulParamVersion;
@@ -169,6 +178,7 @@ typedef struct
 		CMD_PARAMETER_ISERASED_T tIsErased;
 		CMD_PARAMETER_GETERASEAREA_T tGetEraseArea;
 		CMD_PARAMETER_GETBOARDINFO_T tGetBoardInfo;
+		CMD_PARAMETER_SPIMACROPLAYER_T tSpiMacroPlayer;
 	} uParameter;
 } tFlasherInputParameter;
 
