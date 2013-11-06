@@ -7,7 +7,7 @@ Doc Bacardi <doc_bacardi@sourceforge.net>
 == About
 
 The flasher is a program for the netX network controllers from Hilscher (http://www.hilscher.com).
-It's main use case is writing a bootable image to an SPI or parallel flash.
+Its main use case is writing a bootable image to an SPI or parallel flash.
 
 In general the flasher works with flash devices. It can...
 
@@ -138,8 +138,8 @@ If no entry in this list matches, the SFDP protocol is used. SFDP is a JEDEC sta
 frequency, command bytes for common operations and information about multiline capabilities of the device (2bit or 4bit modes).
 
 SFDP is exactly the standard which a tool like the flasher needs. It is easy to implement as it is not (yet) cluttered with vendor specific extensions like CFI. It looks like the perfect replacement for
-the big and clumsy build-in list of known devices. Unfortunately this is not possible at the moment. SFDP came out in 20XX (TODO: Add year here). This means there are still a lot of flash devices on the market which
-do not support this protocol. We still need the build-in list.
+the big and clumsy built-in list of known devices. Unfortunately this is not possible at the moment. SFDP came out in 20XX (TODO: Add year here). This means there are still a lot of flash devices on the market which
+do not support this protocol. We still need the built-in list.
 
 If you have an SPI flash and would like to use it with the flasher there are several ways to find out if it is already supported. If you have a netX board assembled with the flash, it is simple:
 just run the LUA script `identify_serflash.lua` from the flasher distribution. If the flash is supported, a big OK appears.
@@ -148,9 +148,9 @@ Doing a test run is the prefered way to check if a flash device is supported by 
 Still there are some ways:
 
  . Check the datasheet of the device for SFDP support.
- . Every release of the flasher comes with a file named `spi_flash_list.txt`. This file shows all flash devices in the build-in list. Check if the flash is listed there.
+ . Every release of the flasher comes with a file named `spi_flash_list.txt`. This file shows all flash devices in the built-in list. Check if the flash is listed there.
 
-If both approaches failed, it looks like the device is not supported yet. As it does not support the SFDP protocol, it must be added to the build-in list. The chapter <<The_build_in_list_of_known_devices>> describes
+If both approaches failed, it looks like the device is not supported yet. As it does not support the SFDP protocol, it must be added to the built-in list. The chapter <<The_built_in_list_of_known_devices>> describes
 how to do this. Please consider to contribute your changes back to the flasher project. This has the benefit that all future releases will support your flash device out of the box.
 
 If you run into problems adding the description, you can ask for help on the
@@ -160,8 +160,8 @@ guarantee a response time of X hours or such things. The netX support at
 Hilscher will be happy to help you in these cases (TODO: add link).
 
 
-[[The_build_in_list_of_known_devices,The build-in list of known devices]]
-==== The build-in list of known devices
+[[The_built_in_list_of_known_devices,The built-in list of known devices]]
+==== The built-in list of known devices
 
 Adding a new SPI flash device to the flasher is a real simple task. All
 definitions are stored in a simple XML file. There is no need to write C code.
@@ -175,7 +175,7 @@ will be completely autodetected with the SFDP protocol.
 
 The name of the XML file is `spi_flash_types.xml`. It is located in the `src`
 subfolder of the source distribution of the flasher. It is not part of the
-executable distribution of the flasher. Here is a link the latest version in
+executable distribution of the flasher. Here is a link to the latest version in
 the Mercurial repository: http://hg.code.sf.net/p/muhkuh/flasher/raw-file/tip/src/spi_flash_types.xml[src/spi_flash_types.xml].
 
 The root node of the XML file is named `KnownSerialFlashes`. All flash
@@ -290,7 +290,7 @@ The following example shows the position of the name and description.
 
 ==== notes
 
-Notes are informative entries meant for developers. They are not shown to the users of the flasher, but they are part of the HTML list of the build-in devices.
+Notes are informative entries meant for developers. They are not shown to the users of the flasher, but they are part of the HTML list of the built-in devices.
 One flash description can have more than one note in separate `Note` nodes.
 
 The following example shows the position of the notes:
