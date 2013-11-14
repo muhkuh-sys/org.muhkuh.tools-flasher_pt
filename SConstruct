@@ -256,8 +256,8 @@ lua_flasher = env_netx500_nodbg.GccSymbolTemplate('targets/lua/flasher.lua', elf
 # Build the documentation.
 #
 
-env_default.XSLT('targets/doc/spi_flash_types.html', ['src/spi_flash_types.xml', 'src/spi_flash_types.xsl'])
-env_default.XSLT('targets/doc/spi_flash_list.txt', ['src/spi_flash_types.xml', 'src/spi_flash_list.xsl'])
+tDocSpiFlashTypesHtml = env_default.XSLT('targets/doc/spi_flash_types.html', ['src/spi_flash_types.xml', 'src/spi_flash_types.xsl'])
+tDocSpiFlashListTxt = env_default.XSLT('targets/doc/spi_flash_list.txt', ['src/spi_flash_types.xml', 'src/spi_flash_list.xsl'])
 
 
 # Get the default attributes.
@@ -306,7 +306,9 @@ tArcList.AddFiles('bin/debug/',
 	bin_netx10_dbg)
 
 tArcList.AddFiles('doc/',
-	doc)
+	doc,
+	tDocSpiFlashTypesHtml,
+	tDocSpiFlashListTxt)
 
 tArcList.AddFiles('lua/',
 	'lua/cli_flash.lua',
