@@ -35,11 +35,7 @@ The most common modification is the addition of new SPI flash types. Please see 
 [[Building_the_flasher_from_source, Building the flasher from source]]
 == Building the flasher from source
 
-Building the netX flasher is currently supported on Linux operating systems and some versions of Windows. Please note that the following versions of Windows are not supported:
-
- * Windows Vista
- * Windows 7
- * Windows Server 2008
+Building the netX flasher is currently supported on Linux operating systems and Windows starting with XP.
 
 To compile the netX flasher you need only 1 tool: Python. A small python script will take care of the rest of the dependencies.
 
