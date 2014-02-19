@@ -191,6 +191,21 @@
 		    magic="0x00, 0x1f, 0x28, 0x00, 0x00" />
 	</SerialFlash>
 
+	<SerialFlash name="AT45DB641E" size="8650752" clock="50000">
+		<Description>Adesto AT45DB641E</Description>
+		<Note></Note>
+		<Layout pageSize="264" sectorPages="8" mode="pagesize bitshift" />
+		<Read readArrayCommand="0x0b" ignoreBytes="1" />
+		<Write writeEnableCommand="" pageProgramCommand="" bufferFillCommand="0x84" bufferWriteCommand="0x88" eraseAndPageProgramCommand="0x82" />
+		<Erase erasePageCommand="0x81" eraseSectorCommand="0x50" eraseChipCommand="0xc7, 0x94, 0x80, 0x9a" />
+		<Status readStatusCommand="0xd7" statusReadyMask="0xbc" statusReadyValue="0xbc" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff, 0xff, 0xff"
+		    magic="0x00, 0x1f, 0x28, 0x00, 0x01, 0x00" />
+	</SerialFlash>
+
 	<SerialFlash name="NX25P10" size="131072" clock="20000">
 		<Description>NexFlash NX25P10</Description>
 		<Note></Note>
