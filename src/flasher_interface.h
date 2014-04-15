@@ -158,7 +158,7 @@ typedef struct
 typedef struct CMD_PARAMETER_SPIMACROPLAYER_STRUCT
 {
 	SPI_CONFIGURATION_T tSpi;
-	unsigned char *pucBuffer;
+	const unsigned char *pucBuffer;
 	size_t sizBuffer;
 } CMD_PARAMETER_SPIMACROPLAYER_T;
 
