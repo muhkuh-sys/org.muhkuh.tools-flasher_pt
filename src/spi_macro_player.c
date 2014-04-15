@@ -802,6 +802,8 @@ NETX_CONSOLEAPP_RESULT_T spi_macro_player(CMD_PARAMETER_SPIMACROPLAYER_T *ptPara
 
 
 	uprintf("*** SPI Macro Player ***\n");
+	uprintf("Macro:\n");
+	hexdump(ptParameter->pucBuffer, ptParameter->sizBuffer);
 
 #if CFG_DEBUGMSG==1
 	ulDebugMessages = 0xffffffff;
