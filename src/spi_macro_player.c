@@ -35,460 +35,757 @@
 	/*
 	 * These defines must match the ZONE_* defines
 	 */
-	#define DBG_ZONE_ERROR		0
-	#define DBG_ZONE_WARNING	1
-	#define DBG_ZONE_FUNCTION	2
-	#define DBG_ZONE_INIT		3
-	#define DBG_ZONE_VERBOSE	7
+	#define DBG_ZONE_ERROR          0
+	#define DBG_ZONE_WARNING        1
+	#define DBG_ZONE_FUNCTION       2
+	#define DBG_ZONE_INIT           3
+	#define DBG_ZONE_VERBOSE        7
 
-	#define ZONE_ERROR		DEBUGZONE(DBG_ZONE_ERROR)
-	#define ZONE_WARNING		DEBUGZONE(DBG_ZONE_WARNING)
-	#define ZONE_FUNCTION		DEBUGZONE(DBG_ZONE_FUNCTION)
-	#define ZONE_INIT		DEBUGZONE(DBG_ZONE_INIT)
-	#define ZONE_VERBOSE		DEBUGZONE(DBG_ZONE_VERBOSE)
+	#define ZONE_ERROR              DEBUGZONE(DBG_ZONE_ERROR)
+	#define ZONE_WARNING            DEBUGZONE(DBG_ZONE_WARNING)
+	#define ZONE_FUNCTION           DEBUGZONE(DBG_ZONE_FUNCTION)
+	#define ZONE_INIT               DEBUGZONE(DBG_ZONE_INIT)
+	#define ZONE_VERBOSE            DEBUGZONE(DBG_ZONE_VERBOSE)
 
 	#define DEBUGMSG(cond,...) ((void)((cond)?(uprintf(__VA_ARGS__)),1:0))
 #else
 	#define DEBUGMSG(cond,...) ((void)0)
 #endif
 
-#if 0
-static void qsi_seq_reset_input_buffer(QSI_CFG_T *ptQsiCfg)
-{
-	DEBUGMSG(ZONE_VERBOSE, ". reset the input buffer.\n");
 
-	ptQsiCfg->sizBufferPos = 0;
-	memset(ptQsiCfg->uBuffer.auc, 0, sizeof(ptQsiCfg->uBuffer.auc));
+#define SPI_MACRO_RECEIVE_BUFFER_SIZE 16
+
+
+
+typedef struct SPI_MACRO_STRUCT
+{
+	SPI_CFG_T *ptSpiDev;
+	const unsigned char *pucMacroStart;
+	const unsigned char *pucMacroCnt;
+	const unsigned char *pucMacroEnd;
+
+	unsigned int uiFlag_Equal;
+	unsigned int uiFlag_Zero;
+
+	unsigned char aucReceiveBuffer[SPI_MACRO_RECEIVE_BUFFER_SIZE];
+} SPI_MACRO_T;
+
+
+typedef int (*PFN_SPI_MACRO_HANDLER_T)(SPI_MACRO_T *ptCfg);
+
+typedef struct SPI_MACRO_HANDLER_TABLE_STRUCT
+{
+	SPI_MACRO_CMD_T tCmd;
+	PFN_SPI_MACRO_HANDLER_T pfnHandler;
+} SPI_MACRO_HANDLER_TABLE_T;
+
+
+/*-------------------------------------------------------------------------*/
+
+
+static int SMC_Handler_NoOperation(SPI_MACRO_T *ptCfg __attribute__((unused)))
+{
+	uprintf("[SMC] no operation\n");
+	return 0;
 }
 
 
-static void qsi_receive(QSI_CFG_T *ptQsiCfg, unsigned int uiParameter)
-{
-	HOSTDEF(ptSqiArea)
-	unsigned long ulValue;
-	unsigned char ucByte;
-	size_t sizBufferPos;
-	unsigned long ulData;
-	unsigned int uiByteCnt;
 
-
-	/* set mode to "receive" */
-	ulValue  = ptQsiCfg->tCfg.ulTrcBase;
-	ulValue |= 1 << HOSTSRT(sqi_tcr_duplex);
-	/* set the transfer size */
-	ulValue |= uiParameter << HOSTSRT(sqi_tcr_transfer_size);
-	/* start the transfer */
-	ulValue |= HOSTMSK(sqi_tcr_start_transfer);
-	ptSqiArea->ulSqi_tcr = ulValue;
-
-	/* get buffer position */
-	sizBufferPos = ptQsiCfg->sizBufferPos;
-
-	/* check the mode */
-	if( (ptQsiCfg->tCfg.ulTrcBase&HOSTMSK(sqi_tcr_mode))==0 )
-	{
-		/* mode 0 : the fifo size is 8 bit */
-		do
-		{
-			/* wait for one byte in the fifo */
-			do
-			{
-				ulValue  = ptSqiArea->ulSqi_sr;
-				ulValue &= HOSTMSK(sqi_sr_rx_fifo_not_empty);
-			} while( ulValue==0 );
-			/* grab byte */
-			ucByte = (unsigned char)(ptSqiArea->ulSqi_dr);
-			ptQsiCfg->uBuffer.auc[sizBufferPos] = ucByte;
-			DEBUGMSG(ZONE_VERBOSE, ". rec $%02x\n", ucByte);
-			/* move and wrap buffer pointer */
-			++sizBufferPos;
-			sizBufferPos &= 0x0f;
-		} while( (uiParameter--)>0 );
-	}
-	else
-	{
-		/* DSI/QSI mode : the fifo size is 32 bit */
-		++uiParameter;
-		do
-		{
-			/* wait for one byte in the fifo */
-			do
-			{
-				ulValue  = ptSqiArea->ulSqi_sr;
-				ulValue &= HOSTMSK(sqi_sr_rx_fifo_not_empty);
-			} while( ulValue==0 );
-
-			/* get the dword */
-			ulData = ptSqiArea->ulSqi_dr;
-			DEBUGMSG(ZONE_VERBOSE, "received dw: $%08x\n", ulData);
-
-			/* process the dword */
-			uiByteCnt = 4;
-			do
-			{
-				/* grab byte */
-				ucByte = (unsigned char)ulData;
-				ptQsiCfg->uBuffer.auc[sizBufferPos] = ucByte;
-				DEBUGMSG(ZONE_VERBOSE, ". rec $%02x\n", ucByte);
-				/* move to next byte */
-				ulData >>= 8;
-				--uiByteCnt;
-				/* move and wrap buffer pointer */
-				++sizBufferPos;
-				sizBufferPos &= 0x0f;
-				/* one byte processed */
-				--uiParameter;
-			} while( uiParameter!=0 && uiByteCnt!=0 );
-		} while( uiParameter!=0 );
-	}
-
-	/* update buffer position */
-	ptQsiCfg->sizBufferPos = sizBufferPos;
-
-	/* wait until the transfer is done */
-	do
-	{
-		ulValue  = ptSqiArea->ulSqi_sr;
-		ulValue &= HOSTMSK(sqi_sr_busy);
-	} while( ulValue!=0 );
-}
-
-
-static void qsi_send(QSI_CFG_T *ptQsiCfg, unsigned int uiParameter, const unsigned char *pucData)
-{
-	HOSTDEF(ptSqiArea)
-	unsigned long ulValue;
-	unsigned char ucSend;
-	unsigned int uiShiftCnt;
-	unsigned long ulSend;
-
-
-	DEBUGMSG(ZONE_VERBOSE, ". sending %d bytes\n", uiParameter+1);
-
-	/* set mode to "send" */
-	ulValue  = ptQsiCfg->tCfg.ulTrcBase;
-	ulValue |= 2 << HOSTSRT(sqi_tcr_duplex);
-	/* set the transfer size */
-	ulValue |= uiParameter << HOSTSRT(sqi_tcr_transfer_size);
-	/* start the transfer */
-	ulValue |= HOSTMSK(sqi_tcr_start_transfer);
-	ptSqiArea->ulSqi_tcr = ulValue;
-
-	/* check the mode */
-	if( (ptQsiCfg->tCfg.ulTrcBase&HOSTMSK(sqi_tcr_mode))==0 )
-	{
-		/* mode 0 : the fifo size is 8 bit */
-		do
-		{
-			/* wait for space in the fifo */
-			do
-			{
-				ulValue  = ptSqiArea->ulSqi_sr;
-				ulValue &= HOSTMSK(sqi_sr_rx_fifo_full);
-			} while( ulValue!=0 );
-
-			/* send byte */
-			ucSend = *(pucData++);
-			ptSqiArea->ulSqi_dr = ucSend;
-			DEBUGMSG(ZONE_VERBOSE, ". send $%02x\n", ucSend);
-		} while( (uiParameter--)>0 );
-	}
-	else
-	{
-		/* DSI/QSI mode : the FIFO size is 32 bit */
-		++uiParameter;
-		do
-		{
-			/* collect a DWORD */
-			ulSend = 0;
-			uiShiftCnt = 0;
-			do
-			{
-				ulSend |= ((unsigned long)(*(pucData++))) << (uiShiftCnt<<3U);
-				++uiShiftCnt;
-				--uiParameter;
-			} while( uiParameter!=0 && uiShiftCnt<4 );
-
-			/* wait for space in the FIFO */
-			do
-			{
-				ulValue  = ptSqiArea->ulSqi_sr;
-				ulValue &= HOSTMSK(sqi_sr_rx_fifo_full);
-			} while( ulValue!=0 );
-			/* send DWORD */
-			ptSqiArea->ulSqi_dr = ulSend;
-			DEBUGMSG(ZONE_VERBOSE, ". send $%08x\n", ulSend);
-		} while( uiParameter!=0 );
-	}
-
-	/* wait until the transfer is done */
-	do
-	{
-		ulValue  = ptSqiArea->ulSqi_sr;
-		ulValue &= HOSTMSK(sqi_sr_busy);
-	} while( ulValue!=0 );
-}
-
-
-static int execute_sequence(QSI_CFG_T *ptCfg, const unsigned char *pucSeq)
+static int SMC_Handler_ActivateChipSelect(SPI_MACRO_T *ptCfg)
 {
 	int iResult;
-	size_t sizSeq;
-	unsigned char ucCmd;
-	QSI_CMD_T tQsiCmd;
-	unsigned int uiParameter;
+	SPI_CFG_T *ptSpiDev;
+
+
+	uprintf("[SMC] activate chip select\n");
+	ptSpiDev = ptCfg->ptSpiDev;
+	iResult = ptSpiDev->pfnSelect(ptSpiDev, 1);
+
+	return iResult;
+}
+
+
+
+static int SMC_Handler_DeactivateChipSelect(SPI_MACRO_T *ptCfg)
+{
+	int iResult;
+	SPI_CFG_T *ptSpiDev;
+
+
+	uprintf("[SMC] deactivate chip select\n");
+	ptSpiDev = ptCfg->ptSpiDev;
+	iResult = ptSpiDev->pfnSelect(ptSpiDev, 1);
+
+	return iResult;
+}
+
+
+
+static int SMC_Handler_ExchangeData(SPI_MACRO_T *ptCfg)
+{
+	int iResult;
+	SPI_CFG_T *ptSpiDev;
 	const unsigned char *pucCnt;
-	const unsigned char *pucEnd;
+	size_t sizData;
 
 
-	/* expect success */
-	iResult = 0;
+	uprintf("[SMC] exchange data\n");
 
-	qsi_seq_reset_input_buffer(ptCfg);
+	ptSpiDev = ptCfg->ptSpiDev;
+	pucCnt = ptCfg->pucMacroCnt;
 
-	/* get the sequence size */
-	sizSeq = *(pucSeq++);
-
-	pucCnt = pucSeq;
-	pucEnd = pucCnt + sizSeq;
-	while( iResult==0 && pucCnt<pucEnd )
+	/* The command needs at least one parameter: the size. */
+	if( (pucCnt+1)>(ptCfg->pucMacroEnd) )
 	{
-		ucCmd = *(pucCnt++);
-		if( ucCmd<0xe0U )
+		uprintf("ERROR: Expecting size, but the macro is too short!\n");
+		iResult = -1;
+	}
+	else
+	{
+		/* Get the number of bytes. */
+		sizData = (size_t)(*(pucCnt++));
+
+		/* The number of bytes must not exceed the receive buffer size. */
+		if( sizData>SPI_MACRO_RECEIVE_BUFFER_SIZE )
 		{
-			tQsiCmd = ucCmd & 0xf8U;
-			uiParameter = ucCmd & 0x07U;
+			uprintf("ERROR: the number of bytes to exchange exceeds the size of the receive buffer: %d>%d\n", sizData, SPI_MACRO_RECEIVE_BUFFER_SIZE);
+			iResult = -1;
+		}
+		else if( sizData==0 )
+		{
+			iResult = 0;
 		}
 		else
 		{
-			tQsiCmd = ucCmd & 0xf0U;
-			uiParameter = ucCmd & 0x0fU;
-		}
-		switch( tQsiCmd )
-		{
-		case QSI_MODE:
-			qsi_seq_set_mode(ptCfg, uiParameter);
-			break;
-
-
-		case QSI_ADR:
-			/* send address bytes specified in bits 0-3 starting msb */
-			qsi_seq_send_address(ptCfg, uiParameter);
-			break;
-
-
-		case QSI_CMP:
-		case QSI_CMP_FATAL:
-			/* a value of 0 means 1 byte */
-			++uiParameter;
-			/* compare the bytes in the buffer */
-			if( pucCnt+uiParameter>pucEnd )
+			/* Are enough bytes left in the macro? */
+			if( (pucCnt+sizData)>(ptCfg->pucMacroEnd) )
 			{
-				/* the sequence does not fit into the remaining buffer */
-				/* this is an error in the seqnence */
-				DEBUGMSG(ZONE_ERROR, "! cmp argument too large!\n");
+				uprintf("ERROR: Expecting %d data bytes, but the macro is too short!\n", sizData);
 				iResult = -1;
 			}
 			else
 			{
-				/* compare the sequence */
-				iLastCompareResult = qsi_seq_compare(ptCfg, uiParameter, pucCnt);
-				if( tQsiCmd==QSI_CMP_FATAL && iLastCompareResult!=0 )
+				uprintf("[SMC] send:\n");
+				hexdump(pucCnt, sizData);
+
+				iResult = ptSpiDev->pfnExchangeData(ptSpiDev, pucCnt, ptCfg->aucReceiveBuffer, sizData);
+				if( iResult!=0 )
 				{
+					uprintf("ERROR: failed to exchange data!\n");
 					iResult = -1;
-				}
-				pucCnt += uiParameter;
-			}
-			break;
-
-
-		case QSI_MASK:
-			/* a value of 0 means 1 byte */
-			++uiParameter;
-			/* mask the bytes in the buffer */
-			if( pucCnt+uiParameter>pucEnd )
-			{
-				/* the skip size does not fit into the remaining buffer */
-				/* this is an error in the seqence */
-				DEBUGMSG(ZONE_ERROR, "! mask argument too large!\n");
-				iResult = -1;
-			}
-			else
-			{
-				qsi_seq_mask(ptCfg, uiParameter, pucCnt);
-				pucCnt += uiParameter;
-			}
-			break;
-
-
-		case QSI_SEND_NNN:
-		case QSI_SEND_SNN:
-		case QSI_SEND_SDN:
-		case QSI_SEND_SDD:
-			/* transfer n dummy bytes of 0x00 */
-			if( tQsiCmd!=QSI_SEND_NNN )
-			{
-				if( ptCfg->tCfg.pfnSelect(&(ptCfg->tCfg), 1)==0 )
-				{
-					DEBUGMSG(ZONE_VERBOSE, ". select the slave.\n");
-					qsi_seq_reset_input_buffer(ptCfg);
-				}
-			}
-			qsi_send(ptCfg, uiParameter, pucCnt);
-			pucCnt += uiParameter + 1;
-			if( tQsiCmd>=QSI_SEND_SDN )
-			{
-				DEBUGMSG(ZONE_VERBOSE, ". deselect the slave\n");
-				ptCfg->tCfg.pfnSelect(&(ptCfg->tCfg), 0);
-				if( tQsiCmd>=QSI_SEND_SDD )
-				{
-					ptCfg->tCfg.pfnSendIdle(&(ptCfg->tCfg), 0);
-				}
-			}
-			break;
-
-
-		case QSI_RECEIVE_NNN:
-		case QSI_RECEIVE_SNN:
-		case QSI_RECEIVE_SDN:
-		case QSI_RECEIVE_SDD:
-			/* receive bytes */
-			if( tQsiCmd!=QSI_RECEIVE_NNN )
-			{
-				if( ptCfg->tCfg.pfnSelect(&(ptCfg->tCfg), 1)==0 )
-				{
-					DEBUGMSG(ZONE_VERBOSE, ". select the slave.\n");
-					qsi_seq_reset_input_buffer(ptCfg);
-				}
-			}
-			qsi_receive(ptCfg, uiParameter);
-			if( tQsiCmd>=QSI_RECEIVE_SDN )
-			{
-				DEBUGMSG(ZONE_VERBOSE, ". deselect the slave\n");
-				ptCfg->tCfg.pfnSelect(&(ptCfg->tCfg), 0);
-				if( tQsiCmd>=QSI_RECEIVE_SDD )
-				{
-					ptCfg->tCfg.pfnSendIdle(&(ptCfg->tCfg), 0);
-				}
-			}
-			break;
-
-
-		case QSI_DUMMY_NNN:
-		case QSI_DUMMY_SNN:
-		case QSI_DUMMY_SDN:
-		case QSI_DUMMY_SDD:
-			/* transfer n dummy bytes of 0x00 */
-			if( tQsiCmd!=QSI_DUMMY_NNN )
-			{
-				if( ptCfg->tCfg.pfnSelect(&(ptCfg->tCfg), 1)==0 )
-				{
-					DEBUGMSG(ZONE_VERBOSE, ". select the slave.\n");
-					qsi_seq_reset_input_buffer(ptCfg);
-				}
-			}
-			ptCfg->tCfg.pfnSendIdle(&(ptCfg->tCfg), uiParameter);
-			if( tQsiCmd>=QSI_DUMMY_SDN )
-			{
-				DEBUGMSG(ZONE_VERBOSE, ". deselect the slave\n");
-				ptCfg->tCfg.pfnSelect(&(ptCfg->tCfg), 0);
-				if( tQsiCmd>=QSI_DUMMY_SDD )
-				{
-					ptCfg->tCfg.pfnSendIdle(&(ptCfg->tCfg), 0);
-				}
-			}
-			break;
-
-
-		case QSI_SKIP_EQ:
-		case QSI_SKIP_NE:
-			/* a value of 0 means 1 byte */
-			++uiParameter;
-			/* skip n bytes if last cmp was equal */
-			if( pucCnt+uiParameter>pucEnd )
-			{
-				/* the skip size does not fit into the remaining buffer */
-				/* this is an error in the seqence */
-				DEBUGMSG(ZONE_ERROR, "! skip argument too large!\n");
-				iResult = -1;
-			}
-			else
-			{
-				if( (tQsiCmd==QSI_SKIP_EQ && iLastCompareResult==0) || (tQsiCmd==QSI_SKIP_NE && iLastCompareResult!=0) )
-				{
-					DEBUGMSG(ZONE_VERBOSE, ". Skipping %d bytes\n", uiParameter);
-					pucCnt += uiParameter;
 				}
 				else
 				{
-					DEBUGMSG(ZONE_VERBOSE, ". Not skipping.\n");
+					uprintf("[SMC] received:\n");
+					hexdump(ptCfg->aucReceiveBuffer, sizData);
+
+					pucCnt += sizData;
+
+					iResult = 0;
 				}
 			}
-			break;
-
-
-		default:
-			DEBUGMSG(ZONE_ERROR, "! unknown command: $%02x\n", tQsiCmd);
-			iResult = -1;
-			break;
 		}
+	}
+
+	ptCfg->pucMacroCnt = pucCnt;
+
+	return iResult;
+}
+
+
+
+static int SMC_Handler_SendData(SPI_MACRO_T *ptCfg)
+{
+	int iResult;
+	SPI_CFG_T *ptSpiDev;
+	const unsigned char *pucCnt;
+	size_t sizData;
+
+
+	uprintf("[SMC] send data\n");
+
+	ptSpiDev = ptCfg->ptSpiDev;
+	pucCnt = ptCfg->pucMacroCnt;
+
+	/* The command needs at least one parameter: the size. */
+	if( (pucCnt+1)>(ptCfg->pucMacroEnd) )
+	{
+		uprintf("ERROR: Expecting size, but the macro is too short!\n");
+		iResult = -1;
+	}
+	else
+	{
+		/* Get the number of bytes. */
+		sizData = (size_t)(*(pucCnt++));
+
+		if( sizData==0 )
+		{
+			iResult = 0;
+		}
+		else
+		{
+			/* Are enough bytes left in the macro? */
+			if( (pucCnt+sizData)>(ptCfg->pucMacroEnd) )
+			{
+				uprintf("ERROR: Expecting %d data bytes, but the macro is too short!\n", sizData);
+				iResult = -1;
+			}
+			else
+			{
+				uprintf("[SMC] send:\n");
+				hexdump(pucCnt, sizData);
+
+				iResult = ptSpiDev->pfnSendData(ptSpiDev, pucCnt, sizData);
+				if( iResult!=0 )
+				{
+					uprintf("ERROR: failed to send the data!\n");
+					iResult = -1;
+				}
+				else
+				{
+					pucCnt += sizData;
+					iResult = 0;
+				}
+			}
+		}
+	}
+
+	ptCfg->pucMacroCnt = pucCnt;
+
+	return iResult;
+}
+
+
+
+static int SMC_Handler_ReceiveData(SPI_MACRO_T *ptCfg)
+{
+	int iResult;
+	SPI_CFG_T *ptSpiDev;
+	const unsigned char *pucCnt;
+	size_t sizData;
+
+
+	uprintf("[SMC] receive data\n");
+
+	ptSpiDev = ptCfg->ptSpiDev;
+	pucCnt = ptCfg->pucMacroCnt;
+
+	/* The command needs one parameter: the size. */
+	if( (pucCnt+1)>(ptCfg->pucMacroEnd) )
+	{
+		uprintf("ERROR: Expecting size, but the macro is too short!\n");
+		iResult = -1;
+	}
+	else
+	{
+		/* Get the number of bytes. */
+		sizData = (size_t)(*(pucCnt++));
+
+		/* The number of bytes must not exceed the receive buffer size. */
+		if( sizData>SPI_MACRO_RECEIVE_BUFFER_SIZE )
+		{
+			uprintf("ERROR: the number of bytes to receive exceeds the size of the receive buffer: %d>%d\n", sizData, SPI_MACRO_RECEIVE_BUFFER_SIZE);
+			iResult = -1;
+		}
+		else if( sizData==0 )
+		{
+			iResult = 0;
+		}
+		else
+		{
+			iResult = ptSpiDev->pfnReceiveData(ptSpiDev, ptCfg->aucReceiveBuffer, sizData);
+			if( iResult!=0 )
+			{
+				uprintf("ERROR: failed to receive data!\n");
+				iResult = -1;
+			}
+			else
+			{
+				uprintf("[SMC] received:\n");
+				hexdump(ptCfg->aucReceiveBuffer, sizData);
+
+				iResult = 0;
+			}
+		}
+	}
+
+	ptCfg->pucMacroCnt = pucCnt;
+
+	return iResult;
+}
+
+
+
+static int SMC_Handler_SendIdleBytes(SPI_MACRO_T *ptCfg)
+{
+	int iResult;
+	SPI_CFG_T *ptSpiDev;
+	const unsigned char *pucCnt;
+	size_t sizData;
+
+
+	uprintf("[SMC] send idle bytes\n");
+
+	ptSpiDev = ptCfg->ptSpiDev;
+	pucCnt = ptCfg->pucMacroCnt;
+
+	/* The command needs one parameter: the size. */
+	if( (pucCnt+1)>(ptCfg->pucMacroEnd) )
+	{
+		uprintf("ERROR: Expecting size, but the macro is too short!\n");
+		iResult = -1;
+	}
+	else
+	{
+		/* Get the number of bytes. */
+		sizData = (size_t)(*(pucCnt++));
+
+		iResult = ptSpiDev->pfnSendIdle(ptSpiDev, sizData);
+		if( iResult!=0 )
+		{
+			uprintf("ERROR: failed to send idle bytes data!\n");
+			iResult = -1;
+		}
+		else
+		{
+			iResult = 0;
+		}
+	}
+
+	ptCfg->pucMacroCnt = pucCnt;
+
+	return iResult;
+}
+
+
+
+static int SMC_Handler_MaskBuffer(SPI_MACRO_T *ptCfg)
+{
+	int iResult;
+	const unsigned char *pucCnt;
+	size_t sizData;
+	size_t sizCnt;
+	unsigned char ucData;
+	unsigned int uiZero;
+
+
+	uprintf("[SMC] mask buffer\n");
+
+	pucCnt = ptCfg->pucMacroCnt;
+
+	/* The command needs at least one parameter: the size. */
+	if( (pucCnt+1)>(ptCfg->pucMacroEnd) )
+	{
+		uprintf("ERROR: Expecting size, but the macro is too short!\n");
+		iResult = -1;
+	}
+	else
+	{
+		/* Get the number of bytes. */
+		sizData = (size_t)(*(pucCnt++));
+
+		/* The number of bytes must not exceed the receive buffer size. */
+		if( sizData>SPI_MACRO_RECEIVE_BUFFER_SIZE )
+		{
+			uprintf("ERROR: the number of bytes to mask exceeds the size of the receive buffer: %d>%d\n", sizData, SPI_MACRO_RECEIVE_BUFFER_SIZE);
+			iResult = -1;
+		}
+		else if( sizData==0 )
+		{
+			iResult = 0;
+		}
+		else
+		{
+			/* Are enough bytes left in the macro? */
+			if( (pucCnt+sizData)>(ptCfg->pucMacroEnd) )
+			{
+				uprintf("ERROR: Expecting %d data bytes, but the macro is too short!\n", sizData);
+				iResult = -1;
+			}
+			else
+			{
+				uprintf("[SMC] buffer:\n");
+				hexdump(ptCfg->aucReceiveBuffer, sizData);
+
+				uprintf("[SMC] mask:\n");
+				hexdump(pucCnt, sizData);
+
+				/* Expect that all masked bytes will be zero. */
+				uiZero = 1;
+				sizCnt = 0;
+				do
+				{
+					ucData  = ptCfg->aucReceiveBuffer[sizCnt];
+					ucData &= pucCnt[sizCnt];
+					ptCfg->aucReceiveBuffer[sizCnt] = ucData;
+
+					if( ucData!=0x00 )
+					{
+						/* This byte is not zero. */
+						uiZero = 0;
+					}
+
+					++sizCnt;
+				} while( sizCnt<sizData );
+
+				/* Set the new zero flag. */
+				ptCfg->uiFlag_Zero = uiZero;
+
+				uprintf("[SMC] result:\n");
+				hexdump(ptCfg->aucReceiveBuffer, sizData);
+
+				pucCnt += sizData;
+
+				iResult = 0;
+			}
+		}
+	}
+
+	ptCfg->pucMacroCnt = pucCnt;
+
+	return iResult;
+}
+
+
+
+static int SMC_Handler_CompareBuffer(SPI_MACRO_T *ptCfg)
+{
+	int iResult;
+	const unsigned char *pucCnt;
+	size_t sizData;
+	size_t sizCnt;
+	unsigned char ucData;
+	unsigned int uiEqual;
+
+
+	uprintf("[SMC] compare buffer\n");
+
+	pucCnt = ptCfg->pucMacroCnt;
+
+	/* The command needs at least one parameter: the size. */
+	if( (pucCnt+1)>(ptCfg->pucMacroEnd) )
+	{
+		uprintf("ERROR: Expecting size, but the macro is too short!\n");
+		iResult = -1;
+	}
+	else
+	{
+		/* Get the number of bytes. */
+		sizData = (size_t)(*(pucCnt++));
+
+		/* The number of bytes must not exceed the receive buffer size. */
+		if( sizData>SPI_MACRO_RECEIVE_BUFFER_SIZE )
+		{
+			uprintf("ERROR: the number of bytes to compare exceeds the size of the receive buffer: %d>%d\n", sizData, SPI_MACRO_RECEIVE_BUFFER_SIZE);
+			iResult = -1;
+		}
+		else if( sizData==0 )
+		{
+			iResult = 0;
+		}
+		else
+		{
+			/* Are enough bytes left in the macro? */
+			if( (pucCnt+sizData)>(ptCfg->pucMacroEnd) )
+			{
+				uprintf("ERROR: Expecting %d data bytes, but the macro is too short!\n", sizData);
+				iResult = -1;
+			}
+			else
+			{
+				uprintf("[SMC] buffer:\n");
+				hexdump(ptCfg->aucReceiveBuffer, sizData);
+
+				uprintf("[SMC] compare:\n");
+				hexdump(pucCnt, sizData);
+
+				/* Expect that all bytes will match. */
+				uiEqual = 1;
+				sizCnt = 0;
+				do
+				{
+					ucData = ptCfg->aucReceiveBuffer[sizCnt];
+					if( ucData!=pucCnt[sizCnt] )
+					{
+						/* This byte does not match. */
+						uiEqual = 0;
+					}
+
+					++sizCnt;
+				} while( sizCnt<sizData );
+
+				/* Set the new zero flag. */
+				ptCfg->uiFlag_Equal = uiEqual;
+
+				pucCnt += sizData;
+
+				iResult = 0;
+			}
+		}
+	}
+
+	ptCfg->pucMacroCnt = pucCnt;
+
+	return iResult;
+}
+
+
+
+static int SMC_Handler_Jump(SPI_MACRO_T *ptCfg)
+{
+	int iResult;
+	const unsigned char *pucCnt;
+	size_t sizOffset;
+
+
+	uprintf("[SMC] jump\n");
+
+	pucCnt = ptCfg->pucMacroCnt;
+
+	/* The command needs one parameter: the offset. */
+	if( (pucCnt+1)>(ptCfg->pucMacroEnd) )
+	{
+		uprintf("ERROR: Expecting offset, but the macro is too short!\n");
+		iResult = -1;
+	}
+	else
+	{
+		/* Get the offset. */
+		sizOffset = (size_t)(*(pucCnt++));
+
+		/* Set the new pointer. */
+		ptCfg->pucMacroCnt = ptCfg->pucMacroStart + sizOffset;
+
+		iResult = 0;
 	}
 
 	return iResult;
 }
 
 
-unsigned long aulBuffer[16];
 
-#endif
+static int SMC_Handler_JumpEqual(SPI_MACRO_T *ptCfg)
+{
+	int iResult;
+	const unsigned char *pucCnt;
+	size_t sizOffset;
+
+
+	uprintf("[SMC] jump equal\n");
+
+	pucCnt = ptCfg->pucMacroCnt;
+
+	/* The command needs one parameter: the offset. */
+	if( (pucCnt+1)>(ptCfg->pucMacroEnd) )
+	{
+		uprintf("ERROR: Expecting offset, but the macro is too short!\n");
+		iResult = -1;
+	}
+	else
+	{
+		/* Get the offset. */
+		sizOffset = (size_t)(*(pucCnt++));
+
+		if( ptCfg->uiFlag_Equal!=0 )
+		{
+			/* Set the new pointer. */
+			ptCfg->pucMacroCnt = ptCfg->pucMacroStart + sizOffset;
+		}
+
+		iResult = 0;
+	}
+
+	return iResult;
+}
+
+
+
+static int SMC_Handler_JumpNotEqual(SPI_MACRO_T *ptCfg)
+{
+	int iResult;
+	const unsigned char *pucCnt;
+	size_t sizOffset;
+
+
+	uprintf("[SMC] jump not equal\n");
+
+	pucCnt = ptCfg->pucMacroCnt;
+
+	/* The command needs one parameter: the offset. */
+	if( (pucCnt+1)>(ptCfg->pucMacroEnd) )
+	{
+		uprintf("ERROR: Expecting offset, but the macro is too short!\n");
+		iResult = -1;
+	}
+	else
+	{
+		/* Get the offset. */
+		sizOffset = (size_t)(*(pucCnt++));
+
+		if( ptCfg->uiFlag_Equal==0 )
+		{
+			/* Set the new pointer. */
+			ptCfg->pucMacroCnt = ptCfg->pucMacroStart + sizOffset;
+		}
+
+		iResult = 0;
+	}
+
+	return iResult;
+}
+
+
+
+static int SMC_Handler_JumpZero(SPI_MACRO_T *ptCfg)
+{
+	int iResult;
+	const unsigned char *pucCnt;
+	size_t sizOffset;
+
+
+	uprintf("[SMC] jump zero\n");
+
+	pucCnt = ptCfg->pucMacroCnt;
+
+	/* The command needs one parameter: the offset. */
+	if( (pucCnt+1)>(ptCfg->pucMacroEnd) )
+	{
+		uprintf("ERROR: Expecting offset, but the macro is too short!\n");
+		iResult = -1;
+	}
+	else
+	{
+		/* Get the offset. */
+		sizOffset = (size_t)(*(pucCnt++));
+
+		if( ptCfg->uiFlag_Zero!=0 )
+		{
+			/* Set the new pointer. */
+			ptCfg->pucMacroCnt = ptCfg->pucMacroStart + sizOffset;
+		}
+
+		iResult = 0;
+	}
+
+	return iResult;
+}
+
+
+
+static int SMC_Handler_JumpNotZero(SPI_MACRO_T *ptCfg)
+{
+	int iResult;
+	const unsigned char *pucCnt;
+	size_t sizOffset;
+
+
+	uprintf("[SMC] jump not zero\n");
+
+	pucCnt = ptCfg->pucMacroCnt;
+
+	/* The command needs one parameter: the offset. */
+	if( (pucCnt+1)>(ptCfg->pucMacroEnd) )
+	{
+		uprintf("ERROR: Expecting offset, but the macro is too short!\n");
+		iResult = -1;
+	}
+	else
+	{
+		/* Get the offset. */
+		sizOffset = (size_t)(*(pucCnt++));
+
+		if( ptCfg->uiFlag_Zero==0 )
+		{
+			/* Set the new pointer. */
+			ptCfg->pucMacroCnt = ptCfg->pucMacroStart + sizOffset;
+		}
+
+		iResult = 0;
+	}
+
+	return iResult;
+}
+
+/*-------------------------------------------------------------------------*/
+
+
+static const SPI_MACRO_HANDLER_TABLE_T atCmdHandler[] =
+{
+	{ SMC_NO_OPERATION,           SMC_Handler_NoOperation },
+	{ SMC_ACTIVATE_CHIP_SELECT,   SMC_Handler_ActivateChipSelect },
+	{ SMC_DEACTIVATE_CHIP_SELECT, SMC_Handler_DeactivateChipSelect },
+	{ SMC_EXCHANGE_DATA,          SMC_Handler_ExchangeData },
+	{ SMC_SEND_DATA,              SMC_Handler_SendData },
+	{ SMC_RECEIVE_DATA,           SMC_Handler_ReceiveData },
+	{ SMC_SEND_IDLE_BYTES,        SMC_Handler_SendIdleBytes },
+	{ SMC_MASK_BUFFER,            SMC_Handler_MaskBuffer },
+	{ SMC_COMPARE_BUFFER,         SMC_Handler_CompareBuffer },
+	{ SMC_JUMP,                   SMC_Handler_Jump },
+	{ SMC_JUMP_EQUAL,             SMC_Handler_JumpEqual },
+	{ SMC_JUMP_NOT_EQUAL,         SMC_Handler_JumpNotEqual },
+	{ SMC_JUMP_ZERO,              SMC_Handler_JumpZero },
+	{ SMC_JUMP_NOT_ZERO,          SMC_Handler_JumpNotZero }
+};
 
 
 static NETX_CONSOLEAPP_RESULT_T execute_sequence(CMD_PARAMETER_SPIMACROPLAYER_T *ptParameter, SPI_CFG_T *ptSpiDev)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
+	SPI_MACRO_T tSpiMacro;
 	int iResult;
-	unsigned char aucSend[6];
-	unsigned char aucRecv[6];
-	
+	const SPI_MACRO_HANDLER_TABLE_T *ptCnt;
+	const SPI_MACRO_HANDLER_TABLE_T *ptEnd;
+	SPI_MACRO_CMD_T tCmd;
+	PFN_SPI_MACRO_HANDLER_T pfnHandler;
 
 
-	aucSend[0] = 0x9f;
-	aucSend[1] = 0x00;
-	aucSend[2] = 0x00;
-	aucSend[3] = 0x00;
-	aucSend[4] = 0x00;
-	aucSend[5] = 0x00;
+	/* Be optimistic. */
+	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
-	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	tSpiMacro.ptSpiDev = ptSpiDev;
+	tSpiMacro.pucMacroStart = ptParameter->pucBuffer;
+	tSpiMacro.pucMacroCnt = ptParameter->pucBuffer;
+	tSpiMacro.pucMacroEnd = ptParameter->pucBuffer + ptParameter->sizBuffer;
+	tSpiMacro.uiFlag_Equal = 0;
+	tSpiMacro.uiFlag_Zero = 0;
+	memset(tSpiMacro.aucReceiveBuffer, 0, SPI_MACRO_RECEIVE_BUFFER_SIZE);
 
-	/* Deselect the chip. */
-	ptSpiDev->pfnSelect(ptSpiDev, 0);
+	ptEnd = atCmdHandler + (sizeof(atCmdHandler)/sizeof(atCmdHandler[0]));
 
-	/* Send 8 idle bytes to clear the bus. */
-	iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 8);
-	if( iResult!=0 )
+	/* Loop over the complete macro buffer. */
+	while( tSpiMacro.pucMacroCnt<tSpiMacro.pucMacroEnd )
 	{
-		uprintf("ERROR: Failed to send idle bytes: %d.\n", iResult);
-	}
-	else
-	{
-		/* Select the slave. */
-		ptSpiDev->pfnSelect(ptSpiDev, 1);
+		tCmd = (SPI_MACRO_CMD_T)(*(tSpiMacro.pucMacroCnt++));
 
-		/* Send id magic and receive response. */
-		iResult = ptSpiDev->pfnExchangeData(ptSpiDev, aucSend, aucRecv, sizeof(aucRecv));
-		if( iResult!=0 )
+		ptCnt = atCmdHandler;
+		pfnHandler = NULL;
+		while( ptCnt<ptEnd )
 		{
-			uprintf("ERROR: Failed to send bytes: %d.\n", iResult);
+			if( ptCnt->tCmd==tCmd )
+			{
+				pfnHandler = ptCnt->pfnHandler;
+				break;
+			}
+			++ptCnt;
+		}
+
+		if( pfnHandler==NULL )
+		{
+			uprintf("ERROR: Unknown command: 0x%02x\n", tCmd);
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+			break;
 		}
 		else
 		{
-			hexdump(aucRecv, sizeof(aucRecv));
-			tResult = NETX_CONSOLEAPP_RESULT_OK;
+			/* Call the handler. */
+			iResult = pfnHandler(&tSpiMacro);
+			if( iResult!=0 )
+			{
+				uprintf("ERROR: Failed to execute the command 0x%02x!\n");
+				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+				break;
+			}
 		}
-
-		/* Deselect slave */
-		ptSpiDev->pfnSelect(ptSpiDev, 0);
 	}
 
 	return tResult;
@@ -518,7 +815,7 @@ NETX_CONSOLEAPP_RESULT_T spi_macro_player(CMD_PARAMETER_SPIMACROPLAYER_T *ptPara
 	iResult = board_get_spi_driver(ptSpiCfg, &tSpiDev);
 	if( iResult!=0 )
 	{
-		uprintf("Failed to init the board driver!\n");
+		uprintf("Failed to initialize the board driver!\n");
 	}
 	else
 	{
@@ -527,6 +824,5 @@ NETX_CONSOLEAPP_RESULT_T spi_macro_player(CMD_PARAMETER_SPIMACROPLAYER_T *ptPara
 
 	return tResult;
 }
-
 
 

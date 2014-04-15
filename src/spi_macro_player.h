@@ -31,18 +31,20 @@
 
 typedef enum SPI_MACRO_CMD_ENUM
 {
-	SMP_SEND_NNN     = 1,  /* exchange bytes */
-	SMP_SEND_SNN     = 2,  /* chip select, exchange bytes */
-	SMP_SEND_SDN     = 3,  /* chip select, exchange bytes, chip deselect */
-	SMP_SEND_SDD     = 4,  /* chip select, exchange bytes, chip deselect, 1 dummy transfer */
-	SMP_RECEIVE_NNN  = 5,  /* exchange bytes */
-	SMP_RECEIVE_SNN  = 6,  /* chip select, exchange bytes */
-	SMP_RECEIVE_SDN  = 7,  /* chip select, exchange bytes, chip deselect */
-	SMP_RECEIVE_SDD  = 8,  /* chip select, exchange bytes, chip deselect, 1 dummy transfer */
-	SMP_DUMMY_NNN    = 9,  /* transfer n dummy bytes of 0x00 */
-	SMP_DUMMY_SNN    = 10, /* transfer n dummy bytes of 0x00 */
-	SMP_DUMMY_SDN    = 11, /* transfer n dummy bytes of 0x00 */
-	SMP_DUMMY_SDD    = 12  /* transfer n dummy bytes of 0x00 */
+	SMC_NO_OPERATION           = 0,  /* no operation */
+	SMC_ACTIVATE_CHIP_SELECT   = 1,  /* activate chip select */
+	SMC_DEACTIVATE_CHIP_SELECT = 2,  /* deactivate the chip select line */
+	SMC_EXCHANGE_DATA          = 3,
+	SMC_SEND_DATA              = 4,
+	SMC_RECEIVE_DATA           = 5,
+	SMC_SEND_IDLE_BYTES        = 6,
+	SMC_MASK_BUFFER            = 7,
+	SMC_COMPARE_BUFFER         = 8,
+	SMC_JUMP                   = 9,
+	SMC_JUMP_EQUAL             = 10,
+	SMC_JUMP_NOT_EQUAL         = 11,
+	SMC_JUMP_ZERO              = 12,
+	SMC_JUMP_NOT_ZERO          = 13
 } SPI_MACRO_CMD_T;
 
 
