@@ -901,11 +901,21 @@ end
 -- SPI macro player
 --------------------------------------------------------------------------
 
-function spi_macro_player(tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, fnCallbackProgress, fnCallbackMessage)
+function spi_macro_player(tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, strMacro, fnCallbackProgress, fnCallbackMessage)
 	local ulValue
 	local aulParameter
 	local ulIdleCfg
+	local sizMacro
+
 	
+	sizMacro = string.len(strMacro)
+	if sizMacro>aAttr.ulBufferLen then
+		error("The macro exceeds the buffer size!")
+	end
+
+	-- Download the macro.
+	write_image(tPlugin, aAttr.ulBufferAdr, strMacro, fnCallbackProgress)
+		
 	ulIdleCfg = MSK_SQI_CFG_IDLE_IO1_OE + MSK_SQI_CFG_IDLE_IO1_OUT
 	          + MSK_SQI_CFG_IDLE_IO2_OE + MSK_SQI_CFG_IDLE_IO2_OUT
 	          + MSK_SQI_CFG_IDLE_IO3_OE + MSK_SQI_CFG_IDLE_IO3_OUT
@@ -920,8 +930,8 @@ function spi_macro_player(tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, fnC
 		3,                                    -- mode
 		0xffffffff,                           -- mmio config
 		
-		0,                                    -- A pointer to the macro block.
-		0                                     -- The size of the macro in bytes.
+		aAttr.ulBufferAdr,                    -- A pointer to the macro block.
+		sizMacro                              -- The size of the macro in bytes.
 	}
 	
 	ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
