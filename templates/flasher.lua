@@ -906,10 +906,10 @@ end
 
 
 --------------------------------------------------------------------------
--- SPI macro player
+-- SPI debug interface
 --------------------------------------------------------------------------
 
-function spm_init(tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, fnCallbackProgress, fnCallbackMessage)
+function sdi_init(tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, fnCallbackProgress, fnCallbackMessage)
 	local ulValue
 	local aulParameter
 	local ulIdleCfg
@@ -938,7 +938,7 @@ end
 
 
 
-function spm_chip_select(tPlugin, aAttr, uiActive, fnCallbackProgress, fnCallbackMessage)
+function sdi_chip_select(tPlugin, aAttr, uiActive, fnCallbackProgress, fnCallbackMessage)
 	local ulValue
 	local aulParameter
 
@@ -963,7 +963,7 @@ end
 
 
 
-function spm_exchange_data(tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMessage)
+function sdi_exchange_data(tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMessage)
 	local ulValue
 	local aulParameter
 	local sizData
@@ -999,7 +999,7 @@ function spm_exchange_data(tPlugin, aAttr, strData, fnCallbackProgress, fnCallba
 end
 
 
-function spm_send_data(tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMessage)
+function sdi_send_data(tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMessage)
 	local ulValue
 	local aulParameter
 	local sizData
@@ -1028,7 +1028,7 @@ function spm_send_data(tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMe
 end
 
 
-function spm_receive_data(tPlugin, aAttr, sizData, fnCallbackProgress, fnCallbackMessage)
+function sdi_receive_data(tPlugin, aAttr, sizData, fnCallbackProgress, fnCallbackMessage)
 	local ulValue
 	local aulParameter
 	local ulRxBuffer
@@ -1055,7 +1055,7 @@ function spm_receive_data(tPlugin, aAttr, sizData, fnCallbackProgress, fnCallbac
 end
 
 
-function spm_idle_bytes(tPlugin, aAttr, sizIdleBytes, fnCallbackProgress, fnCallbackMessage)
+function sdi_idle_bytes(tPlugin, aAttr, sizIdleBytes, fnCallbackProgress, fnCallbackMessage)
 	local ulValue
 	local aulParameter
 
