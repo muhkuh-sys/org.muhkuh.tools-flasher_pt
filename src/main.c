@@ -604,7 +604,7 @@ static NETX_CONSOLEAPP_RESULT_T check_params(NETX_CONSOLEAPP_PARAMETER_T *ptCons
 
 	case OPERATION_MODE_SpiMacroPlayer:
 		ulPars = 0;
-		uprintf(". Mode: SPI Macro Player\n");
+		/* NOTE: do not print the mode here or the user will get insane for big macros. */
 		break;
 
 	default:

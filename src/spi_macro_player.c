@@ -84,19 +84,6 @@ static int SMC_Handler_Initialize(const SPI_MACRO_PARAMETER_T *ptCfg, SPI_CFG_T 
 	/* Get the driver. */
 	iResult = board_get_spi_driver(ptSpiCfg, ptSpiDev);
 
-
-	if( iResult==0 )
-	{
-		const unsigned char aucID[1] = { 0x9f };
-		unsigned char aucBuffer[20];
-
-		ptSpiDev->pfnSelect(ptSpiDev, 1);
-		ptSpiDev->pfnSendData(ptSpiDev, aucID, 1);
-		ptSpiDev->pfnReceiveData(ptSpiDev, aucBuffer, 20);
-		hexdump(aucBuffer, 20);
-		ptSpiDev->pfnSelect(ptSpiDev, 0);
-	}
-
 	return iResult;
 }
 
@@ -226,8 +213,6 @@ NETX_CONSOLEAPP_RESULT_T spi_macro_player(CMD_PARAMETER_SPIMACROPLAYER_T *ptPara
 	const SPI_MACRO_HANDLER_TABLE_T *ptEnd;
 	PFN_SPI_MACRO_HANDLER_T pfnHandler;
 
-
-	uprintf("*** SPI Macro Player ***\n");
 
 #if CFG_DEBUGMSG==1
 	ulDebugMessages = 0xffffffff;
