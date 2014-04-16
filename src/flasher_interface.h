@@ -24,8 +24,9 @@
 
 #include <string.h>
 
-#include "spi_flash.h"
 #include "cfi_flash.h"
+#include "spi_flash.h"
+#include "spi_macro_player.h"
 
 /*-------------------------------------*/
 
@@ -153,14 +154,6 @@ typedef struct
 	unsigned char *pucBuffer;
 	size_t sizBuffer;
 } CMD_PARAMETER_GETBOARDINFO_T;
-
-
-typedef struct CMD_PARAMETER_SPIMACROPLAYER_STRUCT
-{
-	SPI_CONFIGURATION_T tSpi;
-	const unsigned char *pucBuffer;
-	size_t sizBuffer;
-} CMD_PARAMETER_SPIMACROPLAYER_T;
 
 
 typedef struct

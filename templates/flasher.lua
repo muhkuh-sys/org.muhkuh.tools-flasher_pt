@@ -71,6 +71,14 @@ MSK_SQI_CFG_IDLE_IO3_OUT         = ${MSK_SQI_CFG_IDLE_IO3_OUT}
 SRT_SQI_CFG_IDLE_IO3_OUT         = ${SRT_SQI_CFG_IDLE_IO3_OUT}
 
 
+SMC_INITIALIZE                   = ${SMC_INITIALIZE}
+SMC_CHIP_SELECT                  = ${SMC_CHIP_SELECT}
+SMC_EXCHANGE_DATA                = ${SMC_EXCHANGE_DATA}
+SMC_SEND_DATA                    = ${SMC_SEND_DATA}
+SMC_RECEIVE_DATA                 = ${SMC_RECEIVE_DATA}
+SMC_SEND_IDLE_BYTES              = ${SMC_SEND_IDLE_BYTES}
+
+
 FLASHER_INTERFACE_VERSION        = ${FLASHER_INTERFACE_VERSION}
 
 
@@ -901,21 +909,12 @@ end
 -- SPI macro player
 --------------------------------------------------------------------------
 
-function spi_macro_player(tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, strMacro, fnCallbackProgress, fnCallbackMessage)
+function spm_init(tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, fnCallbackProgress, fnCallbackMessage)
 	local ulValue
 	local aulParameter
 	local ulIdleCfg
-	local sizMacro
 
 	
-	sizMacro = string.len(strMacro)
-	if sizMacro>aAttr.ulBufferLen then
-		error("The macro exceeds the buffer size!")
-	end
-
-	-- Download the macro.
-	write_image(tPlugin, aAttr.ulBufferAdr, strMacro, fnCallbackProgress)
-		
 	ulIdleCfg = MSK_SQI_CFG_IDLE_IO1_OE + MSK_SQI_CFG_IDLE_IO1_OUT
 	          + MSK_SQI_CFG_IDLE_IO2_OE + MSK_SQI_CFG_IDLE_IO2_OUT
 	          + MSK_SQI_CFG_IDLE_IO3_OE + MSK_SQI_CFG_IDLE_IO3_OUT
@@ -923,18 +922,154 @@ function spi_macro_player(tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, str
 	aulParameter =
 	{
 		OPERATION_MODE_SpiMacroPlayer,        -- operation mode: SPI macro player
+		SMC_INITIALIZE,                       -- Command: initialize
+		aAttr.ulDeviceDesc,                   -- free space for the SPI configuration
 		ulUnit,                               -- the SPI unit
 		ulChipSelect,                         -- the SPI chip select
 		ulSpeed_kHz,                          -- the speed in kHz (1000 -> 1MHz)
 		ulIdleCfg,                            -- idle config
 		3,                                    -- mode
-		0xffffffff,                           -- mmio config
-		
-		aAttr.ulBufferAdr,                    -- A pointer to the macro block.
-		sizMacro                              -- The size of the macro in bytes.
+		0xffffffff                            -- mmio config
 	}
 	
 	ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
+	return ulValue == 0
+end
+
+
+
+function spm_chip_select(tPlugin, aAttr, uiActive, fnCallbackProgress, fnCallbackMessage)
+	local ulValue
+	local aulParameter
+
+	
+	if tonumber(uiActive)==0 then
+		ulValue = 0
+	else
+		ulValue = 1
+	end
+	
+	aulParameter =
+	{
+		OPERATION_MODE_SpiMacroPlayer,        -- operation mode: SPI macro player
+		SMC_CHIP_SELECT,                      -- Command: chip select
+		aAttr.ulDeviceDesc,                   -- the SPI configuration
+		ulValue,                              -- chip select
+	}
+	
+	ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
+	return ulValue == 0
+end
+
+
+
+function spm_exchange_data(tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMessage)
+	local ulValue
+	local aulParameter
+	local sizData
+	local ulTxBuffer
+	local ulRxBuffer
+	local strRxData
+
+
+	sizData = string.len(strData)
+
+	ulTxBuffer = aAttr.ulBufferAdr
+	ulRxBuffer = aAttr.ulBufferAdr + sizData
+
+	-- Download the data.
+	write_image(tPlugin, ulTxBuffer, strData, fnCallbackProgress)
+	
+	aulParameter =
+	{
+		OPERATION_MODE_SpiMacroPlayer,        -- operation mode: SPI macro player
+		SMC_EXCHANGE_DATA,                    -- Command: exchange data
+		aAttr.ulDeviceDesc,                   -- the SPI configuration
+		ulTxBuffer,
+		ulRxBuffer,
+		sizData
+	}
+	
+	ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
+	if ulValue==0 then
+		strRxData = read_image(tPlugin, ulRxBuffer, sizData, fnCallbackProgress)
+	end
+	
+	return strRxData
+end
+
+
+function spm_send_data(tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMessage)
+	local ulValue
+	local aulParameter
+	local sizData
+	local ulTxBuffer
+
+
+	sizData = string.len(strData)
+
+	ulTxBuffer = aAttr.ulBufferAdr
+
+	-- Download the data.
+	write_image(tPlugin, ulTxBuffer, strData, fnCallbackProgress)
+	
+	aulParameter =
+	{
+		OPERATION_MODE_SpiMacroPlayer,        -- operation mode: SPI macro player
+		SMC_SEND_DATA,                        -- Command: send data
+		aAttr.ulDeviceDesc,                   -- the SPI configuration
+		ulTxBuffer,
+		sizData
+	}
+	
+	ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
+	
+	return ulValue == 0
+end
+
+
+function spm_receive_data(tPlugin, aAttr, sizData, fnCallbackProgress, fnCallbackMessage)
+	local ulValue
+	local aulParameter
+	local ulRxBuffer
+	local strRxData
+
+
+	ulRxBuffer = aAttr.ulBufferAdr
+
+	aulParameter =
+	{
+		OPERATION_MODE_SpiMacroPlayer,        -- operation mode: SPI macro player
+		SMC_RECEIVE_DATA,                     -- Command: receive data
+		aAttr.ulDeviceDesc,                   -- the SPI configuration
+		ulRxBuffer,
+		sizData
+	}
+	
+	ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
+	if ulValue==0 then
+		strRxData = read_image(tPlugin, ulRxBuffer, sizData, fnCallbackProgress)
+	end
+	
+	return strRxData
+end
+
+
+function spm_idle_bytes(tPlugin, aAttr, sizIdleBytes, fnCallbackProgress, fnCallbackMessage)
+	local ulValue
+	local aulParameter
+
+
+	aulParameter =
+	{
+		OPERATION_MODE_SpiMacroPlayer,        -- operation mode: SPI macro player
+		SMC_SEND_IDLE_BYTES,                  -- Command: send idle bytes
+		aAttr.ulDeviceDesc,                   -- the SPI configuration
+		sizIdleBytes
+	}
+	
+	ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
+	
 	return ulValue == 0
 end
 

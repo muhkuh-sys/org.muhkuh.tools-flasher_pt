@@ -31,22 +31,73 @@
 
 typedef enum SPI_MACRO_CMD_ENUM
 {
-	SMC_NO_OPERATION           = 0,  /* no operation */
-	SMC_ACTIVATE_CHIP_SELECT   = 1,  /* activate chip select */
-	SMC_DEACTIVATE_CHIP_SELECT = 2,  /* deactivate the chip select line */
-	SMC_EXCHANGE_DATA          = 3,
-	SMC_SEND_DATA              = 4,
-	SMC_RECEIVE_DATA           = 5,
-	SMC_SEND_IDLE_BYTES        = 6,
-	SMC_MASK_BUFFER            = 7,
-	SMC_COMPARE_BUFFER         = 8,
-	SMC_JUMP                   = 9,
-	SMC_JUMP_EQUAL             = 10,
-	SMC_JUMP_NOT_EQUAL         = 11,
-	SMC_JUMP_ZERO              = 12,
-	SMC_JUMP_NOT_ZERO          = 13
+	SMC_INITIALIZE             = 0,
+	SMC_CHIP_SELECT            = 1,
+	SMC_EXCHANGE_DATA          = 2,
+	SMC_SEND_DATA              = 3,
+	SMC_RECEIVE_DATA           = 4,
+	SMC_SEND_IDLE_BYTES        = 5
 } SPI_MACRO_CMD_T;
 
+
+
+typedef struct SPI_MACRO_PARAMETER_INIT_STRUCT
+{
+	SPI_CONFIGURATION_T tSpi;
+} SPI_MACRO_PARAMETER_INIT_T;
+
+
+typedef struct SPI_MACRO_PARAMETER_CHIPSELECT_STRUCT
+{
+	int iActive;
+} SPI_MACRO_PARAMETER_CHIPSELECT_T;
+
+
+typedef struct SPI_MACRO_PARAMETER_EXCHANGE_STRUCT
+{
+	const unsigned char *pucTxBuffer;
+	unsigned char *pucRxBuffer;
+	size_t sizBuffer;
+} SPI_MACRO_PARAMETER_EXCHANGE_T;
+
+
+typedef struct SPI_MACRO_PARAMETER_SEND_STRUCT
+{
+	const unsigned char *pucTxBuffer;
+	size_t sizTxBuffer;
+} SPI_MACRO_PARAMETER_SEND_T;
+
+
+typedef struct SPI_MACRO_PARAMETER_RECEIVE_STRUCT
+{
+	unsigned char *pucRxBuffer;
+	size_t sizRxBuffer;
+} SPI_MACRO_PARAMETER_RECEIVE_T;
+
+
+typedef struct SPI_MACRO_PARAMETER_IDLE_STRUCT
+{
+	size_t sizIdleBytes;
+} SPI_MACRO_PARAMETER_IDLE_T;
+
+
+typedef union SPI_MACRO_PARAMETER_UNION
+{
+	SPI_MACRO_PARAMETER_INIT_T tInit;
+	SPI_MACRO_PARAMETER_CHIPSELECT_T tChipSelect;
+	SPI_MACRO_PARAMETER_EXCHANGE_T tExchangeData;
+	SPI_MACRO_PARAMETER_SEND_T tSendData;
+	SPI_MACRO_PARAMETER_RECEIVE_T tReceiveData;
+	SPI_MACRO_PARAMETER_IDLE_T tIdleBytes;
+} SPI_MACRO_PARAMETER_T;
+
+
+typedef struct CMD_PARAMETER_SPIMACROPLAYER_STRUCT
+{
+	unsigned long ulCommand;
+	SPI_CFG_T *ptSpiDev;
+	SPI_MACRO_PARAMETER_T uCfg;
+} CMD_PARAMETER_SPIMACROPLAYER_T;
 
 
 NETX_CONSOLEAPP_RESULT_T spi_macro_player(CMD_PARAMETER_SPIMACROPLAYER_T *ptParameter);
