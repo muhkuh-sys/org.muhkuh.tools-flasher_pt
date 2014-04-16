@@ -202,25 +202,14 @@ static int qsi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 	/* get control register contents */
 	ulValue  = ptSqiArea->aulSqi_cr[1];
 
-	/* compare the active selection with the requested one */
-	if( (ulValue&HOSTMSK(sqi_cr1_fss))==uiChipSelect )
-	{
-		/* the slave is already selected */
-		/* NOTE: of course it does not hurt to select it again, but
-		   the chip select is also used to reset the buffer counter */
-		iResult = -1;
-	}
-	else
-	{
-		/* mask out the slave select bits */
-		ulValue &= ~HOSTMSK(sqi_cr1_fss);
+	/* mask out the slave select bits */
+	ulValue &= ~HOSTMSK(sqi_cr1_fss);
 
-		/* mask in the new slave id */
-		ulValue |= uiChipSelect;
+	/* mask in the new slave id */
+	ulValue |= uiChipSelect;
 
-		/* write back new value */
-		ptSqiArea->aulSqi_cr[1] = ulValue;
-	}
+	/* write back new value */
+	ptSqiArea->aulSqi_cr[1] = ulValue;
 
 	return iResult;
 }
