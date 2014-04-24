@@ -283,7 +283,7 @@ aAttribs.update(dict({
 	'toclevels': 4
 }))
 
-doc = env_default.Asciidoc('targets/doc/flasher.html', 'doc/flasher.txt', ASCIIDOC_BACKEND='html5', ASCIIDOC_ATTRIBUTES=aAttribs)
+doc = env_default.Asciidoc('targets/doc/flasher.html', 'README.asciidoc', ASCIIDOC_BACKEND='html5', ASCIIDOC_ATTRIBUTES=aAttribs)
 
 
 #----------------------------------------------------------------------------
