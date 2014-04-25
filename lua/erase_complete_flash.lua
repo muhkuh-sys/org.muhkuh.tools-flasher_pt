@@ -16,8 +16,12 @@ if not fOk then
 	error("Failed to get a device description!")
 end
 
--- erase the first page
-ulEraseStart, ulEraseEnd = flasher.getEraseArea(tPlugin, aAttr, 0, 4194304)
+-- Get the complete devicesize.
+ulFlashSize = flasher.getFlashSize(tPlugin, aAttr, tester.callback, tester.callback_progress)
+print(string.format("The device size is: 0x%08x", ulFlashSize))
+
+-- Erase the complete device.
+ulEraseStart, ulEraseEnd = flasher.getEraseArea(tPlugin, aAttr, 0, ulFlashSize)
 if not ulEraseStart then
 	error("Failed to get erase areas!")
 end
