@@ -1,0 +1,5 @@
+language: python
+python:
+  - "2.7"
+# This is the command to build the whole project and pack the results in a distributable form.
+script:  python mbs/mbs
