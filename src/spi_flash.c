@@ -23,6 +23,7 @@
 #include "exodecr.h"
 #include "flasher_header.h"
 #include "uprintf.h"
+#include "progress_bar.h"
 
 #include "spi_flash.h"
 #include "sfdp.h"
@@ -548,6 +549,8 @@ static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 		/* get relevant bits */
 		ucStatus &= ptFlash->tAttributes.ucStatusReadyMask;
 
+		progress_bar_check_timer();
+		
 		/* wait until the remaining status bits match the expected value */
 	} while( ucStatus!=ptFlash->tAttributes.ucStatusReadyValue );
 	

@@ -25,6 +25,7 @@
 
 /* ------------------------------------- */
 
+static unsigned long ulProgressBar_CurrentValue;
 static unsigned long ulProgressBar_MaxValue;
 static unsigned long ulProgressBar_TimerHandle;
 
@@ -36,6 +37,7 @@ static void progress_bar_show_progress(unsigned long ulPosition)
 }
 
 /* ------------------------------------- */
+
 
 void progress_bar_init(unsigned long ulMaxvalue)
 {
@@ -51,16 +53,23 @@ void progress_bar_init(unsigned long ulMaxvalue)
 
 void progress_bar_set_position(unsigned long ulPosition)
 {
+	ulProgressBar_CurrentValue = ulPosition;
+	progress_bar_check_timer();
+}
+
+void progress_bar_check_timer()
+{
 	/*  is the counter still running? */
 	if( systime_elapsed(ulProgressBar_TimerHandle, 100)!=0 )
 	{
 		/*  counter already stopped -> time to print the progress */
-		progress_bar_show_progress(ulPosition);
+		progress_bar_show_progress(ulProgressBar_CurrentValue);
 
 		/*  restart counter */
 		ulProgressBar_TimerHandle = systime_get_ms();
 	}
 }
+
 
 void progress_bar_finalize(void)
 {
