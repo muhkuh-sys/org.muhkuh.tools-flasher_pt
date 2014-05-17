@@ -1,4 +1,4 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="flasher" default="all">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="flasher_cli" default="all">
 
 	<!-- TODO: only download the file if it does not exist yet. -->
 	<!-- TODO: restart ANT after the download somehow? -->
