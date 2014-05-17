@@ -1,0 +1,22 @@
+<ivysettings>
+	<settings defaultResolver="resolver-muhkuh-chain" />
+	<resolvers>
+		<chain name="resolver-muhkuh-chain">
+			<!-- This is a local resolver for the filesystem. Results of
+			     the local builds will be stored here.
+			-->
+			<filesystem name="local" descriptor="required" m2compatible="true">
+				<ivy      pattern="${user.home}/.mbs/repository/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
+				<artifact pattern="${user.home}/.mbs/repository/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
+			</filesystem>
+			
+		<!-- Not yet...
+			<url name="sourceforge" descriptor="required" >
+				<ivy      pattern="http://downloads.sourceforge.net/project/muhkuh/artifacts/[module]/[revision]/[artifact].[ext].ivy" />
+				<artifact pattern="http://downloads.sourceforge.net/project/muhkuh/artifacts/[module]/[revision]/[artifact].[ext]" />
+			</url>
+		-->
+		</chain>
+	</resolvers>
+</ivysettings>
+
