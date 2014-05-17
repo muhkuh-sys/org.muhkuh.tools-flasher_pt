@@ -1,3 +1,4 @@
+require("muhkuh_cli_init")
 require("flasher")
 
 tPlugin = tester.getCommonPlugin()
