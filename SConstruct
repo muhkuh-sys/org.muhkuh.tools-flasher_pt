@@ -293,13 +293,13 @@ doc = env_default.Asciidoc('targets/doc/flasher.html', 'README.asciidoc', ASCIID
 
 tArcList = env_default.ArchiveList('zip')
 
-tArcList.AddFiles('bin/',
+tArcList.AddFiles('netx/',
 	bin_netx500_nodbg,
 	bin_netx56_nodbg,
 	bin_netx50_nodbg,
 	bin_netx10_nodbg)
 
-tArcList.AddFiles('bin/debug/',
+tArcList.AddFiles('netx/debug/',
 	bin_netx500_dbg,
 	bin_netx56_dbg,
 	bin_netx50_dbg,
@@ -311,20 +311,25 @@ tArcList.AddFiles('doc/',
 	tDocSpiFlashListTxt)
 
 tArcList.AddFiles('lua/',
-	'lua/cli_flash.lua',
 	lua_flasher,
+	'lua/flasher_test.lua')
+
+tArcList.AddFiles('demo/',
+	'lua/cli_flash.lua',
 	'lua/demo_getBoardInfo.lua',
 	'lua/erase_complete_flash.lua',
 	'lua/erase_first_flash_sector.lua',
 	'lua/flash_parflash.lua',
 	'lua/flash_serflash.lua',
-	'lua/flasher_test.lua',
 	'lua/get_erase_areas_parflash.lua',
 	'lua/identify_parflash.lua',
 	'lua/identify_serflash.lua',
 	'lua/is_erased_parflash.lua',
 	'lua/read_bootimage.lua',
 	'lua/read_complete_flash.lua')
+
+tArcList.AddFiles('',
+	'ivy/install.xml')
 
 strArchiveVersion = '%s_%s' % (env_default['PROJECT_VERSION_LAST_COMMIT'], env_default['PROJECT_VERSION_VCS'])
 tArc = env_default.Archive('targets/flasher_%s.zip' % strArchiveVersion, None, ARCHIVE_CONTENTS=tArcList)
