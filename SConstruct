@@ -31,6 +31,7 @@ Import('env_default')
 tExoRaw = env_default.GetTool('exoraw-2.0.7_1')
 tExoRaw.ApplyToEnv(env_default)
 
+import os.path
 import spi_flashes
 spi_flashes.ApplyToEnv(env_default)
 
@@ -331,11 +332,22 @@ tArcList.AddFiles('demo/',
 tArcList.AddFiles('',
 	'ivy/flasher/install.xml')
 
-tArc = env_default.Archive('targets/ivy/flasher/flasher_%s.zip' % env_default.ArtifactVersion_Get(), None, ARCHIVE_CONTENTS=tArcList)
+strArtifactPath = 'targets/ivy/repository/org/muhkuh/tools/flasher/%s' % env_default.ArtifactVersion_Get()
+tArc = env_default.Archive(os.path.join(strArtifactPath, 'flasher-%s.zip' % env_default.ArtifactVersion_Get()), None, ARCHIVE_CONTENTS=tArcList)
 
 
-env_default.ArtifactVersion('targets/ivy/flasher/ivy-%s.xml' % env_default.ArtifactVersion_Get(), 'ivy/flasher/ivy.xml')
+env_default.ArtifactVersion(os.path.join(strArtifactPath, 'ivy-%s.xml' % env_default.ArtifactVersion_Get()), 'ivy/flasher/ivy.xml')
 
+
+#----------------------------------------------------------------------------
+#
+# Prepare the build folders for the other artifacts.
+#
+
+Command('targets/ivy/ivysettings.xml', 'ivy/ivysettings.xml', Copy("$TARGET", "$SOURCE"))
+
+Command('targets/ivy/flasher_cli/build.xml', 'ivy/flasher_cli/build.xml', Copy("$TARGET", "$SOURCE"))
+env_default.ArtifactVersion('targets/ivy/flasher_cli/ivy.xml', 'ivy/flasher_cli/ivy.xml')
 
 #----------------------------------------------------------------------------
 #
