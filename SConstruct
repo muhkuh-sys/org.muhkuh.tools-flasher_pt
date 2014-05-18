@@ -288,7 +288,7 @@ doc = env_default.Asciidoc('targets/doc/flasher.html', 'README.asciidoc', ASCIID
 
 #----------------------------------------------------------------------------
 #
-# Build the distribution.
+# Build the artifact.
 #
 
 tArcList = env_default.ArchiveList('zip')
@@ -329,10 +329,12 @@ tArcList.AddFiles('demo/',
 	'lua/read_complete_flash.lua')
 
 tArcList.AddFiles('',
-	'ivy/install.xml')
+	'ivy/flasher/install.xml')
 
-strArchiveVersion = '%s_%s' % (env_default['PROJECT_VERSION_LAST_COMMIT'], env_default['PROJECT_VERSION_VCS'])
-tArc = env_default.Archive('targets/flasher_%s.zip' % strArchiveVersion, None, ARCHIVE_CONTENTS=tArcList)
+tArc = env_default.Archive('targets/ivy/flasher/flasher_%s.zip' % env_default.ArtifactVersion_Get(), None, ARCHIVE_CONTENTS=tArcList)
+
+
+env_default.ArtifactVersion('targets/ivy/flasher/ivy-%s.xml' % env_default.ArtifactVersion_Get(), 'ivy/flasher/ivy.xml')
 
 
 #----------------------------------------------------------------------------

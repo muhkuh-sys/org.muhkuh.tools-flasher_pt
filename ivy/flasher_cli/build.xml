@@ -10,7 +10,7 @@
 
 	<!-- Download all required artifacts to the local 'lib' folder. -->
 	<target name="collect" description="Collect all dependencies in the lib subfolder.">
-		<ivy:settings id="ivy.muhkuh.settings" file="ivysettings.xml" />
+		<ivy:settings id="ivy.muhkuh.settings" file="../ivysettings.xml" />
 		<ivy:retrieve settingsRef="ivy.muhkuh.settings" pattern="lib/[orgPath]/[artifact]-[revision].[ext]" sync="true" />
 		<ivy:artifactproperty name="path.[artifact]" value="lib/[orgPath]/[artifact]-[revision]." />
 		<ivy:report todir="${install.base}/.ivy" graph="false" />
