@@ -10,12 +10,11 @@
 				<artifact pattern="${user.home}/.mbs/repository/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
 			</filesystem>
 			
-		<!-- Not yet...
-			<url name="sourceforge" descriptor="required" >
-				<ivy      pattern="http://downloads.sourceforge.net/project/muhkuh/artifacts/[module]/[revision]/[artifact].[ext].ivy" />
-				<artifact pattern="http://downloads.sourceforge.net/project/muhkuh/artifacts/[module]/[revision]/[artifact].[ext]" />
+			<!-- The main repository for artifacts on sourceforge. -->
+			<url name="sourceforge" descriptor="required" m2compatible="true">
+				<ivy      pattern="http://downloads.sourceforge.net/project/muhkuh/mbs/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
+				<artifact pattern="http://downloads.sourceforge.net/project/muhkuh/mbs/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
 			</url>
-		-->
 		</chain>
 	</resolvers>
 </ivysettings>
