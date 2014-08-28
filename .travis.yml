@@ -12,6 +12,8 @@ env:
 before_install:
   - wget http://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist//ant/binaries/apache-ant-1.9.4-bin.tar.bz2 -O /tmp/apache-ant-1.9.4-bin.tar.bz2
   - tar --directory /tmp --extract --bzip2 --file /tmp/apache-ant-1.9.4-bin.tar.bz2
+  - sudo apt-get update -qq
+  - sudo apt-get install -y python-requests
 
 # 1) Build the flasher artifact.
 # 2) Install the required Ivy version and build the flasher_cli artifacts.
