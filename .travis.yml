@@ -7,9 +7,7 @@ before_install:
   - sudo apt-get install -y ant
 
 # 1) Build the flasher.
-# 2) Install the required Ivy version.
-# 3) Build the artifact.
+# 2) Install the required Ivy version and build the artifact.
 script:
   - python mbs/mbs
-  - cd targets/ivy/flasher_cli && ant bootstrap
-  - cd targets/ivy/flasher_cli && ant
+  - cd targets/ivy/flasher_cli && ant bootstrap && ant
