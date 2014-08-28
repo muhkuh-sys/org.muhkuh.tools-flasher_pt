@@ -6,12 +6,10 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y ant
 
-# This is the command to build the whole project and pack the results in a distributable form.
-script:  python mbs/mbs
-
-# Install the required Ivy version.
-script:  cd targets/ivy/flasher_cli && ant bootstrap
-
-# Build the artifact.
-script:  cd targets/ivy/flasher_cli && ant
-
+# 1) Build the flasher.
+# 2) Install the required Ivy version.
+# 3) Build the artifact.
+script:
+  - python mbs/mbs
+  - cd targets/ivy/flasher_cli && ant bootstrap
+  - cd targets/ivy/flasher_cli && ant
