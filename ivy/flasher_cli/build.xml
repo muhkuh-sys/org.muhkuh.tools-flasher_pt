@@ -70,13 +70,13 @@
 		<property name="install_base" location="targets/${install_artifact}" />
 		
 		<antcall target="pack">
-			<param name="install.base"                   location="${install_base}" />
-			<param name="install.executable"             location="${install_base}" />
-			<param name="install.sharedobject"           location="${install_base}" />
-			<param name="install.lua"                    location="${install_base}/lua" />
-			<param name="install.luaplugin"              location="${install_base}/lua_plugins" />
-			<param name="install.documentation"          location="${install_base}/doc" />
-			<param name="install.firmware"               location="${install_base}/netx" />
+			<param name="install.base"                   location="${install_base}/${install_artifact}" />
+			<param name="install.executable"             location="${install_base}/${install_artifact}" />
+			<param name="install.sharedobject"           location="${install_base}/${install_artifact}" />
+			<param name="install.lua"                    location="${install_base}/${install_artifact}/lua" />
+			<param name="install.luaplugin"              location="${install_base}/${install_artifact}/lua_plugins" />
+			<param name="install.documentation"          location="${install_base}/${install_artifact}/doc" />
+			<param name="install.firmware"               location="${install_base}/${install_artifact}/netx" />
 			
 			<param name="install.os_arch.linux_i386"     value="false" />
 			<param name="install.os_arch.linux_x86_64"   value="false" />
@@ -91,13 +91,13 @@
 		<property name="install_base" location="targets/${install_artifact}" />
 		
 		<antcall target="pack">
-			<param name="install.base"                   location="${install_base}" />
-			<param name="install.executable"             location="${install_base}" />
-			<param name="install.sharedobject"           location="${install_base}" />
-			<param name="install.lua"                    location="${install_base}/lua" />
-			<param name="install.luaplugin"              location="${install_base}/lua_plugins" />
-			<param name="install.documentation"          location="${install_base}/doc" />
-			<param name="install.firmware"               location="${install_base}/netx" />
+			<param name="install.base"                   location="${install_base}/${install_artifact}" />
+			<param name="install.executable"             location="${install_base}/${install_artifact}" />
+			<param name="install.sharedobject"           location="${install_base}/${install_artifact}" />
+			<param name="install.lua"                    location="${install_base}/${install_artifact}/lua" />
+			<param name="install.luaplugin"              location="${install_base}/${install_artifact}/lua_plugins" />
+			<param name="install.documentation"          location="${install_base}/${install_artifact}/doc" />
+			<param name="install.firmware"               location="${install_base}/${install_artifact}/netx" />
 			
 			<param name="install.os_arch.linux_i386"     value="false" />
 			<param name="install.os_arch.linux_x86_64"   value="false" />
