@@ -2,6 +2,14 @@
 	<settings defaultResolver="resolver-muhkuh-chain" />
 	<resolvers>
 		<chain name="resolver-muhkuh-chain">
+			<!-- This is a local resolver for the build result of this project.
+			     The repository is located in the 'repository' subfolder next to this configuration file.
+			-->
+			<filesystem name="private" descriptor="required" m2compatible="true">
+				<ivy      pattern="${ivy.settings.dir}/repository/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
+				<artifact pattern="${ivy.settings.dir}/repository/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
+			</filesystem>
+			
 			<!-- This is a local resolver for the filesystem. Results of
 			     the local builds will be stored here.
 			-->
