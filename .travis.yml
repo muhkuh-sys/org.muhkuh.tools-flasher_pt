@@ -2,6 +2,10 @@ language: python
 python:
   - "2.7"
 
+env:
+  - secure: "CQaqQBrFIEVHPO+J8gWRCV0eQ2bdwdZG3T8t/DBj7hGTOXqaB1YHSWpSt+xbht/B2pelSz2XOWNhvF8Q9PFqW+nMFANkqz0W24BtBrVhLh6hUh+DLAW9rvctNeKU03Eqke+g7YAex6cLdVqk2HTyUBmMxe/rOGROGj2Sd+auhdc="
+
+
 # The build box uses Ubuntu 12.04, which provides ant 1.8.x . This project
 # needs at least ant 1.9.1 to get the "if" attribute (see
 # http://ant.apache.org/manual/ifunless.html).
@@ -11,6 +15,10 @@ before_install:
 
 # 1) Build the flasher artifact.
 # 2) Install the required Ivy version and build the flasher_cli artifacts.
+# 3) deploy the artifacts to BinTray.
 script:
+  - export PROJECTDIR=$PWD
   - python mbs/mbs
   - cd targets/ivy/flasher_cli && /tmp/apache-ant-1.9.4/bin/ant bootstrap && /tmp/apache-ant-1.9.4/bin/ant
+  - cd $PROJECTDIR
+  - python ivy/deploy.py
