@@ -349,20 +349,6 @@ Command('targets/ivy/ivysettings.xml', 'ivy/ivysettings.xml', Copy("$TARGET", "$
 Command('targets/ivy/flasher_cli/build.xml', 'ivy/flasher_cli/build.xml', Copy("$TARGET", "$SOURCE"))
 env_default.ArtifactVersion('targets/ivy/flasher_cli/ivy.xml', 'ivy/flasher_cli/ivy.xml')
 
-#----------------------------------------------------------------------------
-#
-# Create the artifact list.
-#
-
-strGroupID = 'net.sourceforge.muhkuh'
-aServer = ('nexus@netx01', 'muhkuh', 'muhkuh_snapshots')
-bCanRelease = env_default['CFG_BUILD']=='release'
-
-# Add the LUA file to the list of artifacts.
-env_default.AddArtifact(tArc, aServer, strGroupID, 'flasher', 'zip', GOOD=bCanRelease)
-
-tArtifacts = env_default.Artifact('targets/artifacts.xml', None)
-
 
 #----------------------------------------------------------------------------
 #
