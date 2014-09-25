@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <ivy-module version="2.0">
-	<info organisation="org.muhkuh.tools" module="flasher_cli" revision="${ARTIFACT_VERSION}" />
+	<info organisation="org.muhkuh.tools" module="flasher_cli" revision="${PROJECT_VERSION}" />
 	
 	<publications>
 		<artifact name="flasher_cli_windows_x86" ext="zip" type="zip" packaging="zip" />
@@ -10,7 +10,7 @@
 	
 	<dependencies>
 		<dependency org="org.muhkuh.tools" name="bootloader_windows_driver" rev="2.0.0"/>
-		<dependency org="org.muhkuh.tools" name="flasher" rev="${ARTIFACT_VERSION}"/>
+		<dependency org="org.muhkuh.tools" name="flasher" rev="${PROJECT_VERSION}"/>
 	</dependencies>
 </ivy-module>
 
