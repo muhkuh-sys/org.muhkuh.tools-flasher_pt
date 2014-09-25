@@ -360,6 +360,7 @@ Command('targets/ivy/ivysettings.xml', 'ivy/ivysettings.xml', Copy("$TARGET", "$
 
 Command('targets/ivy/flasher_cli/build.xml', 'ivy/flasher_cli/build.xml', Copy("$TARGET", "$SOURCE"))
 env_default.ArtifactVersion('targets/ivy/flasher_cli/ivy.xml', 'ivy/flasher_cli/ivy.xml')
+env_default.ArtifactVersion('targets/artifacts_flasher_cli.xml', 'ivy/flasher_cli/artifacts_flasher_cli.xml')
 
 
 #----------------------------------------------------------------------------
