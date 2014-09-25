@@ -292,30 +292,35 @@ doc = env_default.Asciidoc('targets/doc/flasher.html', 'README.asciidoc', ASCIID
 # Build the artifact.
 #
 
-tArcList = env_default.ArchiveList('zip')
+aArtifactServer = ('nexus@netx01', 'muhkuh', 'muhkuh_snapshots')
+strArtifactGroup = 'tools.muhkuh.org'
+strArtifactId = 'flasher'
 
-tArcList.AddFiles('netx/',
+
+tArcList0 = env_default.ArchiveList('zip')
+
+tArcList0.AddFiles('netx/',
 	bin_netx500_nodbg,
 	bin_netx56_nodbg,
 	bin_netx50_nodbg,
 	bin_netx10_nodbg)
 
-tArcList.AddFiles('netx/debug/',
+tArcList0.AddFiles('netx/debug/',
 	bin_netx500_dbg,
 	bin_netx56_dbg,
 	bin_netx50_dbg,
 	bin_netx10_dbg)
 
-tArcList.AddFiles('doc/',
+tArcList0.AddFiles('doc/',
 	doc,
 	tDocSpiFlashTypesHtml,
 	tDocSpiFlashListTxt)
 
-tArcList.AddFiles('lua/',
+tArcList0.AddFiles('lua/',
 	lua_flasher,
 	'lua/flasher_test.lua')
 
-tArcList.AddFiles('demo/',
+tArcList0.AddFiles('demo/',
 	'lua/cli_flash.lua',
 	'lua/demo_getBoardInfo.lua',
 	'lua/erase_complete_flash.lua',
@@ -329,14 +334,21 @@ tArcList.AddFiles('demo/',
 	'lua/read_bootimage.lua',
 	'lua/read_complete_flash.lua')
 
-tArcList.AddFiles('',
-	'ivy/flasher/install.xml')
-
-strArtifactPath = 'targets/ivy/repository/org/muhkuh/tools/flasher/%s' % env_default.ArtifactVersion_Get()
-tArc = env_default.Archive(os.path.join(strArtifactPath, 'flasher-%s.zip' % env_default.ArtifactVersion_Get()), None, ARCHIVE_CONTENTS=tArcList)
+tArcList0.AddFiles('',
+	'ivy/org.muhkuh.tools.flasher/install.xml')
 
 
-env_default.ArtifactVersion(os.path.join(strArtifactPath, 'ivy-%s.xml' % env_default.ArtifactVersion_Get()), 'ivy/flasher/ivy.xml')
+aArtifactGroupReverse = strArtifactGroup.split('.')
+aArtifactGroupReverse.reverse()
+
+strArtifactPath = 'targets/ivy/repository/%s/%s/%s' % ('/'.join(aArtifactGroupReverse),strArtifactId,PROJECT_VERSION)
+tArc0 = env_default.Archive(os.path.join(strArtifactPath, '%s-%s.zip' % (strArtifactId,PROJECT_VERSION)), None, ARCHIVE_CONTENTS=tArcList0)
+tIvy0 = env_default.ArtifactVersion(os.path.join(strArtifactPath, '%s-%s.ivy' % (strArtifactId,PROJECT_VERSION)), 'ivy/%s.%s/ivy.xml' % ('.'.join(aArtifactGroupReverse),strArtifactId))
+
+env_default.AddArtifact(tArc0, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'zip')
+env_default.AddArtifact(tIvy0, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'ivy')
+
+tArtifacts = env_default.Artifact('targets/artifacts_flasher.xml', None)
 
 
 #----------------------------------------------------------------------------
