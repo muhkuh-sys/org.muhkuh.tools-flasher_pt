@@ -70,26 +70,33 @@ class BinTray:
 
 
 tParser = argparse.ArgumentParser(description='Deploy some artifacts.')
-tParser.add_argument('strArtifactsFilename', metavar='FILE', help='Read the artifact list from FILE.')
+tParser.add_argument('astrArtifactsFilename', nargs='+', metavar='FILE', help='Read the artifact list from FILE.')
 aOptions = tParser.parse_args()
 
 strAuth = os.environ['BINTRAY_APITOKEN']
 strUser,strApiToken = string.split(strAuth, ':')
 
-# Open the XML file.
-tXmlArtifacts = xml.etree.ElementTree.parse(aOptions.strArtifactsFilename)
-tNodeRoot = tXmlArtifacts.getroot()
+# Loop over all XML files and collect all targets.
+aTargets = []
+for strFilename in aOptions.astrArtifactsFilename:
+	tXmlArtifacts = xml.etree.ElementTree.parse(strFilename)
+	tNodeRoot = tXmlArtifacts.getroot()
+	
+	for tNodeTarget in tNodeRoot.findall('Project/Server/Target'):
+		tTarget = {'ArtifactID': tNodeTarget.find('ArtifactID').text,
+		           'Version':    tNodeTarget.find('Version').text,
+		           'file':       tNodeTarget.get('file'),
+		           'GroupID':    tNodeTarget.find('GroupID').text,
+		           'Packaging':  tNodeTarget.find('Packaging').text}
+		aTargets.append(tTarget)
 
 
 tBinTray = BinTray(strUser, strApiToken, 'muhkuh', 'Muhkuh')
 
 # Loop over all targets and find all package/version combinations without duplicates.
 aPackageVersions = set()
-for tNodeTarget in tNodeRoot.findall('Project/Server/Target'):
-	strPackage = tNodeTarget.find('ArtifactID').text
-	strVersion = tNodeTarget.find('Version').text
-	
-	aPackageVersions.add((strPackage, strVersion))
+for tTarget in aTargets:
+	aPackageVersions.add((tTarget['ArtifactID'], tTarget['Version']))
 
 
 # Loop over all package/version combinations. Delete existing version on the server. Create all versions on the server.
@@ -108,13 +115,7 @@ for strPackageVersion in aPackageVersions:
 
 
 # Loop over all targets and upload the files.
-for tNodeTarget in tNodeRoot.findall('Project/Server/Target'):
-	strPackage   = tNodeTarget.find('ArtifactID').text
-	strVersion   = tNodeTarget.find('Version').text
-	strFile      = tNodeTarget.get('file')
-	strGroup     = tNodeTarget.find('GroupID').text
-	strPackaging = tNodeTarget.find('Packaging').text
-	
-	print 'Uploading %s.' % strFile
-	tBinTray.content_upload(strPackage, strVersion, strGroup, strFile, '%s-%s.%s' % (strPackage,strVersion,strPackaging))
+for tTarget in aTargets:
+	print 'Uploading %s.' % tTarget['file']
+	tBinTray.content_upload(tTarget['ArtifactID'], tTarget['Version'], tTarget['GroupID'], tTarget['file'], os.path.basename(tTarget['file']))
 
