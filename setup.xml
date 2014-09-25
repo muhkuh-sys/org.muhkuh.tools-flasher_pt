@@ -4,7 +4,8 @@
 <muhkuh_buildsystem project="flasher">
 	<project_version>
 		<major>1</major>
-		<minor>0</minor>
+		<minor>1</minor>
+		<micro>0</micro>
 	</project_version>
 
 	<scons>
