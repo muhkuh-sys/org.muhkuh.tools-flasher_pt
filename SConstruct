@@ -28,7 +28,7 @@
 SConscript('mbs/SConscript')
 Import('env_default')
 
-tExoRaw = env_default.GetTool('exoraw-2.0.7_1')
+tExoRaw = env_default.GetTool('exoraw-2.0.7_2')
 tExoRaw.ApplyToEnv(env_default)
 
 import os.path
