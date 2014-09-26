@@ -47,7 +47,7 @@
 		<ant dir="${path.lua_plugin_romloader}" antfile="install.xml">
 			<propertyset refid="install"/>
 		</ant>
-		<ant dir="${path.muhkuh_tester_cli}" antfile="install.xml">
+		<ant dir="${path.muhkuh_base_cli}" antfile="install.xml">
 			<propertyset refid="install"/>
 		</ant>
 		<ant dir="${path.flasher}" antfile="install.xml">
