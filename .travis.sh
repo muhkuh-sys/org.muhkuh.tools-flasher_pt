@@ -30,7 +30,7 @@ if [ $STATUS -ne 0 ]; then
 fi
 
 cd ../../..
-python ivy/deploy.py artifacts_flasher.xml artifacts_flasher_cli.xml
+python ivy/deploy.py targets/artifacts_flasher.xml targets/artifacts_flasher_cli.xml
 STATUS=$?
 if [ $STATUS -ne 0 ]; then
 	echo "Error running the deploy script."
