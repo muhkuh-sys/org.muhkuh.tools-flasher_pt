@@ -1,4 +1,18 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant" name="flasher_cli" default="all">
+	<property name="version.required" value="1.9.1" />
+
+
+	<target name="version_check">
+		<antversion property="version.running" />
+		<fail message="FATAL ERROR:  The running Ant version, ${version.running}, is too old.">
+			<condition>
+				<not>
+					<antversion atleast="${version.required}" />
+				</not>
+			</condition>
+		</fail>
+	</target>
+
 
 	<!-- TODO: only download the file if it does not exist yet. -->
 	<!-- TODO: restart ANT after the download somehow? -->
@@ -107,7 +121,7 @@
 	</target>
 
 
-	<target name="all">
+	<target name="all" depends="version_check">
 		<ant target="flasher_cli_windows_x86" />
 		<ant target="flasher_cli_windows_amd64" />
 	</target>
