@@ -1,5 +1,7 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:if="ant:if" name="flasher" default="install_flasher">
-	<target name="install_flasher" description="install all components">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:if="ant:if" name="flasher" default="install">
+	<target name="install" description="install all components">
+		<echo>org.muhkuh.tools.flasher</echo>
+		
 		<copy todir="${install.documentation}" includeEmptyDirs="true">
 			<fileset dir="doc" />
 		</copy>
