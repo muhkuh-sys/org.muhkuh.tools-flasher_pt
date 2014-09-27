@@ -26,7 +26,7 @@
 	<target name="collect" description="Collect all dependencies in the lib subfolder.">
 		<ivy:settings id="ivy.muhkuh.settings" file="../ivysettings.xml" />
 		<ivy:retrieve settingsRef="ivy.muhkuh.settings" pattern="lib/[orgPath]/[artifact]-[revision].[ext]" sync="true" />
-		<ivy:artifactproperty name="path.[artifact]" value="lib/[orgPath]/[artifact]-[revision]." />
+		<ivy:artifactproperty name="path.[organisation].[artifact]" value="lib/[orgPath]/[artifact]-[revision]." />
 		<ivy:report todir="${install.base}/.ivy" graph="false" />
 	</target>
 
@@ -46,30 +46,15 @@
 			<propertyref name="install.os_arch.windows_amd64" />
 		</propertyset>
 		
-		<ant dir="${path.bootloader_windows_driver}" antfile="install.xml">
-			<propertyset refid="install"/>
-		</ant>
-		<ant dir="${path.lua}" antfile="install.xml">
-			<propertyset refid="install"/>
-		</ant>
-		<ant dir="${path.lua_plugin_bit}" antfile="install.xml">
-			<propertyset refid="install"/>
-		</ant>
-		<ant dir="${path.lua_plugin_mhash}" antfile="install.xml">
-			<propertyset refid="install"/>
-		</ant>
-		<ant dir="${path.lua_plugin_romloader}" antfile="install.xml">
-			<propertyset refid="install"/>
-		</ant>
-		<ant dir="${path.muhkuh_base_cli}" antfile="install.xml">
-			<propertyset refid="install"/>
-		</ant>
-		<ant dir="${path.flasher}" antfile="install.xml">
-			<propertyset refid="install"/>
-		</ant>
+		<ivy:buildlist reference="muhkuh-build-path">
+			<fileset dir="lib" includes="**/install.xml"/>
+		</ivy:buildlist>
+		
+		<subant target="install" buildpathref="muhkuh-build-path" inheritAll="true" inheritRefs="true" />
+		
 		<!-- Copy all demo scripts to the installation base. -->
 		<copy todir="${install.base}" includeEmptyDirs="true">
-			<fileset dir="${path.flasher}/demo" />
+			<fileset dir="${path.org.muhkuh.tools.flasher}/demo" />
 		</copy>
 	</target>
 
