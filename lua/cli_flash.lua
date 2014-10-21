@@ -6,6 +6,8 @@
 --
 --  Changes:
 --    Date      Author   Description
+--  21 oct 14   SL       adapted FLASHER_PATH to Ivy install
+--                       execute muhkuh_cli_init
 --  14 mar 12   SL       argument handling, usage text
 --                       removed dependency from tester
 --  01 mar 12   SL       adapted to use the extended routines in flasher.lua
@@ -17,8 +19,10 @@ SVN_VERSION="$Revision$"
 SVN_AUTHOR ="$Author$"
 -----------------------------------------------------------------------------
 
-FLASHER_PATH = "../targets/"
+FLASHER_PATH = "netx/"
 _G.__MUHKUH_WORKING_FOLDER = ""
+
+require("muhkuh_cli_init")
 
 -- flasher-related
 require("mhash")
