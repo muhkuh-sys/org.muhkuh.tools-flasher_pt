@@ -23,10 +23,10 @@
 
 /*-----------------------------------*/
 
-#define FLASHER_MAGIC0	0x6e
-#define FLASHER_MAGIC1	0x78
-#define FLASHER_MAGIC2	0x66
-#define FLASHER_MAGIC3	0x6c
+#define FLASHER_MAGIC0  0x6e
+#define FLASHER_MAGIC1  0x78
+#define FLASHER_MAGIC2  0x66
+#define FLASHER_MAGIC3  0x6c
 
 /* chiptyp defines */
 typedef enum
@@ -71,8 +71,9 @@ typedef struct FLASHER_VERSION_STRUCT
 {
 	const char    abMagic[4];
 
-	unsigned long ulVersionMaj;
-	unsigned long ulVersionMin;
+	unsigned long ulVersionMajor;
+	unsigned long ulVersionMinor;
+	unsigned long ulVersionMicro;
 	const char    acVersionVcs[16];
 
 	unsigned long *pulLoadAddress;

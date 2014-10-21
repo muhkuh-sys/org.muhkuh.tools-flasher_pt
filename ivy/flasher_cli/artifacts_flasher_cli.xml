@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Artifacts>
+	<Project>
+		<Server id="nexus@netx01" release="muhkuh" snapshots="muhkuh_snapshots">
+			<Target file="targets/ivy/flasher_cli/targets/flasher_cli_windows_amd64-${PROJECT_VERSION}.zip">
+				<ArtifactID>flasher</ArtifactID>
+				<GroupID>tools.muhkuh.org</GroupID>
+				<Version>${PROJECT_VERSION}</Version>
+				<Packaging>zip</Packaging>
+			</Target>
+			<Target file="targets/ivy/flasher_cli/targets/flasher_cli_windows_x86-${PROJECT_VERSION}.zip">
+				<ArtifactID>flasher</ArtifactID>
+				<GroupID>tools.muhkuh.org</GroupID>
+				<Version>${PROJECT_VERSION}</Version>
+				<Packaging>zip</Packaging>
+			</Target>
+		</Server>
+	</Project>
+</Artifacts>
+

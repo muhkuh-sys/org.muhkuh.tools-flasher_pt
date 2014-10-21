@@ -7,7 +7,7 @@
 	
 	<xsl:template match="/">
 		<xsl:text>
-This is a list of all known SPI flashes for the flasher <xsl:value-of select="$FLASHER_VERSION_ALL"/>:
+This is a list of all known SPI flashes for the flasher <xsl:value-of select="concat($FLASHER_VERSION_ALL, ' ', $FLASHER_VERSION_VCS)"/>:
 
 </xsl:text>
 		<xsl:apply-templates select="KnownSerialFlashes"/>

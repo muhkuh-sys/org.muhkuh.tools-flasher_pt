@@ -28,9 +28,10 @@
 SConscript('mbs/SConscript')
 Import('env_default')
 
-tExoRaw = env_default.GetTool('exoraw-2.0.7_1')
+tExoRaw = env_default.GetTool('exoraw-2.0.7_2')
 tExoRaw.ApplyToEnv(env_default)
 
+import os.path
 import spi_flashes
 spi_flashes.ApplyToEnv(env_default)
 
@@ -288,37 +289,44 @@ doc = env_default.Asciidoc('targets/doc/flasher.html', 'README.asciidoc', ASCIID
 
 #----------------------------------------------------------------------------
 #
-# Build the distribution.
+# Build the artifact.
 #
 
-tArcList = env_default.ArchiveList('zip')
+aArtifactServer = ('nexus@netx01', 'muhkuh', 'muhkuh_snapshots')
+strArtifactGroup = 'tools.muhkuh.org'
+strArtifactId = 'flasher'
 
-tArcList.AddFiles('bin/',
+
+tArcList0 = env_default.ArchiveList('zip')
+
+tArcList0.AddFiles('netx/',
 	bin_netx500_nodbg,
 	bin_netx56_nodbg,
 	bin_netx50_nodbg,
 	bin_netx10_nodbg)
 
-tArcList.AddFiles('bin/debug/',
+tArcList0.AddFiles('netx/debug/',
 	bin_netx500_dbg,
 	bin_netx56_dbg,
 	bin_netx50_dbg,
 	bin_netx10_dbg)
 
-tArcList.AddFiles('doc/',
+tArcList0.AddFiles('doc/',
 	doc,
 	tDocSpiFlashTypesHtml,
 	tDocSpiFlashListTxt)
 
-tArcList.AddFiles('lua/',
-	'lua/cli_flash.lua',
+tArcList0.AddFiles('lua/',
 	lua_flasher,
+	'lua/flasher_test.lua')
+
+tArcList0.AddFiles('demo/',
+	'lua/cli_flash.lua',
 	'lua/demo_getBoardInfo.lua',
 	'lua/erase_complete_flash.lua',
 	'lua/erase_first_flash_sector.lua',
 	'lua/flash_parflash.lua',
 	'lua/flash_serflash.lua',
-	'lua/flasher_test.lua',
 	'lua/get_erase_areas_parflash.lua',
 	'lua/identify_parflash.lua',
 	'lua/identify_serflash.lua',
@@ -326,23 +334,33 @@ tArcList.AddFiles('lua/',
 	'lua/read_bootimage.lua',
 	'lua/read_complete_flash.lua')
 
-strArchiveVersion = '%s_%s' % (env_default['PROJECT_VERSION_LAST_COMMIT'], env_default['PROJECT_VERSION_VCS'])
-tArc = env_default.Archive('targets/flasher_%s.zip' % strArchiveVersion, None, ARCHIVE_CONTENTS=tArcList)
+tArcList0.AddFiles('',
+	'ivy/org.muhkuh.tools.flasher/install.xml')
+
+
+aArtifactGroupReverse = strArtifactGroup.split('.')
+aArtifactGroupReverse.reverse()
+
+strArtifactPath = 'targets/ivy/repository/%s/%s/%s' % ('/'.join(aArtifactGroupReverse),strArtifactId,PROJECT_VERSION)
+tArc0 = env_default.Archive(os.path.join(strArtifactPath, '%s-%s.zip' % (strArtifactId,PROJECT_VERSION)), None, ARCHIVE_CONTENTS=tArcList0)
+tIvy0 = env_default.ArtifactVersion(os.path.join(strArtifactPath, 'ivy-%s.xml' % PROJECT_VERSION), 'ivy/%s.%s/ivy.xml' % ('.'.join(aArtifactGroupReverse),strArtifactId))
+
+env_default.AddArtifact(tArc0, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'zip')
+env_default.AddArtifact(tIvy0, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'ivy')
+
+tArtifacts = env_default.Artifact('targets/artifacts_flasher.xml', None)
 
 
 #----------------------------------------------------------------------------
 #
-# Create the artifact list.
+# Prepare the build folders for the other artifacts.
 #
 
-strGroupID = 'net.sourceforge.muhkuh'
-aServer = ('nexus@netx01', 'muhkuh', 'muhkuh_snapshots')
-bCanRelease = env_default['CFG_BUILD']=='release'
+Command('targets/ivy/ivysettings.xml', 'ivy/ivysettings.xml', Copy("$TARGET", "$SOURCE"))
 
-# Add the LUA file to the list of artifacts.
-env_default.AddArtifact(tArc, aServer, strGroupID, 'flasher', 'zip', GOOD=bCanRelease)
-
-tArtifacts = env_default.Artifact('targets/artifacts.xml', None)
+Command('targets/ivy/flasher_cli/build.xml', 'ivy/flasher_cli/build.xml', Copy("$TARGET", "$SOURCE"))
+env_default.ArtifactVersion('targets/ivy/flasher_cli/ivy.xml', 'ivy/flasher_cli/ivy.xml')
+env_default.ArtifactVersion('targets/artifacts_flasher_cli.xml', 'ivy/flasher_cli/artifacts_flasher_cli.xml')
 
 
 #----------------------------------------------------------------------------

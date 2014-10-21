@@ -30,8 +30,9 @@ const FLASHER_VERSION_T flasher_version =
 {
 	.abMagic = { FLASHER_MAGIC0, FLASHER_MAGIC1, FLASHER_MAGIC2, FLASHER_MAGIC3 },
 
-	.ulVersionMaj = FLASHER_VERSION_MAJ,
-	.ulVersionMin = FLASHER_VERSION_MIN,
+	.ulVersionMajor = FLASHER_VERSION_MAJOR,
+	.ulVersionMinor = FLASHER_VERSION_MINOR,
+	.ulVersionMicro = FLASHER_VERSION_MICRO,
 	.acVersionVcs = FLASHER_VERSION_VCS,
 
 	.pulLoadAddress = __LOAD_ADDRESS__,

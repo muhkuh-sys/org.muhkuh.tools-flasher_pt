@@ -8,7 +8,7 @@
 <xsl:template match="/">
 	<html>
 		<head>
-			<title>SPI flash devices for flasher <xsl:value-of select="$FLASHER_VERSION_ALL"/></title>
+			<title>SPI flash devices for flasher <xsl:value-of select="concat($FLASHER_VERSION_ALL, ' ', $FLASHER_VERSION_VCS)"/></title>
 			<style type="text/css">
 .result_true {
         display: inline;
@@ -34,7 +34,7 @@
 			</style>
 		</head>
 		<body bgcolor="#ffffff" marginheight="2" marginwidth="2" topmargin="2" leftmargin="2">
-			<h1>SPI flash devices for flasher <xsl:value-of select="$FLASHER_VERSION_ALL"/></h1>
+			<h1>SPI flash devices for flasher <xsl:value-of select="concat($FLASHER_VERSION_ALL, ' ', $FLASHER_VERSION_VCS)"/></h1>
 			<xsl:apply-templates select="KnownSerialFlashes"/>
 		</body>
 	</html>

@@ -1,5 +1,27 @@
 language: python
 python:
   - "2.7"
-# This is the command to build the whole project and pack the results in a distributable form.
-script:  python mbs/mbs
+
+
+env:
+  - secure: "CQaqQBrFIEVHPO+J8gWRCV0eQ2bdwdZG3T8t/DBj7hGTOXqaB1YHSWpSt+xbht/B2pelSz2XOWNhvF8Q9PFqW+nMFANkqz0W24BtBrVhLh6hUh+DLAW9rvctNeKU03Eqke+g7YAex6cLdVqk2HTyUBmMxe/rOGROGj2Sd+auhdc="
+
+
+# The build box uses Ubuntu 12.04, which provides ant 1.8.x . This project
+# needs at least ant 1.9.1 to get the "if" attribute (see
+# http://ant.apache.org/manual/ifunless.html).
+before_install:
+  - wget http://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist//ant/binaries/apache-ant-1.9.4-bin.tar.bz2 -O /tmp/apache-ant-1.9.4-bin.tar.bz2
+  - tar --directory /tmp --extract --bzip2 --file /tmp/apache-ant-1.9.4-bin.tar.bz2
+
+
+install:
+  - pip install -q requests
+
+
+# 1) Build the flasher artifact.
+# 2) Install the required Ivy version and build the flasher_cli artifacts.
+# 3) deploy the artifacts to BinTray.
+script:
+  - ./.travis.sh
+
