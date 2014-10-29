@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<ivy-module version="2.0">
-	<info organisation="org.muhkuh.tools" module="flasher" revision="${PROJECT_VERSION}">
+<ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
+	<info organisation="org.muhkuh.tools"
+	      module="flasher"
+	      revision="${PROJECT_VERSION}"
+	      e:vcs-id="${PROJECT_VERSION_VCS}">
 		<license name="GPL-2.0"/>
 		<ivyauthor name="Flasher team" url="https://github.com/muhkuh-sys/flasher" />
 		<description>
