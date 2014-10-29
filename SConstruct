@@ -343,7 +343,7 @@ aArtifactGroupReverse.reverse()
 
 strArtifactPath = 'targets/ivy/repository/%s/%s/%s' % ('/'.join(aArtifactGroupReverse),strArtifactId,PROJECT_VERSION)
 tArc0 = env_default.Archive(os.path.join(strArtifactPath, '%s-%s.zip' % (strArtifactId,PROJECT_VERSION)), None, ARCHIVE_CONTENTS=tArcList0)
-tIvy0 = env_default.ArtifactVersion(os.path.join(strArtifactPath, 'ivy-%s.xml' % PROJECT_VERSION), 'ivy/%s.%s/ivy.xml' % ('.'.join(aArtifactGroupReverse),strArtifactId))
+tIvy0 = env_default.Version(os.path.join(strArtifactPath, 'ivy-%s.xml' % PROJECT_VERSION), 'ivy/%s.%s/ivy.xml' % ('.'.join(aArtifactGroupReverse),strArtifactId))
 
 env_default.AddArtifact(tArc0, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'zip')
 env_default.AddArtifact(tIvy0, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'ivy')
@@ -357,10 +357,11 @@ tArtifacts = env_default.Artifact('targets/artifacts_flasher.xml', None)
 #
 
 Command('targets/ivy/ivysettings.xml', 'ivy/ivysettings.xml', Copy("$TARGET", "$SOURCE"))
+Command('targets/ivy/flasher_cli/ivy-report.xsl', 'ivy/ivy-report.xsl', Copy("$TARGET", "$SOURCE"))
 
 Command('targets/ivy/flasher_cli/build.xml', 'ivy/flasher_cli/build.xml', Copy("$TARGET", "$SOURCE"))
-env_default.ArtifactVersion('targets/ivy/flasher_cli/ivy.xml', 'ivy/flasher_cli/ivy.xml')
-env_default.ArtifactVersion('targets/artifacts_flasher_cli.xml', 'ivy/flasher_cli/artifacts_flasher_cli.xml')
+env_default.Version('targets/ivy/flasher_cli/ivy.xml', 'ivy/flasher_cli/ivy.xml')
+env_default.Version('targets/artifacts_flasher_cli.xml', 'ivy/flasher_cli/artifacts_flasher_cli.xml')
 
 
 #----------------------------------------------------------------------------

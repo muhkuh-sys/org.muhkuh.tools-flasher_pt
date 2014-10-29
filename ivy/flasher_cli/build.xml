@@ -27,7 +27,7 @@
 		<ivy:settings id="ivy.muhkuh.settings" file="../ivysettings.xml" />
 		<ivy:retrieve settingsRef="ivy.muhkuh.settings" pattern="lib/[orgPath]/[artifact]-[revision].[ext]" sync="true" />
 		<ivy:artifactproperty name="path.[organisation].[artifact]" value="lib/[orgPath]/[artifact]-[revision]." />
-		<ivy:report todir="${install.base}/.ivy" graph="false" />
+		<ivy:report todir="${install.base}/.ivy" graph="false" xslfile="ivy-report.xsl" />
 	</target>
 
 
