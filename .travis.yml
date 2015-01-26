@@ -5,6 +5,7 @@ python:
 
 env:
   - secure: "CQaqQBrFIEVHPO+J8gWRCV0eQ2bdwdZG3T8t/DBj7hGTOXqaB1YHSWpSt+xbht/B2pelSz2XOWNhvF8Q9PFqW+nMFANkqz0W24BtBrVhLh6hUh+DLAW9rvctNeKU03Eqke+g7YAex6cLdVqk2HTyUBmMxe/rOGROGj2Sd+auhdc="
+  - PATH=/tmp/apache-ant-1.9.4/bin/:$PATH
 
 
 # The build box uses Ubuntu 12.04, which provides ant 1.8.x . This project
@@ -23,5 +24,5 @@ install:
 # 2) Install the required Ivy version and build the flasher_cli artifacts.
 # 3) deploy the artifacts to BinTray.
 script:
-  - ./.travis.sh
+  - ./.build.sh
 
