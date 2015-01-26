@@ -18,15 +18,15 @@
 	<!-- TODO: restart ANT after the download somehow? -->
 	<target name="bootstrap" description="Install the ivy JAR.">
 		<mkdir dir="${user.home}/.ant/lib"/>
-		<get dest="${user.home}/.ant/lib/ivy.jar" src="http://search.maven.org/remotecontent?filepath=org/apache/ivy/ivy/2.4.0-rc1/ivy-2.4.0-rc1.jar"/>
+		<get dest="${user.home}/.ant/lib/ivy.jar" src="http://search.maven.org/remotecontent?filepath=org/apache/ivy/ivy/2.4.0/ivy-2.4.0.jar"/>
 	</target>
 
 
 	<!-- Download all required artifacts to the local 'lib' folder. -->
 	<target name="collect" description="Collect all dependencies in the lib subfolder.">
 		<ivy:settings id="ivy.muhkuh.settings" file="../ivysettings.xml" />
-		<ivy:retrieve settingsRef="ivy.muhkuh.settings" pattern="lib/[orgPath]/[artifact]-[revision].[ext]" sync="true" />
-		<ivy:artifactproperty name="path.[organisation].[artifact]" value="lib/[orgPath]/[artifact]-[revision]." />
+		<ivy:retrieve settingsRef="ivy.muhkuh.settings" pattern="lib/[orgPath]/[artifact]-[revision]" sync="true" />
+		<ivy:artifactproperty name="path.[organisation].[artifact]" value="lib/[orgPath]/[artifact]-[revision]" />
 		<ivy:report todir="${install.base}/.ivy" graph="false" xslfile="ivy-report.xsl" />
 	</target>
 
