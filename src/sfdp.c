@@ -339,6 +339,126 @@ static void hexdump_line(const unsigned char *pucData, size_t sizData)
 #endif
 
 
+static unsigned int get_jedec_id_length(unsigned char *pucArrayPointer, unsigned int uiArraySize){
+    unsigned int uiIdSize = 1;
+    unsigned char *pucArrayPointer0 = pucArrayPointer++;
+    unsigned int uiArrayCnt;
+    unsigned int uiIdValidationCnt;
+    unsigned int uiArrayValidationCnt;
+    for(uiArrayCnt = 1 ; uiArrayCnt < uiArraySize ; uiArrayCnt++){
+        if (*pucArrayPointer != *pucArrayPointer0){
+            /*current byte is different from the first byte*/
+            pucArrayPointer++;
+            uiIdSize++;
+        } else{
+            /*current byte equals the first byte*/
+            for (uiIdValidationCnt = 0;uiIdValidationCnt < uiArrayCnt;uiIdValidationCnt++){
+                if(*(pucArrayPointer0 + uiIdValidationCnt) != *(pucArrayPointer + uiIdValidationCnt)){
+                    pucArrayPointer++;
+                    uiIdSize++;
+                    /*id not found yet*/
+                    break;
+                }
+            }
+            if (uiIdValidationCnt == uiArrayCnt){
+                /*found a double sequence*/
+                uiIdValidationCnt=0;
+                for(uiArrayValidationCnt = (2*uiArrayCnt);uiArrayValidationCnt<uiArraySize;uiArrayValidationCnt++){
+                    if(*(pucArrayPointer0 + uiIdValidationCnt) != *(pucArrayPointer+uiArrayValidationCnt-uiArrayCnt)){
+                        /*id not found yet*/
+                        pucArrayPointer++;
+                        uiIdSize++;
+                        break;
+                    }
+                    uiIdValidationCnt++;
+                    if (uiIdValidationCnt == uiArrayCnt){
+                        /*reset counter for validation of following id bytes*/
+                        uiIdValidationCnt = 0;
+                    }
+                }
+                if(uiArrayValidationCnt==uiArraySize){
+                    /*id found*/
+                    break;
+                }
+            }
+        }
+
+    }
+    return uiIdSize;
+}
+
+static int read_jedec_id(const SPI_FLASH_T *ptFlash, unsigned char *pucJedecId, unsigned int sizJedecId, unsigned int *puiDetectedSize)
+{
+	int iResult;
+	const SPI_CFG_T *ptSpiDev;
+	unsigned char aucCmd[1];
+	unsigned int uiDetectedSize = 0;
+
+	DEBUGMSG(ZONE_FUNCTION, ("+read_jedec_id(): ptFlash=0x%08x\n", ptFlash));
+
+	/* Construct the command. */
+	aucCmd[0] = 0x9fU;
+
+	/* Get the SPI device. */
+	ptSpiDev = &ptFlash->tSpiDev;
+
+	/* Select the slave. */
+	ptSpiDev->pfnSelect(ptSpiDev, 1);
+
+	/* Send the command. */
+	iResult = ptSpiDev->pfnSendData(ptSpiDev, aucCmd, sizeof(aucCmd));
+	if( iResult!=0 )
+	{
+		DEBUGMSG(ZONE_ERROR, ("pfnSendData: %d\n", iResult));
+	}
+	else
+	{
+		/* Receive the data. */
+		iResult = ptSpiDev->pfnReceiveData(ptSpiDev, pucJedecId, sizJedecId);
+		if( iResult!=0 )
+		{
+			DEBUGMSG(ZONE_ERROR, ("pfnReceiveData: %d\n", iResult));
+		}
+	}
+
+	/*  Deselect the slave. */
+	ptSpiDev->pfnSelect(ptSpiDev, 0);
+	if( iResult==0 )
+	{
+		/* Send 1 idle byte. */
+		iResult = ptSpiDev->pfnSendIdle(ptSpiDev, 1);
+		if( iResult!=0 )
+		{
+			DEBUGMSG(ZONE_ERROR, ("pfnSendIdle: %d\n", iResult));
+		}
+	}
+
+
+	if( iResult==0 )
+	{
+		/* Jetzt haben wir 32Byte JEDEC IDs in aucData! */
+		uiDetectedSize = get_jedec_id_length(pucJedecId, sizJedecId);
+		if (uiDetectedSize >8 || uiDetectedSize < 3)
+		{
+			if (uiDetectedSize == 1 && ((*pucJedecId == 0x00) || (*pucJedecId == 0xff)))
+			{
+				uiDetectedSize = 0;
+			}
+			else
+			{
+				uiDetectedSize = 3;
+			}
+		}
+	}
+
+	*puiDetectedSize = uiDetectedSize;
+	DEBUGMSG(ZONE_FUNCTION, ("-read_jedec_id(): iResult=%d\n", iResult));
+	return iResult;
+}
+
+
+
+
 const SPIFLASH_ATTRIBUTES_T *sfdp_detect(SPI_FLASH_T *ptFlash)
 {
 	SPI_CFG_T *ptSpiDev;
@@ -352,6 +472,10 @@ const SPIFLASH_ATTRIBUTES_T *sfdp_detect(SPI_FLASH_T *ptFlash)
 	unsigned char ucSfdpVersion_Maj;
 	unsigned char ucSfdpVersion_Min;
 	size_t sizSfdpHeaders;
+	int iJedecIdResult;
+	unsigned char aucJedecId[32];
+	unsigned int uiJedecIdCnt = 0;
+	unsigned int uiIdSequenceSize;
 
 
 
@@ -391,11 +515,24 @@ const SPIFLASH_ATTRIBUTES_T *sfdp_detect(SPI_FLASH_T *ptFlash)
 				uprintf("read_parameter_headers: %d\n", iResult);
 				if( iResult==0 )
 				{
+					iJedecIdResult = read_jedec_id(ptFlash, aucJedecId, sizeof(aucJedecId), &uiIdSequenceSize);
+
 #if CFG_DEBUGMSG!=0
 					if( ZONE_VERBOSE )
 					{
 						uprintf("SFDP flash parameters:\n");
-						uprintf("<SerialFlash name=\"SFDP\" size=\"%d\" clock=\"%d\">\n", tSfdpAttributes.ulSize, tSfdpAttributes.ulClock);
+						uprintf("<SerialFlash name=\"SFDP");
+
+						if( iJedecIdResult==0 )
+						{
+							/* SFDP_01_40_15 */
+							while(uiJedecIdCnt < uiIdSequenceSize)
+							{
+								uprintf("_%02x", aucJedecId[uiJedecIdCnt++]);
+							}
+						}
+
+						uprintf("\" size=\"%d\" clock=\"%d\">\n", tSfdpAttributes.ulSize, tSfdpAttributes.ulClock);
 						uprintf("\t<Description>SFDP flash</Description>\n");
 						uprintf("\t<Note>This flash was auto-detected with SFDP</Note>\n");
 						uprintf("\t<Layout pageSize=\"%d\" sectorPages=\"%d\" mode=\"linear\" />\n", tSfdpAttributes.ulPageSize, tSfdpAttributes.ulSectorPages, spi_flash_get_adr_mode_name(tSfdpAttributes.tAdrMode));
