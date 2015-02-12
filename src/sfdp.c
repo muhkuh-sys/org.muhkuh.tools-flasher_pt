@@ -474,9 +474,9 @@ const SPIFLASH_ATTRIBUTES_T *sfdp_detect(SPI_FLASH_T *ptFlash)
 	size_t sizSfdpHeaders;
 	int iJedecIdResult;
 	unsigned char aucJedecId[32];
-	unsigned int uiJedecIdCnt = 0;
 	unsigned int uiIdSequenceSize;
-
+	char *pcName;
+	unsigned int uiDevNameCnt;
 
 
 	/* Get the SPI device. */
@@ -516,23 +516,53 @@ const SPIFLASH_ATTRIBUTES_T *sfdp_detect(SPI_FLASH_T *ptFlash)
 				if( iResult==0 )
 				{
 					iJedecIdResult = read_jedec_id(ptFlash, aucJedecId, sizeof(aucJedecId), &uiIdSequenceSize);
+					if( iJedecIdResult==0 )
+					{
+						pcName = tSfdpAttributes.acName;
+
+						*(pcName++) = 'S';
+						*(pcName++) = 'F';
+						*(pcName++) = 'D';
+						*(pcName++) = 'P';
+						*(pcName++) = '_';
+
+						for(uiDevNameCnt = 0; uiDevNameCnt < uiIdSequenceSize;uiDevNameCnt++)
+						{
+							/* high digit */
+							if((aucJedecId[uiDevNameCnt] >> 4) <= 9)
+							{
+								/* char number */
+								*(pcName++) = (unsigned char)((aucJedecId[uiDevNameCnt] >> 4) + 0x30);
+							}
+							else
+							{
+								/* char letter */
+								*(pcName++) = (unsigned char) ((aucJedecId[uiDevNameCnt] >> 4) + 0x57);
+							}
+
+							/* low digit */
+							if((aucJedecId[uiDevNameCnt] & 0x0f) <= 9)
+							{
+								/* char number */
+								*(pcName++) = (unsigned char)((aucJedecId[uiDevNameCnt] & 0x0f) + 0x30);
+							}
+							else
+							{
+								/* char letter */
+								*(pcName++) = (unsigned char)((aucJedecId[uiDevNameCnt] & 0x0f) + 0x57);
+							}
+						}
+
+						/* 0 termination of string */
+						*pcName = 0;
+
+					}
 
 #if CFG_DEBUGMSG!=0
 					if( ZONE_VERBOSE )
 					{
 						uprintf("SFDP flash parameters:\n");
-						uprintf("<SerialFlash name=\"SFDP");
-
-						if( iJedecIdResult==0 )
-						{
-							/* SFDP_01_40_15 */
-							while(uiJedecIdCnt < uiIdSequenceSize)
-							{
-								uprintf("_%02x", aucJedecId[uiJedecIdCnt++]);
-							}
-						}
-
-						uprintf("\" size=\"%d\" clock=\"%d\">\n", tSfdpAttributes.ulSize, tSfdpAttributes.ulClock);
+						uprintf("<SerialFlash name=\"%s\" size=\"%d\" clock=\"%d\">\n", tSfdpAttributes.acName, tSfdpAttributes.ulSize, tSfdpAttributes.ulClock);
 						uprintf("\t<Description>SFDP flash</Description>\n");
 						uprintf("\t<Note>This flash was auto-detected with SFDP</Note>\n");
 						uprintf("\t<Layout pageSize=\"%d\" sectorPages=\"%d\" mode=\"linear\" />\n", tSfdpAttributes.ulPageSize, tSfdpAttributes.ulSectorPages, spi_flash_get_adr_mode_name(tSfdpAttributes.tAdrMode));
