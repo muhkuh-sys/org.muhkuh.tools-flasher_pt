@@ -238,8 +238,11 @@ def spiflashes_action(target, source, env):
 	tXml.parse(source[0].get_path())
 
 	# Get the maximum sizes for the following arrays.
+	# All initial values are 0 except for the name. It can also be set by
+	# the SFDP auto-detect, where the name has a maximum size of 21.
+	# (21 because the prefix "SFDP_" and 16 hex digits).
 	aMaxSize = dict({
-		'.@name': 0,
+		'.@name': 21,
 		'Erase@eraseChipCommand': 0,
 		'Init0@command': 0,
 		'Init1@command': 0,
