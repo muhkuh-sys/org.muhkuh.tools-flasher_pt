@@ -466,7 +466,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_easyErase(tFlasherInputParameter *ptAppPa
 static NETX_CONSOLEAPP_RESULT_T opMode_spiMacroPlayer(tFlasherInputParameter *ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-
+	(void) ptConsoleParams; /* unused */
 
 	tResult = spi_macro_player(&(ptAppParams->uParameter.tSpiMacroPlayer));
 	return tResult;
@@ -490,8 +490,8 @@ static NETX_CONSOLEAPP_RESULT_T check_params(NETX_CONSOLEAPP_PARAMETER_T *ptCons
 	OPERATION_MODE_T tOpMode;
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	unsigned long ulStartAdr;
-	unsigned long ulEndAdr;
-	unsigned long ulDataByteSize;
+	unsigned long ulEndAdr       = 0; /* avoid 'uninitialized' warning */
+	unsigned long ulDataByteSize = 0; /* dito */
 	unsigned char *pucData;
 	unsigned long ulFlashSize;
 	unsigned long ulPars;

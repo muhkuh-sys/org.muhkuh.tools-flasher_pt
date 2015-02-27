@@ -279,6 +279,7 @@ static int CFI_getbyte(FLASH_DEVICE_T *ptFlashDevice, unsigned char *pucDest, si
 		tVAdr.puc += sizCfiOffset;
 		ulValue = *(tVAdr.puc);
 		ucFlash0 = (unsigned char)(ulValue&0xffU);
+		ucFlash1 = (unsigned char) 0; /* avoid 'uninitialized' warning */
 		break;
 
 	case BUS_WIDTH_16Bit:
@@ -300,10 +301,10 @@ static int CFI_getbyte(FLASH_DEVICE_T *ptFlashDevice, unsigned char *pucDest, si
 		iResult = FALSE; // Error: illegal bus width
 	}
 	
-	DEBUGMSG(ZONE_VERBOSE, (".CFI_getbyte() offset = 0x%08x dest = %08x byte = %02x\n", 
-		sizCfiOffset, pucDest, ucFlash0));
-	
 	if (iResult == TRUE) {
+		DEBUGMSG(ZONE_VERBOSE, (".CFI_getbyte() offset = 0x%08x dest = %08x byte = %02x\n", 
+			sizCfiOffset, pucDest, ucFlash0));
+	
 		if( ptFlashDevice->fPaired!=0 && ucFlash0!=ucFlash1 )
 		{
 			uprintf("!The paired flashes do not match! This is not supported.\n");

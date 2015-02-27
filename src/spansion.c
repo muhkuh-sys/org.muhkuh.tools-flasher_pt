@@ -539,12 +539,24 @@ static FLASH_ERRORS_E FlashBufferedWrite(const FLASH_DEVICE_T *ptFlashDev, const
 			/* Get the last data. */
 			ulLastData = *(tSrc.pul-1);
 			break;
+			
+			
+		default:
+			DEBUGMSG(ZONE_ERROR, ("!FlashBufferedWrite(): invalid bus width %d\n", ptFlashDev->tBits));
+			tResult = eFLASH_INVALID_PARAMETER;
+			break;
 		}
 
+		if(tResult!=eFLASH_NO_ERROR)
+		{
+			break;
+		}
+		
 		FlashWriteCommand(ptFlashDev, ulCurrentSector, 0, SPANSION_CMD_BUFFERPROG);
 
 		/* Wait for Flashing complete */
 		tResult = FlashWaitWriteDone(ptFlashDev, ulCurrentSector, ulLastOffset, ulLastData, TRUE);
+		
 		if( tResult!=eFLASH_NO_ERROR )
 		{
 			if(tResult==eFLASH_ABORTED)

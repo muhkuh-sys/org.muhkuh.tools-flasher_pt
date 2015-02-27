@@ -334,6 +334,8 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 		ptFlashDevice->pfnSetup = setup_flash;
 	}
 #else
+	uiUnit = uiUnit; /* avoid 'set but not used' warning */
+	uiChipSelect = uiChipSelect;
 	uprintf("! Unknown chip type or parallel flash not supported on this chip!\n");
 	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 #endif
