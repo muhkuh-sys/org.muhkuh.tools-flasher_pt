@@ -61,6 +61,7 @@
 
 	<target name="pack" description="Pack the complete artifact into a ZIP archive." depends="combine">
 		<zip destfile="targets/${install_artifact}-${ivy.revision}.zip" basedir="${install_base}" />
+		<copy tofile="targets/${install_artifact}.zip" file="targets/${install_artifact}-${ivy.revision}.zip" />
 	</target>
 
 
