@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2012 by Hilscher GmbH                                   *
+ *   Copyright (C) 2008 by Hilscher GmbH                                   *
  *   cthelen@hilscher.com                                                  *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -18,42 +18,49 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef __NETX_IO_AREAS_H__
-#define __NETX_IO_AREAS_H__
 
-#define DO_CONCAT(a,b,c) a##_##b##_##c
-#define CONCAT(a,b,c) DO_CONCAT(a,b,c)
+#include "flasher_header.h"
 
-#if ASIC_TYP==500
-#       define HOST NX500
-#       define HOSTNAME "netx500"
-#       include "netx500/netx500_io_areas.h"
-#elif ASIC_TYP==50
-#       define HOST NX50
-#       define HOSTNAME "netx50"
-#       include "netx50/netx50_io_areas.h"
-#elif ASIC_TYP==56
-#       define HOST NX56
-#       define HOSTNAME "netx56"
-#       include "netx56/netx56_io_areas.h"
-#elif ASIC_TYP==10
-#       define HOST NX10
-#       define HOSTNAME "netx10"
-#       include "netx10/netx10_io_areas.h"
-#elif ASIC_TYP==4000
-#       define HOST NX4000
-#       define HOSTNAME "netx4000"
-#       include "netx4000/netx4000_io_areas.h"
-#else
-#       error "no host define set!"
-#endif
+#include "flasher_interface.h"
+#include "flasher_version.h"
+#include "netx_consoleapp.h"
 
-#define HOSTDEF(a)  CONCAT(HOST,DEF,a)
-#define HOSTADR(a)  CONCAT(Adr,HOST,a)
-#define HOSTADDR(a) CONCAT(Addr,HOST,a)
-#define HOSTMSK(a)  CONCAT(MSK,HOST,a)
-#define HOSTSRT(a)  CONCAT(SRT,HOST,a)
-#define HOSTADEF(a) CONCAT(HOST,a,AREA_T)
-#define HOSTDFLT(a) CONCAT(DFLT_VAL,HOST,a)
 
-#endif  /* __NETX_IO_AREAS_H__ */
+const FLASHER_VERSION_T flasher_version =
+{
+	.abMagic = { FLASHER_MAGIC0, FLASHER_MAGIC1, FLASHER_MAGIC2, FLASHER_MAGIC3 },
+
+	.ulVersionMajor = FLASHER_VERSION_MAJOR,
+	.ulVersionMinor = FLASHER_VERSION_MINOR,
+	.ulVersionMicro = FLASHER_VERSION_MICRO,
+	.acVersionVcs = FLASHER_VERSION_VCS,
+
+	.pulLoadAddress = __LOAD_ADDRESS__,
+	.pfnExecutionAddress = start,
+
+	.pucBuffer_Parameter = __BUFFER_START__,
+	.pucBuffer_DeviceDescription = __BUFFER_START__ + sizeof(NETX_CONSOLEAPP_PARAMETER_T) + sizeof(tFlasherInputParameter),
+	.pucBuffer_Data = __BUFFER_START__ + sizeof(NETX_CONSOLEAPP_PARAMETER_T) + sizeof(tFlasherInputParameter) + sizeof(DEVICE_DESCRIPTION_T),
+	.pucBuffer_End = __BUFFER_END__,
+
+	.aulChiptyp =
+	{
+		FLASHER_CHIPTYP0_NETX4000,
+
+		0
+	},
+	.aulIf =
+	{
+		FLASHER_IF0_NETX4000_PFSRAM |
+		FLASHER_IF0_NETX4000_SPI,
+
+		0,
+
+		0,
+
+		0
+	}
+};
+
+/*-----------------------------------*/
+

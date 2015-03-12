@@ -26,9 +26,14 @@
 #include "mmio.h"
 #include "netx_io_areas.h"
 
+#if ASIC_TYP==4000
+#include "portcontrol.h"
+#endif
+
+/* Note: This scheme works only for a single SQI unit. */
+#if ASIC_TYP==10
 static const MMIO_CFG_T aatMmioValues[3][4] =
 {
-#if ASIC_TYP==10
 	/*
 	 * Chip select 0
 	 */
@@ -58,7 +63,10 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 		0xffU,                          /* MISO */
 		0xffU                           /* MOSI */
 	}
+};
 #elif ASIC_TYP==56
+static const MMIO_CFG_T aatMmioValues[3][4] =
+{
 	/*
 	 * Chip select 0
 	 */
@@ -88,10 +96,53 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 		0xffU,                          /* MISO */
 		0xffU                           /* MOSI */
 	}
+};
+#elif ASIC_TYP==4000
+static const MMIO_CFG_T aatMmioValues[1][4] =
+{
+	/*
+	 * Chip select 0
+	 */
+	 /* no MMMIOs used on SCIT board */
+	{
+		0xffU,                          /* chip select */
+		0xffU,                          /* clock */
+		0xffU,                          /* MISO */
+		0xffU                           /* MOSI */
+	}
+};
+
+
+/* This tables shows the port control indices for the SQI0 pins.
+ * There is only CS0. All other chip selects are not routed to the outside.
+ */
+static const unsigned short ausPortcontrol_Index_SQI0_CS0[6] =
+{
+	PORTCONTROL_INDEX( 1,  0),      // SQI0_CLK
+	PORTCONTROL_INDEX( 1,  1),      // SQI0_MOSI
+	PORTCONTROL_INDEX( 1,  2),      // SQI0_MISO
+	PORTCONTROL_INDEX( 1,  3),      // SQI0_SIO2
+	PORTCONTROL_INDEX( 1,  4),      // SQI0_SIO3
+	PORTCONTROL_INDEX( 1,  5)       // SQI0_CS0N
+};
+
+
+/* This tables shows the port control indices for the SQI1 pins.
+ * There is only CS0. All other chip selects are not routed to the outside.
+ */
+static const unsigned short ausPortcontrol_Index_SQI1_CS0[6] =
+{
+	PORTCONTROL_INDEX(10,  3),      // SQI1_CLK
+	PORTCONTROL_INDEX(10,  4),      // SQI1_MOSI
+	PORTCONTROL_INDEX(10,  5),      // SQI1_MISO
+	PORTCONTROL_INDEX(10,  6),      // SQI1_SIO2
+	PORTCONTROL_INDEX(10,  7),      // SQI1_SIO3
+	PORTCONTROL_INDEX(10,  8)       // SQI1_CS0N
+};
+
 #else
 #       error "The SQI driver does not support this ASIC type!"
 #endif
-};
 
 
 /*-------------------------------------------------------------------------*/
@@ -113,10 +164,11 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
  */
 static unsigned char qsi_spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char uiByte)
 {
-	HOSTDEF(ptSqiArea);
+	HOSTADEF(SQI) * ptSqiArea;
 	unsigned long ulValue;
 	unsigned char ucByte;
 
+	ptSqiArea = (HOSTADEF(SQI) *)(ptCfg->ptUnit);
 
 	/* set mode to "full duplex" */
 	ulValue  = ptCfg->ulTrcBase;
@@ -183,11 +235,12 @@ static unsigned long qsi_get_device_speed_representation(unsigned int uiSpeed)
 
 static int qsi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 {
-	HOSTDEF(ptSqiArea);
+	HOSTADEF(SQI) * ptSqiArea;
 	int iResult;
 	unsigned long uiChipSelect;
 	unsigned long ulValue;
 
+	ptSqiArea = (HOSTADEF(SQI) *)(ptCfg->ptUnit);
 
 	iResult = 0;
 
@@ -450,11 +503,12 @@ static int qsi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucDat
 }
 #endif
 
-static void qsi_set_new_speed(const SPI_CFG_T *ptCfg __attribute__((unused)), unsigned long ulDeviceSpecificSpeed)
+static void qsi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpecificSpeed)
 {
-	HOSTDEF(ptSqiArea);
+	HOSTADEF(SQI) * ptSqiArea;
 	unsigned long ulValue;
 
+	ptSqiArea = (HOSTADEF(SQI) *)(ptCfg->ptUnit);
 
 	ulDeviceSpecificSpeed &= HOSTMSK(sqi_cr0_sck_muladd) | HOSTMSK(sqi_cr0_filter_in);
 
@@ -467,12 +521,13 @@ static void qsi_set_new_speed(const SPI_CFG_T *ptCfg __attribute__((unused)), un
 
 static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 {
-	HOSTDEF(ptSqiArea);
+	HOSTADEF(SQI) * ptSqiArea;
 #if ASIC_TYP==56
 	HOSTDEF(ptAsicCtrlArea);
 #endif
 	unsigned long ulValue;
 
+	ptSqiArea = (HOSTADEF(SQI) *)(ptCfg->ptUnit);
 
 	/* Deactivate IRQs. */
 	ptSqiArea->ulSqi_irq_mask = 0;
@@ -488,8 +543,10 @@ static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 	ulValue |= HOSTMSK(sqi_irq_clear_trans_end);
 	ptSqiArea->ulSqi_irq_clear = ulValue;
 
+#if ASIC_TYP==10 || ASIC_TYP==56
 	/* Deactivate IRQ routing to the CPUs. */
 	ptSqiArea->ulSqi_irq_cpu_sel = 0;
+#endif
 
 	/* Deactivate DMAs. */
 	ptSqiArea->ulSqi_dmacr = 0;
@@ -520,9 +577,12 @@ static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 
 int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 {
-	HOSTDEF(ptSqiArea);
+	HOSTADEF(SQI) * ptSqiArea;
+
 #if ASIC_TYP==56
 	HOSTDEF(ptAsicCtrlArea);
+#elif ASIC_TYP==4000
+	const unsigned short *pusPortControlIndex;
 #endif
 	unsigned long ulValue;
 	int iResult;
@@ -531,6 +591,7 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	unsigned int uiChipSelect;
 
 
+	ptSqiArea = (HOSTADEF(SQI) *)(ptCfg->ptUnit);
 	iResult = 0;
 
 	/* Get the chip select value. */
@@ -555,6 +616,12 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	/* copy the MMIO pins */
 	memcpy(ptCfg->aucMmio, ptSpiCfg->aucMmio, sizeof(ptSpiCfg->aucMmio));
 
+	/* Set up the port control unit. */
+	/*
+	pusPortControlIndex = ausPortcontrol_Index_SQI0_CS0;
+	portcontrol_apply(pusPortControlIndex, ptSpiCfg->ausPortControl, sizeof(ptSpiCfg->ausPortControl)/sizeof(ptSpiCfg->ausPortControl[0]));
+	*/
+
 	/* do not use IRQs in bootloader */
 	ptSqiArea->ulSqi_irq_mask = 0;
 	/* clear all pending IRQs */
@@ -567,8 +634,11 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	ulValue |= HOSTMSK(sqi_irq_clear_txeic);
 	ulValue |= HOSTMSK(sqi_irq_clear_trans_end);
 	ptSqiArea->ulSqi_irq_clear = ulValue;
+
+#if ASIC_TYP==10 || ASIC_TYP==56
 	/* do not route the IRQs to a CPU */
 	ptSqiArea->ulSqi_irq_cpu_sel = 0;
+#endif
 
 	/* do not use DMAs */
 	ptSqiArea->ulSqi_dmacr = 0;

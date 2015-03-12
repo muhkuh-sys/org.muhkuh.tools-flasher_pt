@@ -22,7 +22,7 @@
 
 #if ASIC_TYP==500 || ASIC_TYP==100
 #	include "netx_io_areas.h"
-#elif ASIC_TYP==56 || ASIC_TYP==50 || ASIC_TYP==10
+#elif ASIC_TYP==56 || ASIC_TYP==50 || ASIC_TYP==10 || ASIC_TYP==4000
 #	include "i2c_hifsta.h"
 #endif
 
@@ -52,7 +52,7 @@ void setRdyRunLed(RDYRUN_LED_T tMode)
 	}
 	
 	ptNetxControlledGlobalRegisterBlock1Area->ulSta_netx = ulBlinki;
-#elif ASIC_TYP==56 || ASIC_TYP==50 || ASIC_TYP==10
+#elif ASIC_TYP==56 || ASIC_TYP==50 || ASIC_TYP==10 || ASIC_TYP==4000
 	switch(tMode)
 	{
 	default:

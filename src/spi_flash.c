@@ -29,8 +29,8 @@
 #include "sfdp.h"
 
 
-#if ASIC_TYP==10 || ASIC_TYP==56
-/* netX10 and netX56 have a SQI and a SPI unit. */
+#if ASIC_TYP==10 || ASIC_TYP==56 | ASIC_TYP==4000
+/* netX10, netX56 and netX4000 have a SQI and a SPI unit. */
 #	include "drv_sqi.h"
 #	include "drv_spi_hsoc_v2.h"
 #elif ASIC_TYP==50
@@ -603,6 +603,33 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 
 	case 1:
 		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(spi_motion);
+		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		break;
+
+	default:
+		iResult = -1;
+		break;
+	}
+#elif ASIC_TYP==4000
+	switch( ptSpiCfg->uiUnit )
+	{
+	case 0:
+		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(SQI0);
+		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg);
+		break;
+
+	case 1:
+		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(SQI1);
+		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg);
+		break;
+
+	case 2:
+		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(spi);
+		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		break;
+
+	case 3:
+		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(spi_xpic3);
 		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 

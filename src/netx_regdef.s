@@ -14,6 +14,9 @@
 #elif ASIC_TYP==10
 #       define HOST NX10
 #       include "netx10_regdef.s"
+#elif ASIC_TYP==4000
+#       define HOST NX4000
+#       include "netx4000_regdef.s"
 #else
 #       error "no host define set!"
 #endif

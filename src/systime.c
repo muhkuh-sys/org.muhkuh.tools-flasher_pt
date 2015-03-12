@@ -23,6 +23,10 @@
 
 #define DEV_FREQUENCY 100000000UL
 
+/* Hack */
+#if ASIC_TYP==4000  
+#define ptSystimeArea ptSystime0Area
+#endif
 
 void systime_init(void)
 {
