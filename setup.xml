@@ -40,6 +40,7 @@
 			<typ>tar.bz2</typ>
 		</tool>
 -->
+		<!-- For netX 500/100/50/10/51/52. -->
 		<tool>
 			<group>org.gnu.gcc</group>
 			<name>gcc-arm-elf</name>
@@ -47,5 +48,13 @@
 			<version>4.3.3_7</version>
 			<typ>tar.bz2</typ>
 		</tool>
+		<!-- For netX 4000 -->
+		<!--tool>
+			<group>org.gnu.gcc</group>
+			<name>gcc-arm-none-eabi</name>
+			<package>gcc-arm-none-eabi_${platform}_${machine}</package>
+			<version>4.9.3_1</version>
+			<typ>tar.bz2</typ>
+		</tool-->
 	</tools>
 </muhkuh_buildsystem>
