@@ -114,6 +114,8 @@ env_default.Version('targets/doc/README.rst', 'templates/README.rst')
 #
 # Create the compiler environments.
 #
+# cpu=...  for gcc-arm-elf
+# arch=... for gcc-arm-none-eabi
 
 env_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
 
