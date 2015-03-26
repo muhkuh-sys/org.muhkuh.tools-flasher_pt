@@ -60,6 +60,19 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 		MMIO_CFG_spi1_mosi		/* mosi */
 	}
 };
+#elif ASIC_TYP==4000
+static const MMIO_CFG_T aatMmioValues[1][4] =
+{
+	/*
+	 * Chip select 0
+	 */
+	{
+		MMIO_CFG_SPI1_CS0N,		/* chip select */
+		MMIO_CFG_SPI1_CLK,		/* clock */
+		MMIO_CFG_SPI1_MISO,		/* miso */
+		MMIO_CFG_SPI1_MOSI		/* mosi */
+	},
+};
 #endif
 
 static unsigned char spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char ucByte)
@@ -288,7 +301,7 @@ static void spi_deactivate(const SPI_CFG_T *ptCfg)
 	ptSpiUnit->aulSpi_cr[1] = 0;
 
 	/* Activate the spi pins. */
-#if ASIC_TYP==50 || ASIC_TYP==10 || ASIC_TYP==56
+#if ASIC_TYP==50 || ASIC_TYP==10 || ASIC_TYP==56 || ASIC_TYP==4000
 	mmio_deactivate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[ptCfg->uiChipSelect]);
 #endif
 }
@@ -399,7 +412,7 @@ int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	ptCfg->ucIdleChar = ucIdleChar;
 
 	/* activate the spi pins */
-#if ASIC_TYP==50 || ASIC_TYP==10 || ASIC_TYP==56
+#if ASIC_TYP==50 || ASIC_TYP==10 || ASIC_TYP==56 || ASIC_TYP==4000
 	mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[uiChipSelect]);
 #endif
 	return iResult;

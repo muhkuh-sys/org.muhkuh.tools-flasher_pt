@@ -10,9 +10,8 @@ Rename Sconstruct to something else and rename Sconstruct_netx4000 to Sconstruct
 In setup.xml, comment out the entry for the gcc-arm-elf compiler and uncomment the entry for the gcc-arm-none-eabi compiler.
 In templates/flasher.lua, uncomment the line
 --	[romloader.ROMLOADER_CHIPTYP_NETX4000] = "netx4000"
-
-
-Working: UART interface with SQI1, with a 1-bit flash.
-Not working: SQI0, SPI 0/1
-
+In the detect function, change the line 
+		0xffffffff,                           -- mmio config
+to
+		0x35363437,                           -- mmio config
 
