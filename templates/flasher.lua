@@ -929,9 +929,10 @@ function sdi_init(tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, fnCallbackP
 		ulUnit,                               -- the SPI unit
 		ulChipSelect,                         -- the SPI chip select
 		ulSpeed_kHz,                          -- the speed in kHz (1000 -> 1MHz)
-		ulIdleCfg,                            -- idle config
+		ulSpeed_kHz,                          -- the maximum kHz
+		ulIdleCfg,                            -- idle configuration
 		3,                                    -- mode
-		0xffffffff                            -- mmio config
+		0xffffffff                            -- MMIO configuration
 	}
 	
 	ulValue = callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
