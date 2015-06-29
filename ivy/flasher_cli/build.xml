@@ -1,114 +1,12 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant" name="flasher_cli" default="all">
 	<property name="version.required" value="1.9.1" />
 
+	<import file="mbs.xml" />
 
-	<target name="version_check">
-		<antversion property="version.running" />
-		<fail message="FATAL ERROR:  The running Ant version, ${version.running}, is too old.">
-			<condition>
-				<not>
-					<antversion atleast="${version.required}" />
-				</not>
-			</condition>
-		</fail>
-	</target>
-
-
-	<!-- TODO: only download the file if it does not exist yet. -->
-	<!-- TODO: restart ANT after the download somehow? -->
-	<target name="bootstrap" description="Install the ivy JAR.">
-		<mkdir dir="${user.home}/.ant/lib"/>
-		<get dest="${user.home}/.ant/lib/ivy.jar" src="http://search.maven.org/remotecontent?filepath=org/apache/ivy/ivy/2.4.0/ivy-2.4.0.jar"/>
-	</target>
-
-
-	<!-- Download all required artifacts to the local 'lib' folder. -->
-	<target name="collect" description="Collect all dependencies in the lib subfolder.">
-		<ivy:settings id="ivy.muhkuh.settings" file="../ivysettings.xml" />
-		<ivy:retrieve settingsRef="ivy.muhkuh.settings" pattern="lib/[orgPath]/[artifact]-[revision]" sync="true" />
-		<ivy:artifactproperty name="path.[organisation].[artifact]" value="lib/[orgPath]/[artifact]-[revision]" />
-		<ivy:report todir="${install.base}/.ivy" graph="false" xslfile="ivy-report.xsl" />
-	</target>
-
-
-	<target name="combine" description="Combine the dependencies to a new artifact." depends="collect">
-		<propertyset id="install">
-			<propertyref name="install.base" />
-			<propertyref name="install.executable" />
-			<propertyref name="install.sharedobject" />
-			<propertyref name="install.lua" />
-			<propertyref name="install.luaplugin" />
-			<propertyref name="install.documentation" />
-			<propertyref name="install.firmware" />
-			<propertyref name="install.os_arch.linux_i386" />
-			<propertyref name="install.os_arch.linux_x86_64" />
-			<propertyref name="install.os_arch.windows_x86" />
-			<propertyref name="install.os_arch.windows_amd64" />
-		</propertyset>
-		
-		<ivy:buildlist reference="muhkuh-build-path">
-			<fileset dir="lib" includes="**/install.xml"/>
-		</ivy:buildlist>
-		
-		<subant target="install" buildpathref="muhkuh-build-path" inheritAll="true" inheritRefs="true" />
-		
+	<target name="local" description="The local additions to the packages.">
 		<!-- Copy all demo scripts to the installation base. -->
 		<copy todir="${install.base}" includeEmptyDirs="true">
 			<fileset dir="${path.org.muhkuh.tools.flasher}/demo" />
 		</copy>
-	</target>
-
-
-	<target name="pack" description="Pack the complete artifact into a ZIP archive." depends="combine">
-		<zip destfile="targets/${install_artifact}-${ivy.revision}.zip" basedir="${install_base}" />
-		<copy tofile="targets/${install_artifact}.zip" file="targets/${install_artifact}-${ivy.revision}.zip" />
-	</target>
-
-
-	<target name="flasher_cli_windows_x86">
-		<property name="install_artifact" value="flasher_cli_windows_x86" />
-		<property name="install_base" location="targets/${install_artifact}" />
-		
-		<antcall target="pack">
-			<param name="install.base"                   location="${install_base}/${install_artifact}" />
-			<param name="install.executable"             location="${install_base}/${install_artifact}" />
-			<param name="install.sharedobject"           location="${install_base}/${install_artifact}" />
-			<param name="install.lua"                    location="${install_base}/${install_artifact}/lua" />
-			<param name="install.luaplugin"              location="${install_base}/${install_artifact}/lua_plugins" />
-			<param name="install.documentation"          location="${install_base}/${install_artifact}/doc" />
-			<param name="install.firmware"               location="${install_base}/${install_artifact}/netx" />
-			
-			<param name="install.os_arch.linux_i386"     value="false" />
-			<param name="install.os_arch.linux_x86_64"   value="false" />
-			<param name="install.os_arch.windows_x86"    value="true" />
-			<param name="install.os_arch.windows_amd64"  value="false" />
-		</antcall>
-	</target>
-
-
-	<target name="flasher_cli_windows_amd64">
-		<property name="install_artifact" value="flasher_cli_windows_amd64" />
-		<property name="install_base" location="targets/${install_artifact}" />
-		
-		<antcall target="pack">
-			<param name="install.base"                   location="${install_base}/${install_artifact}" />
-			<param name="install.executable"             location="${install_base}/${install_artifact}" />
-			<param name="install.sharedobject"           location="${install_base}/${install_artifact}" />
-			<param name="install.lua"                    location="${install_base}/${install_artifact}/lua" />
-			<param name="install.luaplugin"              location="${install_base}/${install_artifact}/lua_plugins" />
-			<param name="install.documentation"          location="${install_base}/${install_artifact}/doc" />
-			<param name="install.firmware"               location="${install_base}/${install_artifact}/netx" />
-			
-			<param name="install.os_arch.linux_i386"     value="false" />
-			<param name="install.os_arch.linux_x86_64"   value="false" />
-			<param name="install.os_arch.windows_x86"    value="false" />
-			<param name="install.os_arch.windows_amd64"  value="true" />
-		</antcall>
-	</target>
-
-
-	<target name="all" depends="version_check">
-		<ant target="flasher_cli_windows_x86" />
-		<ant target="flasher_cli_windows_amd64" />
 	</target>
 </project>
