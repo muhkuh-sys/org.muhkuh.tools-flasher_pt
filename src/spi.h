@@ -55,6 +55,7 @@ typedef struct
 	unsigned int uiUnit;
 	unsigned int uiChipSelect;
 	unsigned long ulInitialSpeedKhz;
+	unsigned long ulMaximumSpeedKhz;
 	unsigned int uiIdleCfg;
 	unsigned int uiMode;
 	unsigned char aucMmio[4];
@@ -72,17 +73,18 @@ typedef int (*PFN_RECEIVE_DATA_T)(const struct SPI_CFG_Ttag *psCfg, unsigned cha
 typedef int (*PFN_EXCHANGE_DATA_T)(const struct SPI_CFG_Ttag *psCfg, const unsigned char *pucOutData, unsigned char *pucInData, size_t sizData);
 typedef void (*PFN_SET_NEW_SPEED_T)(const struct SPI_CFG_Ttag *psCfg, unsigned long ulDeviceSpecificSpeed);
 typedef unsigned char (*PFN_EXCHANGE_BYTE_T)(const struct SPI_CFG_Ttag *ptCfg, unsigned char ucByte);
-typedef unsigned long (*PFN_GET_DEVICE_SPEED_REPRESENTATION_T)(unsigned int uiSpeed);
+typedef unsigned long (*PFN_GET_DEVICE_SPEED_REPRESENTATION_T)(const struct SPI_CFG_Ttag *psCfg, unsigned int uiSpeed);
 typedef void (*PFN_DEACTIVATE_T)(const struct SPI_CFG_Ttag *psCfg);
 
 
 typedef struct SPI_CFG_Ttag
 {
-	HOSTADEF(SPI) *ptUnit;          /* Pointer to the spi unit, i.e. the register block. */
-	unsigned long ulSpeed;          /* device speed in kHz */
-	unsigned int uiIdleCfg;         /* the idle configuration */
-	SPI_MODE_T tMode;               /* bus mode */
-	unsigned int uiChipSelect;      /* chip select */
+	HOSTADEF(SPI) *ptUnit;            /* Pointer to the SPI register block. */
+	unsigned long ulSpeed;            /* Device speed in kHz */
+	unsigned long ulMaximumSpeedKhz;  /* The maximum allowed speed on the interface. */
+	unsigned int uiIdleCfg;           /* the idle configuration */
+	SPI_MODE_T tMode;                 /* bus mode */
+	unsigned int uiChipSelect;        /* chip select */
 
 	PFN_SPI_SLAVE_SELECT_T pfnSelect;
 	PFN_SEND_IDLE_T pfnSendIdle;
@@ -96,7 +98,7 @@ typedef struct SPI_CFG_Ttag
 
 	unsigned char ucIdleChar;       /* the idle character */
 	unsigned long ulTrcBase;        /* the base bits of the transfer control register */
-	unsigned char aucMmio[4];       /* mmio pins */
+	unsigned char aucMmio[4];       /* MMIO pins */
 } SPI_CFG_T;
 
 

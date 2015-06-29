@@ -702,7 +702,7 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 				memcpy(&ptFlash->tAttributes, ptFlashAttr, sizeof(SPIFLASH_ATTRIBUTES_T));
 
 				/* set higher speed for the device */
-				ptSpiDev->ulSpeed = ptSpiDev->pfnGetDeviceSpeedRepresentation(ptFlash->tAttributes.ulClock);
+				ptSpiDev->ulSpeed = ptSpiDev->pfnGetDeviceSpeedRepresentation(ptSpiDev, ptFlash->tAttributes.ulClock);
 				ptSpiDev->pfnSetNewSpeed(ptSpiDev, ptSpiDev->ulSpeed);
 
 				/* send the init commands */

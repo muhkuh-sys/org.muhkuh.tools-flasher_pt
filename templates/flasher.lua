@@ -378,13 +378,14 @@ function detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, fnCallbackMessage, f
 	aulParameter = 
 	{
 		OPERATION_MODE_Detect,                -- operation mode: detect
-		tBus,                                 -- device: spi flash
+		tBus,                                 -- device: SPI flash
 		ulUnit,                               -- unit
 		ulChipSelect,                         -- chip select: 1
 		1000,                                 -- initial speed in kHz (1000 -> 1MHz)
-		ulIdleCfg,                            -- idle config
+		25000,                                -- maximum allowed speed (25000 -> 25MHz)
+		ulIdleCfg,                            -- idle configuration
 		3,                                    -- mode
-		0xffffffff,                           -- mmio config
+		0xffffffff,                           -- MMIO configuration
 		aAttr.ulDeviceDesc                    -- data block for the device description
 	}
 	

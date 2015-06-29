@@ -196,15 +196,23 @@ static unsigned char qsi_spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char
 /*-------------------------------------------------------------------------*/
 
 
-static unsigned long qsi_get_device_speed_representation(unsigned int uiSpeed)
+static unsigned long qsi_get_device_speed_representation(const SPI_CFG_T *ptCfg, unsigned int uiSpeed)
 {
 	unsigned long ulDevSpeed;
 	unsigned long ulInputFilter;
+	unsigned long ulMaximumSpeedKhz;
 
 
 	/* ulSpeed is in kHz */
 
-	/* limit speed to upper border */
+	/* Limit the speed. */
+	ulMaximumSpeedKhz = ptCfg->ulMaximumSpeedKhz;
+	if( uiSpeed>ulMaximumSpeedKhz )
+	{
+		uiSpeed = ulMaximumSpeedKhz;
+	}
+
+	/* Limit the speed to the maximum possible value of the hardware. */
 	if( uiSpeed>50000 )
 	{
 		uiSpeed = 50000;
@@ -597,10 +605,11 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	/* Get the chip select value. */
 	uiChipSelect = ptSpiCfg->uiChipSelect;
 
-	ptCfg->ulSpeed = ptSpiCfg->ulInitialSpeedKhz;   /* initial device speed in kHz */
-	ptCfg->uiIdleCfg = ptSpiCfg->uiIdleCfg;         /* the idle configuration */
-	ptCfg->tMode = ptSpiCfg->uiMode;                /* bus mode */
-	ptCfg->uiChipSelect = 1U<<uiChipSelect;         /* chip select */
+	ptCfg->ulSpeed = ptSpiCfg->ulInitialSpeedKhz;            /* initial device speed in kHz */
+	ptCfg->ulMaximumSpeedKhz = ptSpiCfg->ulMaximumSpeedKhz;  /* The maximum allowed speed on the interface. */
+	ptCfg->uiIdleCfg = ptSpiCfg->uiIdleCfg;                  /* the idle configuration */
+	ptCfg->tMode = ptSpiCfg->uiMode;                         /* bus mode */
+	ptCfg->uiChipSelect = 1U<<uiChipSelect;                  /* chip select */
 
 	/* set the function pointers */
 	ptCfg->pfnSelect = qsi_slave_select;
@@ -649,7 +658,7 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	/* set 8 bits */
 	ulValue  = 7 << HOSTSRT(sqi_cr0_datasize);
 	/* set speed and filter */
-	ulValue |= qsi_get_device_speed_representation(ptCfg->ulSpeed);
+	ulValue |= qsi_get_device_speed_representation(ptCfg, ptCfg->ulSpeed);
 	/* start in SPI mode: use only IO0 and IO1 for transfer */
 	ulValue |= 0 << HOSTSRT(sqi_cr0_sio_cfg);
 	/* set the clock polarity  */
