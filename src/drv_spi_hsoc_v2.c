@@ -36,8 +36,8 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 	{
 		MMIO_CFG_spi1_cs0n,		/* chip select */
 		MMIO_CFG_spi1_clk,		/* clock */
-		MMIO_CFG_spi1_miso,		/* miso */
-		MMIO_CFG_spi1_mosi		/* mosi */
+		MMIO_CFG_spi1_miso,		/* MISO */
+		MMIO_CFG_spi1_mosi		/* MOSI */
 	},
 
 	/*
@@ -46,8 +46,8 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 	{
 		MMIO_CFG_spi1_cs1n,		/* chip select */
 		MMIO_CFG_spi1_clk,		/* clock */
-		MMIO_CFG_spi1_miso,		/* miso */
-		MMIO_CFG_spi1_mosi		/* mosi */
+		MMIO_CFG_spi1_miso,		/* MISO */
+		MMIO_CFG_spi1_mosi		/* MOSI */
 	},
 
 	/*
@@ -56,8 +56,8 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 	{
 		MMIO_CFG_spi1_cs2n,		/* chip select */
 		MMIO_CFG_spi1_clk,		/* clock */
-		MMIO_CFG_spi1_miso,		/* miso */
-		MMIO_CFG_spi1_mosi		/* mosi */
+		MMIO_CFG_spi1_miso,		/* MISO */
+		MMIO_CFG_spi1_mosi		/* MOSI */
 	}
 };
 #elif ASIC_TYP==4000
@@ -69,8 +69,8 @@ static const MMIO_CFG_T aatMmioValues[1][4] =
 	{
 		MMIO_CFG_SPI1_CS0N,		/* chip select */
 		MMIO_CFG_SPI1_CLK,		/* clock */
-		MMIO_CFG_SPI1_MISO,		/* miso */
-		MMIO_CFG_SPI1_MOSI		/* mosi */
+		MMIO_CFG_SPI1_MISO,		/* MISO */
+		MMIO_CFG_SPI1_MOSI		/* MOSI */
 	},
 };
 #endif
@@ -82,19 +82,19 @@ static unsigned char spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char ucB
 
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
+	ptSpiUnit = ptCfg->pvUnit;
 
-	/* send byte */
+	/* Send the byte. */
 	ptSpiUnit->ulSpi_dr = ucByte;
 
-	/* wait for one byte in the fifo */
+	/* Wait for one byte in the FIFO. */
 	do
 	{
 		ulValue  = ptSpiUnit->ulSpi_sr;
 		ulValue &= HOSTMSK(spi_sr_RNE);
 	} while( ulValue==0 );
 
-	/* grab byte */
+	/* Grab the byte. */
 	ucByte = (unsigned char)(ptSpiUnit->ulSpi_dr);
 	return ucByte;
 }
@@ -155,9 +155,9 @@ static int spi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
+	ptSpiUnit = ptCfg->pvUnit;
 
-	/* get the chipselect value */
+	/* get the chip select value */
 	uiChipSelect = 0;
 	if( fIsSelected!=0 )
 	{
@@ -186,7 +186,7 @@ static int spi_send_idle(const SPI_CFG_T *ptCfg, size_t sizBytes)
 	unsigned char ucIdleChar;
 
 
-	/* get the idle byte */
+	/* Get the idle byte. */
 	ucIdleChar = ptCfg->ucIdleChar;
 
 	while( sizBytes>0 )
@@ -260,7 +260,7 @@ static void spi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpec
 
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
+	ptSpiUnit = ptCfg->pvUnit;
 
 	ulDeviceSpecificSpeed &= HOSTMSK(spi_cr0_sck_muladd) | HOSTMSK(spi_cr0_filter_in);
 
@@ -278,7 +278,7 @@ static void spi_deactivate(const SPI_CFG_T *ptCfg)
 
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
+	ptSpiUnit = ptCfg->pvUnit;
 
 	/* Deactivate irqs. */
 	ptSpiUnit->ulSpi_imsc = 0;
@@ -328,7 +328,7 @@ int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	iResult = 0;
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
+	ptSpiUnit = ptCfg->pvUnit;
 
 	/* Get the chip select value. */
 	uiChipSelect = ptSpiCfg->uiChipSelect;

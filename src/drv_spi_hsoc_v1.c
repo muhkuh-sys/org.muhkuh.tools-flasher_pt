@@ -34,7 +34,7 @@ static unsigned char spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char ucB
 
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
+	ptSpiUnit = ptCfg->pvUnit;
 
 	/* write byte to spi bus */
 	ptSpiUnit->ulSpi_data_register = ucByte | HOSTMSK(spi_data_register_dr_valid0);
@@ -149,7 +149,7 @@ static int spi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
+	ptSpiUnit = ptCfg->pvUnit;
 
 	/* get control register contents */
 	ulValue = ptSpiUnit->ulSpi_control_register;
@@ -252,7 +252,7 @@ static void spi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpec
 
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
+	ptSpiUnit = ptCfg->pvUnit;
 
 	ulDeviceSpecificSpeed &= HOSTMSK(spi_control_register_CR_speed);
 
@@ -270,8 +270,8 @@ static void spi_deactivate(const SPI_CFG_T *ptCfg)
 
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
-	/* Soft reset spi and clear both fifos. */
+	ptSpiUnit = ptCfg->pvUnit;
+	/* Soft reset SPI and clear both FIFOs. */
 	ulValue  = HOSTMSK(spi_control_register_CR_softreset);
 	ulValue |= HOSTMSK(spi_control_register_CR_clr_infifo);
 	ulValue |= HOSTMSK(spi_control_register_CR_clr_outfifo);
@@ -301,7 +301,7 @@ int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	iResult = 0;
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
+	ptSpiUnit = ptCfg->pvUnit;
 
 	/* Get the chip select value. */
 	uiChipSelect = ptSpiCfg->uiChipSelect;

@@ -79,7 +79,7 @@ typedef void (*PFN_DEACTIVATE_T)(const struct SPI_CFG_Ttag *psCfg);
 
 typedef struct SPI_CFG_Ttag
 {
-	HOSTADEF(SPI) *ptUnit;            /* Pointer to the SPI register block. */
+	void *pvUnit;                     /* Pointer to the SQI or SPI register block. */
 	unsigned long ulSpeed;            /* Device speed in kHz */
 	unsigned long ulMaximumSpeedKhz;  /* The maximum allowed speed on the interface. */
 	unsigned int uiIdleCfg;           /* the idle configuration */
