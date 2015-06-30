@@ -1,7 +1,10 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant" name="flasher_cli" default="all">
 	<property name="version.required" value="1.9.1" />
 
-	<import file="mbs.xml" />
+	<!-- The settings file is in the parent directory. -->
+	<property name="mbs.settings.path" location=".." />
+	<!-- Import the common tasks. -->
+	<import file="${mbs.ivy.path}/mbs.xml" />
 
 	<target name="local" description="The local additions to the packages.">
 		<!-- Copy all demo scripts to the installation base. -->
