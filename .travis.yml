@@ -13,6 +13,7 @@ env:
 # needs at least ant 1.9.1 to get the "if" attribute (see
 # http://ant.apache.org/manual/ifunless.html).
 before_install:
+  - git submodule update --init --recursive
   - wget http://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist//ant/binaries/apache-ant-1.9.5-bin.tar.bz2 -O /tmp/apache-ant-1.9.5-bin.tar.bz2
   - tar --directory /tmp --extract --bzip2 --file /tmp/apache-ant-1.9.5-bin.tar.bz2
 
