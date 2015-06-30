@@ -24,6 +24,12 @@
 				<artifact pattern="http://downloads.sourceforge.net/project/muhkuh/mbs/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
 			</url>
 			
+			<!-- The main repository for stable artifacts on GitHub. -->
+			<url name="github" descriptor="required" m2compatible="true">
+				<ivy      pattern="https://github.com/muhkuh-sys/[organisation]-[module]/releases/download/v[revision]/[artifact].[ext]" />
+				<artifact pattern="https://github.com/muhkuh-sys/[organisation]-[module]/releases/download/v[revision]/[artifact].[ext]" />
+			</url>
+			
 			<!-- This is the resolver for Bintray.
 			     Build results from Travis CI are stored here. They are snapshots and will be replaced with a new build.
 			-->
