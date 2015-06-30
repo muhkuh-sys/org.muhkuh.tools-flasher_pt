@@ -6,7 +6,7 @@
 
 
 install:
-  - cinst --verbose --yes jre8 7zip.commandline python2 ant
+  - cinst -y jre8 7zip.commandline python2 ant
 
 
 platform:
