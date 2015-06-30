@@ -21,10 +21,13 @@ install:
   - pip install -q requests
 
 
-# 1) Build the flasher artifact, install the required Ivy version and build the flasher_cli artifacts.
-# 2) deploy the artifacts to BinTray.
+# Build the flasher artifact, install the required Ivy version and build the flasher_cli artifacts.
 script:
   - ./.build.sh
+
+
+# Deploy the artifacts to BinTray.
+after_success:
   - python ivy/deploy.py targets/artifacts_flasher.xml targets/artifacts_flasher_cli.xml
 
 
