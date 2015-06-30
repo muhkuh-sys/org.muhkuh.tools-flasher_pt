@@ -6,12 +6,16 @@
 
 
 install:
-  - cinst jre8 7zip.commandline python2 ant
+  - cinst --verbose --yes jre8 7zip.commandline python2 ant
 
 
 platform:
   - x86
   - x64
+
+
+before_build:
+  - git submodule update --init --recursive
 
 
 build_script:
