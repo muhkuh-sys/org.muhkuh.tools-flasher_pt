@@ -107,7 +107,6 @@ src_netx10  = flasher_sources_common + flasher_sources_custom_netx10
 #
 env_default.Version('targets/version/flasher_version.h', 'templates/flasher_version.h')
 env_default.Version('targets/version/flasher_version.xsl', 'templates/flasher_version.xsl')
-env_default.Version('targets/doc/README.rst', 'templates/README.rst')
 
 
 #----------------------------------------------------------------------------
@@ -286,7 +285,7 @@ aAttribs.update(dict({
 	'toclevels': 4
 }))
 
-doc = env_default.Asciidoc('targets/doc/flasher.html', 'README.asciidoc', ASCIIDOC_BACKEND='html5', ASCIIDOC_ATTRIBUTES=aAttribs)
+doc = env_default.Asciidoc('targets/doc/flasher.html', 'doc/flasher.asciidoc', ASCIIDOC_BACKEND='html5', ASCIIDOC_ATTRIBUTES=aAttribs)
 
 
 #----------------------------------------------------------------------------
