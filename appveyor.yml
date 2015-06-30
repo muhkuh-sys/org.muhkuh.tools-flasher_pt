@@ -1,0 +1,20 @@
+# Build configuration for http://www.appveyor.com .
+
+# Install software: http://www.appveyor.com/docs/build-configuration#installing-additional-software
+# Here is the chocolatery homepage: https://chocolatey.org/
+# Here is the complete reference for this file: http://www.appveyor.com/docs/appveyor-yml
+
+
+install:
+  - cinst jre8 7zip.commandline python2 ant
+
+
+platform:
+  - x86
+  - x64
+
+
+build_script:
+  - python mbs/mbs
+
+
