@@ -501,7 +501,7 @@ static NETX_CONSOLEAPP_RESULT_T check_params(NETX_CONSOLEAPP_PARAMETER_T *ptCons
 
 	/*  check parameter version */
 	ulParamVersion = ptAppParams->ulParamVersion;
-	if( ulParamVersion!=0x00020000 )
+	if( ulParamVersion!=FLASHER_INTERFACE_VERSION )
 	{
 		uprintf("! unknown parameter version: %04x.%04x. Expected 0002.0000!\n", ulParamVersion>>16, ulParamVersion&0xffff);
 		return NETX_CONSOLEAPP_RESULT_ERROR;
@@ -840,19 +840,19 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 	ptAppParams = (tFlasherInputParameter*)ptTestParam->pvInitParams;
 	tOpMode = ptAppParams->tOperationMode;
 	
-	/* init the board */
+	/* Initialize the board. */
 	tResult = board_init();
 	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 	{
-		/* failed to init board, can not continue */
+		/* Failed to initialize board, can not continue! */
 		setRdyRunLed(RDYRUN_LED_RED);
 	}
 	else
 	{
-		/* switch off sys led */
+		/* Switch off the SYS led. */
 		setRdyRunLed(RDYRUN_LED_OFF);
 		
-		/* configure systime, used by progress functions */
+		/* Configure the systime, used by progress functions. */
 		systime_init();  
 
 		if (tOpMode == OPERATION_MODE_Detect || tOpMode == OPERATION_MODE_GetBoardInfo) {
@@ -928,13 +928,13 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 
 	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 	{
-		/*  operation ok */
+		/*  Operation OK! */
 		uprintf("* OK *\n");
 		setRdyRunLed(RDYRUN_LED_GREEN);
 	}
 	else
 	{
-		/*  operation failed */
+		/*  Operation failed. */
 		setRdyRunLed(RDYRUN_LED_RED);
 	}
 

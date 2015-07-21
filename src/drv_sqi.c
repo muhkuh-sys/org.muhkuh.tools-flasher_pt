@@ -162,13 +162,13 @@ static const unsigned short ausPortcontrol_Index_SQI1_CS0[6] =
  * Notes:
  *   This function has no timeout. If the transfer hangs for some reason, it will never return.
  */
-static unsigned char qsi_spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char uiByte)
+static unsigned char qsi_spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char ucByteSend)
 {
 	HOSTADEF(SQI) * ptSqiArea;
 	unsigned long ulValue;
-	unsigned char ucByte;
+	unsigned char ucByteReceive;
 
-	ptSqiArea = (HOSTADEF(SQI) *)(ptCfg->ptUnit);
+	ptSqiArea = ptCfg->pvUnit;
 
 	/* set mode to "full duplex" */
 	ulValue  = ptCfg->ulTrcBase;
@@ -178,7 +178,7 @@ static unsigned char qsi_spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char
 	ptSqiArea->ulSqi_tcr = ulValue;
 
 	/* send byte */
-	ptSqiArea->ulSqi_dr = uiByte;
+	ptSqiArea->ulSqi_dr = ucByteSend;
 
 	/* Wait for one byte in the FIFO. */
 	do
@@ -188,23 +188,31 @@ static unsigned char qsi_spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char
 	} while( ulValue!=0 );
 
 	/* grab byte */
-	ucByte = (unsigned char)(ptSqiArea->ulSqi_dr);
-	return ucByte;
+	ucByteReceive = (unsigned char)(ptSqiArea->ulSqi_dr);
+	return ucByteReceive;
 }
 
 
 /*-------------------------------------------------------------------------*/
 
 
-static unsigned long qsi_get_device_speed_representation(unsigned int uiSpeed)
+static unsigned long qsi_get_device_speed_representation(const SPI_CFG_T *ptCfg, unsigned int uiSpeed)
 {
 	unsigned long ulDevSpeed;
 	unsigned long ulInputFilter;
+	unsigned long ulMaximumSpeedKhz;
 
 
 	/* ulSpeed is in kHz */
 
-	/* limit speed to upper border */
+	/* Limit the speed. */
+	ulMaximumSpeedKhz = ptCfg->ulMaximumSpeedKhz;
+	if( uiSpeed>ulMaximumSpeedKhz )
+	{
+		uiSpeed = ulMaximumSpeedKhz;
+	}
+
+	/* Limit the speed to the maximum possible value of the hardware. */
 	if( uiSpeed>50000 )
 	{
 		uiSpeed = 50000;
@@ -240,7 +248,7 @@ static int qsi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 	unsigned long uiChipSelect;
 	unsigned long ulValue;
 
-	ptSqiArea = (HOSTADEF(SQI) *)(ptCfg->ptUnit);
+	ptSqiArea = ptCfg->pvUnit;
 
 	iResult = 0;
 
@@ -508,7 +516,7 @@ static void qsi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpec
 	HOSTADEF(SQI) * ptSqiArea;
 	unsigned long ulValue;
 
-	ptSqiArea = (HOSTADEF(SQI) *)(ptCfg->ptUnit);
+	ptSqiArea = ptCfg->pvUnit;
 
 	ulDeviceSpecificSpeed &= HOSTMSK(sqi_cr0_sck_muladd) | HOSTMSK(sqi_cr0_filter_in);
 
@@ -527,7 +535,7 @@ static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 #endif
 	unsigned long ulValue;
 
-	ptSqiArea = (HOSTADEF(SQI) *)(ptCfg->ptUnit);
+	ptSqiArea = ptCfg->pvUnit;
 
 	/* Deactivate IRQs. */
 	ptSqiArea->ulSqi_irq_mask = 0;
@@ -591,16 +599,17 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	unsigned int uiChipSelect;
 
 
-	ptSqiArea = (HOSTADEF(SQI) *)(ptCfg->ptUnit);
+	ptSqiArea = ptCfg->pvUnit;
 	iResult = 0;
 
 	/* Get the chip select value. */
 	uiChipSelect = ptSpiCfg->uiChipSelect;
 
-	ptCfg->ulSpeed = ptSpiCfg->ulInitialSpeedKhz;   /* initial device speed in kHz */
-	ptCfg->uiIdleCfg = ptSpiCfg->uiIdleCfg;         /* the idle configuration */
-	ptCfg->tMode = ptSpiCfg->uiMode;                /* bus mode */
-	ptCfg->uiChipSelect = 1U<<uiChipSelect;         /* chip select */
+	ptCfg->ulSpeed = ptSpiCfg->ulInitialSpeedKhz;            /* initial device speed in kHz */
+	ptCfg->ulMaximumSpeedKhz = ptSpiCfg->ulMaximumSpeedKhz;  /* The maximum allowed speed on the interface. */
+	ptCfg->uiIdleCfg = ptSpiCfg->uiIdleCfg;                  /* the idle configuration */
+	ptCfg->tMode = ptSpiCfg->uiMode;                         /* bus mode */
+	ptCfg->uiChipSelect = 1U<<uiChipSelect;                  /* chip select */
 
 	/* set the function pointers */
 	ptCfg->pfnSelect = qsi_slave_select;
@@ -622,7 +631,7 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	portcontrol_apply(pusPortControlIndex, ptSpiCfg->ausPortControl, sizeof(ptSpiCfg->ausPortControl)/sizeof(ptSpiCfg->ausPortControl[0]));
 	*/
 
-	/* do not use IRQs in bootloader */
+	/* Do not use IRQs in flasher. */
 	ptSqiArea->ulSqi_irq_mask = 0;
 	/* clear all pending IRQs */
 	ulValue  = HOSTMSK(sqi_irq_clear_RORIC);
@@ -649,7 +658,7 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	/* set 8 bits */
 	ulValue  = 7 << HOSTSRT(sqi_cr0_datasize);
 	/* set speed and filter */
-	ulValue |= qsi_get_device_speed_representation(ptCfg->ulSpeed);
+	ulValue |= qsi_get_device_speed_representation(ptCfg, ptCfg->ulSpeed);
 	/* start in SPI mode: use only IO0 and IO1 for transfer */
 	ulValue |= 0 << HOSTSRT(sqi_cr0_sio_cfg);
 	/* set the clock polarity  */

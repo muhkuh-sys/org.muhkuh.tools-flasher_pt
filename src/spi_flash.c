@@ -569,7 +569,7 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 	switch( ptSpiCfg->uiUnit )
 	{
 	case 0:
-		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(spi);
+		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi);
 		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
@@ -581,12 +581,12 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 	switch( ptSpiCfg->uiUnit )
 	{
 	case 0:
-		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(spi0);
+		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi0);
 		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	case 1:
-		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(spi1);
+		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi1);
 		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
@@ -598,11 +598,12 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 	switch( ptSpiCfg->uiUnit )
 	{
 	case 0:
+		ptSpiDev->pvUnit = (HOSTADEF(SQI)*)HOSTADDR(sqi);
 		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	case 1:
-		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(spi_motion);
+		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi_motion);
 		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
@@ -614,22 +615,22 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 	switch( ptSpiCfg->uiUnit )
 	{
 	case 0:
-		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(SQI0);
+		ptSpiDev->pvUnit = (HOSTADEF(SQI)*)HOSTADDR(SQI0);
 		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	case 1:
-		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(SQI1);
+		ptSpiDev->pvUnit = (HOSTADEF(SQI)*)HOSTADDR(SQI1);
 		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	case 2:
-		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(spi);
+		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi);
 		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	case 3:
-		ptSpiDev->ptUnit = (HOSTADEF(SPI)*)HOSTADDR(spi_xpic3);
+		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi_xpic3);
 		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
@@ -638,8 +639,7 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 		break;
 	}
 #else
-	//uprintf("ERROR: Drv_SpiInitializeFlash: unknown asic type %d. Forgot to extend this function for a new asic?\n", ASIC_TYP);
-	DBG_ERROR_VAL("unknown asic type %d. Forgot to extend this function for a new asic?", ASIC_TYP)
+	DBG_ERROR_VAL("Unknown ASIC type %d. Forgot to extend this function for a new ASIC?", ASIC_TYP)
 	iResult = -1;
 #endif
 
@@ -702,7 +702,7 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 				memcpy(&ptFlash->tAttributes, ptFlashAttr, sizeof(SPIFLASH_ATTRIBUTES_T));
 
 				/* set higher speed for the device */
-				ptSpiDev->ulSpeed = ptSpiDev->pfnGetDeviceSpeedRepresentation(ptFlash->tAttributes.ulClock);
+				ptSpiDev->ulSpeed = ptSpiDev->pfnGetDeviceSpeedRepresentation(ptSpiDev, ptFlash->tAttributes.ulClock);
 				ptSpiDev->pfnSetNewSpeed(ptSpiDev, ptSpiDev->ulSpeed);
 
 				/* send the init commands */

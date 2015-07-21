@@ -30,13 +30,13 @@
 
 /*-------------------------------------*/
 
-#define FLASHER_INTERFACE_VERSION 0x00020000
+#define FLASHER_INTERFACE_VERSION 0x00030000
 
 
 typedef enum
 {
 	BUS_ParFlash                    = 0,    /*  Parallel flash */
-	BUS_SPI                         = 1     /*  Serial flash on spi bus. */
+	BUS_SPI                         = 1     /*  Serial flash on SPI bus. */
 } BUS_T;
 
 typedef enum

@@ -34,7 +34,7 @@ static unsigned char spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char ucB
 
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
+	ptSpiUnit = ptCfg->pvUnit;
 
 	/* write byte to spi bus */
 	ptSpiUnit->ulSpi_data_register = ucByte | HOSTMSK(spi_data_register_dr_valid0);
@@ -100,15 +100,23 @@ static const SPI_KHZ_TO_CLOCK_T aulSpeedSteps[] =
 	{ 10000, HAL_SPI_SPEED_10_0MHz },
 	{ 12500, HAL_SPI_SPEED_12_5MHz },
 	{ 16666, HAL_SPI_SPEED_16_6MHz },
-	{ 25000, HAL_SPI_SPEED_25_0MHz }
-	/* NOTE: Do not use 50MHz, this is too fast for the crappy wiring of most boards. */
+	{ 25000, HAL_SPI_SPEED_25_0MHz },
+	{ 50000, HAL_SPI_SPEED_50_0MHz }
 };
 
-static unsigned long spi_get_device_speed_representation(unsigned int uiSpeed)
+static unsigned long spi_get_device_speed_representation(const SPI_CFG_T *ptCfg, unsigned int uiSpeed)
 {
 	unsigned int uiCnt;
 	unsigned long ulDevSpeed;
+	unsigned long ulMaximumSpeedKhz;
 
+
+	/* Limit the speed. */
+	ulMaximumSpeedKhz = ptCfg->ulMaximumSpeedKhz;
+	if( uiSpeed>ulMaximumSpeedKhz )
+	{
+		uiSpeed = ulMaximumSpeedKhz;
+	}
 
 	/* Start at the end of the list. There are the largest values. */
 	uiCnt = sizeof(aulSpeedSteps)/sizeof(aulSpeedSteps[0]);
@@ -141,7 +149,7 @@ static int spi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
+	ptSpiUnit = ptCfg->pvUnit;
 
 	/* get control register contents */
 	ulValue = ptSpiUnit->ulSpi_control_register;
@@ -244,7 +252,7 @@ static void spi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpec
 
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
+	ptSpiUnit = ptCfg->pvUnit;
 
 	ulDeviceSpecificSpeed &= HOSTMSK(spi_control_register_CR_speed);
 
@@ -262,8 +270,8 @@ static void spi_deactivate(const SPI_CFG_T *ptCfg)
 
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
-	/* Soft reset spi and clear both fifos. */
+	ptSpiUnit = ptCfg->pvUnit;
+	/* Soft reset SPI and clear both FIFOs. */
 	ulValue  = HOSTMSK(spi_control_register_CR_softreset);
 	ulValue |= HOSTMSK(spi_control_register_CR_clr_infifo);
 	ulValue |= HOSTMSK(spi_control_register_CR_clr_outfifo);
@@ -293,14 +301,15 @@ int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	iResult = 0;
 
 	/* Get the pointer to the registers. */
-	ptSpiUnit = ptCfg->ptUnit;
+	ptSpiUnit = ptCfg->pvUnit;
 
 	/* Get the chip select value. */
 	uiChipSelect = ptSpiCfg->uiChipSelect;
-	ptCfg->ulSpeed = ptSpiCfg->ulInitialSpeedKhz;   /* initial device speed in kHz */
-	ptCfg->uiIdleCfg = ptSpiCfg->uiIdleCfg;         /* the idle configuration */
-	ptCfg->tMode = ptSpiCfg->uiMode;                /* bus mode */
-	ptCfg->uiChipSelect = 1U<<uiChipSelect;         /* chip select */
+	ptCfg->ulSpeed = ptSpiCfg->ulInitialSpeedKhz;            /* initial device speed in kHz */
+	ptCfg->ulMaximumSpeedKhz = ptSpiCfg->ulMaximumSpeedKhz;  /* The maximum allowed speed on the interface. */
+	ptCfg->uiIdleCfg = ptSpiCfg->uiIdleCfg;                  /* the idle configuration */
+	ptCfg->tMode = ptSpiCfg->uiMode;                         /* bus mode */
+	ptCfg->uiChipSelect = 1U<<uiChipSelect;                  /* chip select */
 
 	/* set the function pointers */
 	ptCfg->pfnSelect = spi_slave_select;
@@ -326,7 +335,7 @@ int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	ulValue |= (7<<HOSTSRT(spi_control_register_CR_burst));          /* Set the burst size to the maximum. */
 	ulValue |= (0<<HOSTSRT(spi_control_register_CR_burstdelay));     /* No burst delay. */
 	ulValue |= HOSTMSK(spi_control_register_CR_en);                  /* Enable the interface. */
-	ulValue |= spi_get_device_speed_representation(ptCfg->ulSpeed);  /* clock divider for SCK */
+	ulValue |= spi_get_device_speed_representation(ptCfg, ptCfg->ulSpeed);  /* clock divider for SCK */
 
 	/* Set the clock polarity. */
 	/* Mode 2 and 3 have cpol=1 . */

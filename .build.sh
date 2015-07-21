@@ -1,32 +1,13 @@
-#! /bin/sh
+#! /bin/bash
+set -e
+
+# Get the MBS Ivy path.
+MBS_IVY_PATH=`pwd`/mbs/ivy
 
 # Build the artifact.
 python mbs/mbs
-STATUS=$?
-if [ $STATUS -ne 0 ]; then
-	echo "Error building the flasher artifact!"
-	exit 1
-fi
+pushd targets/ivy/flasher_cli
+ant -Dmbs.ivy.path=${MBS_IVY_PATH} bootstrap
+ant -Dmbs.ivy.path=${MBS_IVY_PATH}
+popd
 
-cd targets/ivy/flasher_cli
-STATUS=$?
-if [ $STATUS -ne 0 ]; then
-	echo "Error changing to the artifacts folder."
-	exit 1
-fi
-
-ant bootstrap
-STATUS=$?
-if [ $STATUS -ne 0 ]; then
-	echo "Error running ant bootstrap."
-	exit 1
-fi
-
-ant
-STATUS=$?
-if [ $STATUS -ne 0 ]; then
-	echo "Error running ant."
-	exit 1
-fi
-
-cd ../../..

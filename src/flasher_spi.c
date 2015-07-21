@@ -575,7 +575,7 @@ NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	iResult = Drv_SpiInitializeFlash(&(ptParameter->uSourceParameter.tSpi), ptFlashDescription);
 	if( iResult!=0 )
 	{
-		/* failed to detect the spi flash */
+		/* failed to detect the SPI flash */
 		uprintf("! failed to detect flash!\n");
 
 		/* clear the result data */
@@ -585,7 +585,7 @@ NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	}
 	else
 	{
-		uprintf(". ok, found %s\n", ptFlashDescription->tAttributes.acName);
+		uprintf(". OK, found %s\n", ptFlashDescription->tAttributes.acName);
 
 		/* set the result data */
 		ptDeviceDescription->fIsValid = 1;
