@@ -231,7 +231,7 @@ u  = {type = "number", clkey ="-u",  argkey = "iUnit",             name="unit nu
 cs = {type = "number", clkey ="-cs", argkey = "iChipSelect",       name="chip select number"},
 p  = {type = "string", clkey ="-p",  argkey = "strPluginName",     name="plugin name"},
 s  = {type = "number", clkey ="-s",  argkey = "ulStartOffset",     name="start offset"},
-l  = {type = "number", clkey ="-l",  argkey = "ulLen",             name="number of bytes to read"},
+l  = {type = "number", clkey ="-l",  argkey = "ulLen",             name="number of bytes to read/erase/hash"},
 f  = {type = "string", clkey = "",   argkey = "strDataFileName",   name="file name"}
 }
 
