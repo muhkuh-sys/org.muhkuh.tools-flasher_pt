@@ -3,6 +3,17 @@ python:
   - '2.7'
 
 
+# Use the new container-based infrastructure. No "sudo" is possible now.
+sudo: false
+
+
+# Cache the .mbs folder.
+cache:
+  directories:
+  - $HOME/.mbs
+  - $HOME/.ant/lib
+
+
 env:
   global:
     - secure: CQaqQBrFIEVHPO+J8gWRCV0eQ2bdwdZG3T8t/DBj7hGTOXqaB1YHSWpSt+xbht/B2pelSz2XOWNhvF8Q9PFqW+nMFANkqz0W24BtBrVhLh6hUh+DLAW9rvctNeKU03Eqke+g7YAex6cLdVqk2HTyUBmMxe/rOGROGj2Sd+auhdc=
