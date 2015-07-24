@@ -855,7 +855,7 @@ function simple_flasher_string(tPlugin, strData, tBus, ulUnit, ulChipSelect, str
 	local aAttr = download(tPlugin, strFlasherPrefix, fnCallbackProgress)
 	
 	-- Detect the device.
-	fOk = detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, ulDevDescAdr, fnCallbackMessage, fnCallbackProgress)
+	fOk = detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, fnCallbackMessage, fnCallbackProgress)
 	if fOk~=true then
 		error("Failed to detect the device!")
 	end
