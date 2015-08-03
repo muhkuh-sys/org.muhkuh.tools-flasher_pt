@@ -92,7 +92,7 @@ typedef union
 
 
 /* This structure describes one sector of a flash device. */
-typedef struct tagSECTOR_INFO
+typedef struct SECTOR_INFO_STRUCT
 {
 	unsigned long ulOffset;
 	unsigned long ulSize;

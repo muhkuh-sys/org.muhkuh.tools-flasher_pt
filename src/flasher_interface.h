@@ -33,13 +33,13 @@
 #define FLASHER_INTERFACE_VERSION 0x00030000
 
 
-typedef enum
+typedef enum BUS_ENUM
 {
 	BUS_ParFlash                    = 0,    /*  Parallel flash */
 	BUS_SPI                         = 1     /*  Serial flash on SPI bus. */
 } BUS_T;
 
-typedef enum
+typedef enum OPERATION_MODE_ENUM
 {
 	OPERATION_MODE_Flash            = 0,
 	OPERATION_MODE_Erase            = 1,
@@ -55,7 +55,7 @@ typedef enum
 } OPERATION_MODE_T;
 
 
-typedef struct
+typedef struct DEVICE_DESCRIPTION_STRUCT
 {
 	int fIsValid;                           /* a value of !=0 means the description is valid */
 	size_t sizThis;                         /* size of the complete structure in bytes */
@@ -75,7 +75,7 @@ typedef struct
     pucData is an absolute pointer to the RAM buffer.
 */
    
-typedef struct
+typedef struct CMD_PARAMETER_FLASH_STRUCT
 {
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	unsigned long ulStartAdr;
@@ -84,7 +84,7 @@ typedef struct
 } CMD_PARAMETER_FLASH_T;
 
 
-typedef struct
+typedef struct CMD_PARAMETER_ERASE_STRUCT
 {
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	unsigned long ulStartAdr;
@@ -92,7 +92,7 @@ typedef struct
 } CMD_PARAMETER_ERASE_T;
 
 
-typedef struct
+typedef struct CMD_PARAMETER_READ_STRUCT
 {
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	unsigned long ulStartAdr;
@@ -101,7 +101,7 @@ typedef struct
 } CMD_PARAMETER_READ_T;
 
 
-typedef struct
+typedef struct CMD_PARAMETER_VERIFY_STRUCT
 {
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	unsigned long ulStartAdr;
@@ -110,7 +110,7 @@ typedef struct
 } CMD_PARAMETER_VERIFY_T;
 
 
-typedef struct
+typedef struct CMD_PARAMETER_CHECKSUM_STRUCT
 {
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	unsigned long ulStartAdr;
@@ -119,7 +119,7 @@ typedef struct
 } CMD_PARAMETER_CHECKSUM_T;
 
 
-typedef struct
+typedef struct CMD_PARAMETER_DETECT_STRUCT
 {
 	BUS_T tSourceTyp;
 	union
@@ -131,7 +131,7 @@ typedef struct
 } CMD_PARAMETER_DETECT_T;
 
 
-typedef struct
+typedef struct CMD_PARAMETER_ISERASED_STRUCT
 {
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	unsigned long ulStartAdr;
@@ -139,7 +139,7 @@ typedef struct
 } CMD_PARAMETER_ISERASED_T;
 
 
-typedef struct
+typedef struct CMD_PARAMETER_GETERASEAREA_STRUCT
 {
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
 	unsigned long ulStartAdr;
@@ -147,7 +147,7 @@ typedef struct
 } CMD_PARAMETER_GETERASEAREA_T;
 
 
-typedef struct
+typedef struct CMD_PARAMETER_GETBOARDINFO_STRUCT
 {
 	unsigned long ulBusId;
 	unsigned long ulUnitId;
@@ -156,7 +156,7 @@ typedef struct
 } CMD_PARAMETER_GETBOARDINFO_T;
 
 
-typedef struct
+typedef struct tFlasherInputParameter_STRUCT
 {
 	unsigned long ulParamVersion;
 	OPERATION_MODE_T tOperationMode;
