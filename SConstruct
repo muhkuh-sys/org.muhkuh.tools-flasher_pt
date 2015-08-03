@@ -252,6 +252,7 @@ bin_netx500_bob = env_netx500_bob.ObjCopy('targets/flasher_netx500_bob.bin', elf
 # them into the LUA script.
 #
 lua_flasher = env_netx500_nodbg.GccSymbolTemplate('targets/lua/flasher.lua', elf_netx500_nodbg, GCCSYMBOLTEMPLATE_TEMPLATE='templates/flasher.lua')
+tDemoShowEraseAreas = env_netx500_nodbg.GccSymbolTemplate('targets/lua/show_erase_areas.lua', elf_netx500_nodbg, GCCSYMBOLTEMPLATE_TEMPLATE='templates/show_erase_areas.lua')
 
 #----------------------------------------------------------------------------
 #
@@ -333,7 +334,8 @@ tArcList0.AddFiles('demo/',
 	'lua/identify_serflash.lua',
 	'lua/is_erased_parflash.lua',
 	'lua/read_bootimage.lua',
-	'lua/read_complete_flash.lua')
+	'lua/read_complete_flash.lua',
+	tDemoShowEraseAreas)
 
 tArcList0.AddFiles('',
 	'ivy/org.muhkuh.tools.flasher/install.xml')
@@ -401,3 +403,4 @@ Command('targets/testbench/identify_serflash.lua',        'lua/identify_serflash
 Command('targets/testbench/is_erased_parflash.lua',       'lua/is_erased_parflash.lua', Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/read_bootimage.lua',           'lua/read_bootimage.lua', Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/read_complete_flash.lua',      'lua/read_complete_flash.lua', Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/show_erase_areas.lua',         tDemoShowEraseAreas, Copy("$TARGET", "$SOURCE"))
