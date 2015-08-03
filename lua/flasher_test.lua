@@ -20,7 +20,7 @@ SVN_AUTHOR ="$Author$"
 require("flasher")
 
 m_logMsgFile = nil
-m_logMsgFile = "D:/log.txt"
+m_logMsgFile = "flasher_test.log"
 
 function log_printf(...)
 	local strMsg = string.format(...)
