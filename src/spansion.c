@@ -509,7 +509,7 @@ static FLASH_ERRORS_E FlashBufferedWrite(const FLASH_DEVICE_T *ptFlashDev, const
 			} while( tDst.puc<tEnd.puc );
 			ulCurrentOffset += ulWriteSize;
 			/* Get the last location. */
-			ulLastOffset = ulCurrentOffset - 1;
+			ulLastOffset = ulCurrentOffset - sizeof(unsigned char);
 			/* Get the last data. */
 			ulLastData = *(tSrc.puc-1);
 			break;
@@ -522,7 +522,7 @@ static FLASH_ERRORS_E FlashBufferedWrite(const FLASH_DEVICE_T *ptFlashDev, const
 			} while( tDst.pus<tEnd.pus );
 			ulCurrentOffset += ulWriteSize;
 			/* Get the last location. */
-			ulLastOffset = ulCurrentOffset - 1;
+			ulLastOffset = ulCurrentOffset - sizeof(unsigned short);
 			/* Get the last data. */
 			ulLastData = *(tSrc.pus-1);
 			break;
@@ -535,7 +535,7 @@ static FLASH_ERRORS_E FlashBufferedWrite(const FLASH_DEVICE_T *ptFlashDev, const
 			} while( tDst.pul<tEnd.pul );
 			ulCurrentOffset += ulWriteSize;
 			/* Get the last location. */
-			ulLastOffset = ulCurrentOffset - 1;
+			ulLastOffset = ulCurrentOffset - sizeof(unsigned long);
 			/* Get the last data. */
 			ulLastData = *(tSrc.pul-1);
 			break;
