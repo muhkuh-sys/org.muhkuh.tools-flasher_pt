@@ -22,7 +22,9 @@
 
 #include "progress_bar.h"
 #include "uprintf.h"
-
+#if ASIC_TYP==4000
+#include "pl353_nor.h"
+#endif
 
 #if CFG_DEBUGMSG!=0
 
@@ -207,6 +209,14 @@ static void setup_flash(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits
 		ptExtAsyncmemCtrlArea->aulExtsram_ctrl[uiChipSelect] = ulValue;
 	}
 }
+
+#elif ASIC_TYP==4000
+static void setup_flash_rap_nor(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits)
+{
+	MEMORY_WIDTH_T tBusWidth = tBits == BUS_WIDTH_16Bit? MEMORY_WIDTH_16Bit:MEMORY_WIDTH_08Bit;
+	setup_flash_nor_pl353(ptCfg->uiChipSelect, tBusWidth);
+}
+
 #endif
 
 
@@ -333,6 +343,96 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 		}
 		ptFlashDevice->pfnSetup = setup_flash;
 	}
+	
+#elif ASIC_TYP==4000
+#if 0
+	if( uiUnit==0 )
+	{
+		if( uiChipSelect>3 )
+		{
+			uprintf("! Invalid chipselect for unit %d: %d\n", uiUnit, uiChipSelect);
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		}
+		else
+		{
+			switch(uiChipSelect)
+			{
+			case 0:
+				ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADR(mem_extsram_cs0_base);
+				break;
+			case 1:
+				ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADR(mem_extsram_cs1_base);
+				break;
+			case 2:
+				ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADR(mem_extsram_cs2_base);
+				break;
+			case 3:
+				ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADR(mem_extsram_cs3_base);
+				break;
+			}
+			/* TODO ptFlashDevice->pfnSetup = setup_flash_srb; */
+		}
+	}
+	else if( uiUnit==1 )
+	{
+		if( uiChipSelect>3 )
+		{
+			uprintf("! Invalid chipselect for unit %d: %d\n", uiUnit, uiChipSelect);
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		}
+		else
+		{
+			//ptFlashDevice->pucFlashBase = (unsigned char*)(HOSTADDR(hif_ahbls6)+0x02000000*uiChipSelect);
+			
+			switch(uiChipSelect)
+			{
+			case 0:
+				ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADR(hif_extsram_cs0_base);
+				break;
+			case 1:
+				ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADR(hif_extsram_cs1_base);
+				break;
+			case 2:
+				ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADR(hif_extsram_cs2_base);
+				break;
+			case 3:
+				ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADR(hif_extsram_cs3_base);
+				break;
+			}
+			
+			/* TODO ptFlashDevice->pfnSetup = setup_flash_ext; */
+		}
+	}
+	else 
+#endif
+	if( uiUnit==2 )
+	{
+		if( uiChipSelect>1 )
+		{
+			uprintf("! Invalid chipselect for unit %d: %d\n", uiUnit, uiChipSelect);
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		}
+		else
+		{
+			switch(uiChipSelect)
+			{
+			case 0:
+				ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADDR(NX2RAP_extsram0);
+				break;
+			case 1:
+				ptFlashDevice->pucFlashBase = (unsigned char*)HOSTADDR(NX2RAP_extsram1);
+				break;
+			}
+			
+			ptFlashDevice->pfnSetup = setup_flash_rap_nor;
+		}
+	}
+	else
+	{
+		uprintf("! Invalid unit number: %d\n", uiUnit);
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	
 #else
 	uiUnit = uiUnit; /* avoid 'set but not used' warning */
 	uiChipSelect = uiChipSelect;
