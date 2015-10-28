@@ -72,6 +72,7 @@ flasher_sources_custom_netx4000 = """
 	src/drv_spi_hsoc_v2.c
 	src/drv_sqi.c
 	src/mmio.c
+	src/pl353_nor.c
 """
 
 src_netx4000  = flasher_sources_common + flasher_sources_custom_netx4000
@@ -83,7 +84,6 @@ src_netx4000  = flasher_sources_common + flasher_sources_custom_netx4000
 #
 env_default.Version('targets/version/flasher_version.h', 'templates/flasher_version.h')
 env_default.Version('targets/version/flasher_version.xsl', 'templates/flasher_version.xsl')
-env_default.Version('targets/doc/README.rst', 'templates/README.rst')
 
 
 #----------------------------------------------------------------------------
