@@ -51,7 +51,11 @@ typedef unsigned short USHORT;
 #define CFI_FLASH_100_INTEL_EXT 0x0003
 #define CFI_FLASH_100_AMD_EXT   0x0004
 
+#if ASIC_TYP==4000
+#define MAX_SECTORS             512
+#else
 #define MAX_SECTORS             256
+#endif
 
 #define DEFAULT_POSTPAUSE       0x03
 #define DEFAULT_PREPAUSE        0x03
