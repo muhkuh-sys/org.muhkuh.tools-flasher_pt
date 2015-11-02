@@ -134,8 +134,18 @@ void pl353_nor_setup(PL353_NOR_HANDLE_T *ptHandle, MEMORY_WIDTH_T tBusWidth)
 	pl353_nor_update_registers(ptHandle);
 }
 
-
-
+/*
+   Default timings are maximum values.
+   min( initialMClk + (ulValueNs - ulInitialNs)/PL353_MCLK_NS, ucMaxMClk)
+   PL353_MCLK_NS = 20 ns
+             val_ns  ini_ns    ini_clk     max_clk
+   usT_RC      300     40        2           15         = 15
+   usT_WC      300     40        2           15         = 15
+   ucT_CEOE    140     20        1            7         = 7 
+   ucT_WP      140     20        1            7         = 7
+   ucT_PC      140     20        1            7         = 7
+   ucT_TR      140     20        1            7         = 7
+*/
 PL353_NOR_SETTINGS_T g_tPl353_NorDefaultSettings = 
 	{
 		.tBusWidth = MEMORY_WIDTH_Auto,
