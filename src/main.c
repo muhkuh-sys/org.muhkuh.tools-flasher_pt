@@ -20,7 +20,7 @@
 
 #include "flasher_version.h"
 #include "netx_consoleapp.h"
-#include "rdyrun.h"
+#include "rdy_run.h"
 
 #include "board.h"
 
@@ -845,12 +845,12 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 	{
 		/* Failed to initialize board, can not continue! */
-		setRdyRunLed(RDYRUN_LED_RED);
+		rdy_run_setLEDs(RDYRUN_YELLOW);
 	}
 	else
 	{
 		/* Switch off the SYS led. */
-		setRdyRunLed(RDYRUN_LED_OFF);
+		rdy_run_setLEDs(RDYRUN_OFF);
 		
 		/* Configure the systime, used by progress functions. */
 		systime_init();  
@@ -930,12 +930,12 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 	{
 		/*  Operation OK! */
 		uprintf("* OK *\n");
-		setRdyRunLed(RDYRUN_LED_GREEN);
+		rdy_run_setLEDs(RDYRUN_GREEN);
 	}
 	else
 	{
 		/*  Operation failed. */
-		setRdyRunLed(RDYRUN_LED_RED);
+		rdy_run_setLEDs(RDYRUN_YELLOW);
 	}
 
 

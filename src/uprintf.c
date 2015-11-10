@@ -1,22 +1,23 @@
-/*************************************************************************** 
- *   Copyright (C) 2011 by Hilscher GmbH                                   * 
- *   cthelen@hilscher.com                                                  * 
- *                                                                         * 
- *   This program is free software; you can redistribute it and/or modify  * 
- *   it under the terms of the GNU Library General Public License as       * 
- *   published by the Free Software Foundation; either version 2 of the    * 
- *   License, or (at your option) any later version.                       * 
- *                                                                         * 
- *   This program is distributed in the hope that it will be useful,       * 
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        * 
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * 
- *   GNU General Public License for more details.                          * 
- *                                                                         * 
- *   You should have received a copy of the GNU Library General Public     * 
- *   License along with this program; if not, write to the                 * 
- *   Free Software Foundation, Inc.,                                       * 
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             * 
+/***************************************************************************
+ *   Copyright (C) 2012 by Christoph Thelen                                *
+ *   doc_bacardi@users.sourceforge.net                                     *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+
 
 #include "uprintf.h"
 
@@ -234,75 +235,42 @@ void uprintf(const char *pcFmt, ...)
 	const char *pcArgument;
 	int iArgument;
 	CONSOLE_LINEFEED_T tLinefeedMode;
-	typedef void (*pfnSerialInit_t)(void);
-	unsigned long ulResVec;
-	unsigned long ulChipId;
 
-
-	/* Check the output handlers. */
-	if( tSerialVectors.fn.fnPut==NULL )
-	{
-		/* NOTE:
-		   On netX500 and netX100 the romcode disables the UART before the call and reenables it when the call
-		   returns. This means we have to init the uart here.
-		*/
-		
-		/* Is this a netx100/500? */
-		ulResVec = *((volatile unsigned long*)0x00000000);
-		ulChipId = *((volatile unsigned long*)0x00200008);
-		if(  (ulResVec==0xea080001 && ulChipId==0x00001000 )  ||  (ulResVec==0xea080002 && ulChipId==0x00003002 ) )
-		{
-			/* Yes, it's a netx100/500. */
-
-			/* Reinit the romcode uart routines, they are deactivated right before the 'CALL' command enters the user's code.
-			   NOTE: the routine is thumb-code, bit #0 of the address must be set to switch the mode.
-			*/
-			((pfnSerialInit_t)(0x002015f4|1))();
-
-			// set the vectors to the romcode
-			// NOTE: all routines are thumb-code, bit #0 of the address must be set to switch the mode
-			tSerialVectors.fn.fnGet   = (PFN_SERIAL_GET_T)(0x00201664|1);
-			tSerialVectors.fn.fnPut   = (PFN_SERIAL_PUT_T)(0x00201646|1);
-			tSerialVectors.fn.fnPeek  = (PFN_SERIAL_PEEK_T)(0x002016b0|1);
-			tSerialVectors.fn.fnFlush = (PFN_SERIAL_FLUSH_T)(0x002016ba|1);
-		}
-	}
-
-	if( tSerialVectors.fn.fnPut!=NULL )
-	{
+	if( (tSerialVectors.fn.fnPut!=NULL) && (tSerialVectors.fn.fnFlush!=NULL)  )
+	{		
 		/* get the linefeed mode */
 		tLinefeedMode = CONSOLE_LINEFEED_CRLF;
-
+	
 		/* Get initial pointer to first argument */
 		va_start(ptArgument, pcFmt);
-
+	
 		/* Is it a NULL Pointer ? */
 		if( pcFmt==NULL )
 		{
 			/* replace the argument with the default string */
 			pcFmt = "NULL\n";
 		}
-
+	
 		/* loop over all chars in the format string */
 		do
 		{
 			/* get the next char */
 			cChar = *(pcFmt++);
-
+	
 			/* is this the end of the format string? */
 			if( cChar!=0 )
 			{
 				/* no -> process the char */
-
+	
 				/* is this an escape char? */
 				if( cChar=='%' )
 				{
 					/* yes -> process the escape sequence */
-
+	
 					/* set default values for escape sequences */
 					cFillUpChar = ' ';
 					sizMinimumSize = 0;
-
+	
 					do
 					{
 						cChar = *(pcFmt++);
@@ -333,9 +301,9 @@ void uprintf(const char *pcFmt, ...)
 								else
 								{
 									break;
-							}	
+								}
 							} while(1);
-
+	
 							/* loop over all digits and add them to the */
 							uiValue = 0;
 							iDigitCnt = 0;
@@ -360,7 +328,7 @@ void uprintf(const char *pcFmt, ...)
 							uprintf_hex(ulArgument, sizMinimumSize, cFillUpChar);
 							break;
 						}
-						else if( cChar=='d' )
+						else if( cChar=='d' || cChar=='u' )
 						{
 							/* show decimal number */
 							ulArgument = va_arg((ptArgument), unsigned long);
@@ -404,11 +372,11 @@ void uprintf(const char *pcFmt, ...)
 					{
 					case CONSOLE_LINEFEED_LF:
 						break;
-
+	
 					case CONSOLE_LINEFEED_CR:
 						cChar = '\r';
 						break;
-
+	
 					default:
 					case CONSOLE_LINEFEED_CRLF:
 						SERIAL_PUT('\r');
@@ -423,7 +391,7 @@ void uprintf(const char *pcFmt, ...)
 				}
 			}
 		} while( cChar!=0 );
-
+	
 		va_end(ptArgument);
 	}
 }

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2008 by Christoph Thelen                                *
+ *   Copyright (C) 2012 by Christoph Thelen                                *
  *   doc_bacardi@users.sourceforge.net                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -21,12 +21,8 @@
 
 #include "systime.h"
 
-#define DEV_FREQUENCY 100000000UL
+#define DEV_FREQUENCY 100000000
 
-/* Hack */
-#if ASIC_TYP==4000  
-#define ptSystimeArea ptSystime0Area
-#endif
 
 void systime_init(void)
 {
@@ -59,6 +55,8 @@ unsigned long systime_get_ms(void)
 int systime_elapsed(unsigned long ulStart, unsigned long ulDuration)
 {
 	HOSTDEF(ptSystimeArea)
+
+
 	unsigned long ulDiff;
 
 

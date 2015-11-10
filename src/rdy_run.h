@@ -19,16 +19,33 @@
  ***************************************************************************/
 
 
-#include "netx_io_areas.h"
+#ifndef __RDY_RUN_H__
+#define __RDY_RUN_H__
+
+/*-----------------------------------*/
+
+typedef enum
+{
+	RDYRUN_OFF      = 0,
+	RDYRUN_GREEN    = 1,
+	RDYRUN_YELLOW   = 2
+} RDYRUN_T;
 
 
-#ifndef __SYSTIME_H__
-#define __SYSTIME_H__
+typedef struct
+{
+	unsigned long ulTimer;
+	unsigned int uiCnt;
+	unsigned long ulMask;
+	unsigned long ulState;
+} BLINKI_HANDLE_T;
 
-void systime_init(void);
 
-unsigned long systime_get_ms(void);
+void rdy_run_setLEDs(RDYRUN_T tState);
+void rdy_run_blinki_init(BLINKI_HANDLE_T *ptHandle, unsigned long ulMask, unsigned long ulState);
+void rdy_run_blinki(BLINKI_HANDLE_T *ptHandle);
 
-int systime_elapsed(unsigned long ulStart, unsigned long ulDuration);
+/*-----------------------------------*/
 
-#endif	/* __SYSTIME_H__ */
+#endif  /* __RDY_RUN_H__ */
+

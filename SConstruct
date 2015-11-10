@@ -51,7 +51,7 @@ flasher_sources_common = """
 	src/main.c
 	src/netx_consoleapp.c
 	src/progress_bar.c
-	src/rdyrun.c
+	src/rdy_run.c
 	src/sfdp.c
 	src/spansion.c
 	src/spi_macro_player.c
