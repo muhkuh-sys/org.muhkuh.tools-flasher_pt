@@ -42,12 +42,15 @@ static const UNIT_TABLE_T tUnitTable_BusSPI =
 
 static const UNIT_TABLE_T tUnitTable_BusParFlash =
 {
-	.sizEntries = 1,
+	.sizEntries = 3,
 	.atEntries =
 	{
-		{ 0,  "SRamBus",    NULL }
+		{ 0,  "SRamBus",        NULL },
+		{ 1,  "ExtBus",         NULL },
+		{ 2,  "RAP_SRamBus",    NULL },
 	}
 };
+
 
 const BUS_TABLE_T tBusTable =
 {
