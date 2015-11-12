@@ -16,12 +16,28 @@ if not strDevDesc then
 	error("Failed to get a device description!")
 end
 
--- Get erase area.
-ulDataFirst = 0x00020080
-ulDataEnd = 0x00021000
-ulEraseFirst,ulEraseEnd = flasher.getEraseArea(tPlugin, aAttr, ulDataFirst, ulDataEnd)
-print(string.format("Area:  [0x%08x, 0x%08x[", ulDataFirst, ulDataEnd))
-print(string.format("Erase: [0x%08x, 0x%08x[", ulEraseFirst, ulEraseEnd))
+-- Get the size of the complete flash.
+ulFlashSize = flasher.getFlashSize(tPlugin, aAttr, tester.callback, tester.callback_progress)
+
+-- Loop over the complete flash size.
+local ulAddressCnt = 0
+local atEraseBlocks = {}
+
+while ulAddressCnt<ulFlashSize do
+	-- Get erase area.
+	ulEraseFirst,ulEraseEnd = flasher.getEraseArea(tPlugin, aAttr, ulAddressCnt, ulAddressCnt+1)
+	
+	local tValues = {erase_start=ulEraseFirst, erase_end=ulEraseEnd}
+	table.insert(atEraseBlocks, tValues)
+	
+	-- Move to the next block.
+	ulAddressCnt = ulEraseEnd
+end
+
+-- Print all erase blocks.
+for iCnt,tValues in ipairs(atEraseBlocks) do
+	print(string.format("%03d: [0x%08x, 0x%08x[", iCnt-1, tValues.erase_start, tValues.erase_end))
+end
 
 -- disconnect the plugin
 tPlugin:Disconnect()
