@@ -29,14 +29,6 @@
 				<ivy      pattern="https://github.com/muhkuh-sys/[organisation]-[module]/releases/download/v[revision]/[artifact].[ext]" />
 				<artifact pattern="https://github.com/muhkuh-sys/[organisation]-[module]/releases/download/v[revision]/[artifact].[ext]" />
 			</url>
-			
-			<!-- This is the resolver for Bintray.
-			     Build results from Travis CI are stored here. They are snapshots and will be replaced with a new build.
-			-->
-			<url name="bintray" descriptor="required" m2compatible="true">
-				<ivy      pattern="http://dl.bintray.com/muhkuh/Muhkuh/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
-				<artifact pattern="http://dl.bintray.com/muhkuh/Muhkuh/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
-			</url>
 		</chain>
 	</resolvers>
 </ivysettings>
