@@ -17,7 +17,7 @@ cache:
 env:
   global:
     - secure: CQaqQBrFIEVHPO+J8gWRCV0eQ2bdwdZG3T8t/DBj7hGTOXqaB1YHSWpSt+xbht/B2pelSz2XOWNhvF8Q9PFqW+nMFANkqz0W24BtBrVhLh6hUh+DLAW9rvctNeKU03Eqke+g7YAex6cLdVqk2HTyUBmMxe/rOGROGj2Sd+auhdc=
-    - PATH=/tmp/apache-ant-1.9.5/bin/:$PATH
+    - PATH=/tmp/apache-ant-1.9.6/bin/:$PATH
 
 
 # The build box uses Ubuntu 12.04, which provides ant 1.8.x . This project
@@ -25,8 +25,8 @@ env:
 # http://ant.apache.org/manual/ifunless.html).
 before_install:
   - git submodule update --init --recursive
-  - wget http://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist//ant/binaries/apache-ant-1.9.5-bin.tar.bz2 -O /tmp/apache-ant-1.9.5-bin.tar.bz2
-  - tar --directory /tmp --extract --bzip2 --file /tmp/apache-ant-1.9.5-bin.tar.bz2
+  - wget http://archive.apache.org/dist/ant/binaries/apache-ant-1.9.6-bin.tar.bz2 -O /tmp/apache-ant-1.9.6-bin.tar.bz2
+  - tar --directory /tmp --extract --bzip2 --file /tmp/apache-ant-1.9.6-bin.tar.bz2
 
 
 install:
