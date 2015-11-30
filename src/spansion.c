@@ -211,10 +211,22 @@ static FLASH_COMMAND_BLOCK_T s_atPPBExit[] =
         {SPANSION_ADR_PPB_EXIT_CYCLE1, SPANSION_CMD_PPB_EXIT_CYCLE1}
 };
 
-#define FLASH_ABSADDR(d,s,o)  (d->pucFlashBase + d->atSectors[s].ulOffset + o)
-
 
 /*-------------------------------------------------------------------------*/
+
+
+static volatile unsigned char *get_flash_address(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset)
+{
+	volatile unsigned char *pucAddress;
+
+
+	pucAddress  = ptFlashDev->pucFlashBase;
+	pucAddress += ptFlashDev->atSectors[ulSector].ulOffset;
+	pucAddress += ulOffset;
+
+	return pucAddress;
+}
+
 
 
 /*! Write a command to the FLASH
@@ -228,7 +240,7 @@ static void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ul
 {
 	unsigned long ulValue;
 	VADR_T tWriteAddr;
-	tWriteAddr.puc = FLASH_ABSADDR(ptFlashDev, ulSector, 0);
+	tWriteAddr.puc = get_flash_address(ptFlashDev, ulSector, 0);
 
 	switch(ptFlashDev->tBits)
 	{
@@ -470,7 +482,7 @@ static FLASH_ERRORS_E FlashNormalWrite(const FLASH_DEVICE_T *ptFlashDev, unsigne
 	DEBUGMSG(ZONE_FUNCTION, ("+FlashNormalWrite(): ptFlashDev=0x%08x, ulSector=%d, ulOffset=0x%08x, pucData=0x%08x, ulWriteSize=0x%08x\n", ptFlashDev, ulSector, ulOffset, pucData, ulWriteSize));
 
 	tSrc.puc = pucData;
-	tDst.puc = FLASH_ABSADDR(ptFlashDev, ulSector, ulOffset);
+	tDst.puc = get_flash_address(ptFlashDev, ulSector, ulOffset);
 	ulEndOffset  = ulOffset + ulWriteSize;
 	ulLastData   = 0;
 	
@@ -581,7 +593,7 @@ static FLASH_ERRORS_E FlashBufferedWrite(const FLASH_DEVICE_T *ptFlashDev, const
 
 		ulLength -= ulWriteSize;
 
-		tDst.puc = FLASH_ABSADDR(ptFlashDev, ulCurrentSector, ulCurrentOffset);
+		tDst.puc = get_flash_address(ptFlashDev, ulCurrentSector, ulCurrentOffset);
 		tEnd.puc = tDst.puc + ulWriteSize;
 
 		switch(ptFlashDev->tBits)
@@ -871,7 +883,7 @@ static int FlashIsset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, 
 	unsigned long ulValue = 0;
 	VADR_T tReadAddr;
 
-	tReadAddr.puc = FLASH_ABSADDR(ptFlashDev, ulSector, ulOffset);
+	tReadAddr.puc = get_flash_address(ptFlashDev, ulSector, ulOffset);
 	
 	DEBUGMSG(ZONE_FUNCTION, ("+FlashIsset(): ptFlashDev=0x%08x, ulSector=%d, ulOffset=0x%08x, ulSet=0x%08x, ulClear=0x%08x\n", ptFlashDev, ulSector, ulOffset, ulSet, ulClear));
 
@@ -1046,7 +1058,7 @@ static FLASH_ERRORS_E FlashWaitWriteDone(const FLASH_DEVICE_T *ptFlashDev, unsig
 
 	/* Perform Polling Operation */
 	polling_counter = 0xFFFFFFFF;
-	ulBlockAddress  = (unsigned long)FLASH_ABSADDR(ptFlashDev, ulSector, ulOffset);
+	ulBlockAddress  = (unsigned long)get_flash_address(ptFlashDev, ulSector, ulOffset);
 	
 	do
 	{
