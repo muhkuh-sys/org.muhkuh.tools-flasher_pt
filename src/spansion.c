@@ -236,8 +236,10 @@ static volatile unsigned char *get_flash_address(const FLASH_DEVICE_T *ptFlashDe
 *   \param   ulOffset    Offset address in the actual FLASH sector
 *   \param   uiCmd       Command to execute
 */
-static void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned int uiCmd)
+static void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulCmd)
 {
+	unsigned char ucValue;
+	unsigned short usValue;
 	unsigned long ulValue;
 	VADR_T tWriteAddr;
 	tWriteAddr.puc = get_flash_address(ptFlashDev, ulSector, 0);
@@ -245,24 +247,34 @@ static void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ul
 	switch(ptFlashDev->tBits)
 	{
 	case BUS_WIDTH_8Bit:
-		/* 8bits cannot be paired */
-		tWriteAddr.puc[ulOffset] = (unsigned char)uiCmd;
+		/* 8bits cannot be constructed by a combination of flash devices. */
+		ucValue = (unsigned char)(ulCmd & 0x000000ffU);
+		tWriteAddr.puc[ulOffset] = ucValue;
 		break;
 
 	case BUS_WIDTH_16Bit:
-		ulValue = uiCmd;
-		if( ptFlashDev->fPaired!=0 )
+		if( ptFlashDev->fPaired==0 )
 		{
-			ulValue |= ulValue << 8U;
+			usValue = (unsigned short)(ulCmd & 0x0000ffffU);
 		}
-		tWriteAddr.pus[ulOffset] = (unsigned short)ulValue;
+		else
+		{
+			usValue  = (unsigned short) (ulCmd & 0x000000ffU);
+			usValue |= (unsigned short)((ulCmd & 0x000000ffU) << 8U);
+		}
+		tWriteAddr.pus[ulOffset] = usValue;
 		break;
 
 	case BUS_WIDTH_32Bit:
-		ulValue = uiCmd;
-		if( ptFlashDev->fPaired!=0 )
+
+		if( ptFlashDev->fPaired==0 )
 		{
-			ulValue |= ulValue << 16U;
+			ulValue = ulCmd;
+		}
+		else
+		{
+			ulValue  =  ulCmd & 0x0000ffffU;
+			ulValue |= (ulCmd & 0x0000ffffU) << 16U;
 		}
 		tWriteAddr.pul[ulOffset] = ulValue;
 		break;
