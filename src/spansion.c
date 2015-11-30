@@ -216,6 +216,93 @@ static FLASH_COMMAND_BLOCK_T s_atPPBExit[] =
 #define FLASH_ABSADDR(d,s,o)  (d->pucFlashBase + d->atSectors[s].ulOffset + o)
 
 
+/*-------------------------------------------------------------------------*/
+
+
+/*! Write a command to the FLASH
+*
+*   \param   ptFlashDev  Pointer to the FLASH control Block
+*   \param   ulSector    FLASH sector number
+*   \param   ulOffset    Offset address in the actual FLASH sector
+*   \param   uiCmd       Command to execute
+*/
+void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned int uiCmd)
+{
+	unsigned long ulValue;
+	VADR_T tWriteAddr;
+	tWriteAddr.puc = FLASH_ABSADDR(ptFlashDev, ulSector, 0);
+
+	switch(ptFlashDev->tBits)
+	{
+	case BUS_WIDTH_8Bit:
+		/* 8bits cannot be paired */
+		tWriteAddr.puc[ulOffset] = (unsigned char)uiCmd;
+		break;
+
+	case BUS_WIDTH_16Bit:
+		ulValue = uiCmd;
+		if( ptFlashDev->fPaired!=0 )
+		{
+			ulValue |= ulValue << 8U;
+		}
+		tWriteAddr.pus[ulOffset] = (unsigned short)ulValue;
+		break;
+
+	case BUS_WIDTH_32Bit:
+		ulValue = uiCmd;
+		if( ptFlashDev->fPaired!=0 )
+		{
+			ulValue |= ulValue << 16U;
+		}
+		tWriteAddr.pul[ulOffset] = ulValue;
+		break;
+	}
+
+	DEBUGMSG(ZONE_FUNCTION, ("-FlashWriteCommand()\n"));
+}
+
+
+
+/*! Waitfs for an erase procedure to finish
+*
+*   \param   ptFlashDev       Pointer to the FLASH control Block
+*   \param   ulSector         FLASH sector number
+*
+*   \return  eFLASH_NO_ERROR  on success
+*/
+static FLASH_ERRORS_E FlashWaitEraseDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
+{
+	BOOL fRunning = TRUE;
+	FLASH_ERRORS_E eRet = eFLASH_NO_ERROR;
+
+	DEBUGMSG(ZONE_FUNCTION, ("+FlashWaitEraseDone(): ptFlashDev=0x%08x, ulSector=%d\n", ptFlashDev, ulSector));
+
+	do
+	{
+		/* Check for DQ7 == 1 */
+		if(FlashIsset(ptFlashDev, ulSector, 0, DQ7, 0))
+		{
+			/* Erase success */
+			fRunning = FALSE;
+		}
+		else
+		{
+			/* Check for DQ5 == 1 and DQ7 == 0 */
+			if(FlashIsset(ptFlashDev, ulSector, 0, DQ5, DQ7))
+			{
+				eRet = eFLASH_DEVICE_FAILED;
+				fRunning = FALSE;
+			}
+		}
+	} while(fRunning);
+
+	DEBUGMSG(ZONE_FUNCTION, ("-FlashWaitEraseDone(): eRet=%d\n", eRet));
+
+	return eRet;
+}
+
+
+
 /*
 Todo: the version check for the primary vendor extension table and the
 protect scheme check should be vendor-specific:
@@ -770,49 +857,6 @@ FLASH_ERRORS_E FlashUnlock(const FLASH_DEVICE_T *ptFlashDev)
 }
 
 
-/*! Write a command to the FLASH
-*
-*   \param   ptFlashDev  Pointer to the FLASH control Block
-*   \param   ulSector    FLASH sector number
-*   \param   ulOffset    Offset address in the actual FLASH sector
-*   \param   uiCmd       Command to execute
-*/
-void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned int uiCmd)
-{
-	unsigned long ulValue;
-	VADR_T tWriteAddr;
-	tWriteAddr.puc = FLASH_ABSADDR(ptFlashDev, ulSector, 0);
-	
-	switch(ptFlashDev->tBits)
-	{
-	case BUS_WIDTH_8Bit:
-		/* 8bits cannot be paired */
-		tWriteAddr.puc[ulOffset] = (unsigned char)uiCmd;
-		break;
-
-	case BUS_WIDTH_16Bit:
-		ulValue = uiCmd;
-		if( ptFlashDev->fPaired!=0 )
-		{
-			ulValue |= ulValue << 8U;
-		}
-		tWriteAddr.pus[ulOffset] = (unsigned short)ulValue;
-		break;
-
-	case BUS_WIDTH_32Bit:
-		ulValue = uiCmd;
-		if( ptFlashDev->fPaired!=0 )
-		{
-			ulValue |= ulValue << 16U;
-		}
-		tWriteAddr.pul[ulOffset] = ulValue;
-		break;
-	}
-
-	DEBUGMSG(ZONE_FUNCTION, ("-FlashWriteCommand()\n"));
-}
-
-
 /*! Checks if a given flag (bCmd) is set on the FLASH device
 *
 *   \param   ptFlashDev  Pointer to the FLASH control Block
@@ -865,45 +909,6 @@ static int FlashIsset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, 
 	
 	DEBUGMSG(ZONE_FUNCTION, ("-FlashIsset(): iRet=%d\n", iRet));
 	return iRet;
-}
-
-
-/*! Waitfs for an erase procedure to finish
-*
-*   \param   ptFlashDev       Pointer to the FLASH control Block
-*   \param   ulSector         FLASH sector number
-*
-*   \return  eFLASH_NO_ERROR  on success
-*/
-static FLASH_ERRORS_E FlashWaitEraseDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
-{
-	BOOL fRunning = TRUE;
-	FLASH_ERRORS_E eRet = eFLASH_NO_ERROR;
-
-	DEBUGMSG(ZONE_FUNCTION, ("+FlashWaitEraseDone(): ptFlashDev=0x%08x, ulSector=%d\n", ptFlashDev, ulSector));
-
-	do
-	{
-		/* Check for DQ7 == 1 */
-		if(FlashIsset(ptFlashDev, ulSector, 0, DQ7, 0))
-		{
-			/* Erase success */
-			fRunning = FALSE;
-		}
-		else
-		{
-			/* Check for DQ5 == 1 and DQ7 == 0 */
-			if(FlashIsset(ptFlashDev, ulSector, 0, DQ5, DQ7))
-			{
-				eRet = eFLASH_DEVICE_FAILED;
-				fRunning = FALSE;
-			}
-		}
-	} while(fRunning);
-
-	DEBUGMSG(ZONE_FUNCTION, ("-FlashWaitEraseDone(): eRet=%d\n", eRet));
-
-	return eRet;
 }
 
 
