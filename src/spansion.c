@@ -49,8 +49,6 @@
 	#define DEBUGMSG(cond,printf_exp) ((void)0)
 #endif /* CFG_DEBUGMSG!=0 */
 
-#define UNUSED(x) (void) x;
-
 #define DQ0                                   0x01U
 #define DQ1                                   0x02U
 #define DQ2                                   0x04U
@@ -132,26 +130,18 @@
 
 
 
-#define READ_USHORT(ulAddress)   (*(volatile unsigned short*)ulAddress)
-#define READ_ULONG(ulAddress)    (*(volatile unsigned long*)ulAddress)
-
-#define READ_FLASH(ulAddress)    ((ptFlashDev->fPaired)? READ_ULONG(ulAddress) : READ_USHORT(ulAddress))
-
 #define ARRAYSIZE(a) (sizeof(a)/sizeof(a[0]))
 
 
-typedef enum 
+typedef enum FLASH_STATUS_ENUM
 {
- DEV_STATUS_UNKNOWN = 0,
- DEV_NOT_BUSY,
- DEV_BUSY,
- DEV_EXCEEDED_TIME_LIMITS,
- DEV_SUSPEND,
- DEV_WRITE_BUFFER_ABORT,
- DEV_STATUS_GET_PROBLEM,
- DEV_VERIFY_ERROR,
- DEV_BYTES_PER_OP_WRONG
-} DEVSTATUS;
+	FLASH_STATUS_Idle        = 0,
+	FLASH_STATUS_Busy        = 1,
+	FLASH_STATUS_WriteAbort  = 2,
+	FLASH_STATUS_TimeOut     = 3,
+	FLASH_STATUS_MultipleErrors = 4,    /* A combination of multiple devices shows more than one error. */
+} FLASH_STATUS_T;
+
 
 typedef struct FLASH_COMMAND_BLOCK_Ttag
 {
@@ -159,8 +149,7 @@ typedef struct FLASH_COMMAND_BLOCK_Ttag
   unsigned char bCmd;
 } FLASH_COMMAND_BLOCK_T;
 
-static FLASH_ERRORS_E FlashWaitWriteDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulOffsetData, BOOL fBufferWrite);
-static int            FlashIsset        (const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulSet, unsigned long ulClear);
+//static FLASH_ERRORS_E FlashWaitWriteDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulOffsetData, BOOL fBufferWrite);
 static void           FlashWriteCommandSequence(const FLASH_DEVICE_T *ptFlashDev, FLASH_COMMAND_BLOCK_T* ptCmd, unsigned long ulCount);
 static FLASH_ERRORS_E FlashNormalWrite(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector,      unsigned long ulOffset, const unsigned char* pbData, unsigned long ulWriteSize);
 
@@ -229,6 +218,33 @@ static volatile unsigned char *get_flash_address(const FLASH_DEVICE_T *ptFlashDe
 
 
 
+static unsigned long read_flash_data(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset)
+{
+	VADR_T tAddr;
+	unsigned long ulValue;
+
+
+	tAddr.puc = get_flash_address(ptFlashDev, ulSector, ulOffset);
+	switch( ptFlashDev->tBits )
+	{
+	case BUS_WIDTH_8Bit:
+		ulValue = (unsigned long)(*(tAddr.puc));
+		break;
+
+	case BUS_WIDTH_16Bit:
+		ulValue = (unsigned long)(*(tAddr.pus));
+		break;
+
+	case BUS_WIDTH_32Bit:
+		ulValue = *(tAddr.pul);
+		break;
+	}
+
+	return ulValue;
+}
+
+
+
 /*! Write a command to the FLASH
 *
 *   \param   ptFlashDev  Pointer to the FLASH control Block
@@ -285,44 +301,258 @@ static void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ul
 
 
 
-/*! Waitfs for an erase procedure to finish
+/*! Wait for all devices to leave the busy state and combine their status.
 *
 *   \param   ptFlashDev       Pointer to the FLASH control Block
 *   \param   ulSector         FLASH sector number
 *
 *   \return  eFLASH_NO_ERROR  on success
 */
-static FLASH_ERRORS_E FlashWaitEraseDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
+static FLASH_STATUS_T get_combined_status(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, int iAccessIsWriteBufferProgram)
 {
-	BOOL fRunning = TRUE;
-	FLASH_ERRORS_E eRet = eFLASH_NO_ERROR;
+	unsigned long aulCombinedStatus[3];
+	unsigned long aulSingleStatus[3];
+	unsigned int uiDevices; /* This is the number of devices to check. For a paired device it is 2, for a single device it is 1. */
+	unsigned long aulMask[4];
+	unsigned int auiSrt[4];
+	FLASH_STATUS_T atStatus[4];
+	unsigned int uiDeviceCnt;
+	unsigned int uiCnt;
+	unsigned long ulValue;
+	unsigned long ulToggle0;
+	unsigned long ulToggle1;
+	unsigned int uiAllDevicesReady;
+	FLASH_STATUS_T tStatus;
+	FLASH_STATUS_T tCombinedStatus;
 
-	DEBUGMSG(ZONE_FUNCTION, ("+FlashWaitEraseDone(): ptFlashDev=0x%08x, ulSector=%d\n", ptFlashDev, ulSector));
 
-	do
+	DEBUGMSG(ZONE_FUNCTION, ("+get_combined_status(): ptFlashDev=0x%08x, ulSector=%d, iAccessIsWriteBufferProgram=%d\n", ptFlashDev, ulSector, iAccessIsWriteBufferProgram));
+
+	/* Set all devices to busy. */
+	memset(aulMask, 0, sizeof(aulMask));
+	memset(auiSrt, 0, sizeof(auiSrt));
+	for(uiCnt=0; uiCnt<(sizeof(atStatus)/sizeof(atStatus[0])); ++uiCnt)
 	{
-		/* Check for DQ7 == 1 */
-		if(FlashIsset(ptFlashDev, ulSector, 0, DQ7, 0))
+		atStatus[uiCnt] = FLASH_STATUS_Busy;
+	}
+
+	/* How many devices must be checked?
+	 * FIXME: currently this is limited to 2, so a combination of 4*8bit is not possible.
+	 */
+	uiDevices = 0;
+	switch(ptFlashDev->tBits)
+	{
+	case BUS_WIDTH_8Bit:
+		/* 8 bit can not be paired. */
+		uiDevices = 1;
+		aulMask[0] = 0x000000ffU;
+		auiSrt[0] = 0U;
+		break;
+
+	case BUS_WIDTH_16Bit:
+		if( ptFlashDev->fPaired==0 )
 		{
-			/* Erase success */
-			fRunning = FALSE;
+			/* This is a single 16bit device. */
+			uiDevices = 1;
+			aulMask[0] = 0x0000ffffU;
+			auiSrt[0] = 0U;
 		}
 		else
 		{
-			/* Check for DQ5 == 1 and DQ7 == 0 */
-			if(FlashIsset(ptFlashDev, ulSector, 0, DQ5, DQ7))
+			/* This is a combination of 2*8bit devices. */
+			uiDevices = 2;
+			aulMask[0] = 0x000000ffU;
+			auiSrt[0] = 0U;
+			aulMask[1] = 0x0000ff00U;
+			auiSrt[1] = 8U;
+		}
+		break;
+
+	case BUS_WIDTH_32Bit:
+		if( ptFlashDev->fPaired==0 )
+		{
+			/* This is a single 32bit device. */
+			uiDevices = 1;
+			aulMask[0] = 0xffffffffU;
+			auiSrt[0] = 0U;
+		}
+		else
+		{
+			/* This is a combination of 2*16bit devices. */
+			uiDevices = 2;
+			aulMask[0] = 0x0000ffffU;
+			auiSrt[0] = 0U;
+			aulMask[1] = 0xffff0000U;
+			auiSrt[1] = 16U;
+		}
+		break;
+	}
+
+	do
+	{
+		/* Read the combined status 3 times. */
+		for(uiCnt=0; uiCnt<3; uiCnt++)
+		{
+			aulCombinedStatus[uiCnt] = read_flash_data(ptFlashDev, ulSector, ulOffset);
+		}
+
+		/* Check if all devices are ready. */
+		uiAllDevicesReady = 1;
+
+		/* Loop over all devices. */
+		for(uiDeviceCnt=0; uiDeviceCnt<uiDevices; uiDeviceCnt++)
+		{
+			/* Only check the device if it is not ready yet. */
+			if( atStatus[uiDeviceCnt]==FLASH_STATUS_Busy )
 			{
-				eRet = eFLASH_DEVICE_FAILED;
-				fRunning = FALSE;
+				/* At least this device is not ready yet. */
+				uiAllDevicesReady = 0;
+
+				/* Extract the 3 status values of the current device. */
+				for(uiCnt=0; uiCnt<3; uiCnt++)
+				{
+					ulValue   = aulCombinedStatus[uiCnt];
+					ulValue  &= aulMask[uiDeviceCnt];
+					ulValue >>= auiSrt[uiDeviceCnt];
+					aulSingleStatus[uiCnt] = ulValue;
+				}
+
+				/* Does DQ6 toggle between the reads 0 and 1? */
+				ulToggle0  = aulSingleStatus[0];
+				ulToggle0 ^= aulSingleStatus[1];
+				ulToggle0 &= DQ6;
+
+				/* Does DQ6 toggle between the reads 1 and 2? */
+				ulToggle1  = aulSingleStatus[1];
+				ulToggle1 ^= aulSingleStatus[2];
+				ulToggle1 &= DQ6;
+
+				if( ulToggle0!=0 && ulToggle1!=0 )
+				{
+					/* Is this a "write buffer program" operation and is DQ1 set in the first read? */
+					ulValue  = aulSingleStatus[0];
+					ulValue &= DQ5;
+					if( iAccessIsWriteBufferProgram!=0 && ulValue!=0 )
+					{
+						atStatus[uiDeviceCnt] = FLASH_STATUS_WriteAbort;
+					}
+					else
+					{
+						/* Is DQ5 set in the first read? */
+						ulValue  = aulSingleStatus[0];
+						ulValue &= DQ5;
+						if( ulValue!=0 )
+						{
+							atStatus[uiDeviceCnt] = FLASH_STATUS_TimeOut;
+						}
+					}
+				}
+				else if( aulSingleStatus[0]==aulSingleStatus[1] && aulSingleStatus[0]==aulSingleStatus[2] )
+				{
+					/* The flash finished. */
+					atStatus[uiDeviceCnt] = FLASH_STATUS_Idle;
+				}
 			}
 		}
-	} while(fRunning);
+	} while( uiAllDevicesReady==0 );
 
-	DEBUGMSG(ZONE_FUNCTION, ("-FlashWaitEraseDone(): eRet=%d\n", eRet));
+	/* Loop over all status informations. */
+	tCombinedStatus = FLASH_STATUS_Idle;
+	for(uiDeviceCnt=0; uiDeviceCnt<uiDevices; uiDeviceCnt++)
+	{
+		tStatus = atStatus[uiDeviceCnt];
+		if( tStatus!=FLASH_STATUS_Idle )
+		{
+			if( tCombinedStatus==FLASH_STATUS_Idle )
+			{
+				tCombinedStatus = tStatus;
+			}
+			else if( tCombinedStatus!=tStatus )
+			{
+				tCombinedStatus = FLASH_STATUS_MultipleErrors;
+			}
+		}
+	}
+
+	DEBUGMSG(ZONE_FUNCTION, ("-get_combined_status(): tCombinedStatus=%d\n", tCombinedStatus));
+
+	return tCombinedStatus;
+}
+
+
+
+static FLASH_ERRORS_E FlashWaitForEraseDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
+{
+	FLASH_STATUS_T tStatus;
+	FLASH_ERRORS_E tResult;
+
+
+	tStatus = get_combined_status(ptFlashDev, ulSector, 0, 0);
+	if( tStatus==FLASH_STATUS_Idle )
+	{
+		tResult = eFLASH_NO_ERROR;
+	}
+	else
+	{
+		tResult = eFLASH_DEVICE_FAILED;
+	}
+
+	return tResult;
+}
+
+
+
+/*! Waits for a programming procedure to finish
+*
+*   \param   ptFlashDev       Pointer to the FLASH control Block
+*   \param   ulSector         FLASH sector number
+*   \param   ulOffset         Last offset written
+*   \param   ulOffsetData     Data written to last offset
+*   \param   fBufferWrite     TRUE if buffered write is used
+*
+*   \return  eFLASH_NO_ERROR  on success
+*/
+static FLASH_ERRORS_E FlashWaitForWriteDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulOffsetData, BOOL fBufferWrite)
+{
+	FLASH_STATUS_T tStatus;
+	unsigned long   ulActData;
+	FLASH_ERRORS_E  eRet;
+
+
+	DEBUGMSG(ZONE_FUNCTION, ("+FlashWaitForWriteDone(): ptFlashDev=0x%08x, ulSector=%d, ulOffset=0x%08x, ulOffsetData=0x%08x, fBufferWrite=%d\n", ptFlashDev, ulSector, ulOffset, ulOffsetData, fBufferWrite));
+
+	/* delay 4us */
+	delay_us(4);
+
+	tStatus = get_combined_status(ptFlashDev, ulSector, ulOffset, fBufferWrite);
+	if( tStatus==FLASH_STATUS_Idle )
+	{
+		/* read the actual data */
+		ulActData = read_flash_data(ptFlashDev, ulSector, ulOffset);
+
+		/* Check that polling location verifies correctly */
+		if( ulOffsetData==ulActData )
+		{
+			/* everything is OK */
+			eRet = eFLASH_NO_ERROR;
+		}
+		else
+		{
+			eRet = eFLASH_DEVICE_FAILED;
+		}
+	}
+	else
+	{
+		eRet = eFLASH_DEVICE_FAILED;
+	}
+
+	DEBUGMSG(ZONE_FUNCTION, ("-FlashWaitForWriteDone(): eRet=%d\n", eRet));
 
 	return eRet;
 }
 
+
+/*-------------------------------------------------------------------------*/
 
 
 /*
@@ -409,9 +639,8 @@ int SpansionIdentifyFlash(FLASH_DEVICE_T *ptFlashDev)
 *
 *  \return  eFLASH_NO_ERROR   on success
 */
-static FLASH_ERRORS_E FlashReset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
+static FLASH_ERRORS_E FlashReset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector __attribute__((unused)))
 {
-	UNUSED(ulSector)
 	FLASH_ERRORS_E tResult;
 
 
@@ -439,7 +668,7 @@ static FLASH_ERRORS_E FlashErase(const FLASH_DEVICE_T *ptFlashDev, unsigned long
 	DEBUGMSG(ZONE_FUNCTION, ("+FlashErase(): ptFlashDev=0x%08x, ulSector=%d\n", ptFlashDev, ulSector));
 	FlashWriteCommandSequence(ptFlashDev, s_atErasePrefix, ARRAYSIZE(s_atErasePrefix));
 	FlashWriteCommand(ptFlashDev, ulSector, 0, SPANSION_CMD_SECTORERASE_CYCLE_5);
-	tResult = FlashWaitEraseDone(ptFlashDev, ulSector);
+	tResult = FlashWaitForEraseDone(ptFlashDev, ulSector);
 
 	FlashReset(ptFlashDev, ulSector);
 
@@ -462,7 +691,7 @@ static FLASH_ERRORS_E FlashEraseAll(const FLASH_DEVICE_T *ptFlashDev)
 	FlashWriteCommandSequence(ptFlashDev, s_atErasePrefix, ARRAYSIZE(s_atErasePrefix));
 	FlashWriteCommand(ptFlashDev, 0, SPANSION_ADR_CHIPERASE_CYCLE5, SPANSION_CMD_CHIPERASE_CYCLE5);
 
-	tResult = FlashWaitEraseDone(ptFlashDev, 0);
+	tResult = FlashWaitForEraseDone(ptFlashDev, 0);
 
 	FlashReset(ptFlashDev, 0);
 
@@ -531,7 +760,7 @@ static FLASH_ERRORS_E FlashNormalWrite(const FLASH_DEVICE_T *ptFlashDev, unsigne
 			break;
 		}
 		
-		eRet = FlashWaitWriteDone(ptFlashDev, ulSector, ulLastOffset, ulLastData, FALSE);
+		eRet = FlashWaitForWriteDone(ptFlashDev, ulSector, ulLastOffset, ulLastData, FALSE);
 		if(eRet!=eFLASH_NO_ERROR)
 		{
 			FlashWriteCommand(ptFlashDev, ulSector, 0, SPANSION_CMD_RESET);
@@ -664,7 +893,7 @@ static FLASH_ERRORS_E FlashBufferedWrite(const FLASH_DEVICE_T *ptFlashDev, const
 		FlashWriteCommand(ptFlashDev, ulCurrentSector, 0, SPANSION_CMD_BUFFERPROG);
 
 		/* Wait for Flashing complete */
-		tResult = FlashWaitWriteDone(ptFlashDev, ulCurrentSector, ulLastOffset, ulLastData, TRUE);
+		tResult = FlashWaitForWriteDone(ptFlashDev, ulCurrentSector, ulLastOffset, ulLastData, TRUE);
 		
 		if( tResult!=eFLASH_NO_ERROR )
 		{
@@ -792,10 +1021,8 @@ static FLASH_ERRORS_E FlashProgram(const FLASH_DEVICE_T *ptFlashDev, unsigned lo
 }
 
 
-FLASH_ERRORS_E FlashLock(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector)
+FLASH_ERRORS_E FlashLock(const FLASH_DEVICE_T *ptFlashDev __attribute__((unused)), unsigned long ulSector __attribute__((unused)))
 {
-	UNUSED(ptFlashDev)
-	UNUSED(ulSector)
 	FLASH_ERRORS_E tResult;
 	DEBUGMSG(ZONE_FUNCTION, ("+FlashLock(): ptFlashDev=0x%08x, ulSector=%d\n", ptFlashDev, ulSector));
 
@@ -807,9 +1034,8 @@ FLASH_ERRORS_E FlashLock(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSecto
 	return tResult;
 }
 
-FLASH_ERRORS_E FlashUnlockDummy(const FLASH_DEVICE_T *ptFlashDev)
+FLASH_ERRORS_E FlashUnlockDummy(const FLASH_DEVICE_T *ptFlashDev __attribute__((unused)))
 {
-	UNUSED(ptFlashDev)
 	uprintf(".FlashUnlockDummy(): Unlock not supported\n");
 	return eFLASH_NO_ERROR;
 }
@@ -858,8 +1084,8 @@ FLASH_ERRORS_E FlashUnlock(const FLASH_DEVICE_T *ptFlashDev)
 		FlashWriteCommand(ptFlashDev, SPANSION_ADR_PPB_CLEARALL_CYCLE0, 0, SPANSION_CMD_PPB_CLEARALL_CYCLE0);
 		FlashWriteCommand(ptFlashDev, SPANSION_ADR_PPB_CLEARALL_CYCLE1, 0, SPANSION_CMD_PPB_CLEARALL_CYCLE1);
 
-		/* wait for erase done */
-		eRet = FlashWaitEraseDone(ptFlashDev, 0);
+		/* wait for unlock done */
+		eRet = FlashWaitForEraseDone(ptFlashDev, 0);
 	}
 	else
 	{
@@ -879,61 +1105,7 @@ FLASH_ERRORS_E FlashUnlock(const FLASH_DEVICE_T *ptFlashDev)
 }
 
 
-/*! Checks if a given flag (bCmd) is set on the FLASH device
-*
-*   \param   ptFlashDev  Pointer to the FLASH control Block
-*   \param   ulSector    FLASH sector number
-*   \param   ulOffset    Offset address in the actual FLASH sector
-*   \param   ulSet
-*   \param   ulClear
-*
-*   \return  TRUE        on success
-*/
-static int FlashIsset(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulSet, unsigned long ulClear)
-{
-	int iRet = FALSE;
-	unsigned long ulValue = 0;
-	VADR_T tReadAddr;
-
-	tReadAddr.puc = get_flash_address(ptFlashDev, ulSector, ulOffset);
-	
-	DEBUGMSG(ZONE_FUNCTION, ("+FlashIsset(): ptFlashDev=0x%08x, ulSector=%d, ulOffset=0x%08x, ulSet=0x%08x, ulClear=0x%08x\n", ptFlashDev, ulSector, ulOffset, ulSet, ulClear));
-
-	switch(ptFlashDev->tBits)
-	{
-	case BUS_WIDTH_8Bit:
-		ulValue = (unsigned long) *tReadAddr.puc;
-		break;
-
-	case BUS_WIDTH_16Bit:
-		ulValue = (unsigned long) *tReadAddr.pus; 
-		if(ptFlashDev->fPaired)
-		{
-			ulSet   |= (ulSet << 8);
-			ulClear |= (ulClear << 8);
-		}
-		break;
-
-	case BUS_WIDTH_32Bit:
-		ulValue = *tReadAddr.pul; 
-		if(ptFlashDev->fPaired)
-		{
-			ulSet   |= ulSet   << 16;
-			ulClear |= ulClear << 16;
-		}
-		break;
-	}
-
-	if( ((ulValue & ulSet) == ulSet) && ((ulValue & ulClear) == 0) )
-	{
-		iRet = TRUE;
-	}
-	
-	DEBUGMSG(ZONE_FUNCTION, ("-FlashIsset(): iRet=%d\n", iRet));
-	return iRet;
-}
-
-
+#if 0
 /*! Checks the state of the flash
 *
 *   \param   ptFlashDev    Pointer to the FLASH control Block
@@ -1042,82 +1214,8 @@ static DEVSTATUS FlashGetStatus(const FLASH_DEVICE_T *ptFlashDev, unsigned long 
 
 	return tDevStatus;
 }
+#endif
 
-
-/*! Waits for a programming procedure to finish
-*
-*   \param   ptFlashDev       Pointer to the FLASH control Block
-*   \param   ulSector         FLASH sector number
-*   \param   ulOffset         Last offset written
-*   \param   ulOffsetData     Data written to last offset
-*   \param   fBufferWrite     TRUE if buffered write is used
-*
-*   \return  eFLASH_NO_ERROR  on success
-*/
-static FLASH_ERRORS_E FlashWaitWriteDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulOffsetData, BOOL fBufferWrite)
-{
-	DEVSTATUS       dev_status;
-	unsigned int    polling_counter;
-	unsigned long   ulActData;
-	unsigned long   ulBlockAddress;
-	FLASH_ERRORS_E  eRet;
-
-
-	DEBUGMSG(ZONE_FUNCTION, ("+FlashWaitWriteDone(): ptFlashDev=0x%08x, ulSector=%d, ulOffset=0x%08x, ulOffsetData=0x%08x, fBufferWrite=%d\n", ptFlashDev, ulSector, ulOffset, ulOffsetData, fBufferWrite));
-
-	/* delay 4us */
-	delay_us(4);
-
-	/* Perform Polling Operation */
-	polling_counter = 0xFFFFFFFF;
-	ulBlockAddress  = (unsigned long)get_flash_address(ptFlashDev, ulSector, ulOffset);
-	
-	do
-	{
-		polling_counter--;
-		dev_status = FlashGetStatus(ptFlashDev, ulBlockAddress, fBufferWrite);
-	} while( (dev_status==DEV_BUSY) && polling_counter!=0 );
-
-	/* read the actual data */
-	ulActData = READ_FLASH(ulBlockAddress);
-
-	/*
-	 * if device returns status other than "not busy" then we
-	 *  have a polling error state. 
-	 *  NOTE: assumes the "while dev_busy" test above does not change!
-	 *
-	 * if device was "not busy" then verify polling location.
-	 */
-	if( dev_status!=DEV_NOT_BUSY )
-	{
-		if( dev_status==DEV_WRITE_BUFFER_ABORT )
-		{
-			eRet = eFLASH_ABORTED;
-		}
-		else 
-		{
-			eRet = eFLASH_DEVICE_FAILED;
-		}
-		/* indicate to caller that there was an error */
-	}
-	else 
-	{
-		/* Check that polling location verifies correctly */
-		if( ulOffsetData==ulActData )
-		{
-			/* everything is OK */
-			eRet = eFLASH_NO_ERROR;
-		}
-		else 
-		{
-			eRet = eFLASH_DEVICE_FAILED;
-		}
-	}
-
-	DEBUGMSG(ZONE_FUNCTION, ("-FlashWaitWriteDone(): eRet=%d\n", eRet));
-
-	return eRet;
-}
 
 
 /*! Writes a sequence of flash commands
