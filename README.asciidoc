@@ -7,6 +7,8 @@ TravisCI: image:https://travis-ci.org/muhkuh-sys/org.muhkuh.tools-flasher.svg?br
 
 AppVeyor: image:https://ci.appveyor.com/api/projects/status/github/muhkuh-sys/org.muhkuh.tools-flasher?svg=true["AppVeyor build status", link="https://ci.appveyor.com/project/docbacardi/org-muhkuh-tools-flasher"]
 
+circleci: image:https://circleci.com/gh/muhkuh-sys/org.muhkuh.tools-flasher.svg?style=shield["circleci build status", link="https://circleci.com/gh/muhkuh-sys/org.muhkuh.tools-flasher"]
+
 
 == About
 
@@ -29,8 +31,15 @@ The flasher source code is hosted on GitHub: https://github.com/muhkuh-sys/org.m
 Issues are collected here: https://github.com/muhkuh-sys/org.muhkuh.tools-flasher/issues
 
 Each push to the GitHub repository triggers a build on TravisCI using a Ubuntu 12.04 64bit VM: https://travis-ci.org/muhkuh-sys/org.muhkuh.tools-flasher . Another build is triggered on AppVeyor running on 32bit and 64bit Windows: https://ci.appveyor.com/project/docbacardi/org-muhkuh-tools-flasher .
+Each push to the GitHub repository triggers a build on these services:
+
+ * TravisCI using a Ubuntu 12.04 64bit VM: https://travis-ci.org/muhkuh-sys/org.muhkuh.tools-flasher
+ * AppVeyor running on 32bit and 64bit Windows: https://ci.appveyor.com/project/docbacardi/org-muhkuh-tools-flasher
+ * circleci running on Ubuntu 12.04 64bit VM: https://circleci.com/gh/muhkuh-sys/org.muhkuh.tools-flasher
 
 The build results from TravisCI are copied after auccess to Bintray: https://bintray.com/muhkuh/Muhkuh/flasher/view
 Please note that this is done for each build, and not only tagged ones.
+
+Build results for every commit are also available on circleci: //circleci.com/gh/muhkuh-sys/org.muhkuh.tools-flasher
 
 Build results from a tag are released on GitHub: https://github.com/muhkuh-sys/org.muhkuh.tools-flasher/releases
