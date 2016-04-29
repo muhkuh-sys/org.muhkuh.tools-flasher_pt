@@ -70,7 +70,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_detect(tFlasherInputParameter *ptAppParam
 	default:
 		/*  unknown boot device */
 		uprintf("unknown\n");
-		uprintf("! illegal device id specified\n");
+		uprintf("! illegal device id specified: %d\n", tSourceTyp);
 		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 		break;
 	}
