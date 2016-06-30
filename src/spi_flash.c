@@ -563,10 +563,13 @@ static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDev)
 {
 	int iResult;
+	unsigned int uiUnit;
 
+
+	uiUnit = ptSpiCfg->uiUnit;
 
 #if ASIC_TYP==500 || ASIC_TYP==100
-	switch( ptSpiCfg->uiUnit )
+	switch( uiUnit )
 	{
 	case 0:
 		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi);
@@ -578,7 +581,7 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 		break;
 	}
 #elif ASIC_TYP==50
-	switch( ptSpiCfg->uiUnit )
+	switch( uiUnit )
 	{
 	case 0:
 		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi0);
@@ -595,11 +598,10 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 		break;
 	}
 #elif ASIC_TYP==10 || ASIC_TYP==56
-	switch( ptSpiCfg->uiUnit )
+	switch( uiUnit )
 	{
 	case 0:
-		ptSpiDev->pvUnit = (HOSTADEF(SQI)*)HOSTADDR(sqi);
-		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg);
+		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg, uiUnit);
 		break;
 
 	case 1:
@@ -612,16 +614,11 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 		break;
 	}
 #elif ASIC_TYP==4000
-	switch( ptSpiCfg->uiUnit )
+	switch( uiUnit )
 	{
 	case 0:
-		ptSpiDev->pvUnit = (HOSTADEF(SQI)*)HOSTADDR(SQI0);
-		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg);
-		break;
-
 	case 1:
-		ptSpiDev->pvUnit = (HOSTADEF(SQI)*)HOSTADDR(SQI1);
-		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg);
+		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg, uiUnit);
 		break;
 
 	case 2:

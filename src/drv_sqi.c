@@ -100,6 +100,7 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 #elif ASIC_TYP==4000
 static const MMIO_CFG_T aatMmioValues[1][4] =
 {
+	/* Both SQI ports on the netX4000 are not routed through the MMIO matrix. */
 	/*
 	 * Chip select 0
 	 */
@@ -583,9 +584,9 @@ static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 }
 
 
-int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
+int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiSqiUnit)
 {
-	HOSTADEF(SQI) * ptSqiArea;
+	HOSTADEF(SQI) *ptSqiArea;
 
 #if ASIC_TYP==56
 	HOSTDEF(ptAsicCtrlArea);
@@ -599,150 +600,178 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	unsigned int uiChipSelect;
 
 
-	ptSqiArea = ptCfg->pvUnit;
-	iResult = 0;
-
-	/* Get the chip select value. */
-	uiChipSelect = ptSpiCfg->uiChipSelect;
-
-	ptCfg->ulSpeed = ptSpiCfg->ulInitialSpeedKhz;            /* initial device speed in kHz */
-	ptCfg->ulMaximumSpeedKhz = ptSpiCfg->ulMaximumSpeedKhz;  /* The maximum allowed speed on the interface. */
-	ptCfg->uiIdleCfg = ptSpiCfg->uiIdleCfg;                  /* the idle configuration */
-	ptCfg->tMode = ptSpiCfg->uiMode;                         /* bus mode */
-	ptCfg->uiChipSelect = 1U<<uiChipSelect;                  /* chip select */
-
-	/* set the function pointers */
-	ptCfg->pfnSelect = qsi_slave_select;
-	ptCfg->pfnSendIdle = qsi_send_idle;
-	ptCfg->pfnSendData = qsi_send_data;
-	ptCfg->pfnReceiveData = qsi_receive_data;
-	ptCfg->pfnExchangeData = qsi_exchange_data;
-	ptCfg->pfnSetNewSpeed = qsi_set_new_speed;
-	ptCfg->pfnExchangeByte = qsi_spi_exchange_byte;
-	ptCfg->pfnGetDeviceSpeedRepresentation = qsi_get_device_speed_representation;
-	ptCfg->pfnDeactivate = qsi_deactivate;
-
-	/* copy the MMIO pins */
-	memcpy(ptCfg->aucMmio, ptSpiCfg->aucMmio, sizeof(ptSpiCfg->aucMmio));
-
-	/* Set up the port control unit. */
-	/*
-	pusPortControlIndex = ausPortcontrol_Index_SQI0_CS0;
-	portcontrol_apply(pusPortControlIndex, ptSpiCfg->ausPortControl, sizeof(ptSpiCfg->ausPortControl)/sizeof(ptSpiCfg->ausPortControl[0]));
-	*/
-
-	/* Do not use IRQs in flasher. */
-	ptSqiArea->ulSqi_irq_mask = 0;
-	/* clear all pending IRQs */
-	ulValue  = HOSTMSK(sqi_irq_clear_RORIC);
-	ulValue |= HOSTMSK(sqi_irq_clear_RTIC);
-	ulValue |= HOSTMSK(sqi_irq_clear_RXIC);
-	ulValue |= HOSTMSK(sqi_irq_clear_TXIC);
-	ulValue |= HOSTMSK(sqi_irq_clear_rxneic);
-	ulValue |= HOSTMSK(sqi_irq_clear_rxfic);
-	ulValue |= HOSTMSK(sqi_irq_clear_txeic);
-	ulValue |= HOSTMSK(sqi_irq_clear_trans_end);
-	ptSqiArea->ulSqi_irq_clear = ulValue;
-
+	ptSqiArea = NULL;
 #if ASIC_TYP==10 || ASIC_TYP==56
-	/* do not route the IRQs to a CPU */
-	ptSqiArea->ulSqi_irq_cpu_sel = 0;
+	if( uiSqiUnit==0 )
+	{
+		ptSqiArea = (HOSTADEF(SQI)*)HOSTADDR(sqi);
+	}
+#elif ASIC_TYP==4000
+	if( uiSqiUnit==0 )
+	{
+		ptSqiArea = (HOSTADEF(SQI)*)HOSTADDR(SQI0);
+		pusPortControlIndex = ausPortcontrol_Index_SQI0_CS0;
+	}
+	else if( uiSqiUnit==1 )
+	{
+		ptSqiArea = (HOSTADEF(SQI)*)HOSTADDR(SQI1);
+		pusPortControlIndex = ausPortcontrol_Index_SQI1_CS0;
+	}
 #endif
 
-	/* do not use DMAs */
-	ptSqiArea->ulSqi_dmacr = 0;
-
-	/* do not use XIP */
-	ptSqiArea->ulSqi_sqirom_cfg = 0;
-
-	/* set 8 bits */
-	ulValue  = 7 << HOSTSRT(sqi_cr0_datasize);
-	/* set speed and filter */
-	ulValue |= qsi_get_device_speed_representation(ptCfg, ptCfg->ulSpeed);
-	/* start in SPI mode: use only IO0 and IO1 for transfer */
-	ulValue |= 0 << HOSTSRT(sqi_cr0_sio_cfg);
-	/* set the clock polarity  */
-	if( (ptCfg->tMode==SPI_MODE2) || (ptCfg->tMode==SPI_MODE3) )
+	if( ptSqiArea==NULL )
 	{
-		ulValue |= HOSTMSK(sqi_cr0_sck_pol);
-	}
-	/* set the clock phase     */
-	if( (ptCfg->tMode==SPI_MODE1) || (ptCfg->tMode==SPI_MODE3) )
-	{
-		ulValue |= HOSTMSK(sqi_cr0_sck_phase);
-	}
-	ptSqiArea->aulSqi_cr[0] = ulValue;
-
-
-	/* manual chip select */
-	ulValue  = HOSTMSK(sqi_cr1_fss_static);
-	/* manual transfer start */
-	ulValue |= HOSTMSK(sqi_cr1_spi_trans_ctrl);
-	/* enable the interface */
-	ulValue |= HOSTMSK(sqi_cr1_sqi_en);
-	/* clear both FIFOs */
-	ulValue |= HOSTMSK(sqi_cr1_rx_fifo_clr)|HOSTMSK(sqi_cr1_tx_fifo_clr);
-	ptSqiArea->aulSqi_cr[1] = ulValue;
-
-
-	uiIdleCfg = ptCfg->uiIdleCfg;
-
-	/* set transfer control base */
-	ulValue  = HOSTMSK(sqi_tcr_ms_bit_first);
-	if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO1_OE)!=0 )
-	{
-		ulValue |= HOSTMSK(sqi_tcr_tx_oe);
-	}
-	if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO1_OUT)!=0 )
-	{
-		ulValue |= HOSTMSK(sqi_tcr_tx_out);
-	}
-	ptCfg->ulTrcBase = ulValue;
-	ptSqiArea->ulSqi_tcr = ulValue;
-
-	ulValue = 0;
-	if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO2_OUT)!=0 )
-	{
-		ulValue |= HOSTMSK(sqi_pio_out_sio2);
-	}
-	if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO3_OUT)!=0 )
-	{
-		ulValue |= HOSTMSK(sqi_pio_out_sio3);
-	}
-	ptSqiArea->ulSqi_pio_out = ulValue;
-
-	ulValue = 0;
-	if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO2_OE)!=0 )
-	{
-		ulValue |= HOSTMSK(sqi_pio_oe_sio2);
-	}
-	if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO3_OE)!=0 )
-	{
-		ulValue |= HOSTMSK(sqi_pio_oe_sio3);
-	}
-	ptSqiArea->ulSqi_pio_oe = ulValue;
-
-	/* set the idle char from the TX configuration */
-	if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO1_OUT)!=0 )
-	{
-		ucIdleChar = 0xffU;
+		/* Error: the unit is invalid! */
+		iResult = -1;
 	}
 	else
 	{
-		ucIdleChar = 0x00U;
-	}
-	ptCfg->ucIdleChar = ucIdleChar;
+		iResult = 0;
 
-	/* activate the SPI pins */
-	mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[uiChipSelect]);
+		ptCfg->pvUnit = ptSqiArea;
+
+		/* Get the chip select value. */
+		uiChipSelect = ptSpiCfg->uiChipSelect;
+
+		ptCfg->ulSpeed = ptSpiCfg->ulInitialSpeedKhz;            /* initial device speed in kHz */
+		ptCfg->ulMaximumSpeedKhz = ptSpiCfg->ulMaximumSpeedKhz;  /* The maximum allowed speed on the interface. */
+		ptCfg->uiIdleCfg = ptSpiCfg->uiIdleCfg;                  /* the idle configuration */
+		ptCfg->tMode = ptSpiCfg->uiMode;                         /* bus mode */
+		ptCfg->uiChipSelect = 1U<<uiChipSelect;                  /* chip select */
+
+		/* set the function pointers */
+		ptCfg->pfnSelect = qsi_slave_select;
+		ptCfg->pfnSendIdle = qsi_send_idle;
+		ptCfg->pfnSendData = qsi_send_data;
+		ptCfg->pfnReceiveData = qsi_receive_data;
+		ptCfg->pfnExchangeData = qsi_exchange_data;
+		ptCfg->pfnSetNewSpeed = qsi_set_new_speed;
+		ptCfg->pfnExchangeByte = qsi_spi_exchange_byte;
+		ptCfg->pfnGetDeviceSpeedRepresentation = qsi_get_device_speed_representation;
+		ptCfg->pfnDeactivate = qsi_deactivate;
+
+		/* copy the MMIO pins */
+		memcpy(ptCfg->aucMmio, ptSpiCfg->aucMmio, sizeof(ptSpiCfg->aucMmio));
+
+		/* Set up the port control unit. */
+#if 0
+		pusPortControlIndex = ausPortcontrol_Index_SQI0_CS0;
+		portcontrol_apply(pusPortControlIndex, ptSpiCfg->ausPortControl, sizeof(ptSpiCfg->ausPortControl)/sizeof(ptSpiCfg->ausPortControl[0]));
+#endif
+
+		/* Do not use IRQs in flasher. */
+		ptSqiArea->ulSqi_irq_mask = 0;
+		/* clear all pending IRQs */
+		ulValue  = HOSTMSK(sqi_irq_clear_RORIC);
+		ulValue |= HOSTMSK(sqi_irq_clear_RTIC);
+		ulValue |= HOSTMSK(sqi_irq_clear_RXIC);
+		ulValue |= HOSTMSK(sqi_irq_clear_TXIC);
+		ulValue |= HOSTMSK(sqi_irq_clear_rxneic);
+		ulValue |= HOSTMSK(sqi_irq_clear_rxfic);
+		ulValue |= HOSTMSK(sqi_irq_clear_txeic);
+		ulValue |= HOSTMSK(sqi_irq_clear_trans_end);
+		ptSqiArea->ulSqi_irq_clear = ulValue;
+
+#if ASIC_TYP==10 || ASIC_TYP==56
+		/* Do not route the IRQs to a CPU. */
+		ptSqiArea->ulSqi_irq_cpu_sel = 0;
+#endif
+
+		/* Do not use DMAs. */
+		ptSqiArea->ulSqi_dmacr = 0;
+
+		/* Do not use XIP. */
+		ptSqiArea->ulSqi_sqirom_cfg = 0;
+
+		/* Set 8 bits. */
+		ulValue  = 7 << HOSTSRT(sqi_cr0_datasize);
+		/* Set speed and filter. */
+		ulValue |= qsi_get_device_speed_representation(ptCfg, ptCfg->ulSpeed);
+		/* Start in SPI mode: use only IO0 and IO1 for transfer. */
+		ulValue |= 0 << HOSTSRT(sqi_cr0_sio_cfg);
+		/* Set the clock polarity. */
+		if( (ptCfg->tMode==SPI_MODE2) || (ptCfg->tMode==SPI_MODE3) )
+		{
+			ulValue |= HOSTMSK(sqi_cr0_sck_pol);
+		}
+		/* Set the clock phase. */
+		if( (ptCfg->tMode==SPI_MODE1) || (ptCfg->tMode==SPI_MODE3) )
+		{
+			ulValue |= HOSTMSK(sqi_cr0_sck_phase);
+		}
+		ptSqiArea->aulSqi_cr[0] = ulValue;
+
+
+		/* manual chip select */
+		ulValue  = HOSTMSK(sqi_cr1_fss_static);
+		/* manual transfer start */
+		ulValue |= HOSTMSK(sqi_cr1_spi_trans_ctrl);
+		/* enable the interface */
+		ulValue |= HOSTMSK(sqi_cr1_sqi_en);
+		/* clear both FIFOs */
+		ulValue |= HOSTMSK(sqi_cr1_rx_fifo_clr)|HOSTMSK(sqi_cr1_tx_fifo_clr);
+		ptSqiArea->aulSqi_cr[1] = ulValue;
+
+
+		uiIdleCfg = ptCfg->uiIdleCfg;
+
+		/* set transfer control base */
+		ulValue  = HOSTMSK(sqi_tcr_ms_bit_first);
+		if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO1_OE)!=0 )
+		{
+			ulValue |= HOSTMSK(sqi_tcr_tx_oe);
+		}
+		if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO1_OUT)!=0 )
+		{
+			ulValue |= HOSTMSK(sqi_tcr_tx_out);
+		}
+		ptCfg->ulTrcBase = ulValue;
+		ptSqiArea->ulSqi_tcr = ulValue;
+
+		ulValue = 0;
+		if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO2_OUT)!=0 )
+		{
+			ulValue |= HOSTMSK(sqi_pio_out_sio2);
+		}
+		if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO3_OUT)!=0 )
+		{
+			ulValue |= HOSTMSK(sqi_pio_out_sio3);
+		}
+		ptSqiArea->ulSqi_pio_out = ulValue;
+
+		ulValue = 0;
+		if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO2_OE)!=0 )
+		{
+			ulValue |= HOSTMSK(sqi_pio_oe_sio2);
+		}
+		if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO3_OE)!=0 )
+		{
+			ulValue |= HOSTMSK(sqi_pio_oe_sio3);
+		}
+		ptSqiArea->ulSqi_pio_oe = ulValue;
+
+		/* set the idle char from the TX configuration */
+		if( (uiIdleCfg&MSK_SQI_CFG_IDLE_IO1_OUT)!=0 )
+		{
+			ucIdleChar = 0xffU;
+		}
+		else
+		{
+			ucIdleChar = 0x00U;
+		}
+		ptCfg->ucIdleChar = ucIdleChar;
+
+		/* activate the SPI pins */
+		mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[uiChipSelect]);
 
 #if ASIC_TYP==56
-	/* Activate the SIO2 and SIO3 pins. */
-	ulValue  = ptAsicCtrlArea->ulIo_config2;
-	ulValue |= HOSTMSK(io_config2_sel_sqi);
-	ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
-	ptAsicCtrlArea->ulIo_config2 = ulValue;
+		/* Activate the SIO2 and SIO3 pins. */
+		ulValue  = ptAsicCtrlArea->ulIo_config2;
+		ulValue |= HOSTMSK(io_config2_sel_sqi);
+		ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+		ptAsicCtrlArea->ulIo_config2 = ulValue;
 #endif
+	}
 
 	return iResult;
 }
