@@ -35,6 +35,12 @@ import os.path
 import spi_flashes
 spi_flashes.ApplyToEnv(env_default)
 
+# Create a build environment for the ARM9 based netX chips.
+env_arm9 = env_default.CreateEnvironment(['gcc-arm-none-eabi-4.7', 'asciidoc'])
+
+# Create a build environment for the Cortex-R based netX chips.
+env_cortex7 = env_default.CreateEnvironment(['gcc-arm-none-eabi-4.9', 'asciidoc'])
+
 
 #----------------------------------------------------------------------------
 # This is the list of sources. The elements must be separated with whitespace
@@ -51,17 +57,25 @@ flasher_sources_common = """
 	src/main.c
 	src/netx_consoleapp.c
 	src/progress_bar.c
-	src/rdy_run.c
 	src/sfdp.c
 	src/spansion.c
 	src/spi_macro_player.c
 	src/strata.c
-	src/systime.c
 	src/units.c
-	src/uprintf.c
 	src/sha1_arm/sha1.c
 	src/sha1_arm/sha1_arm.S
 """
+
+
+flasher_sources_custom_netx4000 = """
+	src/netx4000/board.c
+	src/netx4000/flasher_header.c
+	src/drv_spi_hsoc_v2.c
+	src/drv_sqi.c
+	src/mmio.c
+	src/pl353_nor.c
+"""
+
 
 flasher_sources_custom_netx500 = """
 	src/netx500/board.c
@@ -95,10 +109,12 @@ flasher_sources_custom_netx10 = """
 	src/mmio.c
 """
 
-src_netx500 = flasher_sources_common + flasher_sources_custom_netx500
-src_netx56  = flasher_sources_common + flasher_sources_custom_netx56
-src_netx50  = flasher_sources_common + flasher_sources_custom_netx50
-src_netx10  = flasher_sources_common + flasher_sources_custom_netx10
+
+src_netx4000 = flasher_sources_common + flasher_sources_custom_netx4000
+src_netx500  = flasher_sources_common + flasher_sources_custom_netx500
+src_netx56   = flasher_sources_common + flasher_sources_custom_netx56
+src_netx50   = flasher_sources_common + flasher_sources_custom_netx50
+src_netx10   = flasher_sources_common + flasher_sources_custom_netx10
 
 
 #----------------------------------------------------------------------------
@@ -114,37 +130,68 @@ env_default.Version('targets/version/flasher_version.xsl', 'templates/flasher_ve
 # Create the compiler environments.
 #
 
-env_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+astrCommonIncludePaths = ['src', 'src/sha1_arm', '#platform/src', '#platform/src/lib', 'targets/spi_flash_types', 'targets/version']
 
-env_netx500_default = env_default.CreateCompilerEnv('500', ['arch=armv5te'])
+env_netx4000_default = env_cortex7.CreateCompilerEnv('4000', ['arch=armv7', 'thumb'], ['arch=armv7-r', 'thumb'])
+env_netx4000_default.Replace(LDFILE = File('src/netx4000/netx4000.ld'))
+env_netx4000_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx4000'])
+env_netx4000_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+
+env_netx500_default = env_arm9.CreateCompilerEnv('500', ['arch=armv5te'])
 env_netx500_default.Replace(LDFILE = File('src/netx500/netx500.ld'))
-env_netx500_default.Append(CPPPATH = ['src', 'src/netx500', 'src/sha1_arm', '#platform/src', 'targets/spi_flash_types', 'targets/version'])
+env_netx500_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx500'])
+env_netx500_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
 
-env_netx56_default  = env_default.CreateCompilerEnv('56',  ['arch=armv5te'])
+env_netx56_default  = env_arm9.CreateCompilerEnv('56',  ['arch=armv5te'])
 env_netx56_default.Replace(LDFILE = File('src/netx56/netx56.ld'))
-env_netx56_default.Append(CPPPATH = ['src', 'src/netx56', 'src/sha1_arm', '#platform/src', 'targets/spi_flash_types', 'targets/version'])
+env_netx56_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx56'])
+env_netx56_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
 
-env_netx50_default  = env_default.CreateCompilerEnv('50',  ['arch=armv5te'])
+env_netx50_default  = env_arm9.CreateCompilerEnv('50',  ['arch=armv5te'])
 env_netx50_default.Replace(LDFILE = File('src/netx50/netx50.ld'))
-env_netx50_default.Append(CPPPATH = ['src', 'src/netx50', 'src/sha1_arm', '#platform/src', 'targets/spi_flash_types', 'targets/version'])
+env_netx50_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx50'])
+env_netx50_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
 
-env_netx10_default  = env_default.CreateCompilerEnv('10',  ['arch=armv5te'])
+env_netx10_default  = env_arm9.CreateCompilerEnv('10',  ['arch=armv5te'])
 env_netx10_default.Replace(LDFILE = File('src/netx10/netx10.ld'))
-env_netx10_default.Append(CPPPATH = ['src', 'src/netx10', 'src/sha1_arm', '#platform/src', 'targets/spi_flash_types', 'targets/version'])
+env_netx10_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx10'])
+env_netx10_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+
+Export('env_netx4000_default', 'env_netx500_default', 'env_netx56_default', 'env_netx50_default', 'env_netx10_default')
 
 
 #----------------------------------------------------------------------------
 #
-# Create the list of known SPI flashes.
+# Build the platform libraries.
 #
-srcSpiFlashes = env_netx500_default.SPIFlashes('targets/spi_flash_types/spi_flash_types.c', 'src/spi_flash_types.xml')
-objSpiFlashes = env_netx500_default.Object('targets/spi_flash_types/spi_flash_types.o', srcSpiFlashes[0])
-# Extract the binary.
-binSpiFlashes = env_netx500_default.ObjCopy('targets/spi_flash_types/spi_flash_types.bin', objSpiFlashes)
-# Pack the binary with exomizer.
-exoSpiFlashes = env_netx500_default.Exoraw('targets/spi_flash_types/spi_flash_types.exo', binSpiFlashes)
-# Convert the packed binary to an object.
-objExoSpiFlashes = env_netx500_default.ObjImport('targets/spi_flash_types/spi_flash_types_exo.o', exoSpiFlashes)
+PLATFORM_LIB_CFG_BUILDS = [4000, 500, 56, 50, 10]
+SConscript('platform/SConscript', exports='PLATFORM_LIB_CFG_BUILDS')
+Import('platform_lib_netx4000', 'platform_lib_netx500', 'platform_lib_netx56', 'platform_lib_netx50', 'platform_lib_netx10')
+
+
+#----------------------------------------------------------------------------
+#
+# Provide a function to build a flasher binary.
+#
+def flasher_build(tEnvDefault, tEnvPlatform, strBuildPath, astrSources, atLibraries):
+	# Create the list of known SPI flashes.
+	srcSpiFlashes = tEnvDefault.SPIFlashes(os.path.join(strBuildPath, 'spi_flash_types', 'spi_flash_types.c'), 'src/spi_flash_types.xml')
+	objSpiFlashes = tEnvPlatform.Object(os.path.join(strBuildPath, 'spi_flash_types', 'spi_flash_types.o'), srcSpiFlashes[0])
+	# Extract the binary.
+	binSpiFlashes = tEnvPlatform.ObjCopy(os.path.join(strBuildPath, 'spi_flash_types', 'spi_flash_types.bin'), objSpiFlashes)
+	# Pack the binary with exomizer.
+	exoSpiFlashes = tEnvDefault.Exoraw(os.path.join(strBuildPath, 'spi_flash_types', 'spi_flash_types.exo'), binSpiFlashes)
+	# Convert the packed binary to an object.
+	objExoSpiFlashes = tEnvPlatform.ObjImport(os.path.join(strBuildPath, 'spi_flash_types', 'spi_flash_types_exo.o'), exoSpiFlashes)
+
+	# Append the path to the SPI flash list.
+	tEnvPlatform.Append(CPPPATH = [os.path.join(strBuildPath, 'spi_flash_types')])
+
+	tSrcFlasher = tEnvPlatform.SetBuildPath(strBuildPath, 'src', astrSources)
+	tElfFlasher = tEnvPlatform.Elf(os.path.join(strBuildPath, 'flasher.elf'), tSrcFlasher + objExoSpiFlashes + atLibraries)
+	tBinFlasher = tEnvPlatform.ObjCopy(os.path.join(strBuildPath, 'flasher.bin'), tElfFlasher)
+
+	return tElfFlasher,tBinFlasher
 
 
 #----------------------------------------------------------------------------
@@ -154,45 +201,37 @@ objExoSpiFlashes = env_netx500_default.ObjImport('targets/spi_flash_types/spi_fl
 env_netx10_oldio_nodbg = env_netx10_default.Clone()
 env_netx10_oldio_nodbg.Replace(LDFILE = File('src/netx10/netx10_oldio.ld'))
 env_netx10_oldio_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-src_netx10_oldio_nodbg = env_netx10_oldio_nodbg.SetBuildPath('targets/netx10_oldio_nodbg', 'src', src_netx10)
-elf_netx10_oldio_nodbg = env_netx10_oldio_nodbg.Elf('targets/oldio/flasher_netx10.elf', src_netx10_oldio_nodbg + objExoSpiFlashes)
-bin_netx10_oldio_nodbg = env_netx10_oldio_nodbg.ObjCopy('targets/oldio/flasher_netx10.bin', elf_netx10_oldio_nodbg)
+elf_netx10_oldio_nodbg,bin_netx10_oldio_nodbg = flasher_build(env_default, env_netx10_oldio_nodbg, 'targets/netx10_oldio_nodbg', src_netx10, [platform_lib_netx10])
 
 env_netx10_oldio_dbg = env_netx10_default.Clone()
 env_netx10_oldio_dbg.Replace(LDFILE = File('src/netx10/netx10_oldio.ld'))
 env_netx10_oldio_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-src_netx10_oldio_dbg = env_netx10_oldio_dbg.SetBuildPath('targets/netx10_oldio_dbg', 'src', src_netx10)
-elf_netx10_oldio_dbg = env_netx10_oldio_dbg.Elf('targets/oldio/flasher_netx10_debug.elf', src_netx10_oldio_dbg + objExoSpiFlashes)
-bin_netx10_oldio_dbg = env_netx10_oldio_dbg.ObjCopy('targets/oldio/flasher_netx10_debug.bin', elf_netx10_oldio_dbg)
+elf_netx10_oldio_dbg,bin_netx10_oldio_dbg = flasher_build(env_default, env_netx10_oldio_dbg, 'targets/netx10_oldio_dbg', src_netx10, [platform_lib_netx10])
 
 
 #----------------------------------------------------------------------------
 #
 # Build the flasher without debug messages.
 #
+env_netx4000_nodbg = env_netx4000_default.Clone()
+env_netx4000_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+elf_netx4000_nodbg,bin_netx4000_nodbg = flasher_build(env_default, env_netx4000_nodbg, 'targets/netx4000_nodbg', src_netx4000, [platform_lib_netx4000])
+
 env_netx500_nodbg = env_netx500_default.Clone()
 env_netx500_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-src_netx500_nodbg = env_netx500_nodbg.SetBuildPath('targets/netx500_nodbg', 'src', src_netx500)
-elf_netx500_nodbg = env_netx500_nodbg.Elf('targets/netx500_nodbg/flasher_netx500.elf', src_netx500_nodbg + objExoSpiFlashes)
-bin_netx500_nodbg = env_netx500_nodbg.ObjCopy('targets/flasher_netx500.bin', elf_netx500_nodbg)
+elf_netx500_nodbg,bin_netx500_nodbg = flasher_build(env_default, env_netx500_nodbg, 'targets/netx500_nodbg', src_netx500, [platform_lib_netx500])
 
 env_netx56_nodbg = env_netx56_default.Clone()
 env_netx56_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-src_netx56_nodbg = env_netx56_nodbg.SetBuildPath('targets/netx56_nodbg', 'src', src_netx56)
-elf_netx56_nodbg = env_netx56_nodbg.Elf('targets/netx56_nodbg/flasher_netx56.elf', src_netx56_nodbg + objExoSpiFlashes)
-bin_netx56_nodbg = env_netx56_nodbg.ObjCopy('targets/flasher_netx56.bin', elf_netx56_nodbg)
+elf_netx56_nodbg,bin_netx56_nodbg = flasher_build(env_default, env_netx56_nodbg, 'targets/netx56_nodbg', src_netx56, [platform_lib_netx56])
 
 env_netx50_nodbg = env_netx50_default.Clone()
 env_netx50_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-src_netx50_nodbg = env_netx50_nodbg.SetBuildPath('targets/netx50_nodbg', 'src', src_netx50)
-elf_netx50_nodbg = env_netx50_nodbg.Elf('targets/netx50_nodbg/flasher_netx50.elf', src_netx50_nodbg + objExoSpiFlashes)
-bin_netx50_nodbg = env_netx50_nodbg.ObjCopy('targets/flasher_netx50.bin', elf_netx50_nodbg)
+elf_netx50_nodbg,bin_netx50_nodbg = flasher_build(env_default, env_netx50_nodbg, 'targets/netx50_nodbg', src_netx50, [platform_lib_netx50])
 
 env_netx10_nodbg = env_netx10_default.Clone()
 env_netx10_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-src_netx10_nodbg = env_netx10_nodbg.SetBuildPath('targets/netx10_nodbg', 'src', src_netx10)
-elf_netx10_nodbg = env_netx10_nodbg.Elf('targets/netx10_nodbg/flasher_netx10.elf', src_netx10_nodbg + objExoSpiFlashes)
-bin_netx10_nodbg = env_netx10_nodbg.ObjCopy('targets/flasher_netx10.bin', elf_netx10_nodbg)
+elf_netx10_nodbg,bin_netx10_nodbg = flasher_build(env_default, env_netx10_nodbg, 'targets/netx10_nodbg', src_netx10, [platform_lib_netx10])
 
 
 #----------------------------------------------------------------------------
@@ -200,29 +239,25 @@ bin_netx10_nodbg = env_netx10_nodbg.ObjCopy('targets/flasher_netx10.bin', elf_ne
 # Build the flasher with debug messages.
 #
 
+env_netx4000_dbg = env_netx4000_default.Clone()
+env_netx4000_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+elf_netx4000_dbg,bin_netx4000_dbg = flasher_build(env_default, env_netx4000_dbg, 'targets/netx4000_dbg', src_netx4000, [platform_lib_netx4000])
+
 env_netx500_dbg = env_netx500_default.Clone()
 env_netx500_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-src_netx500_dbg = env_netx500_dbg.SetBuildPath('targets/netx500_dbg', 'src', src_netx500)
-elf_netx500_dbg = env_netx500_dbg.Elf('targets/netx500_dbg/flasher_netx500_debug.elf', src_netx500_dbg + objExoSpiFlashes)
-bin_netx500_dbg = env_netx500_dbg.ObjCopy('targets/flasher_netx500_debug.bin', elf_netx500_dbg)
+elf_netx500_dbg,bin_netx500_dbg = flasher_build(env_default, env_netx500_dbg, 'targets/netx500_dbg', src_netx500, [platform_lib_netx500])
 
 env_netx56_dbg = env_netx56_default.Clone()
 env_netx56_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-src_netx56_dbg = env_netx56_dbg.SetBuildPath('targets/netx56_dbg', 'src', src_netx56)
-elf_netx56_dbg = env_netx56_dbg.Elf('targets/netx56_dbg/flasher_netx56_debug.elf', src_netx56_dbg + objExoSpiFlashes)
-bin_netx56_dbg = env_netx56_dbg.ObjCopy('targets/flasher_netx56_debug.bin', elf_netx56_dbg)
+elf_netx56_dbg,bin_netx56_dbg = flasher_build(env_default, env_netx56_dbg, 'targets/netx56_dbg', src_netx56, [platform_lib_netx56])
 
 env_netx50_dbg = env_netx50_default.Clone()
 env_netx50_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-src_netx50_dbg = env_netx50_dbg.SetBuildPath('targets/netx50_dbg', 'src', src_netx50)
-elf_netx50_dbg = env_netx50_dbg.Elf('targets/netx50_dbg/flasher_netx50_debug.elf', src_netx50_dbg + objExoSpiFlashes)
-bin_netx50_dbg = env_netx50_dbg.ObjCopy('targets/flasher_netx50_debug.bin', elf_netx50_dbg)
+elf_netx50_dbg,bin_netx50_dbg = flasher_build(env_default, env_netx50_dbg, 'targets/netx50_dbg', src_netx50, [platform_lib_netx50])
 
 env_netx10_dbg = env_netx10_default.Clone()
 env_netx10_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-src_netx10_dbg = env_netx10_dbg.SetBuildPath('targets/netx10_dbg', 'src', src_netx10)
-elf_netx10_dbg = env_netx10_dbg.Elf('targets/netx10_dbg/flasher_netx10_debug.elf', src_netx10_dbg + objExoSpiFlashes)
-bin_netx10_dbg = env_netx10_dbg.ObjCopy('targets/flasher_netx10_debug.bin', elf_netx10_dbg)
+elf_netx10_dbg,bin_netx10_dbg = flasher_build(env_default, env_netx10_dbg, 'targets/netx10_dbg', src_netx10, [platform_lib_netx10])
 
 
 #----------------------------------------------------------------------------
@@ -234,9 +269,7 @@ bin_netx10_dbg = env_netx10_dbg.ObjCopy('targets/flasher_netx10_debug.bin', elf_
 env_netx500_bob = env_netx500_default.Clone()
 env_netx500_bob.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
 env_netx500_bob.Replace(LDFILE = File('src/netx500/netx500_bob.ld'))
-src_netx500_bob = env_netx500_bob.SetBuildPath('targets/netx500_bob', 'src', src_netx500)
-elf_netx500_bob = env_netx500_bob.Elf('targets/netx500_bob/flasher_netx500_sdram.elf', src_netx500_bob + objExoSpiFlashes)
-bin_netx500_bob = env_netx500_bob.ObjCopy('targets/flasher_netx500_bob.bin', elf_netx500_bob)
+elf_netx500_bob,bin_netx500_bob = flasher_build(env_default, env_netx500_bob, 'targets/netx500_bob', src_netx500, [platform_lib_netx500])
 
 
 #----------------------------------------------------------------------------
@@ -244,6 +277,9 @@ bin_netx500_bob = env_netx500_bob.ObjCopy('targets/flasher_netx500_bob.bin', elf
 # Generate the LUA scripts from the template.
 # This extracts symbols and enumeration values from the ELF file and inserts
 # them into the LUA script.
+# The netX500 ELF file is used here as a source for no special reason. All of
+# the symbols and values which are used in the template are the same in every
+# ELF file in this project.
 #
 lua_flasher = env_netx500_nodbg.GccSymbolTemplate('targets/lua/flasher.lua', elf_netx500_nodbg, GCCSYMBOLTEMPLATE_TEMPLATE='templates/flasher.lua')
 tDemoShowEraseAreas = env_netx500_nodbg.GccSymbolTemplate('targets/lua/show_erase_areas.lua', elf_netx500_nodbg, GCCSYMBOLTEMPLATE_TEMPLATE='templates/show_erase_areas.lua')
@@ -296,12 +332,14 @@ strArtifactId = 'flasher'
 tArcList0 = env_default.ArchiveList('zip')
 
 tArcList0.AddFiles('netx/',
+	bin_netx4000_nodbg,
 	bin_netx500_nodbg,
 	bin_netx56_nodbg,
 	bin_netx50_nodbg,
 	bin_netx10_nodbg)
 
 tArcList0.AddFiles('netx/debug/',
+	bin_netx4000_dbg,
 	bin_netx500_dbg,
 	bin_netx56_dbg,
 	bin_netx50_dbg,
@@ -369,16 +407,18 @@ env_default.Version('targets/artifacts_flasher_cli.xml', 'ivy/flasher_cli/artifa
 # Make a local demo installation.
 #
 # Copy all binaries.
-Command('targets/testbench/netx/flasher_netx500.bin', bin_netx500_nodbg, Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/netx/flasher_netx56.bin',  bin_netx56_nodbg,  Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/netx/flasher_netx50.bin',  bin_netx50_nodbg,  Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/netx/flasher_netx10.bin',  bin_netx10_nodbg,  Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/flasher_netx4000.bin', bin_netx4000_nodbg, Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/flasher_netx500.bin',  bin_netx500_nodbg,  Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/flasher_netx56.bin',   bin_netx56_nodbg,   Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/flasher_netx50.bin',   bin_netx50_nodbg,   Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/flasher_netx10.bin',   bin_netx10_nodbg,   Copy("$TARGET", "$SOURCE"))
 
 # Copy all debug binaries.
-Command('targets/testbench/netx/debug/flasher_netx500_debug.bin', bin_netx500_dbg, Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/netx/debug/flasher_netx56_debug.bin',  bin_netx56_dbg,  Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/netx/debug/flasher_netx50_debug.bin',  bin_netx50_dbg,  Copy("$TARGET", "$SOURCE"))
-Command('targets/testbench/netx/debug/flasher_netx10_debug.bin',  bin_netx10_dbg,  Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/debug/flasher_netx4000_debug.bin', bin_netx4000_dbg, Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/debug/flasher_netx500_debug.bin',  bin_netx500_dbg,  Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/debug/flasher_netx56_debug.bin',   bin_netx56_dbg,   Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/debug/flasher_netx50_debug.bin',   bin_netx50_dbg,   Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/debug/flasher_netx10_debug.bin',   bin_netx10_dbg,   Copy("$TARGET", "$SOURCE"))
 
 # Copy all LUA modules.
 Command('targets/testbench/lua/flasher.lua', lua_flasher, Copy("$TARGET", "$SOURCE"))
