@@ -29,7 +29,7 @@
 
 static const UNIT_TABLE_T tUnitTable_BusSPI =
 {
-	.sizEntries = 2,
+	.sizEntries = 4,
 	.atEntries =
 	{
 		{ 0,  "SQI0",      (void * const)HOSTADDR(SQI0) },
