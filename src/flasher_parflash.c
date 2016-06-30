@@ -292,16 +292,16 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 			switch(uiChipSelect)
 			{
 			case 0:
-				ptFlashDevice->pucFlashBase = (unsigned char*)(HOSTADDR(hif_ahbls6)+0x02000000*0);
+				ptFlashDevice->pucFlashBase = (unsigned char*)(HOSTADDR(pci_ahbls6)+0x02000000*0);
 				break;
 			case 1:
-				ptFlashDevice->pucFlashBase = (unsigned char*)(HOSTADDR(hif_ahbls6)+0x02000000*1);
+				ptFlashDevice->pucFlashBase = (unsigned char*)(HOSTADDR(pci_ahbls6)+0x02000000*1);
 				break;
 			case 2:
-				ptFlashDevice->pucFlashBase = (unsigned char*)(HOSTADDR(hif_ahbls6)+0x02000000*2);
+				ptFlashDevice->pucFlashBase = (unsigned char*)(HOSTADDR(pci_ahbls6)+0x02000000*2);
 				break;
 			case 3:
-				ptFlashDevice->pucFlashBase = (unsigned char*)(HOSTADDR(hif_ahbls6)+0x02000000*3);
+				ptFlashDevice->pucFlashBase = (unsigned char*)(HOSTADDR(pci_ahbls6)+0x02000000*3);
 				break;
 			}
 			
