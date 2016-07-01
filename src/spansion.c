@@ -150,7 +150,6 @@ typedef struct FLASH_COMMAND_BLOCK_Ttag
 } FLASH_COMMAND_BLOCK_T;
 
 //static FLASH_ERRORS_E FlashWaitWriteDone(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector, unsigned long ulOffset, unsigned long ulOffsetData, BOOL fBufferWrite);
-static void           FlashWriteCommandSequence(const FLASH_DEVICE_T *ptFlashDev, FLASH_COMMAND_BLOCK_T* ptCmd, unsigned long ulCount);
 static FLASH_ERRORS_E FlashNormalWrite(const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector,      unsigned long ulOffset, const unsigned char* pbData, unsigned long ulWriteSize);
 
 static FLASH_ERRORS_E FlashReset      (const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
@@ -297,6 +296,28 @@ static void FlashWriteCommand(const FLASH_DEVICE_T *ptFlashDev, unsigned long ul
 	}
 
 	DEBUGMSG(ZONE_FUNCTION, ("-FlashWriteCommand()\n"));
+}
+
+
+
+/*! Writes a sequence of flash commands
+*
+*   \param   ptFlashDev    Pointer to the FLASH control Block
+*   \param   ptCmd         Array of command blocks
+*   \param   ulCount       Number of commands
+*/
+static void FlashWriteCommandSequence(const FLASH_DEVICE_T *ptFlashDev, const FLASH_COMMAND_BLOCK_T *ptCmd, unsigned long ulCount)
+{
+	DEBUGMSG(ZONE_FUNCTION, ("+FlashWriteCommandSequence(): ptFlashDev=0x%08x, ptCmd=0x%08x, ulCount=%d\n", ptFlashDev, ptCmd, ulCount));
+
+	while(ulCount>0)
+	{
+		FlashWriteCommand(ptFlashDev, 0, ptCmd->ulAddress, ptCmd->bCmd);
+		++ptCmd;
+		--ulCount;
+	}
+
+	DEBUGMSG(ZONE_FUNCTION, ("-FlashWriteCommandSequence()\n"));
 }
 
 
@@ -1216,25 +1237,4 @@ static DEVSTATUS FlashGetStatus(const FLASH_DEVICE_T *ptFlashDev, unsigned long 
 }
 #endif
 
-
-
-/*! Writes a sequence of flash commands
-*
-*   \param   ptFlashDev    Pointer to the FLASH control Block
-*   \param   ptCmd         Array of command blocks
-*   \param   ulCount       Number of commands
-*/
-static void  FlashWriteCommandSequence(const FLASH_DEVICE_T *ptFlashDev, FLASH_COMMAND_BLOCK_T* ptCmd, unsigned long ulCount)
-{
-	DEBUGMSG(ZONE_FUNCTION, ("+FlashWriteCommandSequence(): ptFlashDev=0x%08x, ptCmd=0x%08x, ulCount=%d\n", ptFlashDev, ptCmd, ulCount));
-
-	while(ulCount>0)
-	{
-		FlashWriteCommand(ptFlashDev, 0, ptCmd->ulAddress, ptCmd->bCmd);
-		++ptCmd;
-		--ulCount;
-	}
-
-	DEBUGMSG(ZONE_FUNCTION, ("-FlashWriteCommandSequence()\n"));
-}
 
