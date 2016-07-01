@@ -7,6 +7,14 @@ python:
 sudo: false
 
 
+# Install the "gcc-multilib" package to be able to use 32bit compiler tools on a 64bit VM.
+addons:
+  apt:
+    packages:
+    - gcc-multilib
+    - lib32z1
+
+
 # Cache the .mbs folder.
 cache:
   directories:
