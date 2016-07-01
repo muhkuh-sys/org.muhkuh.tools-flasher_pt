@@ -22,8 +22,9 @@ ENTRY(start)
 
 MEMORY
 {
-	INTRAM(rwx)     : ORIGIN = 0x00000000, LENGTH = 0x00018000
-	DATATCM(rw)     : ORIGIN = 0x04000000, LENGTH = 0x00001000
+	ASSERT_EMPTY(rwx): ORIGIN = 0x00000000, LENGTH = 0
+	INTRAM(rwx):       ORIGIN = 0x00000000, LENGTH = 0x00018000
+	DATATCM(rw):       ORIGIN = 0x04000000, LENGTH = 0x00001000
 }
 
 
@@ -33,23 +34,15 @@ SECTIONS
 	/* bootloader reserved area */
 	.bootloader 0x00000000 :
 	{
-		. = . + 0x8000;
+		. = . + 0x4000;
 	} >INTRAM
 
 
-	.code 0x00008000 :
+	.code :
 	{
 		__LOAD_ADDRESS__ = . ;
 		KEEP( *(.version_info) )
-		*(.text)
-		*(.glue*)
-		*(.vfp11_veneer)
-		*(.v4_bx)
-
-		/* .rodata section which is used for read-only data (constants) */
-		*(.rodata*)
-
-		*(.data)
+		*(.text* .rodata*)
 	} >INTRAM
 
 
@@ -57,8 +50,7 @@ SECTIONS
 	{
 		__bss_start__ = . ;
 
-		*(.bss)
-		*(COMMON)
+		*(.bss COMMON)
 
 		__bss_end__ = . ;
 		__BUFFER_START__ = .;

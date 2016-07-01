@@ -22,32 +22,33 @@ ENTRY(start)
 
 MEMORY
 {
-	INTRAM(rwx)    : ORIGIN = 0x08004000, LENGTH = 0x0007c000
-	IOVECTORS(rw)  : ORIGIN = 0x08000100, LENGTH = 0x00000010
+	ASSERT_EMPTY(rwx): ORIGIN = 0x00000000, LENGTH = 0
+	INTRAM(rwx):       ORIGIN = 0x08004000, LENGTH = 0x0007c000
+	IOVECTORS(rw):     ORIGIN = 0x08000100, LENGTH = 0x00000010
 }
 
 
 /* Section Definitions */
 SECTIONS
 {
+	/* NOTE: include all sections here which should be empty. */
+	.assert_empty (NOLOAD) :
+	{
+		*(.data*)
+		*(.glue*)
+		*(.vfp11_veneer)
+		*(.v4_bx)
+		*(.iplt)
+		*(.rel.dyn)
+		*(.rel.iplt)
+		*(.igot.plt)
+	} >ASSERT_EMPTY
+
 	.code :
 	{
 		__LOAD_ADDRESS__ = . ;
 		KEEP( *(.version_info) )
-		*(.text)
-		*(.glue*)
-		*(.vfp11_veneer)
-		*(.v4_bx)
-
-		/* .rodata section which is used for read-only data (constants) */
-		*(.rodata*)
-	} >INTRAM
-
-
-	/* .data section which is used for initialized data */
-	.data :
-	{
-		*(.data)
+		*(.text* .rodata*)
 	} >INTRAM
 
 
@@ -56,8 +57,7 @@ SECTIONS
 		/* .bss section which is used for uninitialized data */
 		__bss_start__ = . ;
 
-		*(.bss)
-		*(COMMON)
+		*(.bss COMMON)
 
 		__bss_end__ = . ;
 		__BUFFER_START__ = .;

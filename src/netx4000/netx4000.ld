@@ -22,35 +22,34 @@ ENTRY(start)
 
 MEMORY
 {
-	INTRAM(rwx)    : ORIGIN = 0x05084000 , LENGTH = 0x000fc000
-	RAP_CR7LLRAM(rwx):    ORIGIN = 0x04000000, LENGTH = 0x00100000
-	RAP_CR7DTCM(rw):      ORIGIN = 0x00020000, LENGTH = 0x00020000
-	/*IOVECTORS(rw)  : ORIGIN = 0x08000100, LENGTH = 0x00000010*/
+	ASSERT_EMPTY(rwx): ORIGIN = 0x00000000, LENGTH = 0
+	SERIALVECTORS(rw): ORIGIN = 0x0003fff0, LENGTH = 0x00000010
+	CODE(rwx):         ORIGIN = 0x04000000, LENGTH = 0x00100000
 }
 
 
 /* Section Definitions */
 SECTIONS
 {
+	/* NOTE: include all sections here which should be empty. */
+	.assert_empty (NOLOAD) :
+	{
+		*(.data*)
+		*(.glue*)
+		*(.vfp11_veneer)
+		*(.v4_bx)
+		*(.iplt)
+		*(.rel.dyn)
+		*(.rel.iplt)
+		*(.igot.plt)
+	} >ASSERT_EMPTY
+
 	.code :
 	{
 		__LOAD_ADDRESS__ = . ;
 		KEEP( *(.version_info) )
-		*(.text)
-		*(.glue*)
-		*(.vfp11_veneer)
-		*(.v4_bx)
-
-		/* .rodata section which is used for read-only data (constants) */
-		*(.rodata*)
-	} >RAP_CR7LLRAM
-
-
-	/* .data section which is used for initialized data */
-	.data :
-	{
-		*(.data)
-	} >RAP_CR7LLRAM
+		*(.text* .rodata*)
+	} >CODE
 
 
 	.bss :
@@ -58,29 +57,28 @@ SECTIONS
 		/* .bss section which is used for uninitialized data */
 		__bss_start__ = . ;
 
-		*(.bss)
-		*(COMMON)
+		*(.bss COMMON)
 
 		__bss_end__ = . ;
 		__BUFFER_START__ = .;
-	} >RAP_CR7LLRAM
+	} >CODE
 
 	/* NOTE: do not put anything between the bss and the stack section. Here goes the buffer. */
 
-	.stack ORIGIN(RAP_CR7LLRAM)+LENGTH(RAP_CR7LLRAM)-0x1000 :
+	.stack ORIGIN(CODE)+LENGTH(CODE)-0x1000 :
 	{
 		__BUFFER_END__ = .;
 		. = . + 0x1000;
 		PROVIDE (stack_top = .);
-	} >RAP_CR7LLRAM
+	} >CODE
 
 
 	/* The serial vectors are at the end of the DTCM */
-	.SERIALVECTORS ORIGIN(RAP_CR7DTCM) + LENGTH(RAP_CR7DTCM) - 0x10 :
+	.SERIALVECTORS ORIGIN(SERIALVECTORS) :
 	{
 		PROVIDE ( tSerialVectors = . );
 		. = . + 0x10;
-	} >RAP_CR7DTCM
+	} >SERIALVECTORS
 
 
 	/* Stabs debugging sections.  */

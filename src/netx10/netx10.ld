@@ -22,6 +22,7 @@ ENTRY(start)
 
 MEMORY
 {
+	ASSERT_EMPTY(rwx): ORIGIN = 0x00000000, LENGTH = 0
 	IOVECTORS(rx) : ORIGIN = 0x08000100, LENGTH = 0x00000100
 	INTRAM(rwx)   : ORIGIN = 0x08004000, LENGTH = 0x0003c000
 }
@@ -30,6 +31,19 @@ MEMORY
 /* Section Definitions */
 SECTIONS
 {
+	/* NOTE: include all sections here which should be empty. */
+	.assert_empty (NOLOAD) :
+	{
+		*(.data*)
+		*(.glue*)
+		*(.vfp11_veneer)
+		*(.v4_bx)
+		*(.iplt)
+		*(.rel.dyn)
+		*(.rel.iplt)
+		*(.igot.plt)
+	} >ASSERT_EMPTY
+
 	.serial_vectors ORIGIN(IOVECTORS) :
 	{
 		tSerialVectors = . ;
@@ -40,20 +54,7 @@ SECTIONS
 	{
 		__LOAD_ADDRESS__ = . ;
 		KEEP( *(.version_info) )
-		*(.text)
-		*(.glue*)
-		*(.vfp11_veneer)
-		*(.v4_bx)
-	} >INTRAM
-
-
-	.data :
-	{
-		/* ro data */
-		*(.rodata*)
-
-		/* rw data */
-		*(.data)
+		*(.text .rodata*)
 	} >INTRAM
 
 
@@ -63,8 +64,7 @@ SECTIONS
 
 		__bss_start__ = . ;
 
-		*(.bss)
-		*(COMMON)
+		*(.bss COMMON)
 
 		__bss_end__ = . ;
 		__BUFFER_START__ = .;

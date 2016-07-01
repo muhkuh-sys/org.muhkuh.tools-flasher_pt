@@ -22,8 +22,9 @@ ENTRY(start)
 
 MEMORY
 {
-	INTRAM(rwx)     : ORIGIN = 0x00000000, LENGTH = 0x00020000
-	DATATCM(rw)     : ORIGIN = 0x10000000, LENGTH = 0x00002000
+	ASSERT_EMPTY(rwx): ORIGIN = 0x00000000, LENGTH = 0
+	INTRAM(rwx):       ORIGIN = 0x00000000, LENGTH = 0x00020000
+	SERIALVECTORS(rw): ORIGIN = 0x10001ff0, LENGTH = 0x00000010
 }
 
 
@@ -41,20 +42,7 @@ SECTIONS
 	{
 		__LOAD_ADDRESS__ = . ;
 		KEEP( *(.version_info) )
-		*(.text)
-		*(.glue*)
-		*(.vfp11_veneer)
-		*(.v4_bx)
-
-		/* .rodata section which is used for read-only data (constants) */
-		*(.rodata*)
-	} >INTRAM
-
-
-	/* .data section which is used for initialized data */
-	.data :
-	{
-		*(.data)
+		*(.text* .rodata*)
 	} >INTRAM
 
 
@@ -63,8 +51,7 @@ SECTIONS
 		/* .bss section which is used for uninitialized data */
 		__bss_start__ = . ;
 
-		*(.bss)
-		*(COMMON)
+		*(.bss COMMON)
 
 		__bss_end__ = . ;
 		__BUFFER_START__ = .;
@@ -80,11 +67,11 @@ SECTIONS
 	} >INTRAM
 
 
-	.serialvectors 0x10001ff0 (NOLOAD) :
+	.serialvectors ORIGIN(SERIALVECTORS) :
 	{
 		PROVIDE ( tSerialVectors = . );
 		. = . + 0x10;
-	} >DATATCM
+	} >SERIALVECTORS
 
 
 	/* Stabs debugging sections.  */
