@@ -9,6 +9,8 @@ AppVeyor: image:https://ci.appveyor.com/api/projects/status/github/muhkuh-sys/or
 
 circleci: image:https://circleci.com/gh/muhkuh-sys/org.muhkuh.tools-flasher.svg?style=shield["circleci build status", link="https://circleci.com/gh/muhkuh-sys/org.muhkuh.tools-flasher"]
 
+Coverity: image:https://img.shields.io/coverity/scan/9318.svg["Coverity Scan Build Status", link="https://scan.coverity.com/projects/muhkuh-sys-org-muhkuh-tools-flasher"]
+
 
 == About
 
