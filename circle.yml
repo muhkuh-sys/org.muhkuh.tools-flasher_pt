@@ -1,5 +1,6 @@
 machine:
   pre:
+    - sudo apt-get update
     - sudo dpkg --purge ant ant-optional
     - sudo apt-get install gcc-multilib lib32z1
     - wget http://downloads.sourceforge.net/project/muhkuh/mbs/org/apache/ant/1.9.6/apache-ant-1.9.6-bin.tar.bz2 -O /tmp/apache-ant-1.9.6-bin.tar.bz2
