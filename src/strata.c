@@ -66,7 +66,7 @@ static FLASH_ERRORS_E FlashProgram(const FLASH_DEVICE_T *ptFlashDev, unsigned lo
 static FLASH_ERRORS_E FlashLock (const FLASH_DEVICE_T *ptFlashDev, unsigned long ulSector);
 static FLASH_ERRORS_E FlashUnlock(const FLASH_DEVICE_T *ptFlashDev);
 
-static FLASH_FUNCTIONS_T s_tIntelStrataFuncs =
+static const FLASH_FUNCTIONS_T s_tIntelStrataFuncs =
 {
   FlashReset,
   FlashErase,

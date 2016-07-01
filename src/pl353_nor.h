@@ -54,13 +54,6 @@ typedef struct PL353_NOR_HANDLE_STRUCT
 	PL353_NOR_TIMINGS_T tTimingsMclks;
 } PL353_NOR_HANDLE_T;
 
-extern PL353_NOR_SETTINGS_T g_tPl353_NorDefaultSettings;
-
-unsigned char convert_ns_to_mclks(unsigned long ulValueNs, unsigned long ulInitialNs, unsigned char ucInitialMClk, unsigned char ucMaxMClk);
-void nor_update_settings(PL353_NOR_HANDLE_T *ptHandle, PL353_NOR_SETTINGS_T *ptPl353_NorSettings);
-void pl353_nor_update_registers(PL353_NOR_HANDLE_T *ptHandle);
-void pl353_nor_setup(PL353_NOR_HANDLE_T *ptHandle, MEMORY_WIDTH_T tBusWidth);
-
 //void setup_pl353(unsigned int uiChipSelect, MEMORY_WIDTH_T tBusWidth);
 //void setup_flash_nor_pl353(unsigned int uiChipSelect, MEMORY_WIDTH_T tBits);
 void setup_flash_nor_pl353(unsigned int uiChipSelect, MEMORY_WIDTH_T tBusWidth);

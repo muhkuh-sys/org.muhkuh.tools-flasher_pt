@@ -1,7 +1,7 @@
 #include "pl353_nor.h"
 #include "netx_io_areas.h"
 
-unsigned char convert_ns_to_mclks(unsigned long ulValueNs, unsigned long ulInitialNs, unsigned char ucInitialMClk, unsigned char ucMaxMClk)
+static unsigned char convert_ns_to_mclks(unsigned long ulValueNs, unsigned long ulInitialNs, unsigned char ucInitialMClk, unsigned char ucMaxMClk)
 {
 	unsigned long ulAkkuNs;
 	unsigned char ucMclkUnits;
@@ -26,10 +26,10 @@ unsigned char convert_ns_to_mclks(unsigned long ulValueNs, unsigned long ulIniti
 
 
 
-void nor_update_settings(PL353_NOR_HANDLE_T *ptHandle, PL353_NOR_SETTINGS_T *ptPl353_NorSettings)
+static void nor_update_settings(PL353_NOR_HANDLE_T *ptHandle, const PL353_NOR_SETTINGS_T *ptPl353_NorSettings)
 {
 	PL353_NOR_TIMINGS_T *ptTimingSetMclks;
-	PL353_NOR_TIMINGS_T *ptTimingSetNs;
+	const PL353_NOR_TIMINGS_T *ptTimingSetNs;
 	unsigned long ulValue;
 
 	ptTimingSetMclks = &(ptHandle->tTimingsMclks);
@@ -79,7 +79,7 @@ void nor_update_settings(PL353_NOR_HANDLE_T *ptHandle, PL353_NOR_SETTINGS_T *ptP
 
 
 
-void pl353_nor_update_registers(PL353_NOR_HANDLE_T *ptHandle)
+static void pl353_nor_update_registers(PL353_NOR_HANDLE_T *ptHandle)
 {
 	HOSTDEF(ptPL353Area);
 	unsigned long ulValue;
@@ -94,7 +94,7 @@ void pl353_nor_update_registers(PL353_NOR_HANDLE_T *ptHandle)
 
 
 
-void pl353_nor_setup(PL353_NOR_HANDLE_T *ptHandle, MEMORY_WIDTH_T tBusWidth)
+static void pl353_nor_setup(PL353_NOR_HANDLE_T *ptHandle, MEMORY_WIDTH_T tBusWidth)
 {
 	HOSTDEF(ptPL353Area);
 	unsigned long ulValue;
@@ -146,36 +146,38 @@ void pl353_nor_setup(PL353_NOR_HANDLE_T *ptHandle, MEMORY_WIDTH_T tBusWidth)
    ucT_PC      140     20        1            7         = 7
    ucT_TR      140     20        1            7         = 7
 */
-PL353_NOR_SETTINGS_T g_tPl353_NorDefaultSettings = 
+static const PL353_NOR_SETTINGS_T g_tPl353_NorDefaultSettings =
+{
+	.tBusWidth = MEMORY_WIDTH_Auto,
+
+	.ucBurstAlign = 0,
+	.ucBlsTime    = 0,
+	.ucAdV        = 0,
+	.ucBAA        = 0,
+	.ucWrBl       = 0,
+	.ucWrSync     = 0,
+	.ucRdBl       = 0,
+	.ucRdSync     = 0,
+
+	.tTimingsNs =
 	{
-		.tBusWidth = MEMORY_WIDTH_Auto,
+		.usT_RC   = 300U,
+		.usT_WC   = 300U,
+		.ucT_CEOE = 140U,
+		.ucT_WP   = 140U,
+		.ucT_PC   = 140U,
+		.ucT_TR   = 140U,
+		.ucWeTime = 0
+	}
+};
 
-		.ucBurstAlign = 0,
-		.ucBlsTime    = 0,
-		.ucAdV        = 0,
-		.ucBAA        = 0,
-		.ucWrBl       = 0,
-		.ucWrSync     = 0,
-		.ucRdBl       = 0,
-		.ucRdSync     = 0,
-
-		.tTimingsNs =
-		{
-			.usT_RC   = 300U,
-			.usT_WC   = 300U,
-			.ucT_CEOE = 140U,
-			.ucT_WP   = 140U,
-			.ucT_PC   = 140U,
-			.ucT_TR   = 140U,
-			.ucWeTime = 0
-		}
-	};
 
 
 void setup_flash_nor_pl353(unsigned int uiChipSelect, MEMORY_WIDTH_T tBusWidth)
 {
 	PL353_NOR_HANDLE_T tHandle;
 	
+
 	tHandle.uiChipSelect = uiChipSelect;
 	nor_update_settings(&tHandle, &g_tPl353_NorDefaultSettings);
 	pl353_nor_setup(&tHandle, tBusWidth);
