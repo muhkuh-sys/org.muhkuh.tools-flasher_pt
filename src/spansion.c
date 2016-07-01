@@ -223,6 +223,9 @@ static unsigned long read_flash_data(const FLASH_DEVICE_T *ptFlashDev, unsigned 
 	unsigned long ulValue;
 
 
+	/* Set a default for the result in case the bus width is not defined correctly. */
+	ulValue = 0U;
+
 	tAddr.puc = get_flash_address(ptFlashDev, ulSector, ulOffset);
 	switch( ptFlashDev->tBits )
 	{
