@@ -357,11 +357,18 @@ static NETX_CONSOLEAPP_RESULT_T spi_sha1_with_progress(const SPI_FLASH_T *ptFlas
 static NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFlashDev, unsigned long ulStartAdr, unsigned long ulEndAdr)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
+	unsigned long ulPageSize;
 	unsigned long ulSectorSize;
-	unsigned long ulSectorOffset;
+	unsigned long ulPageOffsetStart;
+	unsigned long ulPageOffsetEnd;
+	unsigned long ulSectorOffsetStart;
+	unsigned long ulSectorOffsetEnd;
 	unsigned long ulAddress;
 	unsigned long ulProgressCnt;
 	int iResult;
+	int iCanUsePageErase;
+	int iCanUseSectorErase;
+	unsigned long ulEraseChunk;
 
 
 	uprintf("# Erase flash...\n");
@@ -369,25 +376,72 @@ static NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFla
 	/* Assume success. */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
-	/* Get the sector size. */
+	/* Be pessimistic. */
+	iCanUsePageErase = 0;
+	iCanUseSectorErase = 0;
+
+	/* Get the page and sector size. */
+	ulPageSize = ptFlashDev->tAttributes.ulPageSize;
 	ulSectorSize = ptFlashDev->ulSectorSize;
-	/* Get the offset in the first sector. */
-	ulSectorOffset = ulStartAdr % ulSectorSize;
-	if( ulSectorOffset!=0 )
+
+	/* Only check for page erase if the page erase opcode is not 0. */
+	if( ptFlashDev->tAttributes.ucErasePageOpcode!=0x00 )
 	{
-		uprintf("Warning: the start address is not aligned to a sector border!\n");
-		uprintf("Warning: changing the start address from 0x%08x", ulStartAdr);
-		ulStartAdr -= ulSectorOffset;
-		uprintf(" to 0x%08x.\n", ulStartAdr);
+		/* Get the offsets of the start and end address to the page border. */
+		ulPageOffsetStart = ulStartAdr % ulPageSize;
+		ulPageOffsetEnd = ulEndAdr % ulPageSize;
+		/* The offsets are 0 if they are exactly on the page boundaries. */
+		if( ulPageOffsetStart==0 && ulPageOffsetEnd==0 )
+		{
+			iCanUsePageErase = 1;
+		}
 	}
-	/* Get the offset in the last sector. */
-	ulSectorOffset = ulEndAdr % ulSectorSize;
-	if( ulSectorOffset!=0 )
+
+	/* The sector erase command is always present. */
+
+	/* Get the offsets of the start and end address to the sector border. */
+	ulSectorOffsetStart = ulStartAdr % ulSectorSize;
+	ulSectorOffsetEnd = ulEndAdr % ulSectorSize;
+	/* The offsets are 0 if they are exactly on the sector boundaries. */
+	if( ulSectorOffsetStart==0 && ulSectorOffsetEnd==0 )
 	{
-		uprintf("Warning: the end address is not aligned to a sector border!\n");
-		uprintf("Warning: changing the end address from 0x%08x", ulEndAdr);
-		ulEndAdr += ulSectorSize - ulSectorOffset;
-		uprintf(" to 0x%08x.\n", ulEndAdr);
+		iCanUseSectorErase = 1;
+	}
+
+	/* Prefer sector over page erase. It is faster. */
+	if( iCanUseSectorErase!=0 )
+	{
+		iCanUsePageErase = 0;
+		ulEraseChunk = ulSectorSize;
+	}
+	else if( iCanUsePageErase!=0 )
+	{
+		iCanUseSectorErase = 0;
+		ulEraseChunk = ulPageSize;
+	}
+	/* Fallback to the old behavior if page and sector does not match.
+	 * Adjust the start and end to the next sector boundaries.
+	 */
+	else
+	{
+		if( ulSectorOffsetStart!=0 )
+		{
+			uprintf("Warning: the start address is not aligned to a sector border!\n");
+			uprintf("Warning: changing the start address from 0x%08x", ulStartAdr);
+			ulStartAdr -= ulSectorOffsetStart;
+			uprintf(" to 0x%08x.\n", ulStartAdr);
+		}
+		if( ulSectorOffsetEnd!=0 )
+		{
+			uprintf("Warning: the end address is not aligned to a sector border!\n");
+			uprintf("Warning: changing the end address from 0x%08x", ulEndAdr);
+			ulEndAdr += ulSectorSize - ulSectorOffsetEnd;
+			uprintf(" to 0x%08x.\n", ulEndAdr);
+		}
+
+		iCanUsePageErase = 0;
+		iCanUseSectorErase = 1;
+		ulEraseChunk = ulSectorSize;
 	}
 
 	/* Show the start and the end address of the erase area. */
@@ -400,7 +454,14 @@ static NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFla
 	ulAddress = ulStartAdr;
 	while( ulAddress<ulEndAdr )
 	{
-		iResult = Drv_SpiEraseFlashSector(ptFlashDev, ulAddress);
+		if( iCanUsePageErase!=0 )
+		{
+			iResult = Drv_SpiEraseFlashPage(ptFlashDev, ulAddress);
+		}
+		else
+		{
+			iResult = Drv_SpiEraseFlashSector(ptFlashDev, ulAddress);
+		}
 		if( iResult!=0 )
 		{
 			uprintf("! erase failed at address 0x%08x\n", ulAddress);
@@ -409,15 +470,15 @@ static NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFla
 		}
 
 		/* Move to the next segment. */
-		ulAddress += ulSectorSize;
+		ulAddress += ulEraseChunk;
 
 		/* Increment the progress bar. */
-		ulProgressCnt += ulSectorSize;
+		ulProgressCnt += ulEraseChunk;
 		progress_bar_set_position(ulProgressCnt);
 	}
 
 	progress_bar_finalize();
-	uprintf(". erase ok\n");
+	uprintf(". erase OK\n");
 
 	/* Return the result. */
 	return tResult;
