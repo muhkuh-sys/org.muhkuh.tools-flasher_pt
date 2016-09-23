@@ -756,7 +756,7 @@ int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptF
 	return iResult;
 }
 
-#if 0
+
 /*! Drv_SpiEraseFlashPage
 *   Erases a Page in the specified serial FLASH
 *
@@ -842,7 +842,9 @@ int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddr
 	DEBUGMSG(ZONE_FUNCTION, ("-Drv_SpiEraseFlashPage(): iResult=%d.\n", iResult));
 	return iResult;
 }
-#endif
+
+
+
 /*! Drv_SpiEraseFlashSector
 *   Erases a Sector in the specified serial FLASH
 *
