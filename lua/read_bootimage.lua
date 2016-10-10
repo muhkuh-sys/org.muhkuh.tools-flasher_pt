@@ -43,9 +43,24 @@ end
 ulMagic = get_dword(strBootBlock, 0+1)
 print(string.format("Magic: 0x%08x", ulMagic))
 
-strMagic = string.char(0xaf, 0xbe, 0xf8)
+local aucMagic = {
+	[romloader.ROMLOADER_CHIPTYP_NETX500]  = string.char(0xaf, 0xbe, 0xf8),
+	[romloader.ROMLOADER_CHIPTYP_NETX100]  = string.char(0xaf, 0xbe, 0xf8),
+	[romloader.ROMLOADER_CHIPTYP_NETX50]   = string.char(0xaf, 0xbe, 0xf8),
+	[romloader.ROMLOADER_CHIPTYP_NETX10]   = string.char(0xaf, 0xbe, 0xf8),
+	[romloader.ROMLOADER_CHIPTYP_NETX56]   = string.char(0xaf, 0xbe, 0xf8),
+	[romloader.ROMLOADER_CHIPTYP_NETX56B]  = string.char(0xaf, 0xbe, 0xf8),
+	[romloader.ROMLOADER_CHIPTYP_NETX4000] = string.char(0xaf, 0xbe, 0xf3)
+}
+local iChiptype = tPlugin:GetChiptyp()
+strMagic = aucMagic[iChiptype]
+if not strMagic then
+	error("Unknown chiptyp! " .. tostring(iChiptype))
+end
+print("Expected magic:")
+tester.hexdump(strMagic)
 if strBootBlock:sub(2,4)~=strMagic then
-	error("Magic 0xf8beaf00 not found!")
+	error("Magic not found!")
 end
 
 -- Get the firmware size in bytes.
