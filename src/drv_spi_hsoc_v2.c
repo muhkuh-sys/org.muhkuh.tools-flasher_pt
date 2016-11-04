@@ -27,7 +27,7 @@
 #include "netx_io_areas.h"
 
 
-#if ASIC_TYP==50 || ASIC_TYP==10 || ASIC_TYP==56
+#if ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56
 static const MMIO_CFG_T aatMmioValues[3][4] =
 {
 	/*
@@ -60,7 +60,7 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 		MMIO_CFG_spi1_mosi		/* MOSI */
 	}
 };
-#elif ASIC_TYP==4000
+#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 static const MMIO_CFG_T aatMmioValues[1][4] =
 {
 	/*
@@ -292,11 +292,11 @@ static void spi_deactivate(const SPI_CFG_T *ptCfg)
 	ulValue |= HOSTMSK(spi_icr_txeic);
 	ptSpiUnit->ulSpi_icr = ulValue;
 	/* Deactivate IRQ routing to the CPUs. */
-#if ASIC_TYP==500 || ASIC_TYP==100
+#if ASIC_TYP==ASIC_TYP_NETX500
 	ptSpiUnit->ulSpi_irq_cpu_sel = 0;
-#elif ASIC_TYP==50
+#elif ASIC_TYP==ASIC_TYP_NETX50
 	ptSpiUnit->ulSpi_imsc = 0;
-#elif ASIC_TYP==10
+#elif ASIC_TYP==ASIC_TYP_NETX10
 	ptSpiUnit->ulSpi_imsc = 0;
 	ptSpiUnit->ulSpi_irq_cpu_sel = 0;
 #endif
@@ -309,7 +309,7 @@ static void spi_deactivate(const SPI_CFG_T *ptCfg)
 	ptSpiUnit->aulSpi_cr[1] = 0;
 
 	/* Activate the spi pins. */
-#if ASIC_TYP==50 || ASIC_TYP==10 || ASIC_TYP==56 || ASIC_TYP==4000
+#if ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 || ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 	mmio_deactivate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[ptCfg->uiChipSelect]);
 #endif
 }
@@ -364,16 +364,16 @@ int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	ulValue |= HOSTMSK(spi_icr_txeic);
 	ptSpiUnit->ulSpi_icr = ulValue;
 	/* Do not route the irqs to a cpu. */
-#if ASIC_TYP==500 || ASIC_TYP==100
+#if ASIC_TYP==ASIC_TYP_NETX500
 	ptSpiUnit->keineahnungwas = 0;
-#elif ASIC_TYP==50
+#elif ASIC_TYP==ASIC_TYP_NETX50
 	ptSpiUnit->ulSpi_imsc = 0;
-#elif ASIC_TYP==10
+#elif ASIC_TYP==ASIC_TYP_NETX10
 	ptSpiUnit->ulSpi_imsc = 0;
 	ptSpiUnit->ulSpi_irq_cpu_sel = 0;
-#elif ASIC_TYP==56
+#elif ASIC_TYP==ASIC_TYP_NETX56
 	/* what about the netx 56? */
-#elif ASIC_TYP==4000
+#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 	ptSpiUnit->ulSpi_imsc = 0;
 #endif
 
@@ -421,7 +421,7 @@ int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	ptCfg->ucIdleChar = ucIdleChar;
 
 	/* activate the spi pins */
-#if ASIC_TYP==50 || ASIC_TYP==10 || ASIC_TYP==56 || ASIC_TYP==4000
+#if ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 || ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 	mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[uiChipSelect]);
 #endif
 	return iResult;

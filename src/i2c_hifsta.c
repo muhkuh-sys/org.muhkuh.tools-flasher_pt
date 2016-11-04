@@ -25,7 +25,7 @@
 
 /*-------------------------------------*/
 
-#if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
+#if ASIC_TYP==ASIC_TYP_NETX500 || ASIC_TYP==ASIC_TYP_NETX100 || ASIC_TYP==ASIC_TYP_NETX50
 
 /* Some defines for the mysterious hif regs,
  * taken from the "netX Program Reference Guide Rev0.3", page 16
@@ -71,7 +71,7 @@ typedef enum
 #define TRIGGER_ROM_WATCHDOG(a) __asm("nop\n")
 
 
-#if ASIC_TYP==10 || ASIC_TYP==50 || ASIC_TYP==56 || ASIC_TYP==4000
+#if ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX56 || ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 static void i2c_hifsta_clock(void)
 {
 	/* trigger rom watchdog */
@@ -92,7 +92,7 @@ static void i2c_hifsta_clock(void)
 #endif
 
 
-#if ASIC_TYP==10 || ASIC_TYP==56 || ASIC_TYP==4000
+#if ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 || ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 void i2c_hifsta_rdy_on_run_off(void)
 {
 	HOSTDEF(ptAsicCtrlArea);
@@ -155,7 +155,7 @@ void i2c_hifsta_rdy_off_run_off(void)
 	ptAsicCtrlArea->ulRdy_run_cfg = ulValue;
 	i2c_hifsta_clock();
 }
-#elif ASIC_TYP==50
+#elif ASIC_TYP==ASIC_TYP_NETX50
 void i2c_hifsta_rdy_on_run_off(void)
 {
 	HOSTDEF(ptNetxControlledGlobalRegisterBlock1Area);

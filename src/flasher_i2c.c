@@ -248,7 +248,7 @@ NETX_CONSOLEAPP_RESULT_T i2c_read_with_progress(unsigned long ulFlashStartAdr, u
 
 void i2c_sendAddress(unsigned int uiParams, int iStopFlag)
 {
-#if ASIC_TYP==500
+#if ASIC_TYP==ASIC_TYP_NETX500
   unsigned long ulVal;
 
 
@@ -301,7 +301,7 @@ void i2c_sendAddress(unsigned int uiParams, int iStopFlag)
 
 void i2c_readResponse(unsigned char *pucBuffer, unsigned int uiLength)
 {
-#if ASIC_TYP==500
+#if ASIC_TYP==ASIC_TYP_NETX500
         unsigned long ulVal;
         unsigned int  uiCnt;
 
@@ -346,7 +346,7 @@ void i2c_readResponse(unsigned char *pucBuffer, unsigned int uiLength)
 
 void i2c_writeData(const unsigned char *pucBuffer, unsigned int uiLength)
 {
-#if ASIC_TYP==500
+#if ASIC_TYP==ASIC_TYP_NETX500
         unsigned long ulVal;
         unsigned int uiCnt;
 
@@ -381,7 +381,7 @@ void i2c_writeData(const unsigned char *pucBuffer, unsigned int uiLength)
 
 void i2c_pollAck(unsigned int uiAckCnt)
 {
-#if ASIC_TYP==500
+#if ASIC_TYP==ASIC_TYP_NETX500
         unsigned long ulVal;
 
 

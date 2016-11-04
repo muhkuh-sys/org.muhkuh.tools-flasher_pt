@@ -26,12 +26,12 @@
 #include "mmio.h"
 #include "netx_io_areas.h"
 
-#if ASIC_TYP==4000
+#if ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 #include "portcontrol.h"
 #endif
 
 /* Note: This scheme works only for a single SQI unit. */
-#if ASIC_TYP==10
+#if ASIC_TYP==ASIC_TYP_NETX10
 static const MMIO_CFG_T aatMmioValues[3][4] =
 {
 	/*
@@ -64,7 +64,7 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 		0xffU                           /* MOSI */
 	}
 };
-#elif ASIC_TYP==56
+#elif ASIC_TYP==ASIC_TYP_NETX56
 static const MMIO_CFG_T aatMmioValues[3][4] =
 {
 	/*
@@ -97,7 +97,7 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 		0xffU                           /* MOSI */
 	}
 };
-#elif ASIC_TYP==4000
+#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 static const MMIO_CFG_T aatMmioValues[1][4] =
 {
 	/* Both SQI ports on the netX4000 are not routed through the MMIO matrix. */
@@ -531,7 +531,7 @@ static void qsi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpec
 static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 {
 	HOSTADEF(SQI) * ptSqiArea;
-#if ASIC_TYP==56
+#if ASIC_TYP==ASIC_TYP_NETX56
 	HOSTDEF(ptAsicCtrlArea);
 #endif
 	unsigned long ulValue;
@@ -552,7 +552,7 @@ static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 	ulValue |= HOSTMSK(sqi_irq_clear_trans_end);
 	ptSqiArea->ulSqi_irq_clear = ulValue;
 
-#if ASIC_TYP==10 || ASIC_TYP==56
+#if ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56
 	/* Deactivate IRQ routing to the CPUs. */
 	ptSqiArea->ulSqi_irq_cpu_sel = 0;
 #endif
@@ -574,7 +574,7 @@ static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 	/* Deactivate the SPI pins. */
 	mmio_deactivate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[ptCfg->uiChipSelect]);
 
-#if ASIC_TYP==56
+#if ASIC_TYP==ASIC_TYP_NETX56
 	/* Deactivate the SIO2 and SIO3 pins. */
 	ulValue  = ptAsicCtrlArea->ulIo_config2;
 	ulValue &= ~HOSTMSK(io_config2_sel_sqi);
@@ -588,9 +588,9 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 {
 	HOSTADEF(SQI) *ptSqiArea;
 
-#if ASIC_TYP==56
+#if ASIC_TYP==ASIC_TYP_NETX56
 	HOSTDEF(ptAsicCtrlArea);
-#elif ASIC_TYP==4000
+#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 	const unsigned short *pusPortControlIndex;
 #endif
 	unsigned long ulValue;
@@ -601,12 +601,12 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 
 
 	ptSqiArea = NULL;
-#if ASIC_TYP==10 || ASIC_TYP==56
+#if ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56
 	if( uiSqiUnit==0 )
 	{
 		ptSqiArea = (HOSTADEF(SQI)*)HOSTADDR(sqi);
 	}
-#elif ASIC_TYP==4000
+#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 	if( uiSqiUnit==0 )
 	{
 		ptSqiArea = (HOSTADEF(SQI)*)HOSTADDR(SQI0);
@@ -672,7 +672,7 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 		ulValue |= HOSTMSK(sqi_irq_clear_trans_end);
 		ptSqiArea->ulSqi_irq_clear = ulValue;
 
-#if ASIC_TYP==10 || ASIC_TYP==56
+#if ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56
 		/* Do not route the IRQs to a CPU. */
 		ptSqiArea->ulSqi_irq_cpu_sel = 0;
 #endif
@@ -764,7 +764,7 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 		/* activate the SPI pins */
 		mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[uiChipSelect]);
 
-#if ASIC_TYP==56
+#if ASIC_TYP==ASIC_TYP_NETX56
 		/* Activate the SIO2 and SIO3 pins. */
 		ulValue  = ptAsicCtrlArea->ulIo_config2;
 		ulValue |= HOSTMSK(io_config2_sel_sqi);

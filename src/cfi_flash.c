@@ -75,8 +75,8 @@ typedef struct
 
 static const CFI_CHECK_CONDITION_T s_atCFIChecks[] =
 {
-/* Only netX500, netX100 and netX50 support a 32bit memory interface. */
-#if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
+/* Only netX500 and netX50 support a 32bit memory interface. */
+#if ASIC_TYP==ASIC_TYP_NETX500 || ASIC_TYP==ASIC_TYP_NETX50
 /*	{BUS_WIDTH_32Bit,  FALSE,  12,  "Q\0\0\0R\0\0\0Y\0\0\0",  CFI_SETUP_1x32 }, */
 
 	{BUS_WIDTH_32Bit,  TRUE,   12,  "Q\0Q\0R\0R\0Y\0Y\0",     CFI_SETUP_2x16 },

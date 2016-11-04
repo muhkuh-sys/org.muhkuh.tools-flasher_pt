@@ -20,6 +20,7 @@
 
 #include <string.h>
 
+#include "asic_types.h"
 #include "exodecr.h"
 #include "flasher_header.h"
 #include "uprintf.h"
@@ -29,13 +30,13 @@
 #include "sfdp.h"
 
 
-#if ASIC_TYP==10 || ASIC_TYP==56 | ASIC_TYP==4000
+#if ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 | ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 /* netX10, netX56 and netX4000 have a SQI and a SPI unit. */
 #	include "drv_sqi.h"
 #	include "drv_spi_hsoc_v2.h"
-#elif ASIC_TYP==50
+#elif ASIC_TYP==ASIC_TYP_NETX50
 #	include "drv_spi_hsoc_v2.h"
-#elif ASIC_TYP==100 || ASIC_TYP==500
+#elif ASIC_TYP==ASIC_TYP_NETX500
 #	include "drv_spi_hsoc_v1.h"
 #endif
 
@@ -568,7 +569,7 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 
 	uiUnit = ptSpiCfg->uiUnit;
 
-#if ASIC_TYP==500 || ASIC_TYP==100
+#if ASIC_TYP==ASIC_TYP_NETX500
 	switch( uiUnit )
 	{
 	case 0:
@@ -580,7 +581,7 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 		iResult = -1;
 		break;
 	}
-#elif ASIC_TYP==50
+#elif ASIC_TYP==ASIC_TYP_NETX50
 	switch( uiUnit )
 	{
 	case 0:
@@ -597,7 +598,7 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 		iResult = -1;
 		break;
 	}
-#elif ASIC_TYP==10 || ASIC_TYP==56
+#elif ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56
 	switch( uiUnit )
 	{
 	case 0:
@@ -613,7 +614,7 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 		iResult = -1;
 		break;
 	}
-#elif ASIC_TYP==4000
+#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 	switch( uiUnit )
 	{
 	case 0:

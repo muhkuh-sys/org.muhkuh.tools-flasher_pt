@@ -20,9 +20,10 @@
 
 #include "flasher_parflash.h"
 
+#include "asic_types.h"
 #include "progress_bar.h"
 #include "uprintf.h"
-#if ASIC_TYP==4000
+#if ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 #include "pl353_nor.h"
 #endif
 
@@ -53,7 +54,7 @@
 
 
 
-#if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
+#if ASIC_TYP==ASIC_TYP_NETX500 || ASIC_TYP==ASIC_TYP_NETX100 || ASIC_TYP==ASIC_TYP_NETX50
 /* in: ptCfg->uiChipSelect
    out: -
    */
@@ -168,7 +169,7 @@ static void setup_flash_ext(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T t
 	}
 }
 
-#elif ASIC_TYP==10
+#elif ASIC_TYP==ASIC_TYP_NETX10
 /* in: ptCfg->uiChipSelect
    out: -
    */
@@ -210,7 +211,7 @@ static void setup_flash(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits
 	}
 }
 
-#elif ASIC_TYP==4000
+#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 static void setup_flash_rap_nor(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits)
 {
 	MEMORY_WIDTH_T tBusWidth = tBits == BUS_WIDTH_16Bit? MEMORY_WIDTH_16Bit:MEMORY_WIDTH_08Bit;
@@ -245,7 +246,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 	ptDeviceDescription = ptParameter->ptDeviceDescription;
 	ptFlashDevice = &(ptDeviceDescription->uInfo.tParFlash);
 
-#if ASIC_TYP==500 || ASIC_TYP==100 || ASIC_TYP==50
+#if ASIC_TYP==ASIC_TYP_NETX500 || ASIC_TYP==ASIC_TYP_NETX100 || ASIC_TYP==ASIC_TYP_NETX50
 /*
 	in: uiUnit, uiChipSelect
 	out: ptFlashDevice->pucFlashBase
@@ -313,7 +314,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 		uprintf("! Invalid unit number: %d\n", uiUnit);
 		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 	}
-#elif ASIC_TYP==10
+#elif ASIC_TYP==ASIC_TYP_NETX10
 	if( uiUnit!=0 )
 	{
 		uprintf("! Invalid unit number: %d\n", uiUnit);
@@ -344,7 +345,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 		ptFlashDevice->pfnSetup = setup_flash;
 	}
 	
-#elif ASIC_TYP==4000
+#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 #if 0
 	if( uiUnit==0 )
 	{
