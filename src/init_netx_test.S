@@ -30,7 +30,7 @@ start:
 	mov     sp, r2
 
 	@ Save the ROM stack position and some additional registers.
-	push    {r1, r3}
+	push    {r0, r1, r3}
 
 	@ Clear the .bss section.
 	mov     r1, #0
@@ -44,9 +44,15 @@ clear_bss:
 	@ Jump to the main routine.
 	blx     netx_consoleapp_main
 
+	@ Move the result to r2.
+	mov     r2, r0
+
 	@ Restore the ROM stack position.
-	pop     {r1, r3}
+	pop     {r0, r1, r3}
 	mov     sp, r1
+
+	@ Store the result in the structure.
+	str     r2, [r0, #0]
 
 	@ Restore the rest of the registers.
 	pop     {r0, r1, r2, lr}
