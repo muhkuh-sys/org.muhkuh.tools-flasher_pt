@@ -43,16 +43,22 @@
 #include "netx_io_areas.h"
 #include "delay.h"
 
+#if ASIC_TYP==ASIC_TYP_NETX90_MPW
+#       include "cortexm_systick.h"
+#endif
 
 /*****************************************************************************/
 /*! This function creates a delay                                 
-* The function unction creates a delay with the entered parameter.                
+* The function creates a delay with the entered parameter.
 *   \param uiDelayUs  Delay value
 *
 */
 /*****************************************************************************/
 void delay_us(unsigned int uiDelayUs)
 {
+#if ASIC_TYP==ASIC_TYP_NETX90_MPW
+	systick_delay_us(uiDelayUs);
+#else
 	HOSTDEF(ptGpioArea);
 	unsigned long ulTimerValue;
 	unsigned long ulTimerCtrl;
@@ -84,5 +90,6 @@ void delay_us(unsigned int uiDelayUs)
 
 	/*  Reset the counter max value */
 	ptGpioArea->aulGpio_counter_max[0] = 0;
+#endif
 }
 

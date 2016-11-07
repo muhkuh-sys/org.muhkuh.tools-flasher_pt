@@ -71,21 +71,20 @@ flasher_sources_common = """
 	src/i2c_hifsta.c
 	src/init_netx_test.S
 	src/main.c
-	src/netx_consoleapp.c
 	src/progress_bar.c
 	src/sfdp.c
 	src/spansion.c
 	src/spi_macro_player.c
 	src/strata.c
 	src/units.c
-	src/sha1_arm/sha1.c
-	src/sha1_arm/sha1_arm.S
 """
 
 
 flasher_sources_custom_netx4000 = """
 	src/netx4000/board.c
 	src/netx4000/flasher_header.c
+	src/sha1_arm/sha1.c
+	src/sha1_arm/sha1_arm.S
 	src/drv_spi_hsoc_v2.c
 	src/drv_sqi.c
 	src/mmio.c
@@ -93,9 +92,21 @@ flasher_sources_custom_netx4000 = """
 """
 
 
+flasher_sources_custom_netx90 = """
+	src/netx90/board.c
+	src/netx90/cortexm_systick.c
+	src/netx90/flasher_header.c
+	src/drv_spi_hsoc_v2.c
+	src/drv_sqi.c
+	src/mmio.c
+"""
+
+
 flasher_sources_custom_netx500 = """
 	src/netx500/board.c
 	src/netx500/flasher_header.c
+	src/sha1_arm/sha1.c
+	src/sha1_arm/sha1_arm.S
 	src/drv_spi_hsoc_v1.c
 """
 
@@ -103,6 +114,8 @@ flasher_sources_custom_netx500 = """
 flasher_sources_custom_netx56 = """
 	src/netx56/board.c
 	src/netx56/flasher_header.c
+	src/sha1_arm/sha1.c
+	src/sha1_arm/sha1_arm.S
 	src/drv_spi_hsoc_v2.c
 	src/drv_sqi.c
 	src/mmio.c
@@ -112,6 +125,8 @@ flasher_sources_custom_netx56 = """
 flasher_sources_custom_netx50 = """
 	src/netx50/board.c
 	src/netx50/flasher_header.c
+	src/sha1_arm/sha1.c
+	src/sha1_arm/sha1_arm.S
 	src/drv_spi_hsoc_v2.c
 	src/mmio.c
 """
@@ -120,6 +135,8 @@ flasher_sources_custom_netx50 = """
 flasher_sources_custom_netx10 = """
 	src/netx10/board.c
 	src/netx10/flasher_header.c
+	src/sha1_arm/sha1.c
+	src/sha1_arm/sha1_arm.S
 	src/drv_spi_hsoc_v2.c
 	src/drv_sqi.c
 	src/mmio.c
@@ -128,6 +145,7 @@ flasher_sources_custom_netx10 = """
 
 src_netx4000 = flasher_sources_common + flasher_sources_custom_netx4000
 src_netx500  = flasher_sources_common + flasher_sources_custom_netx500
+src_netx90   = flasher_sources_common + flasher_sources_custom_netx90
 src_netx56   = flasher_sources_common + flasher_sources_custom_netx56
 src_netx50   = flasher_sources_common + flasher_sources_custom_netx50
 src_netx10   = flasher_sources_common + flasher_sources_custom_netx10
@@ -156,6 +174,11 @@ env_netx500_default = atEnv.NETX500.Clone()
 env_netx500_default.Replace(LDFILE = File('src/netx500/netx500.ld'))
 env_netx500_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx500'])
 env_netx500_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+
+env_netx90_default  = atEnv.NETX90_MPW.Clone()
+env_netx90_default.Replace(LDFILE = File('src/netx90/netx90.ld'))
+env_netx90_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx90'])
+env_netx90_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '0']])
 
 env_netx56_default  = atEnv.NETX56.Clone()
 env_netx56_default.Replace(LDFILE = File('src/netx56/netx56.ld'))
@@ -228,6 +251,10 @@ env_netx500_nodbg = env_netx500_default.Clone()
 env_netx500_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
 elf_netx500_nodbg,bin_netx500_nodbg = flasher_build('flasher_netx500', env_netx500_nodbg, 'targets/netx500_nodbg', src_netx500)
 
+env_netx90_nodbg = env_netx90_default.Clone()
+env_netx90_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+elf_netx90_mpw_nodbg,bin_netx90_mpw_nodbg = flasher_build('flasher_netx90_mpw', env_netx90_nodbg, 'targets/netx90_mpw_nodbg', src_netx90)
+
 env_netx56_nodbg = env_netx56_default.Clone()
 env_netx56_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
 elf_netx56_nodbg,bin_netx56_nodbg = flasher_build('flasher_netx56', env_netx56_nodbg, 'targets/netx56_nodbg', src_netx56)
@@ -253,6 +280,10 @@ elf_netx4000_dbg,bin_netx4000_dbg = flasher_build('flasher_netx4000_debug', env_
 env_netx500_dbg = env_netx500_default.Clone()
 env_netx500_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
 elf_netx500_dbg,bin_netx500_dbg = flasher_build('flasher_netx500_debug', env_netx500_dbg, 'targets/netx500_dbg', src_netx500)
+
+env_netx90_dbg = env_netx90_default.Clone()
+env_netx90_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+elf_netx90_mpw_dbg,bin_netx90_mpw_dbg = flasher_build('flasher_netx90_mpw_debug', env_netx90_dbg, 'targets/netx90_mpw_dbg', src_netx90)
 
 env_netx56_dbg = env_netx56_default.Clone()
 env_netx56_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
@@ -341,6 +372,7 @@ tArcList0 = atEnv.DEFAULT.ArchiveList('zip')
 tArcList0.AddFiles('netx/',
 	bin_netx4000_nodbg,
 	bin_netx500_nodbg,
+	bin_netx90_mpw_nodbg,
 	bin_netx56_nodbg,
 	bin_netx50_nodbg,
 	bin_netx10_nodbg)
@@ -348,6 +380,7 @@ tArcList0.AddFiles('netx/',
 tArcList0.AddFiles('netx/debug/',
 	bin_netx4000_dbg,
 	bin_netx500_dbg,
+	bin_netx90_mpw_dbg,
 	bin_netx56_dbg,
 	bin_netx50_dbg,
 	bin_netx10_dbg)
@@ -416,6 +449,7 @@ atEnv.DEFAULT.Version('targets/artifacts_flasher_cli.xml', 'ivy/flasher_cli/arti
 # Copy all binaries.
 Command('targets/testbench/netx/flasher_netx4000.bin', bin_netx4000_nodbg, Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/netx/flasher_netx500.bin',  bin_netx500_nodbg,  Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/flasher_netx90_mpw.bin',  bin_netx90_mpw_nodbg,  Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/netx/flasher_netx56.bin',   bin_netx56_nodbg,   Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/netx/flasher_netx50.bin',   bin_netx50_nodbg,   Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/netx/flasher_netx10.bin',   bin_netx10_nodbg,   Copy("$TARGET", "$SOURCE"))
@@ -423,6 +457,7 @@ Command('targets/testbench/netx/flasher_netx10.bin',   bin_netx10_nodbg,   Copy(
 # Copy all debug binaries.
 Command('targets/testbench/netx/debug/flasher_netx4000_debug.bin', bin_netx4000_dbg, Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/netx/debug/flasher_netx500_debug.bin',  bin_netx500_dbg,  Copy("$TARGET", "$SOURCE"))
+Command('targets/testbench/netx/debug/flasher_netx90_mpw_debug.bin',  bin_netx90_mpw_dbg,   Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/netx/debug/flasher_netx56_debug.bin',   bin_netx56_dbg,   Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/netx/debug/flasher_netx50_debug.bin',   bin_netx50_dbg,   Copy("$TARGET", "$SOURCE"))
 Command('targets/testbench/netx/debug/flasher_netx10_debug.bin',   bin_netx10_dbg,   Copy("$TARGET", "$SOURCE"))

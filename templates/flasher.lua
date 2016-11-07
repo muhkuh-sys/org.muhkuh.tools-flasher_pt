@@ -155,7 +155,8 @@ local chiptyp2name = {
 	[romloader.ROMLOADER_CHIPTYP_NETX10]  = "netx10",
 	[romloader.ROMLOADER_CHIPTYP_NETX56]  = "netx56",
 	[romloader.ROMLOADER_CHIPTYP_NETX56B] = "netx56",
-	[romloader.ROMLOADER_CHIPTYP_NETX4000] = "netx4000"
+	[romloader.ROMLOADER_CHIPTYP_NETX4000] = "netx4000",
+	[romloader.ROMLOADER_CHIPTYP_NETX90MPW] = "netx90_mpw",
 }
 
 -- prefix must include a trailing backslash if it's a directory
@@ -198,6 +199,7 @@ function get_flasher_binary_attributes(strData)
 	print(string.format("buffer start:       0x%08x", aAttr.ulBufferAdr))
 	print(string.format("buffer end:         0x%08x", aAttr.ulBufferEnd))
 
+  print(string.format("exec:         0x%08x", aAttr.ulExecAddress))
 	return aAttr
 end
 

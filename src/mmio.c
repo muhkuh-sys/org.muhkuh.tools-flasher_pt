@@ -23,27 +23,27 @@
 
 void mmio_activate(const unsigned char *pucMmioPins, size_t sizMmioPins, const MMIO_CFG_T *ptMmioValues)
 {
-	HOSTDEF(ptAsicCtrlArea)
-	HOSTDEF(ptMmioCtrlArea)
+	HOSTDEF(ptAsicCtrlArea);
+	HOSTDEF(ptMmioCtrlArea);
 	const unsigned char *pucCnt;
 	const unsigned char *pucEnd;
 	unsigned int uiMmioPin;
 	MMIO_CFG_T tMmioCfg;
 
 
-	/* loop over all pins */
+	/* Loop over all pins in the array. */
 	pucCnt = pucMmioPins;
 	pucEnd = pucCnt + sizMmioPins;
 	do
 	{
-		/* get the mmio config */
+		/* Get the MMIO configuration. */
 		tMmioCfg = *(ptMmioValues++);
-		/* get the pin index */
+		/* Get the pin index. */
 		uiMmioPin = *(pucCnt++);
-		/* is the index valid? */
+		/* Is the index valid? */
 		if( tMmioCfg!=0xffU && uiMmioPin!=0xffU )
 		{
-			/* activate the pin */
+			/* Activate the pin. */
 			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
 			ptMmioCtrlArea->aulMmio_cfg[uiMmioPin] = tMmioCfg;
 		}
@@ -53,27 +53,27 @@ void mmio_activate(const unsigned char *pucMmioPins, size_t sizMmioPins, const M
 
 void mmio_deactivate(const unsigned char *pucMmioPins, size_t sizMmioPins, const MMIO_CFG_T *ptMmioValues)
 {
-	HOSTDEF(ptAsicCtrlArea)
-	HOSTDEF(ptMmioCtrlArea)
+	HOSTDEF(ptAsicCtrlArea);
+	HOSTDEF(ptMmioCtrlArea);
 	const unsigned char *pucCnt;
 	const unsigned char *pucEnd;
 	unsigned int uiMmioPin;
 	MMIO_CFG_T tMmioCfg;
 
 
-	/* loop over all pins */
+	/* Loop over all pins in the array. */
 	pucCnt = pucMmioPins;
 	pucEnd = pucCnt + sizMmioPins;
 	do
 	{
-		/* get the mmio config */
+		/* Get the MMIO configuration. */
 		tMmioCfg = *(ptMmioValues++);
-		/* get the pin index */
+		/* Get the pin index. */
 		uiMmioPin = *(pucCnt++);
-		/* is the index valid? */
+		/* Is the index valid? */
 		if( tMmioCfg!=0xffU && uiMmioPin!=0xffU )
 		{
-			/* deactivate the pin */
+			/* Deactivate the pin. */
 			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
 			ptMmioCtrlArea->aulMmio_cfg[uiMmioPin] = MMIO_CFG_DISABLE;
 		}

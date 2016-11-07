@@ -30,8 +30,8 @@
 #include "sfdp.h"
 
 
-#if ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 | ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
-/* netX10, netX56 and netX4000 have a SQI and a SPI unit. */
+#if ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 || ASIC_TYP==ASIC_TYP_NETX4000_RELAXED || ASIC_TYP==ASIC_TYP_NETX90_MPW
+/* netX10, netX56, netX4000 and netX90 have a SQI and a SPI unit. */
 #	include "drv_sqi.h"
 #	include "drv_spi_hsoc_v2.h"
 #elif ASIC_TYP==ASIC_TYP_NETX50
@@ -629,6 +629,33 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 
 	case 3:
 		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi_xpic3);
+		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		break;
+
+	default:
+		iResult = -1;
+		break;
+	}
+
+#elif ASIC_TYP==ASIC_TYP_NETX90_MPW
+	switch( uiUnit )
+	{
+	case 0:
+		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg, uiUnit);
+		break;
+
+	case 1:
+		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi0_app);
+		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		break;
+
+	case 2:
+		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi1_app);
+		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		break;
+
+	case 3:
+		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi2_app);
 		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 

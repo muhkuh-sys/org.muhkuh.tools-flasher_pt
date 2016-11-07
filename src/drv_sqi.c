@@ -141,6 +141,22 @@ static const unsigned short ausPortcontrol_Index_SQI1_CS0[6] =
 	PORTCONTROL_INDEX(10,  8)       // SQI1_CS0N
 };
 
+#elif ASIC_TYP==ASIC_TYP_NETX90_MPW
+static const MMIO_CFG_T aatMmioValues[1][4] =
+{
+	/* The SQI port on the netX90 is not routed through the MMIO matrix. */
+	/*
+	 * Chip select 0
+	 */
+	{
+		0xffU,                          /* chip select */
+		0xffU,                          /* clock */
+		0xffU,                          /* MISO */
+		0xffU                           /* MOSI */
+	}
+};
+
+
 #else
 #       error "The SQI driver does not support this ASIC type!"
 #endif
@@ -606,6 +622,7 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 	{
 		ptSqiArea = (HOSTADEF(SQI)*)HOSTADDR(sqi);
 	}
+
 #elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
 	if( uiSqiUnit==0 )
 	{
@@ -616,6 +633,12 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 	{
 		ptSqiArea = (HOSTADEF(SQI)*)HOSTADDR(SQI1);
 		pusPortControlIndex = ausPortcontrol_Index_SQI1_CS0;
+	}
+
+#elif ASIC_TYP==ASIC_TYP_NETX90_MPW
+	if( uiSqiUnit==0 )
+	{
+		ptSqiArea = (HOSTADEF(SQI)*)HOSTADDR(sqi);
 	}
 #endif
 

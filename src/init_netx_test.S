@@ -1,67 +1,58 @@
-
-	.section .text
-	.arm
-
-	.extern test_main
-
-	.global netx_consoleapp_init
-	.global NetxConsoleParameter_Init
+	.extern netx_consoleapp_main
 	.global start
 
+	.text
+
+#include "asic_types.h"
+
 @--------------------------------------
 
-  .func start
+@ The Cortex-M4 in the netX90 is a THUMB-only CPU.
+@ All others start in 32 bit mode.
+#if ASIC_TYP==ASIC_TYP_NETX90_MPW
+	.syntax unified
+	.thumb
+#else
+	.arm
+#endif
 
+
+    .func start, start
+    .type start, STT_FUNC
 start:
-	stmfd   sp!, {r0, r1, r2, lr}
+	push    {r0, r1, r2, lr}
 
-	@ save pointer to netx parameter block
-	ldr     r1, =NetxConsoleParameter_Init
-	str     r0, [r1]
+	@ Save the stack position of the ROM.
+	mov     r1, sp
 
-	@ save debug console stack position
-	mov     r0, sp
-	ldr     r1, =blstack_save
-	str     r0, [r1]
+	@ Set own stack position
+	ldr     r2, =stack_top
+	mov     sp, r2
 
-	@ set own stack position
-	ldr     r0, =stack_top
-	mov     sp, r0
+	@ Save the ROM stack position and some additional registers.
+	push    {r1, r3}
 
-	@ clear .bss section (zero init)
-	mov     r0, #0
-	ldr     r1, =__bss_start__
-	ldr     r2, =__bss_end__
+	@ Clear the .bss section.
+	mov     r1, #0
+	ldr     r2, =__bss_start__
+	ldr     r3, =__bss_end__
 clear_bss:
-	cmp     r1, r2
-	strlo   r0, [r1], #4
-	blo     clear_bss
+	str     r1, [r2], #4
+	cmp     r2, r3
+	bmi     clear_bss
 
-	bl      call_test_main
+	@ Jump to the main routine.
+	blx     netx_consoleapp_main
 
-	@ restore debug console stack
-	ldr     r1, =blstack_save
-	ldr     r0, [r1]
-	mov     sp, r0
+	@ Restore the ROM stack position.
+	pop     {r1, r3}
+	mov     sp, r1
 
-	ldmfd   sp!, {r0, r1, r2, lr}
+	@ Restore the rest of the registers.
+	pop     {r0, r1, r2, lr}
 	bx      lr
 
-call_test_main:
-	ldr     r0, =netx_consoleapp_init
-	bx      r0
-
   .endfunc
-
-@--------------------------------------
-
-	.align 4
-
-NetxConsoleParameter_Init:
-	.word 0
-
-blstack_save:
-	.word 0
 
 @--------------------------------------
 
