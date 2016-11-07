@@ -897,11 +897,14 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 				tResult = opMode_verify(ptAppParams, ptTestParam);
 				break;
 				
-#if CFG_INCLUDE_SHA1!=0
 			case OPERATION_MODE_Checksum:
+#if CFG_INCLUDE_SHA1!=0
 				tResult = opMode_checksum(ptAppParams);
-				break;
+#else
+				uprintf("Error: the checksum command is not supported by this build.");
+				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 #endif
+				break;
 				
 			case OPERATION_MODE_IsErased:
 				tResult = opMode_isErased(ptAppParams, ptTestParam);
