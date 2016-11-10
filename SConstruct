@@ -245,7 +245,7 @@ elf_netx10_oldio_dbg,bin_netx10_oldio_dbg = flasher_build('flasher_netx10_debug'
 #
 env_netx4000_nodbg = env_netx4000_default.Clone()
 env_netx4000_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-elf_netx4000_nodbg,bin_netx4000_nodbg = flasher_build('flasher_netx4000', env_netx4000_nodbg, 'targets/netx4000_nodbg', src_netx4000)
+elf_netx4000_relaxed_nodbg,bin_netx4000_relaxed_nodbg = flasher_build('flasher_netx4000_relaxed', env_netx4000_nodbg, 'targets/netx4000_relaxed_nodbg', src_netx4000)
 
 env_netx500_nodbg = env_netx500_default.Clone()
 env_netx500_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
@@ -275,7 +275,7 @@ elf_netx10_nodbg,bin_netx10_nodbg = flasher_build('flasher_netx10', env_netx10_n
 
 env_netx4000_dbg = env_netx4000_default.Clone()
 env_netx4000_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-elf_netx4000_dbg,bin_netx4000_dbg = flasher_build('flasher_netx4000_debug', env_netx4000_dbg, 'targets/netx4000_dbg', src_netx4000)
+elf_netx4000_relaxed_dbg,bin_netx4000_relaxed_dbg = flasher_build('flasher_netx4000_relaxed_debug', env_netx4000_dbg, 'targets/netx4000_relaxed_dbg', src_netx4000)
 
 env_netx500_dbg = env_netx500_default.Clone()
 env_netx500_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
@@ -370,7 +370,7 @@ strArtifactId = 'flasher'
 tArcList0 = atEnv.DEFAULT.ArchiveList('zip')
 
 tArcList0.AddFiles('netx/',
-	bin_netx4000_nodbg,
+	bin_netx4000_relaxed_nodbg,
 	bin_netx500_nodbg,
 	bin_netx90_mpw_nodbg,
 	bin_netx56_nodbg,
@@ -378,7 +378,7 @@ tArcList0.AddFiles('netx/',
 	bin_netx10_nodbg)
 
 tArcList0.AddFiles('netx/debug/',
-	bin_netx4000_dbg,
+	bin_netx4000_relaxed_dbg,
 	bin_netx500_dbg,
 	bin_netx90_mpw_dbg,
 	bin_netx56_dbg,
