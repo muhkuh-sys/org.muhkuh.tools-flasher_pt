@@ -149,14 +149,14 @@ end
 
 -- map chip type to flasher
 local chiptyp2name = {
-	[romloader.ROMLOADER_CHIPTYP_NETX500] = "netx500",
-	[romloader.ROMLOADER_CHIPTYP_NETX100] = "netx500",
-	[romloader.ROMLOADER_CHIPTYP_NETX50]  = "netx50",
-	[romloader.ROMLOADER_CHIPTYP_NETX10]  = "netx10",
-	[romloader.ROMLOADER_CHIPTYP_NETX56]  = "netx56",
-	[romloader.ROMLOADER_CHIPTYP_NETX56B] = "netx56",
-	[romloader.ROMLOADER_CHIPTYP_NETX4000] = "netx4000",
-	[romloader.ROMLOADER_CHIPTYP_NETX90MPW] = "netx90_mpw",
+	[romloader.ROMLOADER_CHIPTYP_NETX500]         = "netx500",
+	[romloader.ROMLOADER_CHIPTYP_NETX100]         = "netx500",
+	[romloader.ROMLOADER_CHIPTYP_NETX50]          = "netx50",
+	[romloader.ROMLOADER_CHIPTYP_NETX10]          = "netx10",
+	[romloader.ROMLOADER_CHIPTYP_NETX56]          = "netx56",
+	[romloader.ROMLOADER_CHIPTYP_NETX56B]         = "netx56",
+	[romloader.ROMLOADER_CHIPTYP_NETX4000RELAXED] = "netx4000_relaxed",
+	[romloader.ROMLOADER_CHIPTYP_NETX90MPW]       = "netx90_mpw",
 }
 
 -- prefix must include a trailing backslash if it's a directory

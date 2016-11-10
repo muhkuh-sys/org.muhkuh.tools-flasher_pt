@@ -44,13 +44,14 @@ ulMagic = get_dword(strBootBlock, 0+1)
 print(string.format("Magic: 0x%08x", ulMagic))
 
 local aucMagic = {
-	[romloader.ROMLOADER_CHIPTYP_NETX500]  = string.char(0xaf, 0xbe, 0xf8),
-	[romloader.ROMLOADER_CHIPTYP_NETX100]  = string.char(0xaf, 0xbe, 0xf8),
-	[romloader.ROMLOADER_CHIPTYP_NETX50]   = string.char(0xaf, 0xbe, 0xf8),
-	[romloader.ROMLOADER_CHIPTYP_NETX10]   = string.char(0xaf, 0xbe, 0xf8),
-	[romloader.ROMLOADER_CHIPTYP_NETX56]   = string.char(0xaf, 0xbe, 0xf8),
-	[romloader.ROMLOADER_CHIPTYP_NETX56B]  = string.char(0xaf, 0xbe, 0xf8),
-	[romloader.ROMLOADER_CHIPTYP_NETX4000] = string.char(0xaf, 0xbe, 0xf3)
+	[romloader.ROMLOADER_CHIPTYP_NETX500]         = string.char(0xaf, 0xbe, 0xf8),
+	[romloader.ROMLOADER_CHIPTYP_NETX100]         = string.char(0xaf, 0xbe, 0xf8),
+	[romloader.ROMLOADER_CHIPTYP_NETX50]          = string.char(0xaf, 0xbe, 0xf8),
+	[romloader.ROMLOADER_CHIPTYP_NETX10]          = string.char(0xaf, 0xbe, 0xf8),
+	[romloader.ROMLOADER_CHIPTYP_NETX56]          = string.char(0xaf, 0xbe, 0xf8),
+	[romloader.ROMLOADER_CHIPTYP_NETX56B]         = string.char(0xaf, 0xbe, 0xf8),
+	[romloader.ROMLOADER_CHIPTYP_NETX4000RELAXED] = string.char(0xaf, 0xbe, 0xf3),
+	[romloader.ROMLOADER_CHIPTYP_NETX90MPW]       = string.char(0xaf, 0xbe, 0xf3),
 }
 local iChiptype = tPlugin:GetChiptyp()
 strMagic = aucMagic[iChiptype]
