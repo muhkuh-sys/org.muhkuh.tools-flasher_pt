@@ -6,10 +6,8 @@ python:
 # Build on Ubuntu 14.04 .
 dist: trusty
 
-# Use the new container-based infrastructure. No "sudo" is possible now.
-# NOTE: in combination with Ubuntu 14.04 we need the BETA here.
-sudo: false
-group: beta
+# Use the full VM to get all packages.
+sudo: true
 
 
 # Install the "gcc-multilib" package to be able to use 32bit compiler tools on a 64bit VM.
