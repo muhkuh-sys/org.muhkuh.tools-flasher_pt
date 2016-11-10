@@ -114,6 +114,7 @@ static const MMIO_CFG_T aatMmioValues[1][4] =
 };
 
 
+#if 0
 /* This tables shows the port control indices for the SQI0 pins.
  * There is only CS0. All other chip selects are not routed to the outside.
  */
@@ -140,6 +141,7 @@ static const unsigned short ausPortcontrol_Index_SQI1_CS0[6] =
 	PORTCONTROL_INDEX(10,  7),      // SQI1_SIO3
 	PORTCONTROL_INDEX(10,  8)       // SQI1_CS0N
 };
+#endif
 
 #elif ASIC_TYP==ASIC_TYP_NETX90_MPW
 static const MMIO_CFG_T aatMmioValues[1][4] =
@@ -607,7 +609,9 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 #if ASIC_TYP==ASIC_TYP_NETX56
 	HOSTDEF(ptAsicCtrlArea);
 #elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#       if 0
 	const unsigned short *pusPortControlIndex;
+#       endif
 #endif
 	unsigned long ulValue;
 	int iResult;
@@ -627,12 +631,16 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 	if( uiSqiUnit==0 )
 	{
 		ptSqiArea = (HOSTADEF(SQI)*)HOSTADDR(SQI0);
+#if 0
 		pusPortControlIndex = ausPortcontrol_Index_SQI0_CS0;
+#endif
 	}
 	else if( uiSqiUnit==1 )
 	{
 		ptSqiArea = (HOSTADEF(SQI)*)HOSTADDR(SQI1);
+#if 0
 		pusPortControlIndex = ausPortcontrol_Index_SQI1_CS0;
+#endif
 	}
 
 #elif ASIC_TYP==ASIC_TYP_NETX90_MPW
