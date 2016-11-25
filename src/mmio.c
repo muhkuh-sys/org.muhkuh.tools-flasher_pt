@@ -44,7 +44,7 @@ void mmio_activate(const unsigned char *pucMmioPins, size_t sizMmioPins, const M
 		if( tMmioCfg!=0xffU && uiMmioPin!=0xffU )
 		{
 			/* Activate the pin. */
-			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key; /* @suppress("Assignment to itself") */
 			ptMmioCtrlArea->aulMmio_cfg[uiMmioPin] = tMmioCfg;
 		}
 	} while( pucCnt<pucEnd );
@@ -74,7 +74,7 @@ void mmio_deactivate(const unsigned char *pucMmioPins, size_t sizMmioPins, const
 		if( tMmioCfg!=0xffU && uiMmioPin!=0xffU )
 		{
 			/* Deactivate the pin. */
-			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key;
+			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key; /* @suppress("Assignment to itself") */
 			ptMmioCtrlArea->aulMmio_cfg[uiMmioPin] = MMIO_CFG_DISABLE;
 		}
 	} while( pucCnt<pucEnd );
