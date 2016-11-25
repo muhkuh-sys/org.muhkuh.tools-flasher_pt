@@ -62,6 +62,8 @@ spi_flashes.ApplyToEnv(atEnv.NETX90_MPW)
 # This is the list of sources. The elements must be separated with whitespace
 # (i.e. spaces, tabs, newlines). The amount of whitespace does not matter.
 flasher_sources_common = """
+	src/internal_flash/flasher_internal_flash.c
+	src/internal_flash/internal_flash_maz_v0.c
 	src/cfi_flash.c
 	src/delay.c
 	src/spi_flash.c

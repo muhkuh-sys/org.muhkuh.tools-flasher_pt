@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "cfi_flash.h"
+#include "internal_flash/internal_flash.h"
 #include "spi_flash.h"
 #include "spi_macro_player.h"
 
@@ -35,8 +36,9 @@
 
 typedef enum BUS_ENUM
 {
-	BUS_ParFlash                    = 0,    /*  Parallel flash */
-	BUS_SPI                         = 1     /*  Serial flash on SPI bus. */
+	BUS_ParFlash                    = 0,    /* Parallel flash */
+	BUS_SPI                         = 1,    /* Serial flash on SPI bus. */
+	BUS_IFlash                      = 2     /* Internal flash. */
 } BUS_T;
 
 typedef enum OPERATION_MODE_ENUM
@@ -66,6 +68,7 @@ typedef struct DEVICE_DESCRIPTION_STRUCT
 	{
 		FLASH_DEVICE_T tParFlash;
 		SPI_FLASH_T tSpiInfo;
+		INTERNAL_FLASH_T tInternalFlashInfo;
 	} uInfo;
 } DEVICE_DESCRIPTION_T;
 
@@ -126,6 +129,7 @@ typedef struct CMD_PARAMETER_DETECT_STRUCT
 	{
 		PARFLASH_CONFIGURATION_T tParFlash;
 		SPI_CONFIGURATION_T tSpi;
+		INTERNAL_FLASH_CONFIGURATION_T tInternalFlash;
 	} uSourceParameter;
 	DEVICE_DESCRIPTION_T *ptDeviceDescription;
 } CMD_PARAMETER_DETECT_T;

@@ -42,6 +42,7 @@ require("romloader")
 
 BUS_Parflash    = ${BUS_ParFlash}             -- parallel flash
 BUS_Spi         = ${BUS_SPI}             -- serial flash on spi bus
+BUS_IFlash      = ${BUS_IFlash}             -- internal flash
 
 
 OPERATION_MODE_Flash             = ${OPERATION_MODE_Flash}
@@ -149,14 +150,14 @@ end
 
 -- map chip type to flasher
 local chiptyp2name = {
-	[romloader.ROMLOADER_CHIPTYP_NETX500]         = "netx500",
-	[romloader.ROMLOADER_CHIPTYP_NETX100]         = "netx500",
-	[romloader.ROMLOADER_CHIPTYP_NETX50]          = "netx50",
-	[romloader.ROMLOADER_CHIPTYP_NETX10]          = "netx10",
-	[romloader.ROMLOADER_CHIPTYP_NETX56]          = "netx56",
-	[romloader.ROMLOADER_CHIPTYP_NETX56B]         = "netx56",
-	[romloader.ROMLOADER_CHIPTYP_NETX4000RELAXED] = "netx4000_relaxed",
-	[romloader.ROMLOADER_CHIPTYP_NETX90MPW]       = "netx90_mpw",
+	[romloader.ROMLOADER_CHIPTYP_NETX500]          = "netx500",
+	[romloader.ROMLOADER_CHIPTYP_NETX100]          = "netx500",
+	[romloader.ROMLOADER_CHIPTYP_NETX50]           = "netx50",
+	[romloader.ROMLOADER_CHIPTYP_NETX10]           = "netx10",
+	[romloader.ROMLOADER_CHIPTYP_NETX56]           = "netx56",
+	[romloader.ROMLOADER_CHIPTYP_NETX56B]          = "netx56",
+	[romloader.ROMLOADER_CHIPTYP_NETX4000_RELAXED] = "netx4000_relaxed",
+	[romloader.ROMLOADER_CHIPTYP_NETX90_MPW]       = "netx90_mpw",
 }
 
 -- prefix must include a trailing backslash if it's a directory
@@ -427,6 +428,20 @@ function detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, fnCallbackMessage, f
 			0,                                    -- reserved
 			aAttr.ulDeviceDesc                    -- data block for the device description
 		}
+  elseif tBus==BUS_IFlash then
+    aulParameter =
+    {
+      OPERATION_MODE_Detect,                -- operation mode: detect
+      tBus,                                 -- the bus
+      ulUnit,                               -- unit
+      ulChipSelect,                         -- chip select
+      0,                                    -- reserved
+      0,                                    -- reserved
+      0,                                    -- reserved
+      0,                                    -- reserved
+      0,                                    -- reserved
+      aAttr.ulDeviceDesc                    -- data block for the device description
+    }
 	else
 		error("Unknown bus: " .. tostring(tBus))
 	end
