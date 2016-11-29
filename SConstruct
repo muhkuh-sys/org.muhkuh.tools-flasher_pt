@@ -24,38 +24,65 @@ import os.path
 
 #----------------------------------------------------------------------------
 #
+# Select the platforms to build
+#
+atPickNetxForBuild_All = ['NETX4000_RELAXED', 'NETX500', 'NETX90_MPW', 'NETX56', 'NETX50', 'NETX10']
+AddOption('--netx',
+          dest='atPickNetxForBuild',
+          type='choice',
+          choices=atPickNetxForBuild_All,
+          action='append',
+          metavar='NETX',
+          help='Select the platforms to build the flasher for.')
+atPickNetxForBuild = GetOption('atPickNetxForBuild')
+if atPickNetxForBuild is None:
+    atPickNetxForBuild = atPickNetxForBuild_All
+fBuildIsFull = True
+for strNetx in atPickNetxForBuild_All:
+    if strNetx not in atPickNetxForBuild:
+        fBuildIsFull = False
+        break
+
+
+#----------------------------------------------------------------------------
+#
 # Set up the Muhkuh Build System.
 #
-
 SConscript('mbs/SConscript')
 Import('atEnv')
 
+import spi_flashes
+spi_flashes.ApplyToEnv(atEnv.DEFAULT)
+
 # Create a build environment for the ARM9 based netX chips.
 env_arm9 = atEnv.DEFAULT.CreateEnvironment(['gcc-arm-none-eabi-4.7', 'asciidoc', 'exoraw-2.0.7_2'])
-env_arm9.CreateCompilerEnv('NETX500', ['arch=armv5te'])
-env_arm9.CreateCompilerEnv('NETX56', ['arch=armv5te'])
-env_arm9.CreateCompilerEnv('NETX50', ['arch=armv5te'])
-env_arm9.CreateCompilerEnv('NETX10', ['arch=armv5te'])
+if 'NETX500' in atPickNetxForBuild:
+    env_arm9.CreateCompilerEnv('NETX500', ['arch=armv5te'])
+    spi_flashes.ApplyToEnv(atEnv.NETX500)
+if 'NETX56' in atPickNetxForBuild:
+    env_arm9.CreateCompilerEnv('NETX56', ['arch=armv5te'])
+    spi_flashes.ApplyToEnv(atEnv.NETX56)
+if 'NETX50' in atPickNetxForBuild:
+    env_arm9.CreateCompilerEnv('NETX50', ['arch=armv5te'])
+    spi_flashes.ApplyToEnv(atEnv.NETX50)
+if 'NETX10' in atPickNetxForBuild:
+    env_arm9.CreateCompilerEnv('NETX10', ['arch=armv5te'])
+    spi_flashes.ApplyToEnv(atEnv.NETX10)
 
 # Create a build environment for the Cortex-R7 and Cortex-A9 based netX chips.
 env_cortexR7 = atEnv.DEFAULT.CreateEnvironment(['gcc-arm-none-eabi-4.9', 'asciidoc', 'exoraw-2.0.7_2'])
-env_cortexR7.CreateCompilerEnv('NETX4000_RELAXED', ['arch=armv7', 'thumb'], ['arch=armv7-r', 'thumb'])
+if 'NETX4000_RELAXED' in atPickNetxForBuild:
+    env_cortexR7.CreateCompilerEnv('NETX4000_RELAXED', ['arch=armv7', 'thumb'], ['arch=armv7-r', 'thumb'])
+    spi_flashes.ApplyToEnv(atEnv.NETX4000_RELAXED)
 
 # Create a build environment for the Cortex-M4 based netX chips.
 env_cortexM4 = atEnv.DEFAULT.CreateEnvironment(['gcc-arm-none-eabi-4.9', 'asciidoc', 'exoraw-2.0.7_2'])
-env_cortexM4.CreateCompilerEnv('NETX90_MPW', ['arch=armv7', 'thumb'], ['arch=armv7e-m', 'thumb'])
+if 'NETX90_MPW' in atPickNetxForBuild:
+    env_cortexM4.CreateCompilerEnv('NETX90_MPW', ['arch=armv7', 'thumb'], ['arch=armv7e-m', 'thumb'])
+    spi_flashes.ApplyToEnv(atEnv.NETX90_MPW)
 
 # Build the platform libraries.
 SConscript('platform/SConscript')
-
-import spi_flashes
-spi_flashes.ApplyToEnv(atEnv.DEFAULT)
-spi_flashes.ApplyToEnv(atEnv.NETX500)
-spi_flashes.ApplyToEnv(atEnv.NETX56)
-spi_flashes.ApplyToEnv(atEnv.NETX50)
-spi_flashes.ApplyToEnv(atEnv.NETX10)
-spi_flashes.ApplyToEnv(atEnv.NETX4000_RELAXED)
-spi_flashes.ApplyToEnv(atEnv.NETX90_MPW)
 
 
 #----------------------------------------------------------------------------
@@ -167,35 +194,41 @@ atEnv.DEFAULT.Version('targets/version/flasher_version.xsl', 'templates/flasher_
 #
 astrCommonIncludePaths = ['src', 'src/sha1_arm', '#platform/src', '#platform/src/lib', 'targets/spi_flash_types', 'targets/version']
 
-env_netx4000_default = atEnv.NETX4000_RELAXED.Clone()
-env_netx4000_default.Replace(LDFILE = File('src/netx4000/netx4000.ld'))
-env_netx4000_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx4000'])
-env_netx4000_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+if 'NETX4000_RELAXED' in atPickNetxForBuild:
+    env_netx4000_default = atEnv.NETX4000_RELAXED.Clone()
+    env_netx4000_default.Replace(LDFILE = File('src/netx4000/netx4000.ld'))
+    env_netx4000_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx4000'])
+    env_netx4000_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
 
-env_netx500_default = atEnv.NETX500.Clone()
-env_netx500_default.Replace(LDFILE = File('src/netx500/netx500.ld'))
-env_netx500_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx500'])
-env_netx500_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+if 'NETX500' in atPickNetxForBuild:
+    env_netx500_default = atEnv.NETX500.Clone()
+    env_netx500_default.Replace(LDFILE = File('src/netx500/netx500.ld'))
+    env_netx500_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx500'])
+    env_netx500_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
 
-env_netx90_default  = atEnv.NETX90_MPW.Clone()
-env_netx90_default.Replace(LDFILE = File('src/netx90/netx90.ld'))
-env_netx90_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx90'])
-env_netx90_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '0']])
+if 'NETX90_MPW' in atPickNetxForBuild:
+    env_netx90_default  = atEnv.NETX90_MPW.Clone()
+    env_netx90_default.Replace(LDFILE = File('src/netx90/netx90.ld'))
+    env_netx90_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx90'])
+    env_netx90_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '0']])
 
-env_netx56_default  = atEnv.NETX56.Clone()
-env_netx56_default.Replace(LDFILE = File('src/netx56/netx56.ld'))
-env_netx56_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx56'])
-env_netx56_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+if 'NETX56' in atPickNetxForBuild:
+    env_netx56_default  = atEnv.NETX56.Clone()
+    env_netx56_default.Replace(LDFILE = File('src/netx56/netx56.ld'))
+    env_netx56_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx56'])
+    env_netx56_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
 
-env_netx50_default  = atEnv.NETX50.Clone()
-env_netx50_default.Replace(LDFILE = File('src/netx50/netx50.ld'))
-env_netx50_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx50'])
-env_netx50_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+if 'NETX50' in atPickNetxForBuild:
+    env_netx50_default  = atEnv.NETX50.Clone()
+    env_netx50_default.Replace(LDFILE = File('src/netx50/netx50.ld'))
+    env_netx50_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx50'])
+    env_netx50_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
 
-env_netx10_default  = atEnv.NETX10.Clone()
-env_netx10_default.Replace(LDFILE = File('src/netx10/netx10.ld'))
-env_netx10_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx10'])
-env_netx10_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+if 'NETX10' in atPickNetxForBuild:
+    env_netx10_default  = atEnv.NETX10.Clone()
+    env_netx10_default.Replace(LDFILE = File('src/netx10/netx10.ld'))
+    env_netx10_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx10'])
+    env_netx10_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
 
 
 #----------------------------------------------------------------------------
@@ -230,74 +263,86 @@ def flasher_build(strFlasherName, tEnv, strBuildPath, astrSources):
 #
 # Build the netX10 flasher with the old netX50 console io interface.
 #
-env_netx10_oldio_nodbg = env_netx10_default.Clone()
-env_netx10_oldio_nodbg.Replace(LDFILE = File('src/netx10/netx10_oldio.ld'))
-env_netx10_oldio_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-elf_netx10_oldio_nodbg,bin_netx10_oldio_nodbg = flasher_build('flasher_netx10', env_netx10_oldio_nodbg, 'targets/netx10_oldio_nodbg', src_netx10)
+if 'NETX10' in atPickNetxForBuild:
+    env_netx10_oldio_nodbg = env_netx10_default.Clone()
+    env_netx10_oldio_nodbg.Replace(LDFILE = File('src/netx10/netx10_oldio.ld'))
+    env_netx10_oldio_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+    elf_netx10_oldio_nodbg,bin_netx10_oldio_nodbg = flasher_build('flasher_netx10', env_netx10_oldio_nodbg, 'targets/netx10_oldio_nodbg', src_netx10)
 
-env_netx10_oldio_dbg = env_netx10_default.Clone()
-env_netx10_oldio_dbg.Replace(LDFILE = File('src/netx10/netx10_oldio.ld'))
-env_netx10_oldio_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-elf_netx10_oldio_dbg,bin_netx10_oldio_dbg = flasher_build('flasher_netx10_debug', env_netx10_oldio_dbg, 'targets/netx10_oldio_dbg', src_netx10)
+    env_netx10_oldio_dbg = env_netx10_default.Clone()
+    env_netx10_oldio_dbg.Replace(LDFILE = File('src/netx10/netx10_oldio.ld'))
+    env_netx10_oldio_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+    elf_netx10_oldio_dbg,bin_netx10_oldio_dbg = flasher_build('flasher_netx10_debug', env_netx10_oldio_dbg, 'targets/netx10_oldio_dbg', src_netx10)
 
 
 #----------------------------------------------------------------------------
 #
 # Build the flasher without debug messages.
 #
-env_netx4000_nodbg = env_netx4000_default.Clone()
-env_netx4000_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-elf_netx4000_relaxed_nodbg,bin_netx4000_relaxed_nodbg = flasher_build('flasher_netx4000_relaxed', env_netx4000_nodbg, 'targets/netx4000_relaxed_nodbg', src_netx4000)
+if 'NETX4000_RELAXED' in atPickNetxForBuild:
+    env_netx4000_nodbg = env_netx4000_default.Clone()
+    env_netx4000_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+    elf_netx4000_relaxed_nodbg,bin_netx4000_relaxed_nodbg = flasher_build('flasher_netx4000_relaxed', env_netx4000_nodbg, 'targets/netx4000_relaxed_nodbg', src_netx4000)
 
-env_netx500_nodbg = env_netx500_default.Clone()
-env_netx500_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-elf_netx500_nodbg,bin_netx500_nodbg = flasher_build('flasher_netx500', env_netx500_nodbg, 'targets/netx500_nodbg', src_netx500)
+if 'NETX500' in atPickNetxForBuild:
+    env_netx500_nodbg = env_netx500_default.Clone()
+    env_netx500_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+    elf_netx500_nodbg,bin_netx500_nodbg = flasher_build('flasher_netx500', env_netx500_nodbg, 'targets/netx500_nodbg', src_netx500)
 
-env_netx90_nodbg = env_netx90_default.Clone()
-env_netx90_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-elf_netx90_mpw_nodbg,bin_netx90_mpw_nodbg = flasher_build('flasher_netx90_mpw', env_netx90_nodbg, 'targets/netx90_mpw_nodbg', src_netx90)
+if 'NETX90_MPW' in atPickNetxForBuild:
+    env_netx90_nodbg = env_netx90_default.Clone()
+    env_netx90_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+    elf_netx90_mpw_nodbg,bin_netx90_mpw_nodbg = flasher_build('flasher_netx90_mpw', env_netx90_nodbg, 'targets/netx90_mpw_nodbg', src_netx90)
 
-env_netx56_nodbg = env_netx56_default.Clone()
-env_netx56_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-elf_netx56_nodbg,bin_netx56_nodbg = flasher_build('flasher_netx56', env_netx56_nodbg, 'targets/netx56_nodbg', src_netx56)
+if 'NETX56' in atPickNetxForBuild:
+    env_netx56_nodbg = env_netx56_default.Clone()
+    env_netx56_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+    elf_netx56_nodbg,bin_netx56_nodbg = flasher_build('flasher_netx56', env_netx56_nodbg, 'targets/netx56_nodbg', src_netx56)
 
-env_netx50_nodbg = env_netx50_default.Clone()
-env_netx50_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-elf_netx50_nodbg,bin_netx50_nodbg = flasher_build('flasher_netx50', env_netx50_nodbg, 'targets/netx50_nodbg', src_netx50)
+if 'NETX50' in atPickNetxForBuild:
+    env_netx50_nodbg = env_netx50_default.Clone()
+    env_netx50_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+    elf_netx50_nodbg,bin_netx50_nodbg = flasher_build('flasher_netx50', env_netx50_nodbg, 'targets/netx50_nodbg', src_netx50)
 
-env_netx10_nodbg = env_netx10_default.Clone()
-env_netx10_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-elf_netx10_nodbg,bin_netx10_nodbg = flasher_build('flasher_netx10', env_netx10_nodbg, 'targets/netx10_nodbg', src_netx10)
+if 'NETX10' in atPickNetxForBuild:
+    env_netx10_nodbg = env_netx10_default.Clone()
+    env_netx10_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+    elf_netx10_nodbg,bin_netx10_nodbg = flasher_build('flasher_netx10', env_netx10_nodbg, 'targets/netx10_nodbg', src_netx10)
 
 
 #----------------------------------------------------------------------------
 #
 # Build the flasher with debug messages.
 #
+if 'NETX4000_RELAXED' in atPickNetxForBuild:
+    env_netx4000_dbg = env_netx4000_default.Clone()
+    env_netx4000_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+    elf_netx4000_relaxed_dbg,bin_netx4000_relaxed_dbg = flasher_build('flasher_netx4000_relaxed_debug', env_netx4000_dbg, 'targets/netx4000_relaxed_dbg', src_netx4000)
 
-env_netx4000_dbg = env_netx4000_default.Clone()
-env_netx4000_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-elf_netx4000_relaxed_dbg,bin_netx4000_relaxed_dbg = flasher_build('flasher_netx4000_relaxed_debug', env_netx4000_dbg, 'targets/netx4000_relaxed_dbg', src_netx4000)
+if 'NETX500' in atPickNetxForBuild:
+    env_netx500_dbg = env_netx500_default.Clone()
+    env_netx500_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+    elf_netx500_dbg,bin_netx500_dbg = flasher_build('flasher_netx500_debug', env_netx500_dbg, 'targets/netx500_dbg', src_netx500)
 
-env_netx500_dbg = env_netx500_default.Clone()
-env_netx500_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-elf_netx500_dbg,bin_netx500_dbg = flasher_build('flasher_netx500_debug', env_netx500_dbg, 'targets/netx500_dbg', src_netx500)
+if 'NETX90_MPW' in atPickNetxForBuild:
+    env_netx90_dbg = env_netx90_default.Clone()
+    env_netx90_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+    elf_netx90_mpw_dbg,bin_netx90_mpw_dbg = flasher_build('flasher_netx90_mpw_debug', env_netx90_dbg, 'targets/netx90_mpw_dbg', src_netx90)
 
-env_netx90_dbg = env_netx90_default.Clone()
-env_netx90_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-elf_netx90_mpw_dbg,bin_netx90_mpw_dbg = flasher_build('flasher_netx90_mpw_debug', env_netx90_dbg, 'targets/netx90_mpw_dbg', src_netx90)
+if 'NETX56' in atPickNetxForBuild:
+    env_netx56_dbg = env_netx56_default.Clone()
+    env_netx56_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+    elf_netx56_dbg,bin_netx56_dbg = flasher_build('flasher_netx56_debug', env_netx56_dbg, 'targets/netx56_dbg', src_netx56)
 
-env_netx56_dbg = env_netx56_default.Clone()
-env_netx56_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-elf_netx56_dbg,bin_netx56_dbg = flasher_build('flasher_netx56_debug', env_netx56_dbg, 'targets/netx56_dbg', src_netx56)
+if 'NETX50' in atPickNetxForBuild:
+    env_netx50_dbg = env_netx50_default.Clone()
+    env_netx50_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+    elf_netx50_dbg,bin_netx50_dbg = flasher_build('flasher_netx50_debug', env_netx50_dbg, 'targets/netx50_dbg', src_netx50)
 
-env_netx50_dbg = env_netx50_default.Clone()
-env_netx50_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-elf_netx50_dbg,bin_netx50_dbg = flasher_build('flasher_netx50_debug', env_netx50_dbg, 'targets/netx50_dbg', src_netx50)
-
-env_netx10_dbg = env_netx10_default.Clone()
-env_netx10_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-elf_netx10_dbg,bin_netx10_dbg = flasher_build('flasher_netx10_debug', env_netx10_dbg, 'targets/netx10_dbg', src_netx10)
+if 'NETX10' in atPickNetxForBuild:
+    env_netx10_dbg = env_netx10_default.Clone()
+    env_netx10_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+    elf_netx10_dbg,bin_netx10_dbg = flasher_build('flasher_netx10_debug', env_netx10_dbg, 'targets/netx10_dbg', src_netx10)
 
 
 #----------------------------------------------------------------------------
@@ -306,10 +351,11 @@ elf_netx10_dbg,bin_netx10_dbg = flasher_build('flasher_netx10_debug', env_netx10
 # This version runs from SDRAM starting at 0x8002000 to save the INTRAM for
 # the 2ndStageLoader.
 #
-env_netx500_bob = env_netx500_default.Clone()
-env_netx500_bob.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-env_netx500_bob.Replace(LDFILE = File('src/netx500/netx500_bob.ld'))
-elf_netx500_bob,bin_netx500_bob = flasher_build('flasher_netx500_bob', env_netx500_bob, 'targets/netx500_bob', src_netx500)
+if 'NETX500' in atPickNetxForBuild:
+    env_netx500_bob = env_netx500_default.Clone()
+    env_netx500_bob.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+    env_netx500_bob.Replace(LDFILE = File('src/netx500/netx500_bob.ld'))
+    elf_netx500_bob,bin_netx500_bob = flasher_build('flasher_netx500_bob', env_netx500_bob, 'targets/netx500_bob', src_netx500)
 
 
 #----------------------------------------------------------------------------
@@ -321,8 +367,31 @@ elf_netx500_bob,bin_netx500_bob = flasher_build('flasher_netx500_bob', env_netx5
 # the symbols and values which are used in the template are the same in every
 # ELF file in this project.
 #
-lua_flasher = env_netx500_nodbg.GccSymbolTemplate('targets/lua/flasher.lua', elf_netx500_nodbg, GCCSYMBOLTEMPLATE_TEMPLATE='templates/flasher.lua')
-tDemoShowEraseAreas = env_netx500_nodbg.GccSymbolTemplate('targets/lua/show_erase_areas.lua', elf_netx500_nodbg, GCCSYMBOLTEMPLATE_TEMPLATE='templates/show_erase_areas.lua')
+
+# Get the first available build environment and ELF file.
+tEnv = None
+tElf = None
+if 'NETX4000_RELAXED' in atPickNetxForBuild:
+    tEnv = env_netx4000_nodbg
+    tElf = elf_netx4000_relaxed_nodbg
+elif 'NETX500' in atPickNetxForBuild:
+    tEnv = env_netx500_nodbg
+    tElf = elf_netx500_nodbg
+elif 'NETX90_MPW' in atPickNetxForBuild:
+    tEnv = env_netx90_nodbg
+    tElf = elf_netx90_mpw_nodbg
+elif 'NETX56' in atPickNetxForBuild:
+    tEnv = env_netx56_nodbg
+    tElf = elf_netx56_nodbg
+elif 'NETX50' in atPickNetxForBuild:
+    tEnv = env_netx50_nodbg
+    tElf = elf_netx50_nodbg
+elif 'NETX10' in atPickNetxForBuild:
+    tEnv = env_netx10_nodbg
+    tElf = elf_netx10_nodbg
+
+lua_flasher = tEnv.GccSymbolTemplate('targets/lua/flasher.lua', tElf, GCCSYMBOLTEMPLATE_TEMPLATE='templates/flasher.lua')
+tDemoShowEraseAreas = tEnv.GccSymbolTemplate('targets/lua/show_erase_areas.lua', tElf, GCCSYMBOLTEMPLATE_TEMPLATE='templates/show_erase_areas.lua')
 
 #----------------------------------------------------------------------------
 #
@@ -337,23 +406,23 @@ tDocSpiFlashListTxt = atEnv.DEFAULT.XSLT('targets/doc/spi_flash_types.txt', ['sr
 aAttribs = atEnv.DEFAULT['ASCIIDOC_ATTRIBUTES']
 # Add some custom attributes.
 aAttribs.update(dict({
-	# Use ASCIIMath formulas.
-	'asciimath': True,
+    # Use ASCIIMath formulas.
+    'asciimath': True,
 
-	# Embed images into the HTML file as data URIs.
-	'data-uri': True,
+    # Embed images into the HTML file as data URIs.
+    'data-uri': True,
 
-	# Use icons instead of text for markers and callouts.
-	'icons': True,
+    # Use icons instead of text for markers and callouts.
+    'icons': True,
 
-	# Use numbers in the table of contents.
-	'numbered': True,
+    # Use numbers in the table of contents.
+    'numbered': True,
 	
-	# Generate a scrollable table of contents on the left of the text.
-	'toc2': True,
+    # Generate a scrollable table of contents on the left of the text.
+    'toc2': True,
 
-	# Use 4 levels in the table of contents.
-	'toclevels': 4
+    # Use 4 levels in the table of contents.
+    'toclevels': 4
 }))
 
 doc = atEnv.DEFAULT.Asciidoc('targets/doc/flasher.html', 'doc/flasher.asciidoc', ASCIIDOC_BACKEND='html5', ASCIIDOC_ATTRIBUTES=aAttribs)
@@ -363,127 +432,126 @@ doc = atEnv.DEFAULT.Asciidoc('targets/doc/flasher.html', 'doc/flasher.asciidoc',
 #
 # Build the artifact.
 #
-
-aArtifactServer = ('nexus@netx01', 'muhkuh', 'muhkuh_snapshots')
-strArtifactGroup = 'tools.muhkuh.org'
-strArtifactId = 'flasher'
-
-
-tArcList0 = atEnv.DEFAULT.ArchiveList('zip')
-
-tArcList0.AddFiles('netx/',
-	bin_netx4000_relaxed_nodbg,
-	bin_netx500_nodbg,
-	bin_netx90_mpw_nodbg,
-	bin_netx56_nodbg,
-	bin_netx50_nodbg,
-	bin_netx10_nodbg)
-
-tArcList0.AddFiles('netx/debug/',
-	bin_netx4000_relaxed_dbg,
-	bin_netx500_dbg,
-	bin_netx90_mpw_dbg,
-	bin_netx56_dbg,
-	bin_netx50_dbg,
-	bin_netx10_dbg)
-
-tArcList0.AddFiles('doc/',
-	doc,
-	tDocSpiFlashTypesHtml,
-	tDocSpiFlashListTxt)
-
-tArcList0.AddFiles('lua/',
-	lua_flasher,
-	'lua/flasher_test.lua')
-
-tArcList0.AddFiles('demo/',
-	'lua/cli_flash.lua',
-	'lua/demo_getBoardInfo.lua',
-	'lua/erase_complete_flash.lua',
-	'lua/erase_first_flash_sector.lua',
-	'lua/flash_parflash.lua',
-	'lua/flash_serflash.lua',
-	'lua/get_erase_areas_parflash.lua',
-	'lua/identify_parflash.lua',
-	'lua/identify_serflash.lua',
-	'lua/is_erased_parflash.lua',
-	'lua/read_bootimage.lua',
-	'lua/read_complete_flash.lua',
-	tDemoShowEraseAreas)
-
-tArcList0.AddFiles('',
-	'ivy/org.muhkuh.tools.flasher/install.xml')
+if fBuildIsFull==True:
+    aArtifactServer = ('nexus@netx01', 'muhkuh', 'muhkuh_snapshots')
+    strArtifactGroup = 'tools.muhkuh.org'
+    strArtifactId = 'flasher'
 
 
-aArtifactGroupReverse = strArtifactGroup.split('.')
-aArtifactGroupReverse.reverse()
+    tArcList0 = atEnv.DEFAULT.ArchiveList('zip')
 
-strArtifactPath = 'targets/ivy/repository/%s/%s/%s' % ('/'.join(aArtifactGroupReverse),strArtifactId,PROJECT_VERSION)
-tArc = atEnv.DEFAULT.Archive(os.path.join(strArtifactPath, '%s-%s.zip' % (strArtifactId,PROJECT_VERSION)), None, ARCHIVE_CONTENTS=tArcList0)
-tIvy = atEnv.DEFAULT.Version(os.path.join(strArtifactPath, 'ivy-%s.xml' % PROJECT_VERSION), 'ivy/%s.%s/ivy.xml' % ('.'.join(aArtifactGroupReverse),strArtifactId))
+    tArcList0.AddFiles('netx/',
+        bin_netx4000_relaxed_nodbg,
+        bin_netx500_nodbg,
+        bin_netx90_mpw_nodbg,
+        bin_netx56_nodbg,
+        bin_netx50_nodbg,
+        bin_netx10_nodbg)
 
-atEnv.DEFAULT.AddArtifact(tArc, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'zip')
-atEnv.DEFAULT.AddArtifact(tIvy, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'ivy')
+    tArcList0.AddFiles('netx/debug/',
+        bin_netx4000_relaxed_dbg,
+        bin_netx500_dbg,
+        bin_netx90_mpw_dbg,
+        bin_netx56_dbg,
+        bin_netx50_dbg,
+        bin_netx10_dbg)
 
-tArtifacts = atEnv.DEFAULT.Artifact('targets/artifacts_flasher.xml', None)
+    tArcList0.AddFiles('doc/',
+        doc,
+        tDocSpiFlashTypesHtml,
+        tDocSpiFlashListTxt)
 
-# Copy the artifacts to a fixed filename to allow a deploy to github.
-Command('targets/ivy/%s.zip' % strArtifactId,  tArc,  Copy("$TARGET", "$SOURCE"))
-Command('targets/ivy/ivy.xml', tIvy,  Copy("$TARGET", "$SOURCE"))
+    tArcList0.AddFiles('lua/',
+        lua_flasher,
+        'lua/flasher_test.lua')
 
-#----------------------------------------------------------------------------
-#
-# Prepare the build folders for the other artifacts.
-#
+    tArcList0.AddFiles('demo/',
+        'lua/cli_flash.lua',
+        'lua/demo_getBoardInfo.lua',
+        'lua/erase_complete_flash.lua',
+        'lua/erase_first_flash_sector.lua',
+        'lua/flash_parflash.lua',
+        'lua/flash_serflash.lua',
+        'lua/get_erase_areas_parflash.lua',
+        'lua/identify_parflash.lua',
+        'lua/identify_serflash.lua',
+        'lua/is_erased_parflash.lua',
+        'lua/read_bootimage.lua',
+        'lua/read_complete_flash.lua',
+        tDemoShowEraseAreas)
 
-Command('targets/ivy/ivysettings.xml', 'ivy/ivysettings.xml', Copy("$TARGET", "$SOURCE"))
-Command('targets/ivy/flasher_cli/ivy-report.xsl', 'ivy/ivy-report.xsl', Copy("$TARGET", "$SOURCE"))
-
-Command('targets/ivy/flasher_cli/build.xml', 'ivy/flasher_cli/build.xml', Copy("$TARGET", "$SOURCE"))
-atEnv.DEFAULT.Version('targets/ivy/flasher_cli/ivy.xml', 'ivy/flasher_cli/ivy.xml')
-atEnv.DEFAULT.Version('targets/artifacts_flasher_cli.xml', 'ivy/flasher_cli/artifacts_flasher_cli.xml')
+    tArcList0.AddFiles('',
+        'ivy/org.muhkuh.tools.flasher/install.xml')
 
 
-#----------------------------------------------------------------------------
-#
-# Make a local demo installation.
-#
-atCopyFiles = {
-	# Copy all binaries.
-	'targets/testbench/netx/flasher_netx4000_relaxed.bin':             bin_netx4000_relaxed_nodbg,
-	'targets/testbench/netx/flasher_netx500.bin':                      bin_netx500_nodbg,
-	'targets/testbench/netx/flasher_netx90_mpw.bin':                   bin_netx90_mpw_nodbg,
-	'targets/testbench/netx/flasher_netx56.bin':                       bin_netx56_nodbg,
-	'targets/testbench/netx/flasher_netx50.bin':                       bin_netx50_nodbg,
-	'targets/testbench/netx/flasher_netx10.bin':                       bin_netx10_nodbg,
+    aArtifactGroupReverse = strArtifactGroup.split('.')
+    aArtifactGroupReverse.reverse()
 
-	# Copy all debug binaries.
-	'targets/testbench/netx/debug/flasher_netx4000_relaxed_debug.bin': bin_netx4000_relaxed_dbg,
-	'targets/testbench/netx/debug/flasher_netx500_debug.bin':          bin_netx500_dbg,
-	'targets/testbench/netx/debug/flasher_netx90_mpw_debug.bin':       bin_netx90_mpw_dbg,
-	'targets/testbench/netx/debug/flasher_netx56_debug.bin':           bin_netx56_dbg,
-	'targets/testbench/netx/debug/flasher_netx50_debug.bin':           bin_netx50_dbg,
-	'targets/testbench/netx/debug/flasher_netx10_debug.bin':           bin_netx10_dbg,
+    strArtifactPath = 'targets/ivy/repository/%s/%s/%s' % ('/'.join(aArtifactGroupReverse),strArtifactId,PROJECT_VERSION)
+    tArc = atEnv.DEFAULT.Archive(os.path.join(strArtifactPath, '%s-%s.zip' % (strArtifactId,PROJECT_VERSION)), None, ARCHIVE_CONTENTS=tArcList0)
+    tIvy = atEnv.DEFAULT.Version(os.path.join(strArtifactPath, 'ivy-%s.xml' % PROJECT_VERSION), 'ivy/%s.%s/ivy.xml' % ('.'.join(aArtifactGroupReverse),strArtifactId))
 
-	# Copy all LUA modules.
-	'targets/testbench/lua/flasher.lua':                               lua_flasher,
+    atEnv.DEFAULT.AddArtifact(tArc, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'zip')
+    atEnv.DEFAULT.AddArtifact(tIvy, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'ivy')
 
-	# Copy all LUA scripts.
-	'targets/testbench/cli_flash.lua':                                 'lua/cli_flash.lua',
-	'targets/testbench/demo_getBoardInfo.lua':                         'lua/demo_getBoardInfo.lua',
-	'targets/testbench/erase_complete_flash.lua':                      'lua/erase_complete_flash.lua',
-	'targets/testbench/erase_first_flash_sector.lua':                  'lua/erase_first_flash_sector.lua',
-	'targets/testbench/flash_parflash.lua':                            'lua/flash_parflash.lua',
-	'targets/testbench/flash_serflash.lua':                            'lua/flash_serflash.lua',
-	'targets/testbench/flasher_test.lua':                              'lua/flasher_test.lua',
-	'targets/testbench/get_erase_areas_parflash.lua':                  'lua/get_erase_areas_parflash.lua',
-	'targets/testbench/identify_parflash.lua':                         'lua/identify_parflash.lua',
-	'targets/testbench/identify_serflash.lua':                         'lua/identify_serflash.lua',
-	'targets/testbench/is_erased_parflash.lua':                        'lua/is_erased_parflash.lua',
-	'targets/testbench/read_bootimage.lua':                            'lua/read_bootimage.lua',
-	'targets/testbench/read_complete_flash.lua':                       'lua/read_complete_flash.lua',
-	'targets/testbench/show_erase_areas.lua':                          tDemoShowEraseAreas
-}
+    tArtifacts = atEnv.DEFAULT.Artifact('targets/artifacts_flasher.xml', None)
 
-for tDst, tSrc in atCopyFiles.iteritems():
-	Command(tDst, tSrc, Copy("$TARGET", "$SOURCE"))
+    # Copy the artifacts to a fixed filename to allow a deploy to github.
+    Command('targets/ivy/%s.zip' % strArtifactId,  tArc,  Copy("$TARGET", "$SOURCE"))
+    Command('targets/ivy/ivy.xml', tIvy,  Copy("$TARGET", "$SOURCE"))
+
+    #----------------------------------------------------------------------------
+    #
+    # Prepare the build folders for the other artifacts.
+    #
+    Command('targets/ivy/ivysettings.xml', 'ivy/ivysettings.xml', Copy("$TARGET", "$SOURCE"))
+    Command('targets/ivy/flasher_cli/ivy-report.xsl', 'ivy/ivy-report.xsl', Copy("$TARGET", "$SOURCE"))
+
+    Command('targets/ivy/flasher_cli/build.xml', 'ivy/flasher_cli/build.xml', Copy("$TARGET", "$SOURCE"))
+    atEnv.DEFAULT.Version('targets/ivy/flasher_cli/ivy.xml', 'ivy/flasher_cli/ivy.xml')
+    atEnv.DEFAULT.Version('targets/artifacts_flasher_cli.xml', 'ivy/flasher_cli/artifacts_flasher_cli.xml')
+
+
+    #----------------------------------------------------------------------------
+    #
+    # Make a local demo installation.
+    #
+    atCopyFiles = {
+        # Copy all binaries.
+        'targets/testbench/netx/flasher_netx4000_relaxed.bin':             bin_netx4000_relaxed_nodbg,
+        'targets/testbench/netx/flasher_netx500.bin':                      bin_netx500_nodbg,
+        'targets/testbench/netx/flasher_netx90_mpw.bin':                   bin_netx90_mpw_nodbg,
+        'targets/testbench/netx/flasher_netx56.bin':                       bin_netx56_nodbg,
+        'targets/testbench/netx/flasher_netx50.bin':                       bin_netx50_nodbg,
+        'targets/testbench/netx/flasher_netx10.bin':                       bin_netx10_nodbg,
+
+        # Copy all debug binaries.
+        'targets/testbench/netx/debug/flasher_netx4000_relaxed_debug.bin': bin_netx4000_relaxed_dbg,
+        'targets/testbench/netx/debug/flasher_netx500_debug.bin':          bin_netx500_dbg,
+        'targets/testbench/netx/debug/flasher_netx90_mpw_debug.bin':       bin_netx90_mpw_dbg,
+        'targets/testbench/netx/debug/flasher_netx56_debug.bin':           bin_netx56_dbg,
+        'targets/testbench/netx/debug/flasher_netx50_debug.bin':           bin_netx50_dbg,
+        'targets/testbench/netx/debug/flasher_netx10_debug.bin':           bin_netx10_dbg,
+
+        # Copy all LUA modules.
+        'targets/testbench/lua/flasher.lua':                               lua_flasher,
+
+        # Copy all LUA scripts.
+        'targets/testbench/cli_flash.lua':                                 'lua/cli_flash.lua',
+        'targets/testbench/demo_getBoardInfo.lua':                         'lua/demo_getBoardInfo.lua',
+        'targets/testbench/erase_complete_flash.lua':                      'lua/erase_complete_flash.lua',
+        'targets/testbench/erase_first_flash_sector.lua':                  'lua/erase_first_flash_sector.lua',
+        'targets/testbench/flash_parflash.lua':                            'lua/flash_parflash.lua',
+        'targets/testbench/flash_serflash.lua':                            'lua/flash_serflash.lua',
+        'targets/testbench/flasher_test.lua':                              'lua/flasher_test.lua',
+        'targets/testbench/get_erase_areas_parflash.lua':                  'lua/get_erase_areas_parflash.lua',
+        'targets/testbench/identify_parflash.lua':                         'lua/identify_parflash.lua',
+        'targets/testbench/identify_serflash.lua':                         'lua/identify_serflash.lua',
+        'targets/testbench/is_erased_parflash.lua':                        'lua/is_erased_parflash.lua',
+        'targets/testbench/read_bootimage.lua':                            'lua/read_bootimage.lua',
+        'targets/testbench/read_complete_flash.lua':                       'lua/read_complete_flash.lua',
+        'targets/testbench/show_erase_areas.lua':                          tDemoShowEraseAreas
+    }
+
+    for tDst, tSrc in atCopyFiles.iteritems():
+        Command(tDst, tSrc, Copy("$TARGET", "$SOURCE"))
