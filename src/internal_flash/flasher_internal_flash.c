@@ -34,6 +34,13 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_detect(CMD_PARAMETER_DETECT_T *ptParamet
 	DEVICE_DESCRIPTION_T *ptDeviceDescription;
 
 
+	/* Initialize the device description with default values. */
+	ptDeviceDescription = ptParameter->ptDeviceDescription;
+	ptDeviceDescription->fIsValid = 0;
+	ptDeviceDescription->sizThis = 0;
+	ptDeviceDescription->ulVersion = 0;
+	ptDeviceDescription->tSourceTyp = BUS_IFlash;
+
 #if ASIC_TYP==ASIC_TYP_NETX90_MPW
 	/* netX90 MPW has the first version of the MAZ flash. */
 	tResult = internal_flash_maz_v0_detect(ptParameter);
@@ -42,18 +49,9 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_detect(CMD_PARAMETER_DETECT_T *ptParamet
 	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 #endif
 
-	ptDeviceDescription = ptParameter->ptDeviceDescription;
 	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 	{
-		/* Set the result data */
-		ptDeviceDescription->fIsValid = 1;
-		ptDeviceDescription->sizThis = sizeof(DEVICE_DESCRIPTION_T);
-		ptDeviceDescription->ulVersion = FLASHER_INTERFACE_VERSION;
-		ptDeviceDescription->tSourceTyp = BUS_IFlash;
-	}
-	else
-	{
-		/* Set the result data */
+		/* Set the result data. */
 		ptDeviceDescription->fIsValid = 1;
 		ptDeviceDescription->sizThis = sizeof(DEVICE_DESCRIPTION_T);
 		ptDeviceDescription->ulVersion = FLASHER_INTERFACE_VERSION;
