@@ -433,14 +433,20 @@ doc = atEnv.DEFAULT.Asciidoc('targets/doc/flasher.html', 'doc/flasher.asciidoc',
 # Build the artifact.
 #
 if fBuildIsFull==True:
-    aArtifactServer = ('nexus@netx01', 'muhkuh', 'muhkuh_snapshots')
-    strArtifactGroup = 'tools.muhkuh.org'
-    strArtifactId = 'flasher'
+    strGroup = 'org.muhkuh.tools'
+    strModule = 'flasher'
+
+    # Split the group by dots.
+    aGroup = strGroup.split('.')
+    # Build the path for all artifacts.
+    strModulePath = 'targets/jonchki/repository/%s/%s/%s' % ('/'.join(aGroup), strModule, PROJECT_VERSION)
 
 
-    tArcList0 = atEnv.DEFAULT.ArchiveList('zip')
+    strArtifact = 'lua5.1-flasher'
 
-    tArcList0.AddFiles('netx/',
+    tArcList = atEnv.DEFAULT.ArchiveList('zip')
+
+    tArcList.AddFiles('netx/',
         bin_netx4000_relaxed_nodbg,
         bin_netx500_nodbg,
         bin_netx90_mpw_nodbg,
@@ -448,7 +454,7 @@ if fBuildIsFull==True:
         bin_netx50_nodbg,
         bin_netx10_nodbg)
 
-    tArcList0.AddFiles('netx/debug/',
+    tArcList.AddFiles('netx/debug/',
         bin_netx4000_relaxed_dbg,
         bin_netx500_dbg,
         bin_netx90_mpw_dbg,
@@ -456,16 +462,16 @@ if fBuildIsFull==True:
         bin_netx50_dbg,
         bin_netx10_dbg)
 
-    tArcList0.AddFiles('doc/',
+    tArcList.AddFiles('doc/',
         doc,
         tDocSpiFlashTypesHtml,
         tDocSpiFlashListTxt)
 
-    tArcList0.AddFiles('lua/',
+    tArcList.AddFiles('lua/',
         lua_flasher,
         'lua/flasher_test.lua')
 
-    tArcList0.AddFiles('demo/',
+    tArcList.AddFiles('demo/',
         'lua/cli_flash.lua',
         'lua/demo_getBoardInfo.lua',
         'lua/erase_complete_flash.lua',
@@ -480,36 +486,24 @@ if fBuildIsFull==True:
         'lua/read_complete_flash.lua',
         tDemoShowEraseAreas)
 
-    tArcList0.AddFiles('',
-        'ivy/org.muhkuh.tools.flasher/install.xml')
+    tArcList.AddFiles('',
+        'jonchki/%s.%s/install.lua' % (strGroup, strModule))
 
+    tArtifactZip = atEnv.DEFAULT.Archive(os.path.join(strModulePath, '%s-%s.zip' % (strArtifact, PROJECT_VERSION)), None, ARCHIVE_CONTENTS = tArcList)
+    tArtifactXml = atEnv.DEFAULT.Version(os.path.join(strModulePath, '%s-%s.xml' % (strArtifact, PROJECT_VERSION)), 'jonchki/%s.%s/%s.xml' % (strGroup, strModule, strArtifact))
+    tArtifactPom = atEnv.DEFAULT.ArtifactVersion(os.path.join(strModulePath, '%s-%s.pom' % (strArtifact, PROJECT_VERSION)), 'jonchki/%s.%s/pom.xml' % (strGroup, strModule))
 
-    aArtifactGroupReverse = strArtifactGroup.split('.')
-    aArtifactGroupReverse.reverse()
-
-    strArtifactPath = 'targets/ivy/repository/%s/%s/%s' % ('/'.join(aArtifactGroupReverse),strArtifactId,PROJECT_VERSION)
-    tArc = atEnv.DEFAULT.Archive(os.path.join(strArtifactPath, '%s-%s.zip' % (strArtifactId,PROJECT_VERSION)), None, ARCHIVE_CONTENTS=tArcList0)
-    tIvy = atEnv.DEFAULT.Version(os.path.join(strArtifactPath, 'ivy-%s.xml' % PROJECT_VERSION), 'ivy/%s.%s/ivy.xml' % ('.'.join(aArtifactGroupReverse),strArtifactId))
-
-    atEnv.DEFAULT.AddArtifact(tArc, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'zip')
-    atEnv.DEFAULT.AddArtifact(tIvy, aArtifactServer, strArtifactGroup, strArtifactId, PROJECT_VERSION, 'ivy')
-
-    tArtifacts = atEnv.DEFAULT.Artifact('targets/artifacts_flasher.xml', None)
-
-    # Copy the artifacts to a fixed filename to allow a deploy to github.
-    Command('targets/ivy/%s.zip' % strArtifactId,  tArc,  Copy("$TARGET", "$SOURCE"))
-    Command('targets/ivy/ivy.xml', tIvy,  Copy("$TARGET", "$SOURCE"))
 
     #----------------------------------------------------------------------------
     #
     # Prepare the build folders for the other artifacts.
     #
-    Command('targets/ivy/ivysettings.xml', 'ivy/ivysettings.xml', Copy("$TARGET", "$SOURCE"))
-    Command('targets/ivy/flasher_cli/ivy-report.xsl', 'ivy/ivy-report.xsl', Copy("$TARGET", "$SOURCE"))
+    Command('targets/jonchki/flasher_cli/flasher_cli.lua',            'jonchki/org.muhkuh.tools.flasher_cli/flasher_cli.lua',            Copy("$TARGET", "$SOURCE"))
+    Command('targets/jonchki/flasher_cli/jonchkicfg.xml',             'jonchki/jonchkicfg.xml',                                          Copy("$TARGET", "$SOURCE"))
+    Command('targets/jonchki/flasher_cli/jonchkisys_Windows_x64.cfg', 'jonchki/org.muhkuh.tools.flasher_cli/jonchkisys_Windows_x64.cfg', Copy("$TARGET", "$SOURCE"))
+    Command('targets/jonchki/flasher_cli/jonchkisys_Windows_x86.cfg', 'jonchki/org.muhkuh.tools.flasher_cli/jonchkisys_Windows_x86.cfg', Copy("$TARGET", "$SOURCE"))
 
-    Command('targets/ivy/flasher_cli/build.xml', 'ivy/flasher_cli/build.xml', Copy("$TARGET", "$SOURCE"))
-    atEnv.DEFAULT.Version('targets/ivy/flasher_cli/ivy.xml', 'ivy/flasher_cli/ivy.xml')
-    atEnv.DEFAULT.Version('targets/artifacts_flasher_cli.xml', 'ivy/flasher_cli/artifacts_flasher_cli.xml')
+    atEnv.DEFAULT.Version('targets/jonchki/flasher_cli/flasher_cli.xml', 'jonchki/org.muhkuh.tools.flasher_cli/flasher_cli.xml')
 
 
     #----------------------------------------------------------------------------

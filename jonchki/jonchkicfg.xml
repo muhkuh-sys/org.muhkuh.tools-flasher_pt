@@ -1,0 +1,20 @@
+<jonchkicfg>
+	<repositories>
+
+		<repository id="test" type="file" cacheable="false">
+			<root>../repository</root>
+			<versions>[group]/[module]</versions>
+			<config>[group]/[module]/[version]/[artifact]-[version].xml</config>
+			<artifact>[group]/[module]/[version]/[artifact]-[version].zip</artifact>
+		</repository>
+
+<!--
+		<repository id="test" type="url" cacheable="false">
+			<root>http://127.0.0.1/jonchki</root>
+			<versions>[group]/[module]</versions>
+			<config>[group]/[module]/[version]/[artifact]-[version].xml</config>
+			<artifact>[group]/[module]/[version]/[artifact]-[version].zip</artifact>
+		</repository>
+-->
+	</repositories>
+</jonchkicfg>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jonchki-artifact version="1.0">
+	<info group="org.muhkuh.tools"
+	      module="flasher"
+	      artifact="flasher_cli"
+	      version="${PROJECT_VERSION}"
+	      vcs-id="${PROJECT_VERSION_VCS}" />
+	<dependencies>
+		<dependency group="org.muhkuh.tools" module="bootloader_windows_driver" artifact="bootloader_windows_driver" version="2.3.0"/>
+		<dependency group="org.muhkuh.tools" module="flasher" artifact="lua5.1-flasher" version="${PROJECT_VERSION}"/>
+	</dependencies>
+</jonchki-artifact>

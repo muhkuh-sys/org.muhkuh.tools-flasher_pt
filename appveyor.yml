@@ -6,7 +6,7 @@
 
 
 install:
-  - cinst -y jre8 7zip.commandline python2 ant
+  - cinst -y 7zip.commandline python2
 
 
 platform:
@@ -20,5 +20,3 @@ before_build:
 
 build_script:
   - python mbs/mbs
-
-
