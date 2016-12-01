@@ -498,10 +498,14 @@ if fBuildIsFull==True:
     tArcList.AddFiles('',
         'jonchki/%s.%s/install.lua' % (strGroup, strModule))
 
-    tArtifactZip = atEnv.DEFAULT.Archive(os.path.join(strModulePath, '%s-%s.zip' % (strArtifact, PROJECT_VERSION)), None, ARCHIVE_CONTENTS = tArcList)
-    tArtifactXml = atEnv.DEFAULT.Version(os.path.join(strModulePath, '%s-%s.xml' % (strArtifact, PROJECT_VERSION)), 'jonchki/%s.%s/%s.xml' % (strGroup, strModule, strArtifact))
-    tArtifactPom = atEnv.DEFAULT.ArtifactVersion(os.path.join(strModulePath, '%s-%s.pom' % (strArtifact, PROJECT_VERSION)), 'jonchki/%s.%s/pom.xml' % (strGroup, strModule))
+    strBasePath = os.path.join(strModulePath, '%s-%s.zip' % (strArtifact, PROJECT_VERSION))
+    tArtifactZip = atEnv.DEFAULT.Archive('%s.zip' % strBasePath, None, ARCHIVE_CONTENTS = tArcList)
+    tArtifactXml = atEnv.DEFAULT.Version('%s.xml' % strBasePath, 'jonchki/%s.%s/%s.xml' % (strGroup, strModule, strArtifact))
+    tArtifactPom = atEnv.DEFAULT.ArtifactVersion('%s.pom' % strBasePath, 'jonchki/%s.%s/pom.xml' % (strGroup, strModule))
 
+    # Create the SHA1 sums for the ZIP and XML.
+    atEnv.DEFAULT.Hash('%s.zip.sha1' % strBasePath, tArtifactZip)
+    atEnv.DEFAULT.Hash('%s.xml.sha1' % strBasePath, tArtifactXml)
 
     #----------------------------------------------------------------------------
     #
