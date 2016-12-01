@@ -417,7 +417,7 @@ aAttribs.update(dict({
 
     # Use numbers in the table of contents.
     'numbered': True,
-	
+
     # Generate a scrollable table of contents on the left of the text.
     'toc2': True,
 
@@ -476,13 +476,22 @@ if fBuildIsFull==True:
         'lua/demo_getBoardInfo.lua',
         'lua/erase_complete_flash.lua',
         'lua/erase_first_flash_sector.lua',
+        'lua/erase_first_flash_sector_intflash0.lua',
+        'lua/erase_first_flash_sector_intflash1.lua',
+        'lua/erase_first_flash_sector_intflash2.lua',
+        'lua/flash_intflash0.lua',
+        'lua/flash_intflash1.lua',
+        'lua/flash_intflash2.lua',
         'lua/flash_parflash.lua',
         'lua/flash_serflash.lua',
         'lua/get_erase_areas_parflash.lua',
+        'lua/identify_intflash0.lua',
         'lua/identify_parflash.lua',
         'lua/identify_serflash.lua',
         'lua/is_erased_parflash.lua',
         'lua/read_bootimage.lua',
+        'lua/read_bootimage_intflash0.lua',
+        'lua/read_bootimage_intflash2.lua',
         'lua/read_complete_flash.lua',
         tDemoShowEraseAreas)
 
@@ -535,14 +544,23 @@ if fBuildIsFull==True:
         'targets/testbench/demo_getBoardInfo.lua':                         'lua/demo_getBoardInfo.lua',
         'targets/testbench/erase_complete_flash.lua':                      'lua/erase_complete_flash.lua',
         'targets/testbench/erase_first_flash_sector.lua':                  'lua/erase_first_flash_sector.lua',
+        'targets/testbench/erase_first_flash_sector_intflash0.lua':        'lua/erase_first_flash_sector_intflash0.lua',
+        'targets/testbench/erase_first_flash_sector_intflash1.lua':        'lua/erase_first_flash_sector_intflash1.lua',
+        'targets/testbench/erase_first_flash_sector_intflash2.lua':        'lua/erase_first_flash_sector_intflash2.lua',
+        'targets/testbench/flash_intflash0.lua':                           'lua/flash_intflash0.lua',
+        'targets/testbench/flash_intflash1.lua':                           'lua/flash_intflash1.lua',
+        'targets/testbench/flash_intflash2.lua':                           'lua/flash_intflash2.lua',
         'targets/testbench/flash_parflash.lua':                            'lua/flash_parflash.lua',
         'targets/testbench/flash_serflash.lua':                            'lua/flash_serflash.lua',
         'targets/testbench/flasher_test.lua':                              'lua/flasher_test.lua',
         'targets/testbench/get_erase_areas_parflash.lua':                  'lua/get_erase_areas_parflash.lua',
+        'targets/testbench/identify_intflash0.lua':                        'lua/identify_intflash0.lua',
         'targets/testbench/identify_parflash.lua':                         'lua/identify_parflash.lua',
         'targets/testbench/identify_serflash.lua':                         'lua/identify_serflash.lua',
         'targets/testbench/is_erased_parflash.lua':                        'lua/is_erased_parflash.lua',
         'targets/testbench/read_bootimage.lua':                            'lua/read_bootimage.lua',
+        'targets/testbench/read_bootimage_intflash0.lua':                  'lua/read_bootimage_intflash0.lua',
+        'targets/testbench/read_bootimage_intflash2.lua':                  'lua/read_bootimage_intflash2.lua',
         'targets/testbench/read_complete_flash.lua':                       'lua/read_complete_flash.lua',
         'targets/testbench/show_erase_areas.lua':                          tDemoShowEraseAreas
     }
