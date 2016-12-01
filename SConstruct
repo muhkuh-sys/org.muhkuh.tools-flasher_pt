@@ -498,7 +498,7 @@ if fBuildIsFull==True:
     tArcList.AddFiles('',
         'jonchki/%s.%s/install.lua' % (strGroup, strModule))
 
-    strBasePath = os.path.join(strModulePath, '%s-%s.zip' % (strArtifact, PROJECT_VERSION))
+    strBasePath = os.path.join(strModulePath, '%s-%s' % (strArtifact, PROJECT_VERSION))
     tArtifactZip = atEnv.DEFAULT.Archive('%s.zip' % strBasePath, None, ARCHIVE_CONTENTS = tArcList)
     tArtifactXml = atEnv.DEFAULT.Version('%s.xml' % strBasePath, 'jonchki/%s.%s/%s.xml' % (strGroup, strModule, strArtifact))
     tArtifactPom = atEnv.DEFAULT.ArtifactVersion('%s.pom' % strBasePath, 'jonchki/%s.%s/pom.xml' % (strGroup, strModule))
