@@ -13,7 +13,7 @@ local aAttr = flasher.download(tPlugin, "netx/", progress)
 local tBus = flasher.BUS_Parflash
 local ulUnit = 0
 local ulChipSelect = 0
-fOk = flasher.detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, ulDevDescAdr)
+fOk = flasher.detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect)
 if not fOk then
 	error("Failed to get a device description!")
 end

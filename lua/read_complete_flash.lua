@@ -18,7 +18,7 @@ end
 aAttr = flasher.download(tPlugin, "netx/", tester.progress)
 
 -- Use SPI Flash CS0.
-local fOk = flasher.detect(tPlugin, aAttr, flasher.BUS_Spi, 0, 0, ulDevDescAdr)
+local fOk = flasher.detect(tPlugin, aAttr, flasher.BUS_Spi, 0, 0)
 if not fOk then
 	error("Failed to get a device description!")
 end

@@ -26,7 +26,7 @@ aAttr = flasher.download(tPlugin, "netx/", tester.progress)
 local tBus = flasher.BUS_IFlash
 local ulUnit = 0
 local ulChipSelect = 0
-local fOk = flasher.detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, ulDevDescAdr)
+local fOk = flasher.detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect)
 if not fOk then
 	error("Failed to detect a SPI flash!")
 end

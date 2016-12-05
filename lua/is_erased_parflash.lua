@@ -10,7 +10,7 @@ end
 local aAttr = flasher.download(tPlugin, "netx/", progress)
 
 -- Use parallel flash on unit 0, chipselect 0.
-strDevDesc = flasher.detect(tPlugin, aAttr, flasher.BUS_Parflash, 0, 0, ulDevDescAdr)
+strDevDesc = flasher.detect(tPlugin, aAttr, flasher.BUS_Parflash, 0, 0)
 if strDevDesc==nil then
 	error("Failed to get a device description!")
 end

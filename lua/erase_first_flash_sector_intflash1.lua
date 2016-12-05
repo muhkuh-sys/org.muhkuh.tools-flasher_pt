@@ -10,7 +10,7 @@ end
 local aAttr = flasher.download(tPlugin, "netx/", tester.progress)
 
 -- Use INTFLASH0.
-local fOk = flasher.detect(tPlugin, aAttr, flasher.BUS_IFlash, 1, 0, ulDevDescAdr)
+local fOk = flasher.detect(tPlugin, aAttr, flasher.BUS_IFlash, 1, 0)
 if not fOk then
 	error("Failed to get a device description!")
 end
