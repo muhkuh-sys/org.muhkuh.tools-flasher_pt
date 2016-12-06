@@ -40,12 +40,28 @@ static const UNIT_TABLE_T tUnitTable_BusSPI =
 };
 
 
-const BUS_TABLE_T tBusTable =
+
+static const UNIT_TABLE_T tUnitTable_BusIFLASH =
 {
-	.sizEntries = 1,
+	.sizEntries = 4,
 	.atEntries =
 	{
-		{ BUS_SPI,       "Serial Flash",        &tUnitTable_BusSPI }
+		{ 0,  "IFLASH0",   NULL },
+		{ 1,  "IFLASH1",   NULL },
+		{ 2,  "IFLASH2",   NULL },
+		{ 3,  "IFLASH01",  NULL }
+	}
+};
+
+
+
+const BUS_TABLE_T tBusTable =
+{
+	.sizEntries = 2,
+	.atEntries =
+	{
+		{ BUS_SPI,       "Serial Flash",        &tUnitTable_BusSPI },
+		{ BUS_IFlash,    "Internal Flash",      &tUnitTable_BusIFLASH }
 	}
 };
 
