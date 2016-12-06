@@ -38,14 +38,25 @@ typedef struct INTERNAL_FLASH_CONFIGURATION_STRUCT
 
 
 
+typedef enum INTERNAL_FLASH_AREA_ENUM
+{
+	INTERNAL_FLASH_AREA_Unknown       =  0,
+	INTERNAL_FLASH_AREA_Flash0_Main   =  1,
+	INTERNAL_FLASH_AREA_Flash0_Info   =  2,
+	INTERNAL_FLASH_AREA_Flash1_Main   =  3,
+	INTERNAL_FLASH_AREA_Flash1_Info   =  4,
+	INTERNAL_FLASH_AREA_Flash2_Main   =  5,
+	INTERNAL_FLASH_AREA_Flash2_Info   =  6,
+	INTERNAL_FLASH_AREA_Flash01_Main  =  7
+} INTERNAL_FLASH_AREA_T;
+
+
+
 typedef struct INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_STRUCT
 {
-	void *pvControllerArea;
-	void *pvDataArea;
 	int iMain0_Info1;
 	unsigned long ulSizeInBytes;
-	unsigned long ulRowSizeInBytes;
-	unsigned long ulEraseBlockSizeInBytes;
+	INTERNAL_FLASH_AREA_T tArea;
 } INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T;
 
 

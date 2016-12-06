@@ -6,8 +6,15 @@
 /* This unit is only available on the netX90 MPW chip. */
 #if ASIC_TYP==ASIC_TYP_NETX90_MPW
 
+#define IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES 0x80000
+#define IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES 0x1000
+
 #define IFLASH_MAZ_V0_PAGE_SIZE_BYTES 16U
 #define IFLASH_MAZ_V0_PAGE_SIZE_DWORD 4U
+
+#define IFLASH_MAZ_V0_ROW_SIZE_IN_BYTES 0x0200
+#define IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES 0x1000
+
 
 #define IFLASH_MODE_READ        0U
 #define IFLASH_MODE_PROGRAM     1U
@@ -21,6 +28,15 @@ typedef union IFLASH_PAGE_BUFFER_UNION
 	unsigned char auc[IFLASH_MAZ_V0_PAGE_SIZE_BYTES];
 	unsigned long aul[IFLASH_MAZ_V0_PAGE_SIZE_DWORD];
 } IFLASH_PAGE_BUFFER_T;
+
+
+
+typedef struct FLASH_BLOCK_ATTRIBUTES_STRUCT
+{
+	NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea;
+	unsigned long ulUnitOffsetInBytes;
+} FLASH_BLOCK_ATTRIBUTES_T;
+
 
 
 static NETX_CONSOLEAPP_RESULT_T check_command_area(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, unsigned long ulOffsetStart, unsigned long ulOffsetEnd)
@@ -61,60 +77,113 @@ static NETX_CONSOLEAPP_RESULT_T check_command_area(const INTERNAL_FLASH_ATTRIBUT
 
 
 
-static NETX_CONSOLEAPP_RESULT_T iflash_get_areas(unsigned int uiUnit, INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptFlashAttributes)
+static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptFlashAttributes, unsigned long ulOffset, FLASH_BLOCK_ATTRIBUTES_T *ptAttr)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	HOSTDEF(ptIflashCfg0ComArea);
 	HOSTDEF(ptIflashCfg1ComArea);
 	HOSTDEF(ptIflashCfg2Area);
 	NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea;
-	void *pvDataArea;
+	unsigned long ulUnitOffsetInBytes;
+	INTERNAL_FLASH_AREA_T tArea;
 
 
-	/* Be pessimistic. */
 	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-
 	ptIFlashCfgArea = NULL;
-	pvDataArea = NULL;
+	ulUnitOffsetInBytes = 0;
 
-	switch(uiUnit)
+	tArea = ptFlashAttributes->tArea;
+	switch( tArea )
 	{
-	case 0:
-		tResult = NETX_CONSOLEAPP_RESULT_OK;
-		ptIFlashCfgArea = ptIflashCfg0ComArea;
-		pvDataArea = (void*)HOSTADDR(intflash0);
+	case INTERNAL_FLASH_AREA_Unknown:
 		break;
 
-	case 1:
-		tResult = NETX_CONSOLEAPP_RESULT_OK;
-		ptIFlashCfgArea = ptIflashCfg1ComArea;
-		pvDataArea = (void*)HOSTADDR(intflash1);
+	case INTERNAL_FLASH_AREA_Flash0_Main:
+		if( ulOffset<IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES )
+		{
+			ptIFlashCfgArea = ptIflashCfg0ComArea;
+			ulUnitOffsetInBytes = 0;
+			tResult = NETX_CONSOLEAPP_RESULT_OK;
+		}
 		break;
 
-	case 2:
-		tResult = NETX_CONSOLEAPP_RESULT_OK;
-		ptIFlashCfgArea = ptIflashCfg2Area;
-		pvDataArea = (void*)HOSTADDR(intflash2);
+	case INTERNAL_FLASH_AREA_Flash0_Info:
+		if( ulOffset<IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES )
+		{
+			ptIFlashCfgArea = ptIflashCfg0ComArea;
+			ulUnitOffsetInBytes = 0;
+			tResult = NETX_CONSOLEAPP_RESULT_OK;
+		}
+		break;
+
+	case INTERNAL_FLASH_AREA_Flash1_Main:
+		if( ulOffset<IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES )
+		{
+			ptIFlashCfgArea = ptIflashCfg1ComArea;
+			ulUnitOffsetInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES;
+			tResult = NETX_CONSOLEAPP_RESULT_OK;
+		}
+		break;
+
+	case INTERNAL_FLASH_AREA_Flash1_Info:
+		if( ulOffset<IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES )
+		{
+			ptIFlashCfgArea = ptIflashCfg1ComArea;
+			ulUnitOffsetInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES;
+			tResult = NETX_CONSOLEAPP_RESULT_OK;
+		}
+		break;
+
+	case INTERNAL_FLASH_AREA_Flash2_Main:
+		if( ulOffset<IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES )
+		{
+			ptIFlashCfgArea = ptIflashCfg2Area;
+			ulUnitOffsetInBytes = 2 * IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES;
+			tResult = NETX_CONSOLEAPP_RESULT_OK;
+		}
+		break;
+
+	case INTERNAL_FLASH_AREA_Flash2_Info:
+		if( ulOffset<IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES )
+		{
+			ptIFlashCfgArea = ptIflashCfg2Area;
+			ulUnitOffsetInBytes = 2 * IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES;
+			tResult = NETX_CONSOLEAPP_RESULT_OK;
+		}
+		break;
+
+	case INTERNAL_FLASH_AREA_Flash01_Main:
+		if( ulOffset<IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES )
+		{
+			ptIFlashCfgArea = ptIflashCfg0ComArea;
+			ulUnitOffsetInBytes = 0;
+			tResult = NETX_CONSOLEAPP_RESULT_OK;
+		}
+		else if( ulOffset<(2*IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES) )
+		{
+			ptIFlashCfgArea = ptIflashCfg1ComArea;
+			/* NOTE: the offset must be 0 here so that the total sum of IFLASH0 start,
+			 *       the unit offset and the program offset is in the IFLASH1 area.
+			 */
+			ulUnitOffsetInBytes = 0;
+			tResult = NETX_CONSOLEAPP_RESULT_OK;
+		}
 		break;
 	}
 
-	ptFlashAttributes->pvControllerArea = ptIFlashCfgArea;
-	ptFlashAttributes->pvDataArea = pvDataArea;
+	ptAttr->ptIFlashCfgArea = ptIFlashCfgArea;
+	ptAttr->ulUnitOffsetInBytes = ulUnitOffsetInBytes;
 
 	return tResult;
 }
 
 
 
-static void internal_flash_select_read_mode_and_clear_caches(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr)
+static void internal_flash_select_read_mode_and_clear_caches(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea)
 {
-	NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea;
 	int iMain0_Info1;
 	unsigned long ulValue;
 
-
-	/* Get the controller area. */
-	ptIFlashCfgArea = ptAttr->pvControllerArea;
 
 	/* Reset the flash. This clears the "read" caches. */
 	ptIFlashCfgArea->ulIflash_reset = HOSTMSK(iflash_reset_reset);
@@ -160,7 +229,7 @@ static void iflash_start_and_wait(NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea)
 
 
 
-static unsigned long is_block_erased(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, unsigned long ulOffsetInBytes)
+static unsigned long is_block_erased(const FLASH_BLOCK_ATTRIBUTES_T *ptAttr, unsigned long ulBlockNumber)
 {
 	const unsigned long *pulFlashDataArea;
 	const unsigned long *pulCnt;
@@ -168,9 +237,9 @@ static unsigned long is_block_erased(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *p
 	unsigned long ulValue;
 
 
-	pulFlashDataArea = ptAttr->pvDataArea;
-	pulCnt = pulFlashDataArea + (ulOffsetInBytes / sizeof(unsigned long));
-	pulEnd = pulCnt + (ptAttr->ulEraseBlockSizeInBytes / sizeof(unsigned long));
+	pulFlashDataArea = (const unsigned long*)(HOSTADDR(intflash0) + ptAttr->ulUnitOffsetInBytes);
+	pulCnt = pulFlashDataArea + ((IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES * ulBlockNumber) / sizeof(unsigned long));
+	pulEnd = pulCnt + (IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES / sizeof(unsigned long));
 	ulValue = 0xffffffffU;
 	do
 	{
@@ -187,62 +256,70 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase_block(const INTERNAL
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea;
 	unsigned long ulMisalignmentInBytes;
+	unsigned long ulBlockNumber;
 	unsigned long ulXAddr;
 	unsigned long ulYAddr;
 	unsigned long ulValue;
+	FLASH_BLOCK_ATTRIBUTES_T tFlashBlock;
 
 
-	/* Is the offset aligned to the page start? */
-	ulMisalignmentInBytes = ulOffsetInBytes % ptAttr->ulEraseBlockSizeInBytes;
-	if( ulMisalignmentInBytes!=0 )
+	/* Get the pointer to the controller and the offset in the memory map. */
+	tResult = iflash_get_controller(ptAttr, ulOffsetInBytes, &tFlashBlock);
+	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 	{
-		uprintf("! Refuse to erase non-aligned block at offset 0x%08x. The correct offset for the aligned block would be 0x08x.\n", ulOffsetInBytes, ulOffsetInBytes - ulMisalignmentInBytes);
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else
-	{
-		/* Check if the block is already erased. */
-		ulValue = is_block_erased(ptAttr, ulOffsetInBytes);
-		if( ulValue==0xffffffffU )
+		/* Is the offset aligned to the page start? */
+		ulMisalignmentInBytes = ulOffsetInBytes % IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
+		if( ulMisalignmentInBytes!=0 )
 		{
-			uprintf(". The erase block at offset 0x%08x is already clear. Skipping the ERASE command.\n", ulOffsetInBytes);
-			tResult = NETX_CONSOLEAPP_RESULT_OK;
+			uprintf("! Refuse to erase non-aligned block at offset 0x%08x. The correct offset for the aligned block would be 0x08x.\n", ulOffsetInBytes, ulOffsetInBytes - ulMisalignmentInBytes);
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 		}
 		else
 		{
-			ulXAddr = ulOffsetInBytes / ptAttr->ulRowSizeInBytes;
-			ulYAddr = 0;
-
-			ptIFlashCfgArea = ptAttr->pvControllerArea;
-
-			/* Select "erase" mode. */
-			ptIFlashCfgArea->ulIflash_mode_cfg = IFLASH_MODE_ERASE;
-
-			/* Set the X address. */
-			ptIFlashCfgArea->ulIflash_xadr = ulXAddr;
-
-			/* Program one column. */
-			ptIFlashCfgArea->ulIflash_yadr = ulYAddr;
-
-			/* Select the main memory. */
-			ptIFlashCfgArea->ulIflash_ifren_cfg = 0;
-
-			/* Start erasing. */
-			iflash_start_and_wait(ptIFlashCfgArea);
-
-			/* Go back to the read mode. */
-			internal_flash_select_read_mode_and_clear_caches(ptAttr);
-
-			/* Check if the block is now erased. */
-			ulValue = is_block_erased(ptAttr, ulOffsetInBytes);
-			if( ulValue!=0xffffffffU )
+			/* Check if the block is already erased. */
+			ulBlockNumber = ulOffsetInBytes / IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
+			ulValue = is_block_erased(&tFlashBlock, ulBlockNumber);
+			if( ulValue==0xffffffffU )
 			{
-				uprintf("! The erase block at offset 0x%08x was not erased.\n", ulOffsetInBytes);
-				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+				uprintf(". The erase block at offset 0x%08x is already clear. Skipping the ERASE command.\n", ulOffsetInBytes);
+				tResult = NETX_CONSOLEAPP_RESULT_OK;
 			}
 			else
 			{
-				tResult = NETX_CONSOLEAPP_RESULT_OK;
+				ulXAddr = ulOffsetInBytes / IFLASH_MAZ_V0_ROW_SIZE_IN_BYTES;
+				ulYAddr = 0;
+
+				ptIFlashCfgArea = tFlashBlock.ptIFlashCfgArea;
+
+				/* Select "erase" mode. */
+				ptIFlashCfgArea->ulIflash_mode_cfg = IFLASH_MODE_ERASE;
+
+				/* Set the X address. */
+				ptIFlashCfgArea->ulIflash_xadr = ulXAddr;
+
+				/* Program one column. */
+				ptIFlashCfgArea->ulIflash_yadr = ulYAddr;
+
+				/* Select the main memory. */
+				ptIFlashCfgArea->ulIflash_ifren_cfg = 0;
+
+				/* Start erasing. */
+				iflash_start_and_wait(ptIFlashCfgArea);
+
+				/* Go back to the read mode. */
+				internal_flash_select_read_mode_and_clear_caches(ptAttr, ptIFlashCfgArea);
+
+				/* Check if the block is now erased. */
+				ulValue = is_block_erased(&tFlashBlock, ulBlockNumber);
+				if( ulValue!=0xffffffffU )
+				{
+					uprintf("! The erase block at offset 0x%08x was not erased.\n", ulOffsetInBytes);
+					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+				}
+				else
+				{
+					tResult = NETX_CONSOLEAPP_RESULT_OK;
+				}
 			}
 		}
 	}
@@ -252,12 +329,11 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase_block(const INTERNAL
 
 
 
-static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash_page(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, unsigned long ulOffset, IFLASH_PAGE_BUFFER_T tDataToBeFlashed)
+static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash_page(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, unsigned long ulOffsetInBytes, IFLASH_PAGE_BUFFER_T tDataToBeFlashed)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea;
 	unsigned long ulMisalignment;
-	unsigned long ulRowSize;
 	unsigned long ulXAddr;
 	unsigned long ulYAddr;
 	int iMain0_Info1;
@@ -268,129 +344,134 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash_page(const INTERNAL_
 	unsigned long ulDifference;
 	IFLASH_PAGE_BUFFER_T tExistingDataInFlash;
 	IFLASH_PAGE_BUFFER_T tDifference;
+	FLASH_BLOCK_ATTRIBUTES_T tFlashBlock;
 
 
-	/* Is the offset aligned to the page start? */
-	ulMisalignment = ulOffset % IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
-	if( ulMisalignment!=0 )
+	/* Get the pointer to the controller and the offset in the memory map. */
+	tResult = iflash_get_controller(ptAttr, ulOffsetInBytes, &tFlashBlock);
+	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 	{
-		uprintf("! Refuse to program non-aligned page at offset 0x%08x. The correct offset for the aligned page would be 0x08x.\n", ulOffset, ulOffset - ulMisalignment);
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-	else
-	{
-		/* Get a pointer to the data array of the flash. */
-		pucFlashDataArray = ptAttr->pvDataArea;
-
-		/* Get the old contents of the flash. */
-		memcpy(tExistingDataInFlash.auc, pucFlashDataArray + ulOffset, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
-
-		/* Compare the data to be programmed with the flash contents. */
-		iCmpResult = memcmp(tExistingDataInFlash.aul, tDataToBeFlashed.aul, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
-		if( iCmpResult==0 )
+		/* Is the offset aligned to the page start? */
+		ulMisalignment = ulOffsetInBytes % IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
+		if( ulMisalignment!=0 )
 		{
-			/* The requested data is already in the flash. Do not program again. */
-			tResult = NETX_CONSOLEAPP_RESULT_OK;
+			uprintf("! Refuse to program non-aligned page at offset 0x%08x. The correct offset for the aligned page would be 0x08x.\n", ulOffsetInBytes, ulOffsetInBytes - ulMisalignment);
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 		}
 		else
 		{
-			/* Check if the requested data will only change bits from 1 to 0.
-			 *
-			 * Get the difference first. "tDifference" will have
-			 * all bits set to 1 which differ between the flash
-			 * contents and the requested data.
-			 *
-			 * The flash contents must have all bits of the
-			 * difference set to 1. This can be checked by
-			 * masking the flash contents with the difference.
-			 * The result must be the difference.
-			 */
+			/* Get a pointer to the data array of the flash. */
+			pucFlashDataArray = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
 
-			/* Get the difference between the flash contents and
-			 * the data to program.
-			 */
-			for(uiCnt=0; uiCnt<IFLASH_MAZ_V0_PAGE_SIZE_DWORD; ++uiCnt)
+			/* Get the old contents of the flash. */
+			memcpy(tExistingDataInFlash.auc, pucFlashDataArray + ulOffsetInBytes, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
+
+			/* Compare the data to be programmed with the flash contents. */
+			iCmpResult = memcmp(tExistingDataInFlash.aul, tDataToBeFlashed.aul, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
+			if( iCmpResult==0 )
 			{
-				tDifference.aul[uiCnt] = tExistingDataInFlash.aul[uiCnt] ^ tDataToBeFlashed.aul[uiCnt];
+				/* The requested data is already in the flash. Do not program again. */
+				tResult = NETX_CONSOLEAPP_RESULT_OK;
 			}
-
-			tResult = NETX_CONSOLEAPP_RESULT_OK;
-
-			/* Check if all bits from the difference are set to 1
-			 * in the flash.
-			 */
-			for(uiCnt=0; uiCnt<IFLASH_MAZ_V0_PAGE_SIZE_DWORD; ++uiCnt)
+			else
 			{
-				ulDifference = tDifference.aul[uiCnt];
-				ulValue = tExistingDataInFlash.aul[uiCnt] & ulDifference;
-				if( ulValue!=ulDifference )
+				/* Check if the requested data will only change bits from 1 to 0.
+				 *
+				 * Get the difference first. "tDifference" will have
+				 * all bits set to 1 which differ between the flash
+				 * contents and the requested data.
+				 *
+				 * The flash contents must have all bits of the
+				 * difference set to 1. This can be checked by
+				 * masking the flash contents with the difference.
+				 * The result must be the difference.
+				 */
+
+				/* Get the difference between the flash contents and
+				 * the data to program.
+				 */
+				for(uiCnt=0; uiCnt<IFLASH_MAZ_V0_PAGE_SIZE_DWORD; ++uiCnt)
 				{
-					uprintf("! Invalid program request: trying to set bits from 0 to 1 at offset 0x%08x.\n", ulOffset + uiCnt * sizeof(unsigned long));
-					uprintf("! Flash contents:  0x%08x\n", tExistingDataInFlash.aul[uiCnt]);
-					uprintf("! Data to program: 0x%08x\n", tDataToBeFlashed.aul[uiCnt]);
-					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					tDifference.aul[uiCnt] = tExistingDataInFlash.aul[uiCnt] ^ tDataToBeFlashed.aul[uiCnt];
 				}
-			}
-			if( tResult==NETX_CONSOLEAPP_RESULT_OK )
-			{
-				/* Convert the offset to an X and Y component. */
-				ulRowSize = ptAttr->ulRowSizeInBytes;
-				ulXAddr = ulOffset / ulRowSize;
-				ulYAddr  = ulOffset;
-				ulYAddr -= (ulXAddr * ulRowSize);
-				ulYAddr /= IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
 
-				/* Get a pointer to the flash controller. */
-				ptIFlashCfgArea = ptAttr->pvControllerArea;
+				tResult = NETX_CONSOLEAPP_RESULT_OK;
 
-				/* Set the TMR line to 1. */
-				ptIFlashCfgArea->ulIflash_special_cfg = HOSTMSK(iflash_special_cfg_tmr);
-
-				/* Select "program" mode. */
-				ptIFlashCfgArea->ulIflash_mode_cfg = IFLASH_MODE_PROGRAM;
-
-				/* Set the X and Y address. */
-				ptIFlashCfgArea->ulIflash_xadr = ulXAddr;
-				ptIFlashCfgArea->ulIflash_yadr = ulYAddr;
-
-				/* Select the main memory or info page. */
-				iMain0_Info1 = ptAttr->iMain0_Info1;
-				ulValue = 0;
-				if( iMain0_Info1!=0 )
+				/* Check if all bits from the difference are set to 1
+				 * in the flash.
+				 */
+				for(uiCnt=0; uiCnt<IFLASH_MAZ_V0_PAGE_SIZE_DWORD; ++uiCnt)
 				{
-					ulValue = HOSTMSK(iflash_ifren_cfg_ifren);
+					ulDifference = tDifference.aul[uiCnt];
+					ulValue = tExistingDataInFlash.aul[uiCnt] & ulDifference;
+					if( ulValue!=ulDifference )
+					{
+						uprintf("! Invalid program request: trying to set bits from 0 to 1 at offset 0x%08x.\n", ulOffsetInBytes + uiCnt * sizeof(unsigned long));
+						uprintf("! Flash contents:  0x%08x\n", tExistingDataInFlash.aul[uiCnt]);
+						uprintf("! Data to program: 0x%08x\n", tDataToBeFlashed.aul[uiCnt]);
+						tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					}
 				}
-				ptIFlashCfgArea->ulIflash_ifren_cfg = ulValue;
-
-				/* Set the data for the "program" operation. */
-				ptIFlashCfgArea->aulIflash_din[0] = tDataToBeFlashed.aul[0];
-				ptIFlashCfgArea->aulIflash_din[1] = tDataToBeFlashed.aul[1];
-				ptIFlashCfgArea->aulIflash_din[2] = tDataToBeFlashed.aul[2];
-				ptIFlashCfgArea->aulIflash_din[3] = tDataToBeFlashed.aul[3];
-
-				/* Start programming. */
-				iflash_start_and_wait(ptIFlashCfgArea);
-
-				/* Go back to the read mode. */
-				internal_flash_select_read_mode_and_clear_caches(ptAttr);
-
-				/* Verify the data. */
-				memcpy(tExistingDataInFlash.auc, pucFlashDataArray + ulOffset, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
-				iCmpResult = memcmp(tExistingDataInFlash.aul, tDataToBeFlashed.aul, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
-				if( iCmpResult==0 )
+				if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 				{
-					/* The requested data was written to the flash. */
-					tResult = NETX_CONSOLEAPP_RESULT_OK;
-				}
-				else
-				{
-					uprintf("! Verify error at offset 0x%08x.\n", ulOffset);
-					uprintf("Expected data:\n");
-					hexdump(tDataToBeFlashed.auc, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
-					uprintf("Flash contents:\n");
-					hexdump(tExistingDataInFlash.auc, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
+					/* Convert the offset to an X and Y component. */
+					ulXAddr = ulOffsetInBytes / IFLASH_MAZ_V0_ROW_SIZE_IN_BYTES;
+					ulYAddr  = ulOffsetInBytes;
+					ulYAddr -= (ulXAddr * IFLASH_MAZ_V0_ROW_SIZE_IN_BYTES);
+					ulYAddr /= IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
 
-					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					/* Get a pointer to the flash controller. */
+					ptIFlashCfgArea = tFlashBlock.ptIFlashCfgArea;
+
+					/* Set the TMR line to 1. */
+					ptIFlashCfgArea->ulIflash_special_cfg = HOSTMSK(iflash_special_cfg_tmr);
+
+					/* Select "program" mode. */
+					ptIFlashCfgArea->ulIflash_mode_cfg = IFLASH_MODE_PROGRAM;
+
+					/* Set the X and Y address. */
+					ptIFlashCfgArea->ulIflash_xadr = ulXAddr;
+					ptIFlashCfgArea->ulIflash_yadr = ulYAddr;
+
+					/* Select the main memory or info page. */
+					iMain0_Info1 = ptAttr->iMain0_Info1;
+					ulValue = 0;
+					if( iMain0_Info1!=0 )
+					{
+						ulValue = HOSTMSK(iflash_ifren_cfg_ifren);
+					}
+					ptIFlashCfgArea->ulIflash_ifren_cfg = ulValue;
+
+					/* Set the data for the "program" operation. */
+					ptIFlashCfgArea->aulIflash_din[0] = tDataToBeFlashed.aul[0];
+					ptIFlashCfgArea->aulIflash_din[1] = tDataToBeFlashed.aul[1];
+					ptIFlashCfgArea->aulIflash_din[2] = tDataToBeFlashed.aul[2];
+					ptIFlashCfgArea->aulIflash_din[3] = tDataToBeFlashed.aul[3];
+
+					/* Start programming. */
+					iflash_start_and_wait(ptIFlashCfgArea);
+
+					/* Go back to the read mode. */
+					internal_flash_select_read_mode_and_clear_caches(ptAttr, ptIFlashCfgArea);
+
+					/* Verify the data. */
+					memcpy(tExistingDataInFlash.auc, pucFlashDataArray + ulOffsetInBytes, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
+					iCmpResult = memcmp(tExistingDataInFlash.aul, tDataToBeFlashed.aul, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
+					if( iCmpResult==0 )
+					{
+						/* The requested data was written to the flash. */
+						tResult = NETX_CONSOLEAPP_RESULT_OK;
+					}
+					else
+					{
+						uprintf("! Verify error at offset 0x%08x.\n", ulOffsetInBytes);
+						uprintf("Expected data:\n");
+						hexdump(tDataToBeFlashed.auc, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
+						uprintf("Flash contents:\n");
+						hexdump(tExistingDataInFlash.auc, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
+
+						tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					}
 				}
 			}
 		}
@@ -401,6 +482,68 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash_page(const INTERNAL_
 
 
 
+typedef struct UNIT_CS_TO_ATTR_STRUCT
+{
+	unsigned int uiUnit;
+	unsigned int uiChipSelect;
+	int iMain0_Info1;
+	unsigned long ulSizeInBytes;
+	INTERNAL_FLASH_AREA_T tArea;
+} UNIT_CS_TO_ATTR_T;
+
+static const UNIT_CS_TO_ATTR_T atUnitCsToAttr[] =
+{
+	{
+		.uiUnit = 0,
+		.uiChipSelect = 0,
+		.iMain0_Info1 = 0,
+		.ulSizeInBytes = 0x80000,
+		.tArea = INTERNAL_FLASH_AREA_Flash0_Main
+	},
+	{
+		.uiUnit = 1,
+		.uiChipSelect = 0,
+		.iMain0_Info1 = 0,
+		.ulSizeInBytes = 0x80000,
+		.tArea = INTERNAL_FLASH_AREA_Flash1_Main
+	},
+	{
+		.uiUnit = 2,
+		.uiChipSelect = 0,
+		.iMain0_Info1 = 0,
+		.ulSizeInBytes = 0x80000,
+		.tArea = INTERNAL_FLASH_AREA_Flash2_Main
+	},
+	{
+		.uiUnit = 3,
+		.uiChipSelect = 0,
+		.iMain0_Info1 = 0,
+		.ulSizeInBytes = 0x100000,
+		.tArea = INTERNAL_FLASH_AREA_Flash01_Main
+	},
+	{
+		.uiUnit = 0,
+		.uiChipSelect = 1,
+		.iMain0_Info1 = 0,
+		.ulSizeInBytes = 0x1000,
+		.tArea = INTERNAL_FLASH_AREA_Flash0_Info
+	},
+	{
+		.uiUnit = 1,
+		.uiChipSelect = 1,
+		.iMain0_Info1 = 0,
+		.ulSizeInBytes = 0x1000,
+		.tArea = INTERNAL_FLASH_AREA_Flash1_Info
+	},
+	{
+		.uiUnit = 2,
+		.uiChipSelect = 1,
+		.iMain0_Info1 = 0,
+		.ulSizeInBytes = 0x1000,
+		.tArea = INTERNAL_FLASH_AREA_Flash2_Info
+	}
+};
+
 NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
@@ -409,6 +552,9 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_detect(CMD_PARAMETER_DETECT_T *pt
 	INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr;
 	unsigned int uiUnit;
 	unsigned int uiChipSelect;
+	const UNIT_CS_TO_ATTR_T *ptCnt;
+	const UNIT_CS_TO_ATTR_T *ptEnd;
+	const UNIT_CS_TO_ATTR_T *ptHit;
 
 
 	/* Be pessimistic. */
@@ -420,54 +566,41 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_detect(CMD_PARAMETER_DETECT_T *pt
 	ptAttr = &(ptDeviceDescription->uInfo.tInternalFlashInfo.uAttributes.tMazV0);
 
 	/* Set the default values. */
-	ptAttr->pvControllerArea = NULL;
-	ptAttr->pvDataArea = NULL;
 	ptAttr->iMain0_Info1 = 0;
 	ptAttr->ulSizeInBytes = 0;
-	ptAttr->ulRowSizeInBytes = 0;
-	ptAttr->ulEraseBlockSizeInBytes = 0;
+	ptAttr->tArea = INTERNAL_FLASH_AREA_Unknown;
 
-	/* Check the unit. */
+	/* Get the unit. */
 	uiUnit = ptParameter->uSourceParameter.tInternalFlash.uiUnit;
-	tResult = iflash_get_areas(uiUnit, ptAttr);
-	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
+	/* Chip select 0 is the main memory area. Chip select 1 is the info page. */
+	uiChipSelect = ptParameter->uSourceParameter.tInternalFlash.uiChipSelect;
+	ptCnt = atUnitCsToAttr;
+	ptEnd = ptCnt + (sizeof(atUnitCsToAttr)/sizeof(UNIT_CS_TO_ATTR_T));
+	ptHit = NULL;
+	while( ptCnt<ptEnd )
 	{
-		uprintf("! Invalid unit: %d\n", uiUnit);
-	}
-	else
-	{
-		/* Chip select 0 is the main memory area. Chip select 1 is the info page. */
-		uiChipSelect = ptParameter->uSourceParameter.tInternalFlash.uiChipSelect;
-		if( uiChipSelect==0 )
+		if( ptCnt->uiUnit==uiUnit && ptCnt->uiChipSelect==uiChipSelect )
 		{
-			ptAttr->iMain0_Info1 = 0;
-			ptAttr->ulSizeInBytes = 0x80000;
-			ptAttr->ulRowSizeInBytes = 0x200;
-			ptAttr->ulEraseBlockSizeInBytes = 0x1000;
-
-			tResult = NETX_CONSOLEAPP_RESULT_OK;
-			tFlashType = INTERNAL_FLASH_TYPE_MAZ_V0;
-		}
-		else if( uiChipSelect==1 )
-		{
-			ptAttr->iMain0_Info1 = 1;
-			ptAttr->ulSizeInBytes = 0x1000;
-			ptAttr->ulRowSizeInBytes = 0x200;
-			ptAttr->ulEraseBlockSizeInBytes = 0x1000;
-
-			tResult = NETX_CONSOLEAPP_RESULT_OK;
-			tFlashType = INTERNAL_FLASH_TYPE_MAZ_V0;
+			ptHit = ptCnt;
+			break;
 		}
 		else
 		{
-			uprintf("! Invalid chip select: %d\n", uiChipSelect);
-			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+			++ptCnt;
 		}
+	}
+	if( ptHit==NULL )
+	{
+		uprintf("! Invalid chip select %d for unit %d\n", uiChipSelect, uiUnit);
+	}
+	else
+	{
+		ptAttr->iMain0_Info1 = ptHit->iMain0_Info1;
+		ptAttr->ulSizeInBytes = ptHit->ulSizeInBytes;
+		ptAttr->tArea = ptHit->tArea;
 
-		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
-		{
-			internal_flash_select_read_mode_and_clear_caches(ptAttr);
-		}
+		tResult = NETX_CONSOLEAPP_RESULT_OK;
+		tFlashType = INTERNAL_FLASH_TYPE_MAZ_V0;
 	}
 
 	/* Set the flash type. */
@@ -491,6 +624,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptPa
 	unsigned long ulChunkOffset;
 	unsigned long ulChunkSize;
 	unsigned long ulDataSize;
+	FLASH_BLOCK_ATTRIBUTES_T tFlashBlock;
 	IFLASH_PAGE_BUFFER_T tFlashBuffer; /* This is the buffer for the data to flash. */
 
 
@@ -513,9 +647,6 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptPa
 		tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
 		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
-			/* Get a pointer to the data area of the flash. */
-			pucFlashDataArea = ptAttr->pvDataArea;
-
 			/* Get a pointer to the data to be flashed. */
 			pucDataToBeFlashed = ptParameter->pucData;
 
@@ -527,31 +658,38 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptPa
 			{
 				/* Yes -> modify the last part of a page. */
 
-				/* Get the start offset of the page. */
-				ulPageStartOffset = ulOffset - ulChunkOffset;
-
-				/* Get the old contents of the page. */
-				memcpy(tFlashBuffer.auc, pucFlashDataArea + ulPageStartOffset, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
-
-				/* Add the new part to the buffer. */
-				ulChunkSize = IFLASH_MAZ_V0_PAGE_SIZE_BYTES - ulChunkOffset;
-				ulDataSize = ulOffsetEnd - ulOffset;
-				if( ulChunkSize>ulDataSize )
+				/* Get the pointer to the controller and the offset in the memory map. */
+				tResult = iflash_get_controller(ptAttr, ulOffset, &tFlashBlock);
+				if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 				{
-					ulChunkSize = ulDataSize;
-				}
-				memcpy(tFlashBuffer.auc + ulChunkOffset, pucDataToBeFlashed, ulChunkSize);
+					pucFlashDataArea = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
 
-				/* Flash the chunk. */
-				tResult = internal_flash_maz_v0_flash_page(ptAttr, ulPageStartOffset, tFlashBuffer);
-				if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
-				{
-					uprintf("! Failed to flash the page at offset 0x%08x.\n", ulPageStartOffset);
-				}
-				else
-				{
-					ulOffset += ulChunkSize;
-					pucDataToBeFlashed += ulChunkSize;
+					/* Get the start offset of the page. */
+					ulPageStartOffset = ulOffset - ulChunkOffset;
+
+					/* Get the old contents of the page. */
+					memcpy(tFlashBuffer.auc, pucFlashDataArea + ulPageStartOffset, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
+
+					/* Add the new part to the buffer. */
+					ulChunkSize = IFLASH_MAZ_V0_PAGE_SIZE_BYTES - ulChunkOffset;
+					ulDataSize = ulOffsetEnd - ulOffset;
+					if( ulChunkSize>ulDataSize )
+					{
+						ulChunkSize = ulDataSize;
+					}
+					memcpy(tFlashBuffer.auc + ulChunkOffset, pucDataToBeFlashed, ulChunkSize);
+
+					/* Flash the chunk. */
+					tResult = internal_flash_maz_v0_flash_page(ptAttr, ulPageStartOffset, tFlashBuffer);
+					if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
+					{
+						uprintf("! Failed to flash the page at offset 0x%08x.\n", ulPageStartOffset);
+					}
+					else
+					{
+						ulOffset += ulChunkSize;
+						pucDataToBeFlashed += ulChunkSize;
+					}
 				}
 			}
 
@@ -581,22 +719,29 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptPa
 				ulChunkSize = ulOffsetEnd - ulOffset;
 				if( ulChunkSize!=0 )
 				{
-					/* Get the old contents of the page. */
-					memcpy(tFlashBuffer.auc, pucFlashDataArea + ulOffset, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
-
-					/* Add the new part to the buffer. */
-					memcpy(tFlashBuffer.auc, pucDataToBeFlashed, ulChunkSize);
-
-					/* Flash the chunk. */
-					tResult = internal_flash_maz_v0_flash_page(ptAttr, ulOffset, tFlashBuffer);
-					if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
+					/* Get the pointer to the controller and the offset in the memory map. */
+					tResult = iflash_get_controller(ptAttr, ulOffset, &tFlashBlock);
+					if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 					{
-						uprintf("! Failed to flash the page at offset 0x%08x.\n", ulOffset);
-					}
-					else
-					{
-						ulOffset += ulChunkSize;
-						pucDataToBeFlashed += ulChunkSize;
+						pucFlashDataArea = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
+
+						/* Get the old contents of the page. */
+						memcpy(tFlashBuffer.auc, pucFlashDataArea + ulOffset, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
+
+						/* Add the new part to the buffer. */
+						memcpy(tFlashBuffer.auc, pucDataToBeFlashed, ulChunkSize);
+
+						/* Flash the chunk. */
+						tResult = internal_flash_maz_v0_flash_page(ptAttr, ulOffset, tFlashBuffer);
+						if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
+						{
+							uprintf("! Failed to flash the page at offset 0x%08x.\n", ulOffset);
+						}
+						else
+						{
+							ulOffset += ulChunkSize;
+							pucDataToBeFlashed += ulChunkSize;
+						}
 					}
 				}
 			}
@@ -636,7 +781,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase(CMD_PARAMETER_ERASE_T *ptPa
 		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
 			/* The offset must be aligned to the erase block size. */
-			ulEraseBlockSize = ptAttr->ulEraseBlockSizeInBytes;
+			ulEraseBlockSize = IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
 			ulBlockOffset = ulOffsetStart % ulEraseBlockSize;
 			if( ulBlockOffset!=0 )
 			{
@@ -647,16 +792,28 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase(CMD_PARAMETER_ERASE_T *ptPa
 			}
 			else
 			{
-				ulOffset = ulOffsetStart;
-				do
+				/* The end offset must be aligned to the erase block size. */
+				ulBlockOffset =ulOffsetEnd % ulEraseBlockSize;
+				if( ulBlockOffset!=0 )
 				{
-					tResult = internal_flash_maz_v0_erase_block(ptAttr, ulOffset);
-					if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
+					uprintf("! The erase end is not aligned to the erase blocks.\n");
+					uprintf("! Requested erase end: 0x%08x\n", ulOffsetEnd);
+					uprintf("! Erase block end:     0x%08x\n", ulOffsetEnd + ulEraseBlockSize - ulBlockOffset);
+					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+				}
+				else
+				{
+					ulOffset = ulOffsetStart;
+					do
 					{
-						break;
-					}
-					ulOffset += ulEraseBlockSize;
-				} while( ulOffset<ulOffsetEnd );
+						tResult = internal_flash_maz_v0_erase_block(ptAttr, ulOffset);
+						if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
+						{
+							break;
+						}
+						ulOffset += ulEraseBlockSize;
+					} while( ulOffset<ulOffsetEnd );
+				}
 			}
 		}
 	}
@@ -677,6 +834,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_read(CMD_PARAMETER_READ_T *ptPara
 	const unsigned char *pucFlashStart;
 	unsigned char *pucBufferStart;
 	unsigned long ulOffset;
+	FLASH_BLOCK_ATTRIBUTES_T tFlashBlock;
 
 
 	ulOffsetStart = ptParameter->ulStartAdr;
@@ -695,26 +853,32 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_read(CMD_PARAMETER_READ_T *ptPara
 		tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
 		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
-			/* Get the start and size of the data area. */
-			pucFlashArea = (const unsigned char*)(ptAttr->pvDataArea);
-			pucFlashStart = pucFlashArea + ulOffsetStart;
-
-			/* Set the flash to read mode. */
-			internal_flash_select_read_mode_and_clear_caches(ptAttr);
-
-			/* Copy the data block to the destination buffer.*/
-			pucBufferStart = ptParameter->pucData;
-
-			/* Copy the data block to the destination buffer.*/
-			ulOffset = 0;
-			ulLength = ulOffsetEnd - ulOffsetStart;
-			do
+			/* Get the pointer to the controller and the offset in the memory map. */
+			tResult = iflash_get_controller(ptAttr, ulOffsetStart, &tFlashBlock);
+			if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 			{
-				pucBufferStart[ulOffset] = pucFlashStart[ulOffset];
-				++ulOffset;
-			} while( ulOffset<ulLength );
+				pucFlashArea = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
 
-			tResult = NETX_CONSOLEAPP_RESULT_OK;
+				/* Get the start and size of the data area. */
+				pucFlashStart = pucFlashArea + ulOffsetStart;
+
+				/* Set the flash to read mode. */
+				internal_flash_select_read_mode_and_clear_caches(ptAttr, tFlashBlock.ptIFlashCfgArea);
+
+				/* Copy the data block to the destination buffer.*/
+				pucBufferStart = ptParameter->pucData;
+
+				/* Copy the data block to the destination buffer.*/
+				ulOffset = 0;
+				ulLength = ulOffsetEnd - ulOffsetStart;
+				do
+				{
+					pucBufferStart[ulOffset] = pucFlashStart[ulOffset];
+					++ulOffset;
+				} while( ulOffset<ulLength );
+
+				tResult = NETX_CONSOLEAPP_RESULT_OK;
+			}
 		}
 	}
 
@@ -744,6 +908,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_verify(CMD_PARAMETER_VERIFY_T *pt
 	unsigned char ucBufferData;
 	unsigned long ulOffset;
 	unsigned long ulLength;
+	FLASH_BLOCK_ATTRIBUTES_T tFlashBlock;
 
 
 	ulOffsetStart = ptParameter->ulStartAdr;
@@ -762,36 +927,42 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_verify(CMD_PARAMETER_VERIFY_T *pt
 		tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
 		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
-			/* Get the start and size of the data area. */
-			pucFlashArea = (const unsigned char*)(ptAttr->pvDataArea);
-			pucFlashStart = pucFlashArea + ulOffsetStart;
-
-			/* Set the flash to read mode. */
-			internal_flash_select_read_mode_and_clear_caches(ptAttr);
-
-			/* Be optimistic... */
-			tResult = NETX_CONSOLEAPP_RESULT_OK;
-
-			/* Compare the data from the buffer with the flash contents. */
-			pucBufferStart = ptParameter->pucData;
-
-			ulOffset = 0;
-			ulLength = ulOffsetEnd - ulOffsetStart;
-			do
+			/* Get the pointer to the controller and the offset in the memory map. */
+			tResult = iflash_get_controller(ptAttr, ulOffsetStart, &tFlashBlock);
+			if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 			{
-				ucFlashData = pucFlashStart[ulOffset];
-				ucBufferData = pucBufferStart[ulOffset];
-				if( ucFlashData!=ucBufferData )
+				pucFlashArea = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
+
+				/* Get the start and size of the data area. */
+				pucFlashStart = pucFlashArea + ulOffsetStart;
+
+				/* Set the flash to read mode. */
+				internal_flash_select_read_mode_and_clear_caches(ptAttr, tFlashBlock.ptIFlashCfgArea);
+
+				/* Be optimistic... */
+				tResult = NETX_CONSOLEAPP_RESULT_OK;
+
+				/* Compare the data from the buffer with the flash contents. */
+				pucBufferStart = ptParameter->pucData;
+
+				ulOffset = 0;
+				ulLength = ulOffsetEnd - ulOffsetStart;
+				do
 				{
-					uprintf(". verify error at offset 0x%08x. buffer: 0x%02x, flash: 0x%02x.\n", ulOffsetStart + ulOffset, ucBufferData, ucFlashData);
-					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-					break;
-				}
+					ucFlashData = pucFlashStart[ulOffset];
+					ucBufferData = pucBufferStart[ulOffset];
+					if( ucFlashData!=ucBufferData )
+					{
+						uprintf(". verify error at offset 0x%08x. buffer: 0x%02x, flash: 0x%02x.\n", ulOffsetStart + ulOffset, ucBufferData, ucFlashData);
+						tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+						break;
+					}
 
-				++ulOffset;
-			} while( ulOffset<ulLength );
+					++ulOffset;
+				} while( ulOffset<ulLength );
 
-			ptConsoleParams->pvReturnMessage = (void*)tResult;
+				ptConsoleParams->pvReturnMessage = (void*)tResult;
+			}
 		}
 	}
 
@@ -811,12 +982,13 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_is_erased(CMD_PARAMETER_ISERASED_
 	unsigned long ulOffset;
 	unsigned long ulLength;
 	unsigned char ucFlashData;
+	FLASH_BLOCK_ATTRIBUTES_T tFlashBlock;
 
 
 	ulOffsetStart = ptParameter->ulStartAdr;
 	ulOffsetEnd = ptParameter->ulEndAdr;
 
-	/* Silently ignore read requests with a size of 0 bytes. */
+	/* Silently ignore requests with a size of 0 bytes. */
 	if( ulOffsetStart==ulOffsetEnd )
 	{
 		tResult = NETX_CONSOLEAPP_RESULT_OK;
@@ -829,38 +1001,44 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_is_erased(CMD_PARAMETER_ISERASED_
 		tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
 		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
-			/* Get the start and size of the data area. */
-			pucFlashArea = (const unsigned char*)(ptAttr->pvDataArea);
-			pucFlashStart = pucFlashArea + ulOffsetStart;
-
-			/* Set the flash to read mode. */
-			internal_flash_select_read_mode_and_clear_caches(ptAttr);
-
-			/* Be optimistic... */
-			tResult = NETX_CONSOLEAPP_RESULT_OK;
-
-			ulOffset = 0;
-			ulLength = ulOffsetEnd - ulOffsetStart;
-			do
+			/* Get the pointer to the controller and the offset in the memory map. */
+			tResult = iflash_get_controller(ptAttr, ulOffsetStart, &tFlashBlock);
+			if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 			{
-				ucFlashData = pucFlashStart[ulOffset];
-				if( ucFlashData!=0xffU )
+				pucFlashArea = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
+
+				/* Get the start and size of the data area. */
+				pucFlashStart = pucFlashArea + ulOffsetStart;
+
+				/* Set the flash to read mode. */
+				internal_flash_select_read_mode_and_clear_caches(ptAttr, tFlashBlock.ptIFlashCfgArea);
+
+				/* Be optimistic... */
+				tResult = NETX_CONSOLEAPP_RESULT_OK;
+
+				ulOffset = 0;
+				ulLength = ulOffsetEnd - ulOffsetStart;
+				do
 				{
-					break;
+					ucFlashData = pucFlashStart[ulOffset];
+					if( ucFlashData!=0xffU )
+					{
+						break;
+					}
+
+					++ulOffset;
+				} while( ulOffset<ulLength );
+
+				if( ucFlashData==0xff )
+				{
+					uprintf(". CLEAN! The area is erased.\n");
 				}
-
-				++ulOffset;
-			} while( ulOffset<ulLength );
-
-			if( ucFlashData==0xff )
-			{
-				uprintf(". CLEAN! The area is erased.\n");
+				else
+				{
+					uprintf(". DIRTY! The area is not erased.\n");
+				}
+				ptConsoleParams->pvReturnMessage = (void*)((unsigned long)ucFlashData);
 			}
-			else
-			{
-				uprintf(". DIRTY! The area is not erased.\n");
-			}
-			ptConsoleParams->pvReturnMessage = (void*)((unsigned long)ucFlashData);
 		}
 	}
 
@@ -887,8 +1065,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_get_erase_area(CMD_PARAMETER_GETE
 	tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
 	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 	{
-		/* NOTE: this code assumes that the serial flash has uniform erase block sizes. */
-		ulEraseBlockSize = ptAttr->ulEraseBlockSizeInBytes;
+		ulEraseBlockSize = IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
 		uprintf("erase block size: 0x%08x\n", ulEraseBlockSize);
 		uprintf("0x%08x - 0x%08x\n", ulOffsetStart, ulOffsetEnd);
 
