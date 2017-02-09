@@ -4,3 +4,6 @@
 [submodule "platform"]
 	path = platform
 	url = https://github.com/muhkuh-sys/platform.git
+[submodule "jonchki/local"]
+	path = jonchki/local
+	url = https://github.com/muhkuh-sys/org.muhkuh.lua-jonchki.git
