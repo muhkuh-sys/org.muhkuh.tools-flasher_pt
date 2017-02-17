@@ -5,7 +5,7 @@ set -e
 PRJ_DIR=`pwd`
 
 # This is the path to the jonchki tool.
-JONCHKI=/home/cthelen/workspace/org.muhkuh.lua-jonchki/jonchki.lua
+JONCHKI=${PRJ_DIR}/jonchki/local/jonchki.lua
 
 # Build the Windows_x86 artifact.
 pushd targets/jonchki/flasher_cli
