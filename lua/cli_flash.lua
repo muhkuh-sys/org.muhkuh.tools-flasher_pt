@@ -768,6 +768,8 @@ local aArgs
 local fOk
 local strMsg
 
+io.output():setvbuf("no")
+
 aArgs, strMsg = evalArg()
 
 if aArgs == nil then
