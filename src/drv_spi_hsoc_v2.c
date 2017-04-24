@@ -61,9 +61,43 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 	}
 };
 #elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
-static const MMIO_CFG_T aatMmioValues[1][4] =
+
+static const MMIO_CFG_T aatMmioValues_SPI0[3][4] =
 {
 	/*
+	 * For SPI0 
+	 * Chip select 0
+	 */
+	{
+		MMIO_CFG_SPI0_CS0N,		/* chip select */
+		MMIO_CFG_SPI0_CLK,		/* clock */
+		MMIO_CFG_SPI0_MISO,		/* MISO */
+		MMIO_CFG_SPI0_MOSI		/* MOSI */
+	},
+	/*
+	 * Chip select 1
+	 */
+	{
+		MMIO_CFG_SPI0_CS1N,		/* chip select */
+		MMIO_CFG_SPI0_CLK,		/* clock */
+		MMIO_CFG_SPI0_MISO,		/* MISO */
+		MMIO_CFG_SPI0_MOSI		/* MOSI */
+	},
+	/*
+	 * Chip select 2
+	 */
+	{
+		MMIO_CFG_SPI0_CS2N,		/* chip select */
+		MMIO_CFG_SPI0_CLK,		/* clock */
+		MMIO_CFG_SPI0_MISO,		/* MISO */
+		MMIO_CFG_SPI0_MOSI		/* MOSI */
+	},
+};
+
+static const MMIO_CFG_T aatMmioValues_SPI1[3][4] =
+{
+	/*
+	 * For SPI1/XPIC3 SPI
 	 * Chip select 0
 	 */
 	{
@@ -72,7 +106,26 @@ static const MMIO_CFG_T aatMmioValues[1][4] =
 		MMIO_CFG_SPI1_MISO,		/* MISO */
 		MMIO_CFG_SPI1_MOSI		/* MOSI */
 	},
+	/*
+	 * Chip select 1
+	 */
+	{
+		MMIO_CFG_SPI1_CS1N,		/* chip select */
+		MMIO_CFG_SPI1_CLK,		/* clock */
+		MMIO_CFG_SPI1_MISO,		/* MISO */
+		MMIO_CFG_SPI1_MOSI		/* MOSI */
+	},
+	/*
+	 * Chip select 2
+	 */
+	{
+		MMIO_CFG_SPI1_CS2N,		/* chip select */
+		MMIO_CFG_SPI1_CLK,		/* clock */
+		MMIO_CFG_SPI1_MISO,		/* MISO */
+		MMIO_CFG_SPI1_MOSI		/* MOSI */
+	},
 };
+
 #endif
 
 static unsigned char spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char ucByte)
@@ -308,10 +361,17 @@ static void spi_deactivate(const SPI_CFG_T *ptCfg)
 	ptSpiUnit->aulSpi_cr[0] = 0;
 	ptSpiUnit->aulSpi_cr[1] = 0;
 
-	/* Activate the spi pins. */
-#if ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 || ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+	/* Deactivate the spi pins. */
+#if ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 
 	mmio_deactivate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[ptCfg->uiChipSelect]);
+	
+#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+	/* In order to pass the proper MMIO config table, we'd need the unit number, which is not passed in SPI_CFG_T.
+	However, mmio_deactivate() only checks if the MMIO config values are 0xff or not, and all the
+	MMIO config tables for the netX 4000 are equal in this respect. */
+	mmio_deactivate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues_SPI0[0]);
 #endif
+
 }
 
 
@@ -421,8 +481,18 @@ int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	ptCfg->ucIdleChar = ucIdleChar;
 
 	/* activate the spi pins */
-#if ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 || ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#if ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 
 	mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[uiChipSelect]);
+	
+#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+	if (ptSpiCfg->uiUnit == 2) 
+	{
+		mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues_SPI0[uiChipSelect]);
+	}
+	else if (ptSpiCfg->uiUnit == 3)
+	{
+		mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues_SPI1[uiChipSelect]);
+	}
 #endif
 	return iResult;
 }
