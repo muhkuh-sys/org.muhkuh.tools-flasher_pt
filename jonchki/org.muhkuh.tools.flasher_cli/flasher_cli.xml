@@ -4,7 +4,8 @@
 	      module="flasher"
 	      artifact="flasher_cli"
 	      version="${PROJECT_VERSION}"
-	      vcs-id="${PROJECT_VERSION_VCS}" />
+	      vcs-id="${PROJECT_VERSION_VCS}"
+	      extension="zip"/>
 	<dependencies>
 		<dependency group="org.muhkuh.tools" module="bootloader_windows_driver" artifact="bootloader_windows_driver" version="2.3.0"/>
 		<dependency group="org.muhkuh.tools" module="flasher" artifact="lua5.1-flasher" version="${PROJECT_VERSION}"/>

@@ -4,7 +4,8 @@
 	      module="flasher"
 	      artifact="lua5.1-flasher"
 	      version="${PROJECT_VERSION}"
-	      vcs-id="${PROJECT_VERSION_VCS}">
+	      vcs-id="${PROJECT_VERSION_VCS}"
+	      extension="zip">
 		<license name="GPL-2.0"/>
 		<author name="Flasher team" url="https://github.com/muhkuh-sys/flasher" />
 		<description>
