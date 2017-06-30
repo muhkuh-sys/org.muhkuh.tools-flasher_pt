@@ -44,8 +44,8 @@ for strAbsolutePath in ${FILELIST}; do
 	echo "Pull ${strAbsolutePath}"
 	lxc file pull ${CONTAINER}${strAbsolutePath} targets/
 done
-lxc file pull ${CONTAINER}/targets/jonchki/flasher_cli/flasher_cli_windows_32bit.zip targets/
-lxc file pull ${CONTAINER}/targets/jonchki/flasher_cli/flasher_cli_windows_64bit.zip targets/
+lxc file pull ${CONTAINER}/tmp/work/targets/jonchki/flasher_cli/flasher_cli_windows_32bit.zip targets/
+lxc file pull ${CONTAINER}/tmp/work/targets/jonchki/flasher_cli/flasher_cli_windows_64bit.zip targets/
 
 # Stop and remove the container.
 lxc stop ${CONTAINER}
