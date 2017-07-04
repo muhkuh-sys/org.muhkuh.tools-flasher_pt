@@ -2,4 +2,4 @@
 set -e
 
 # Build the artifact.
-python mbs/mbs
+python2.7 mbs/mbs
