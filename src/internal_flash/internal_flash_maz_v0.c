@@ -196,11 +196,10 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 	ptAttr->ulUnitOffsetInBytes = ulUnitOffsetInBytes;
 
 	return tResult;
-}
+} 
 
-
-
-static void internal_flash_select_read_mode_and_clear_caches(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea)
+/* Set the mode (read/erase/program) and select main array or info page */
+static void internal_flash_select_mode_and_clear_caches(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea, unsigned long ulMode)
 {
 	int iMain0_Info1;
 	unsigned long ulValue;
@@ -223,11 +222,17 @@ static void internal_flash_select_read_mode_and_clear_caches(const INTERNAL_FLAS
 	ptIFlashCfgArea->ulIflash_special_cfg = HOSTMSK(iflash_special_cfg_tmr);
 
 	/* Select "read" mode. */
-	ptIFlashCfgArea->ulIflash_mode_cfg = IFLASH_MODE_READ;
+	ptIFlashCfgArea->ulIflash_mode_cfg = ulMode;
 
 	/* Clear also the CPU caches. */
 	__asm__("DSB");
 	__asm__("ISB");
+}
+
+
+static void internal_flash_select_read_mode_and_clear_caches(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea)
+{
+	internal_flash_select_mode_and_clear_caches(ptAttr, ptIFlashCfgArea, IFLASH_MODE_READ);
 }
 
 
@@ -286,6 +291,7 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase_block(const INTERNAL
 
 	/* Get the pointer to the controller and the offset in the memory map. */
 	tResult = iflash_get_controller(ptAttr, ulOffsetInBytes, &tFlashBlock);
+	ptIFlashCfgArea = tFlashBlock.ptIFlashCfgArea;
 	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 	{
 		/* Is the offset aligned to the page start? */
@@ -298,6 +304,7 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase_block(const INTERNAL
 		else
 		{
 			/* Check if the block is already erased. */
+			internal_flash_select_read_mode_and_clear_caches(ptAttr, ptIFlashCfgArea);
 			ulBlockNumber = ulOffsetInBytes / IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
 			ulValue = is_block_erased(&tFlashBlock, ulBlockNumber);
 			if( ulValue==0xffffffffU )
@@ -310,19 +317,14 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase_block(const INTERNAL
 				ulXAddr = ulOffsetInBytes / IFLASH_MAZ_V0_ROW_SIZE_IN_BYTES;
 				ulYAddr = 0;
 
-				ptIFlashCfgArea = tFlashBlock.ptIFlashCfgArea;
-
-				/* Select "erase" mode. */
-				ptIFlashCfgArea->ulIflash_mode_cfg = IFLASH_MODE_ERASE;
+				/* Select "erase" mode and main memory or info page. */
+				internal_flash_select_mode_and_clear_caches(ptAttr, ptIFlashCfgArea, IFLASH_MODE_ERASE);
 
 				/* Set the X address. */
 				ptIFlashCfgArea->ulIflash_xadr = ulXAddr;
 
 				/* Program one column. */
 				ptIFlashCfgArea->ulIflash_yadr = ulYAddr;
-
-				/* Select the main memory. */
-				ptIFlashCfgArea->ulIflash_ifren_cfg = 0;
 
 				/* Start erasing. */
 				iflash_start_and_wait(ptIFlashCfgArea);
@@ -357,7 +359,6 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash_page(const INTERNAL_
 	unsigned long ulMisalignment;
 	unsigned long ulXAddr;
 	unsigned long ulYAddr;
-	int iMain0_Info1;
 	unsigned long ulValue;
 	const unsigned char *pucFlashDataArray;
 	int iCmpResult;
@@ -370,6 +371,8 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash_page(const INTERNAL_
 
 	/* Get the pointer to the controller and the offset in the memory map. */
 	tResult = iflash_get_controller(ptAttr, ulOffsetInBytes, &tFlashBlock);
+	ptIFlashCfgArea = tFlashBlock.ptIFlashCfgArea;
+	
 	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 	{
 		/* Is the offset aligned to the page start? */
@@ -383,6 +386,9 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash_page(const INTERNAL_
 		{
 			/* Get a pointer to the data array of the flash. */
 			pucFlashDataArray = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
+			
+			/* Select read mode and main array or info page */
+			internal_flash_select_read_mode_and_clear_caches(ptAttr, ptIFlashCfgArea);
 
 			/* Get the old contents of the flash. */
 			memcpy(tExistingDataInFlash.auc, pucFlashDataArray + ulOffsetInBytes, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
@@ -441,27 +447,15 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash_page(const INTERNAL_
 					ulYAddr -= (ulXAddr * IFLASH_MAZ_V0_ROW_SIZE_IN_BYTES);
 					ulYAddr /= IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
 
-					/* Get a pointer to the flash controller. */
-					ptIFlashCfgArea = tFlashBlock.ptIFlashCfgArea;
-
 					/* Set the TMR line to 1. */
 					ptIFlashCfgArea->ulIflash_special_cfg = HOSTMSK(iflash_special_cfg_tmr);
 
-					/* Select "program" mode. */
-					ptIFlashCfgArea->ulIflash_mode_cfg = IFLASH_MODE_PROGRAM;
+					/* Select "program" mode and main array or info block. */
+					internal_flash_select_mode_and_clear_caches(ptAttr, ptIFlashCfgArea, IFLASH_MODE_PROGRAM);
 
 					/* Set the X and Y address. */
 					ptIFlashCfgArea->ulIflash_xadr = ulXAddr;
 					ptIFlashCfgArea->ulIflash_yadr = ulYAddr;
-
-					/* Select the main memory or info page. */
-					iMain0_Info1 = ptAttr->iMain0_Info1;
-					ulValue = 0;
-					if( iMain0_Info1!=0 )
-					{
-						ulValue = HOSTMSK(iflash_ifren_cfg_ifren);
-					}
-					ptIFlashCfgArea->ulIflash_ifren_cfg = ulValue;
 
 					/* Set the data for the "program" operation. */
 					ptIFlashCfgArea->aulIflash_din[0] = tDataToBeFlashed.aul[0];
@@ -545,26 +539,29 @@ static const UNIT_CS_TO_ATTR_T atUnitCsToAttr[] =
 	{
 		.uiUnit = 0,
 		.uiChipSelect = 1,
-		.iMain0_Info1 = 0,
+		.iMain0_Info1 = 1,
 		.ulSizeInBytes = 0x1000,
 		.tArea = INTERNAL_FLASH_AREA_Flash0_Info
 	},
 	{
 		.uiUnit = 1,
 		.uiChipSelect = 1,
-		.iMain0_Info1 = 0,
+		.iMain0_Info1 = 1,
 		.ulSizeInBytes = 0x1000,
 		.tArea = INTERNAL_FLASH_AREA_Flash1_Info
 	},
 	{
 		.uiUnit = 2,
 		.uiChipSelect = 1,
-		.iMain0_Info1 = 0,
+		.iMain0_Info1 = 1,
 		.ulSizeInBytes = 0x1000,
 		.tArea = INTERNAL_FLASH_AREA_Flash2_Info
 	}
 };
 
+
+/* In this case, detect checks if the combination of unit and chip select is contained in the table atUnitCsToAttr. 
+   Unit selects the flash bank (0/1/2), and chip select selects the main area of the bank or its info page. */
 NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
