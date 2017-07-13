@@ -23,7 +23,6 @@
 #include "flasher_spi.h"
 #include "spi_flash.h"
 
-#include "flasher_interface.h"
 #include "progress_bar.h"
 #include "uprintf.h"
 
@@ -486,19 +485,12 @@ static NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFla
 
 /*-----------------------------------*/
 
-NETX_CONSOLEAPP_RESULT_T spi_flash(CMD_PARAMETER_FLASH_T *ptParameter)
+NETX_CONSOLEAPP_RESULT_T spi_flash(const SPI_FLASH_T *ptFlashDescription, unsigned long ulFlashStartAdr, unsigned long ulDataByteSize, const unsigned char *pucDataStartAdr)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	const unsigned char *pucDataStartAdr;
-	unsigned long ulFlashStartAdr;
-	unsigned long ulDataByteSize;
-	const SPI_FLASH_T *ptFlashDescription;
+
 
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
-	ulFlashStartAdr = ptParameter->ulStartAdr;
-	ulDataByteSize  = ptParameter->ulDataByteSize;
-	pucDataStartAdr = ptParameter->pucData;
-	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
 	
 	/* write data */
 	tResult = spi_write_with_progress(ptFlashDescription, ulFlashStartAdr, ulDataByteSize, pucDataStartAdr);
@@ -517,16 +509,10 @@ NETX_CONSOLEAPP_RESULT_T spi_flash(CMD_PARAMETER_FLASH_T *ptParameter)
 
 /*-----------------------------------*/
 
-NETX_CONSOLEAPP_RESULT_T spi_erase(CMD_PARAMETER_ERASE_T *ptParameter)
+NETX_CONSOLEAPP_RESULT_T spi_erase(const SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	const SPI_FLASH_T *ptFlashDescription;
-	unsigned long ulStartAdr;
-	unsigned long ulEndAdr;
 
-	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
-	ulStartAdr = ptParameter->ulStartAdr;
-	ulEndAdr = ptParameter->ulEndAdr;
 
 	/* erase the block */
 	tResult = spi_erase_with_progress(ptFlashDescription, ulStartAdr, ulEndAdr);
@@ -541,22 +527,16 @@ NETX_CONSOLEAPP_RESULT_T spi_erase(CMD_PARAMETER_ERASE_T *ptParameter)
 /*-----------------------------------*/
 
 
-NETX_CONSOLEAPP_RESULT_T spi_read(CMD_PARAMETER_READ_T *ptParameter)
+NETX_CONSOLEAPP_RESULT_T spi_read(const SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, unsigned char *pucData)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	const SPI_FLASH_T *ptFlashDescription;
-	unsigned long ulStartAdr;
-	unsigned long ulEndAdr;
+
 
 	/* Expect success. */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
-	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
-	ulStartAdr = ptParameter->ulStartAdr;
-	ulEndAdr = ptParameter->ulEndAdr;
-
 	/* read data */
-	tResult = spi_read_with_progress(ptFlashDescription, ulStartAdr, ulEndAdr, ptParameter->pucData);
+	tResult = spi_read_with_progress(ptFlashDescription, ulStartAdr, ulEndAdr, pucData);
 	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 	{
 		uprintf("! read error\n");
@@ -567,16 +547,10 @@ NETX_CONSOLEAPP_RESULT_T spi_read(CMD_PARAMETER_READ_T *ptParameter)
 
 
 #if CFG_INCLUDE_SHA1!=0
-NETX_CONSOLEAPP_RESULT_T spi_sha1(CMD_PARAMETER_CHECKSUM_T *ptParameter, SHA_CTX *ptSha1Context)
+NETX_CONSOLEAPP_RESULT_T spi_sha1(const SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, SHA_CTX *ptSha1Context)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	const SPI_FLASH_T *ptFlashDescription;
-	unsigned long ulStartAdr;
-	unsigned long ulEndAdr;
 
-	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
-	ulStartAdr = ptParameter->ulStartAdr;
-	ulEndAdr = ptParameter->ulEndAdr;
 
 	/* read data */
 	tResult = spi_sha1_with_progress(ptFlashDescription, ulStartAdr, ulEndAdr, ptSha1Context);
@@ -592,26 +566,18 @@ NETX_CONSOLEAPP_RESULT_T spi_sha1(CMD_PARAMETER_CHECKSUM_T *ptParameter, SHA_CTX
 /*-----------------------------------*/
 
 
-NETX_CONSOLEAPP_RESULT_T spi_verify(CMD_PARAMETER_VERIFY_T *ptParameter, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+NETX_CONSOLEAPP_RESULT_T spi_verify(const SPI_FLASH_T *ptFlashDescription, unsigned long ulFlashStartAdr, unsigned long ulFlashEndAdr, const unsigned char *pucData, void **ppvReturnMessage)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	const unsigned char *pucDataStartAdr;
-	unsigned long ulFlashStartAdr;
-	unsigned long ulFlashEndAdr;
 	unsigned long ulDataByteSize;
-	const SPI_FLASH_T *ptFlashDescription;
 
-	ulFlashStartAdr = ptParameter->ulStartAdr;
-	ulFlashEndAdr   = ptParameter->ulEndAdr;
+
 	ulDataByteSize  = ulFlashEndAdr - ulFlashStartAdr;
-	pucDataStartAdr = ptParameter->pucData;
-
-	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
 
 	/* verify data */
-	tResult = spi_verify_with_progress(ptFlashDescription, ulFlashStartAdr, ulDataByteSize, pucDataStartAdr);
+	tResult = spi_verify_with_progress(ptFlashDescription, ulFlashStartAdr, ulDataByteSize, pucData);
 	
-	ptConsoleParams->pvReturnMessage = (void*)tResult;
+	*ppvReturnMessage = (void*)tResult;
 
 	return tResult;
 }
@@ -620,39 +586,26 @@ NETX_CONSOLEAPP_RESULT_T spi_verify(CMD_PARAMETER_VERIFY_T *ptParameter, NETX_CO
 /*-----------------------------------*/
 
 
-NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter)
+NETX_CONSOLEAPP_RESULT_T spi_detect(SPI_CONFIGURATION_T *ptSpiConfiguration, SPI_FLASH_T *ptFlashDescription)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int iResult;
-	DEVICE_DESCRIPTION_T *ptDeviceDescription;
-	SPI_FLASH_T *ptFlashDescription;
 
-	ptDeviceDescription = ptParameter->ptDeviceDescription;
-	ptFlashDescription = &(ptDeviceDescription->uInfo.tSpiInfo);
 
 	/* try to detect flash */
-	uprintf(". Detecting SPI flash on unit %d, cs %d...\n", ptParameter->uSourceParameter.tSpi.uiUnit, ptParameter->uSourceParameter.tSpi.uiChipSelect);
-	ptFlashDescription->uiSlaveId = ptParameter->uSourceParameter.tSpi.uiChipSelect;
-	iResult = Drv_SpiInitializeFlash(&(ptParameter->uSourceParameter.tSpi), ptFlashDescription);
+	uprintf(". Detecting SPI flash on unit %d, chip select %d...\n", ptSpiConfiguration->uiUnit, ptSpiConfiguration->uiChipSelect);
+	ptFlashDescription->uiSlaveId = ptSpiConfiguration->uiChipSelect;
+	iResult = Drv_SpiInitializeFlash(ptSpiConfiguration, ptFlashDescription);
 	if( iResult!=0 )
 	{
 		/* failed to detect the SPI flash */
 		uprintf("! failed to detect flash!\n");
-
-		/* clear the result data */
-		memset(ptDeviceDescription, 0, sizeof(DEVICE_DESCRIPTION_T));
 
 		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 	}
 	else
 	{
 		uprintf(". OK, found %s\n", ptFlashDescription->tAttributes.acName);
-
-		/* set the result data */
-		ptDeviceDescription->fIsValid = 1;
-		ptDeviceDescription->sizThis = sizeof(DEVICE_DESCRIPTION_T);
-		ptDeviceDescription->ulVersion = FLASHER_INTERFACE_VERSION;
-		ptDeviceDescription->tSourceTyp = BUS_SPI;
 
 		tResult = NETX_CONSOLEAPP_RESULT_OK;
 	}
@@ -664,12 +617,9 @@ NETX_CONSOLEAPP_RESULT_T spi_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 /*-----------------------------------*/
 
 
-NETX_CONSOLEAPP_RESULT_T spi_isErased(CMD_PARAMETER_ISERASED_T *ptParameter, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+NETX_CONSOLEAPP_RESULT_T spi_isErased(const SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, void **ppvReturnMessage)
 {
 	NETX_CONSOLEAPP_RESULT_T  tResult;
-	const SPI_FLASH_T *ptFlashDescription;
-	unsigned long ulStartAdr;
-	unsigned long ulEndAdr;
 	unsigned long ulCnt;
 	unsigned char *pucCnt;
 	unsigned char *pucEnd;
@@ -678,12 +628,9 @@ NETX_CONSOLEAPP_RESULT_T spi_isErased(CMD_PARAMETER_ISERASED_T *ptParameter, NET
 	int iResult;
 	unsigned long ulErased;
 
+
 	/* expect success */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
-
-	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
-	ulStartAdr = ptParameter->ulStartAdr;
-	ulEndAdr  = ptParameter->ulEndAdr;
 
 	ulErased = 0xffU;
 
@@ -729,7 +676,7 @@ NETX_CONSOLEAPP_RESULT_T spi_isErased(CMD_PARAMETER_ISERASED_T *ptParameter, NET
 		ulCnt += ulSegSize;
 		pucCnt += ulSegSize;
 
-		/* inc progress */
+		/* increment progress */
 		ulProgressCnt += ulSegSize;
 		progress_bar_set_position(ulProgressCnt);
 	}
@@ -746,7 +693,7 @@ NETX_CONSOLEAPP_RESULT_T spi_isErased(CMD_PARAMETER_ISERASED_T *ptParameter, NET
 		{
 			uprintf(". DIRTY! The area is not erased.\n");
 		}
-		ptConsoleParams->pvReturnMessage = (void*)ulErased;
+		*ppvReturnMessage = (void*)ulErased;
 	}
 
 	return tResult;
@@ -756,17 +703,11 @@ NETX_CONSOLEAPP_RESULT_T spi_isErased(CMD_PARAMETER_ISERASED_T *ptParameter, NET
 /*-----------------------------------*/
 
 
-NETX_CONSOLEAPP_RESULT_T spi_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptParameter)
+NETX_CONSOLEAPP_RESULT_T spi_getEraseArea(const SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, unsigned long *pulStartAdr, unsigned long *pulEndAdr)
 {
 	NETX_CONSOLEAPP_RESULT_T  tResult;
-	const SPI_FLASH_T *ptFlashDescription;
-	unsigned long ulStartAdr;
-	unsigned long ulEndAdr;
 	unsigned long ulEraseBlockSize;
 
-	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tSpiInfo);
-	ulStartAdr = ptParameter->ulStartAdr;
-	ulEndAdr  = ptParameter->ulEndAdr;
 
 	/* NOTE: this code assumes that the serial flash has uniform erase block sizes. */
 	ulEraseBlockSize = ptFlashDescription->ulSectorSize;
@@ -783,13 +724,13 @@ NETX_CONSOLEAPP_RESULT_T spi_getEraseArea(CMD_PARAMETER_GETERASEAREA_T *ptParame
 
 	uprintf("0x%08x - 0x%08x\n", ulStartAdr, ulEndAdr);
 
-	ptParameter->ulStartAdr = ulStartAdr;
-	ptParameter->ulEndAdr = ulEndAdr;
+	*pulStartAdr = ulStartAdr;
+	*pulEndAdr = ulEndAdr;
 
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
 
-	/* all ok */
+	/* all OK */
 	return tResult;
 }
 

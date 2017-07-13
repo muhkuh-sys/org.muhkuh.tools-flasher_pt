@@ -49,30 +49,50 @@ static NETX_CONSOLEAPP_RESULT_T opMode_detect(tFlasherInputParameter *ptAppParam
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
+	CMD_PARAMETER_DETECT_T *ptParameter;
+	DEVICE_DESCRIPTION_T *ptDeviceDescription;
+
+
+	/* Get a shortcut to the parameters and the device description. */
+	ptParameter = &(ptAppParams->uParameter.tDetect);
+	ptDeviceDescription = ptParameter->ptDeviceDescription;
 
 	/* Clear the result data. */
-	memset(ptAppParams->uParameter.tDetect.ptDeviceDescription, 0, sizeof(DEVICE_DESCRIPTION_T));
+	memset(ptDeviceDescription, 0, sizeof(DEVICE_DESCRIPTION_T));
 
 	uprintf(". Device: ");
-	tSourceTyp = ptAppParams->uParameter.tDetect.tSourceTyp;
+	tSourceTyp = ptParameter->tSourceTyp;
 	switch(tSourceTyp)
 	{
 	case BUS_ParFlash:
 		/* Use parallel flash */
 		uprintf("Parallel flash\n");
-		tResult = parflash_detect(&(ptAppParams->uParameter.tDetect));
+		tResult = parflash_detect(ptParameter);
 		break;
 
 	case BUS_SPI:
 		/* Use SPI flash */
 		uprintf("SPI flash\n");
-		tResult = spi_detect(&(ptAppParams->uParameter.tDetect));
+		tResult = spi_detect(&(ptParameter->uSourceParameter.tSpi), &(ptDeviceDescription->uInfo.tSpiInfo));
+		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+		{
+			ptDeviceDescription->fIsValid = 1;
+			ptDeviceDescription->sizThis = sizeof(DEVICE_DESCRIPTION_T);
+			ptDeviceDescription->ulVersion = FLASHER_INTERFACE_VERSION;
+			ptDeviceDescription->tSourceTyp = BUS_SPI;
+		}
+		else
+		{
+			/* Clear the result data. */
+			memset(ptDeviceDescription, 0, sizeof(DEVICE_DESCRIPTION_T));
+		}
+
 		break;
 
 	case BUS_IFlash:
 		/* Use internal flash */
 		uprintf("internal flash\n");
-		tResult = internal_flash_detect(&(ptAppParams->uParameter.tDetect));
+		tResult = internal_flash_detect(ptParameter);
 		break;
 
 	default:
@@ -152,10 +172,14 @@ static NETX_CONSOLEAPP_RESULT_T opMode_flash(tFlasherInputParameter *ptAppParams
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
+	CMD_PARAMETER_FLASH_T *ptParameter;
 
 
 	/* Be pessimistic. */
 	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
+	/* Get a shortcut to the parameters. */
+	ptParameter = &(ptAppParams->uParameter.tFlash);
 
 	/* Get the source type. */
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
@@ -168,7 +192,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_flash(tFlasherInputParameter *ptAppParams
 
 	case BUS_SPI:
 		/* Use SPI flash. */
-		tResult = spi_flash(&(ptAppParams->uParameter.tFlash));
+		tResult = spi_flash(&(ptParameter->ptDeviceDescription->uInfo.tSpiInfo), ptParameter->ulStartAdr, ptParameter->ulDataByteSize, ptParameter->pucData);
 		break;
 
 	case BUS_IFlash:
@@ -188,10 +212,14 @@ static NETX_CONSOLEAPP_RESULT_T opMode_erase(tFlasherInputParameter *ptAppParams
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
+	CMD_PARAMETER_ERASE_T *ptParameter;
 
 
 	/* Be pessimistic. */
 	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
+	/* Get a shortcut to the parameters. */
+	ptParameter = &(ptAppParams->uParameter.tErase);
 
 	/* Get the source type. */
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
@@ -204,7 +232,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_erase(tFlasherInputParameter *ptAppParams
 
 	case BUS_SPI:
 		/* Use SPI flash. */
-		tResult = spi_erase(&(ptAppParams->uParameter.tErase));
+		tResult = spi_erase(&(ptParameter->ptDeviceDescription->uInfo.tSpiInfo), ptParameter->ulStartAdr, ptParameter->ulEndAdr);
 		break;
 
 	case BUS_IFlash:
@@ -223,10 +251,14 @@ static NETX_CONSOLEAPP_RESULT_T opMode_read(tFlasherInputParameter *ptAppParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
+	CMD_PARAMETER_READ_T *ptParameter;
 
 
 	/* Be pessimistic. */
 	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
+	/* Get a shortcut to the parameters. */
+	ptParameter = &(ptAppParams->uParameter.tRead);
 
 	/* Get the source type. */
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
@@ -239,7 +271,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_read(tFlasherInputParameter *ptAppParams)
 		
 	case BUS_SPI:
 		/* Use SPI flash. */
-		tResult = spi_read(&(ptAppParams->uParameter.tRead));
+		tResult = spi_read(&(ptParameter->ptDeviceDescription->uInfo.tSpiInfo), ptParameter->ulStartAdr, ptParameter->ulEndAdr, ptParameter->pucData);
 		break;
 
 	case BUS_IFlash:
@@ -259,10 +291,14 @@ static NETX_CONSOLEAPP_RESULT_T opMode_verify(tFlasherInputParameter *ptAppParam
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
+	CMD_PARAMETER_VERIFY_T *ptParameter;
 
 
 	/* Be pessimistic. */
 	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
+	/* Get a shortcut to the parameters. */
+	ptParameter = &(ptAppParams->uParameter.tVerify);
 
 	/* Get the source type. */
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
@@ -276,7 +312,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_verify(tFlasherInputParameter *ptAppParam
 		
 	case BUS_SPI:
 		/* Use SPI flash. */
-		tResult = spi_verify(&(ptAppParams->uParameter.tVerify), ptConsoleParams);
+		tResult = spi_verify(&(ptParameter->ptDeviceDescription->uInfo.tSpiInfo), ptParameter->ulStartAdr, ptParameter->ulEndAdr, ptParameter->pucData, &(ptConsoleParams->pvReturnMessage));
 		break;
 
 	case BUS_IFlash:
@@ -293,11 +329,15 @@ static NETX_CONSOLEAPP_RESULT_T opMode_checksum(tFlasherInputParameter *ptAppPar
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
+	CMD_PARAMETER_CHECKSUM_T *ptParameter;
 	SHA_CTX tShaContext;
 	
 
 	/* Be pessimistic. */
 	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
+	/* Get a shortcut to the parameters. */
+	ptParameter = &(ptAppParams->uParameter.tChecksum);
 
 	SHA1_Init(&tShaContext);
 	
@@ -312,7 +352,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_checksum(tFlasherInputParameter *ptAppPar
 		
 	case BUS_SPI:
 		/* Use SPI flash. */
-		tResult = spi_sha1(&(ptAppParams->uParameter.tChecksum), &tShaContext);
+		tResult = spi_sha1(&(ptParameter->ptDeviceDescription->uInfo.tSpiInfo), ptParameter->ulStartAdr, ptParameter->ulEndAdr, &tShaContext);
 		break;
 
 	case BUS_IFlash:
@@ -337,10 +377,14 @@ static NETX_CONSOLEAPP_RESULT_T opMode_isErased(tFlasherInputParameter *ptAppPar
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSourceTyp;
+	CMD_PARAMETER_ISERASED_T *ptParameter;
 
 
 	/* Be pessimistic. */
 	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
+	/* Get a shortcut to the parameters. */
+	ptParameter = &(ptAppParams->uParameter.tIsErased);
 
 	/* Get the source type. */
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
@@ -353,7 +397,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_isErased(tFlasherInputParameter *ptAppPar
 
 	case BUS_SPI:
 		/* Use SPI flash. */
-		tResult = spi_isErased(&(ptAppParams->uParameter.tIsErased), ptConsoleParams);
+		tResult = spi_isErased(&(ptParameter->ptDeviceDescription->uInfo.tSpiInfo), ptParameter->ulStartAdr, ptParameter->ulEndAdr, &(ptConsoleParams->pvReturnMessage));
 		break;
 
 	case BUS_IFlash:
@@ -410,10 +454,14 @@ static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(tFlasherInputParameter *ptAp
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	BUS_T tSrcType;
+	CMD_PARAMETER_GETERASEAREA_T *ptParameter;
 
 
 	/* Be pessimistic. */
 	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+
+	/* Get a shortcut to the parameters. */
+	ptParameter = &(ptAppParams->uParameter.tGetEraseArea);
 
 	if (ptAppParams->uParameter.tGetEraseArea.ulEndAdr == 0xffffffffU)
 	{
@@ -431,7 +479,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(tFlasherInputParameter *ptAp
 
 	case BUS_SPI:
 		/* Use SPI flash. */
-		tResult = spi_getEraseArea(&(ptAppParams->uParameter.tGetEraseArea));
+		tResult = spi_getEraseArea(&(ptParameter->ptDeviceDescription->uInfo.tSpiInfo), ptParameter->ulStartAdr, ptParameter->ulEndAdr, &(ptParameter->ulStartAdr), &(ptParameter->ulEndAdr));
 		break;
 
 	case BUS_IFlash:
