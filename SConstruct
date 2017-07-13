@@ -88,6 +88,10 @@ SConscript('platform/SConscript')
 #----------------------------------------------------------------------------
 # This is the list of sources. The elements must be separated with whitespace
 # (i.e. spaces, tabs, newlines). The amount of whitespace does not matter.
+flasher_sources_main = """
+	src/main.c
+"""
+
 flasher_sources_common = """
 	src/internal_flash/flasher_internal_flash.c
 	src/internal_flash/internal_flash_maz_v0.c
@@ -99,7 +103,6 @@ flasher_sources_common = """
 	src/flasher_spi.c
 	src/i2c_hifsta.c
 	src/init_netx_test.S
-	src/main.c
 	src/progress_bar.c
 	src/sfdp.c
 	src/spansion.c
@@ -252,8 +255,12 @@ def flasher_build(strFlasherName, tEnv, strBuildPath, astrSources):
 	# Append the path to the SPI flash list.
 	tEnv.Append(CPPPATH = [os.path.join(strBuildPath, 'spi_flash_types')])
 
-	tSrcFlasher = tEnv.SetBuildPath(strBuildPath, 'src', astrSources)
-	tElfFlasher = tEnv.Elf(os.path.join(strBuildPath, strFlasherName+'.elf'), tSrcFlasher + objExoSpiFlashes + [tLibPlatform])
+	# Build the library.
+	tSrcFlasherLib = tEnv.SetBuildPath(os.path.join(strBuildPath, 'lib'), 'src', astrSources)
+	tLibFlasher = tEnv.StaticLibrary(os.path.join(strBuildPath, strFlasherName), tSrcFlasherLib)
+
+	tSrcFlasher = tEnv.SetBuildPath(strBuildPath, 'src', flasher_sources_main)
+	tElfFlasher = tEnv.Elf(os.path.join(strBuildPath, strFlasherName+'.elf'), tSrcFlasher + tLibFlasher + objExoSpiFlashes + [tLibPlatform])
 	tBinFlasher = tEnv.ObjCopy(os.path.join(strBuildPath, strFlasherName+'.bin'), tElfFlasher)
 
 	return tElfFlasher,tBinFlasher
