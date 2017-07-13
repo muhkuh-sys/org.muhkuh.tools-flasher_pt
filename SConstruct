@@ -91,6 +91,7 @@ SConscript('platform/SConscript')
 flasher_sources_main = """
 	src/main.c
 	src/init_netx_test.S
+	src/progress_bar.c
 """
 
 flasher_sources_lib = """
@@ -103,7 +104,6 @@ flasher_sources_lib = """
 	src/flasher_parflash.c
 	src/flasher_spi.c
 	src/i2c_hifsta.c
-	src/progress_bar.c
 	src/sfdp.c
 	src/spansion.c
 	src/spi_macro_player.c
