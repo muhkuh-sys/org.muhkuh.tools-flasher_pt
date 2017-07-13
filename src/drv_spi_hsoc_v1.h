@@ -31,7 +31,7 @@
 /*-------------------------------------*/
 
 
-int boot_drv_spi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg);
+int flasher_drv_spi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg);
 
 
 /*-------------------------------------*/

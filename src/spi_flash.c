@@ -574,7 +574,7 @@ int board_get_spi_driver(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SP
 	{
 	case 0:
 		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi);
-		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		iResult = flasher_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	default:
@@ -586,12 +586,12 @@ int board_get_spi_driver(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SP
 	{
 	case 0:
 		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi0);
-		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		iResult = flasher_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	case 1:
 		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi1);
-		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		iResult = flasher_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	default:
@@ -602,12 +602,12 @@ int board_get_spi_driver(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SP
 	switch( uiUnit )
 	{
 	case 0:
-		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg, uiUnit);
+		iResult = flasher_drv_sqi_init(ptSpiDev, ptSpiCfg, uiUnit);
 		break;
 
 	case 1:
 		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi_motion);
-		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		iResult = flasher_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	default:
@@ -619,17 +619,17 @@ int board_get_spi_driver(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SP
 	{
 	case 0:
 	case 1:
-		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg, uiUnit);
+		iResult = flasher_drv_sqi_init(ptSpiDev, ptSpiCfg, uiUnit);
 		break;
 
 	case 2:
 		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi);
-		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		iResult = flasher_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	case 3:
 		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi_xpic3);
-		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		iResult = flasher_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	default:
@@ -641,22 +641,22 @@ int board_get_spi_driver(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SP
 	switch( uiUnit )
 	{
 	case 0:
-		iResult = boot_drv_sqi_init(ptSpiDev, ptSpiCfg, uiUnit);
+		iResult = flasher_drv_sqi_init(ptSpiDev, ptSpiCfg, uiUnit);
 		break;
 
 	case 1:
 		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi0_app);
-		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		iResult = flasher_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	case 2:
 		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi1_app);
-		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		iResult = flasher_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	case 3:
 		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi2_app);
-		iResult = boot_drv_spi_init(ptSpiDev, ptSpiCfg);
+		iResult = flasher_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
 
 	default:

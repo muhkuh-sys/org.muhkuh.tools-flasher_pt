@@ -31,7 +31,7 @@
 /*-------------------------------------*/
 
 
-int boot_drv_sqi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiSqiUnit);
+int flasher_drv_sqi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiSqiUnit);
 
 
 /*-------------------------------------*/

@@ -375,7 +375,7 @@ static void spi_deactivate(const FLASHER_SPI_CFG_T *ptCfg)
 }
 
 
-int boot_drv_spi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg)
+int flasher_drv_spi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg)
 {
 	unsigned long ulValue;
 	int iResult;
