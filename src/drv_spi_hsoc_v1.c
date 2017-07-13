@@ -27,7 +27,7 @@
 
 
 
-static unsigned char spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char ucByte)
+static unsigned char spi_exchange_byte(const FLASHER_SPI_CFG_T *ptCfg, unsigned char ucByte)
 {
 	HOSTADEF(SPI) *ptSpiUnit;
 	unsigned long ulValue;
@@ -104,7 +104,7 @@ static const SPI_KHZ_TO_CLOCK_T aulSpeedSteps[] =
 	{ 50000, HAL_SPI_SPEED_50_0MHz }
 };
 
-static unsigned long spi_get_device_speed_representation(const SPI_CFG_T *ptCfg, unsigned int uiSpeed)
+static unsigned long spi_get_device_speed_representation(const FLASHER_SPI_CFG_T *ptCfg, unsigned int uiSpeed)
 {
 	unsigned int uiCnt;
 	unsigned long ulDevSpeed;
@@ -142,7 +142,7 @@ static unsigned long spi_get_device_speed_representation(const SPI_CFG_T *ptCfg,
 /*-----------------------------------*/
 
 
-static int spi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
+static int spi_slave_select(const FLASHER_SPI_CFG_T *ptCfg, int fIsSelected)
 {
 	HOSTADEF(SPI) *ptSpiUnit;
 	unsigned long ulValue;
@@ -173,7 +173,7 @@ static int spi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 }
 
 
-static int spi_send_idle(const SPI_CFG_T *ptCfg, size_t sizBytes)
+static int spi_send_idle(const FLASHER_SPI_CFG_T *ptCfg, size_t sizBytes)
 {
 	unsigned char ucIdleChar;
 
@@ -191,7 +191,7 @@ static int spi_send_idle(const SPI_CFG_T *ptCfg, size_t sizBytes)
 }
 
 
-static int spi_send_data(const SPI_CFG_T *ptCfg, const unsigned char *pucData, size_t sizData)
+static int spi_send_data(const FLASHER_SPI_CFG_T *ptCfg, const unsigned char *pucData, size_t sizData)
 {
 	const unsigned char *pucDataEnd;
 
@@ -207,7 +207,7 @@ static int spi_send_data(const SPI_CFG_T *ptCfg, const unsigned char *pucData, s
 }
 
 
-static int spi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size_t sizData)
+static int spi_receive_data(const FLASHER_SPI_CFG_T *ptCfg, unsigned char *pucData, size_t sizData)
 {
 	unsigned char ucIdleChar;
 	unsigned char *pucDataEnd;
@@ -228,7 +228,7 @@ static int spi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size
 }
 
 
-static int spi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucOutData, unsigned char *pucInData, size_t sizData)
+static int spi_exchange_data(const FLASHER_SPI_CFG_T *ptCfg, const unsigned char *pucOutData, unsigned char *pucInData, size_t sizData)
 {
 	unsigned char *pucInDataEnd;
 
@@ -245,7 +245,7 @@ static int spi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucOut
 }
 
 
-static void spi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpecificSpeed)
+static void spi_set_new_speed(const FLASHER_SPI_CFG_T *ptCfg, unsigned long ulDeviceSpecificSpeed)
 {
 	HOSTADEF(SPI) *ptSpiUnit;
 	unsigned long ulValue;
@@ -263,7 +263,7 @@ static void spi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpec
 }
 
 
-static void spi_deactivate(const SPI_CFG_T *ptCfg)
+static void spi_deactivate(const FLASHER_SPI_CFG_T *ptCfg)
 {
 	HOSTADEF(SPI) *ptSpiUnit;
 	unsigned long ulValue;
@@ -288,7 +288,7 @@ static void spi_deactivate(const SPI_CFG_T *ptCfg)
 }
 
 
-int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
+int boot_drv_spi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg)
 {
 	unsigned long ulValue;
 	int iResult;
@@ -339,14 +339,14 @@ int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 
 	/* Set the clock polarity. */
 	/* Mode 2 and 3 have cpol=1 . */
-	if( (ptCfg->tMode==SPI_MODE2) || (ptCfg->tMode==SPI_MODE3) )
+	if( (ptCfg->tMode==FLASHER_SPI_MODE2) || (ptCfg->tMode==FLASHER_SPI_MODE3) )
 	{
 		ulValue |= HOSTMSK(spi_control_register_CR_cpol);
 	}
 
 	/* Set the clock phase. */
 	/* Mode 0 and 2 have ncpha=1 . */
-	if( (ptCfg->tMode==SPI_MODE0) || (ptCfg->tMode==SPI_MODE2) )
+	if( (ptCfg->tMode==FLASHER_SPI_MODE0) || (ptCfg->tMode==FLASHER_SPI_MODE2) )
 	{
 		ulValue |= HOSTMSK(spi_control_register_CR_ncpha);
 	}

@@ -128,7 +128,7 @@ static const MMIO_CFG_T aatMmioValues_SPI1[3][4] =
 
 #endif
 
-static unsigned char spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char ucByte)
+static unsigned char spi_exchange_byte(const FLASHER_SPI_CFG_T *ptCfg, unsigned char ucByte)
 {
 	HOSTADEF(SPI) *ptSpiUnit;
 	unsigned long ulValue;
@@ -155,7 +155,7 @@ static unsigned char spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char ucB
 /*-----------------------------------*/
 
 
-static unsigned long spi_get_device_speed_representation(const SPI_CFG_T *ptCfg, unsigned int uiSpeed)
+static unsigned long spi_get_device_speed_representation(const FLASHER_SPI_CFG_T *ptCfg, unsigned int uiSpeed)
 {
 	unsigned long ulDevSpeed;
 	unsigned long ulInputFilter;
@@ -200,7 +200,7 @@ static unsigned long spi_get_device_speed_representation(const SPI_CFG_T *ptCfg,
 }
 
 
-static int spi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
+static int spi_slave_select(const FLASHER_SPI_CFG_T *ptCfg, int fIsSelected)
 {
 	HOSTADEF(SPI) *ptSpiUnit;
 	unsigned long uiChipSelect;
@@ -234,7 +234,7 @@ static int spi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 }
 
 
-static int spi_send_idle(const SPI_CFG_T *ptCfg, size_t sizBytes)
+static int spi_send_idle(const FLASHER_SPI_CFG_T *ptCfg, size_t sizBytes)
 {
 	unsigned char ucIdleChar;
 
@@ -252,7 +252,7 @@ static int spi_send_idle(const SPI_CFG_T *ptCfg, size_t sizBytes)
 }
 
 
-static int spi_send_data(const SPI_CFG_T *ptCfg, const unsigned char *pucData, size_t sizData)
+static int spi_send_data(const FLASHER_SPI_CFG_T *ptCfg, const unsigned char *pucData, size_t sizData)
 {
 	const unsigned char *pucDataEnd;
 
@@ -268,7 +268,7 @@ static int spi_send_data(const SPI_CFG_T *ptCfg, const unsigned char *pucData, s
 }
 
 
-static int spi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size_t sizData)
+static int spi_receive_data(const FLASHER_SPI_CFG_T *ptCfg, unsigned char *pucData, size_t sizData)
 {
 	unsigned char ucIdleChar;
 	unsigned char *pucDataEnd;
@@ -289,7 +289,7 @@ static int spi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size
 }
 
 
-static int spi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucOutData, unsigned char *pucInData, size_t sizData)
+static int spi_exchange_data(const FLASHER_SPI_CFG_T *ptCfg, const unsigned char *pucOutData, unsigned char *pucInData, size_t sizData)
 {
 	unsigned char *pucInDataEnd;
 
@@ -306,7 +306,7 @@ static int spi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucOut
 }
 
 
-static void spi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpecificSpeed)
+static void spi_set_new_speed(const FLASHER_SPI_CFG_T *ptCfg, unsigned long ulDeviceSpecificSpeed)
 {
 	HOSTADEF(SPI) *ptSpiUnit;
 	unsigned long ulValue;
@@ -324,7 +324,7 @@ static void spi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpec
 }
 
 
-static void spi_deactivate(const SPI_CFG_T *ptCfg)
+static void spi_deactivate(const FLASHER_SPI_CFG_T *ptCfg)
 {
 	HOSTADEF(SPI) *ptSpiUnit;
 	unsigned long ulValue;
@@ -366,7 +366,7 @@ static void spi_deactivate(const SPI_CFG_T *ptCfg)
 	mmio_deactivate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[ptCfg->uiChipSelect]);
 	
 #elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
-	/* In order to pass the proper MMIO config table, we'd need the unit number, which is not passed in SPI_CFG_T.
+	/* In order to pass the proper MMIO config table, we'd need the unit number, which is not passed in FLASHER_SPI_CFG_T.
 	However, mmio_deactivate() only checks if the MMIO config values are 0xff or not, and all the
 	MMIO config tables for the netX 4000 are equal in this respect. */
 	mmio_deactivate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues_SPI0[0]);
@@ -375,7 +375,7 @@ static void spi_deactivate(const SPI_CFG_T *ptCfg)
 }
 
 
-int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
+int boot_drv_spi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg)
 {
 	unsigned long ulValue;
 	int iResult;
@@ -445,12 +445,12 @@ int boot_drv_spi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg)
 	/* set speed and filter */
 	ulValue |= spi_get_device_speed_representation(ptCfg, ptCfg->ulSpeed);
 	/* set the clock polarity  */
-	if( (ptCfg->tMode==SPI_MODE2) || (ptCfg->tMode==SPI_MODE3) )
+	if( (ptCfg->tMode==FLASHER_SPI_MODE2) || (ptCfg->tMode==FLASHER_SPI_MODE3) )
 	{
 		ulValue |= HOSTMSK(spi_cr0_SPO);
 	}
 	/* set the clock phase     */
-	if( (ptCfg->tMode==SPI_MODE1) || (ptCfg->tMode==SPI_MODE3) )
+	if( (ptCfg->tMode==FLASHER_SPI_MODE1) || (ptCfg->tMode==FLASHER_SPI_MODE3) )
 	{
 		ulValue |= HOSTMSK(spi_cr0_SPH);
 	}

@@ -59,7 +59,7 @@ SPIFLASH_ATTRIBUTES_T tSfdpAttributes;
 static int read_sfdp(const SPI_FLASH_T *ptFlash, unsigned long ulAddress, unsigned char *pucData, size_t sizData)
 {
 	int iResult;
-	const SPI_CFG_T *ptSpiDev;
+	const FLASHER_SPI_CFG_T *ptSpiDev;
 	unsigned char aucCmd[5];
 
 
@@ -390,7 +390,7 @@ static unsigned int get_jedec_id_length(unsigned char *pucArrayPointer, unsigned
 static int read_jedec_id(const SPI_FLASH_T *ptFlash, unsigned char *pucJedecId, unsigned int sizJedecId, unsigned int *puiDetectedSize)
 {
 	int iResult;
-	const SPI_CFG_T *ptSpiDev;
+	const FLASHER_SPI_CFG_T *ptSpiDev;
 	unsigned char aucCmd[1];
 	unsigned int uiDetectedSize = 0;
 
@@ -461,7 +461,7 @@ static int read_jedec_id(const SPI_FLASH_T *ptFlash, unsigned char *pucJedecId, 
 
 const SPIFLASH_ATTRIBUTES_T *sfdp_detect(SPI_FLASH_T *ptFlash)
 {
-	SPI_CFG_T *ptSpiDev;
+	FLASHER_SPI_CFG_T *ptSpiDev;
 	int iResult;
 	const SPIFLASH_ATTRIBUTES_T *ptResult;
 	union UNION_SFDP_DATA

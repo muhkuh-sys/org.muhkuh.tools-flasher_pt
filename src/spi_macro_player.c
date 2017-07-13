@@ -56,7 +56,7 @@
 /*-------------------------------------------------------------------------*/
 
 
-typedef int (*PFN_SPI_MACRO_HANDLER_T)(const SPI_MACRO_PARAMETER_T *ptCfg, SPI_CFG_T *ptSpiDev);
+typedef int (*PFN_SPI_MACRO_HANDLER_T)(const SPI_MACRO_PARAMETER_T *ptCfg, FLASHER_SPI_CFG_T *ptSpiDev);
 
 typedef struct SPI_MACRO_HANDLER_TABLE_STRUCT
 {
@@ -68,10 +68,10 @@ typedef struct SPI_MACRO_HANDLER_TABLE_STRUCT
 /*-------------------------------------------------------------------------*/
 
 
-static int SMC_Handler_Initialize(const SPI_MACRO_PARAMETER_T *ptCfg, SPI_CFG_T *ptSpiDev)
+static int SMC_Handler_Initialize(const SPI_MACRO_PARAMETER_T *ptCfg, FLASHER_SPI_CFG_T *ptSpiDev)
 {
 	int iResult;
-	const SPI_CONFIGURATION_T *ptSpiCfg;
+	const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg;
 
 
 	uprintf("[SMC] initialize\n");
@@ -79,7 +79,7 @@ static int SMC_Handler_Initialize(const SPI_MACRO_PARAMETER_T *ptCfg, SPI_CFG_T 
 	ptSpiCfg = &(ptCfg->tInit.tSpi);
 
 	/* Clear the complete configuration. */
-	memset(ptSpiDev, 0, sizeof(SPI_CFG_T));
+	memset(ptSpiDev, 0, sizeof(FLASHER_SPI_CFG_T));
 
 	/* Get the driver. */
 	iResult = board_get_spi_driver(ptSpiCfg, ptSpiDev);
@@ -89,7 +89,7 @@ static int SMC_Handler_Initialize(const SPI_MACRO_PARAMETER_T *ptCfg, SPI_CFG_T 
 
 
 
-static int SMC_Handler_ChipSelect(const SPI_MACRO_PARAMETER_T *ptCfg, SPI_CFG_T *ptSpiDev)
+static int SMC_Handler_ChipSelect(const SPI_MACRO_PARAMETER_T *ptCfg, FLASHER_SPI_CFG_T *ptSpiDev)
 {
 	int iResult;
 
@@ -103,7 +103,7 @@ static int SMC_Handler_ChipSelect(const SPI_MACRO_PARAMETER_T *ptCfg, SPI_CFG_T 
 
 
 
-static int SMC_Handler_ExchangeData(const SPI_MACRO_PARAMETER_T *ptCfg, SPI_CFG_T *ptSpiDev)
+static int SMC_Handler_ExchangeData(const SPI_MACRO_PARAMETER_T *ptCfg, FLASHER_SPI_CFG_T *ptSpiDev)
 {
 	int iResult;
 
@@ -129,7 +129,7 @@ static int SMC_Handler_ExchangeData(const SPI_MACRO_PARAMETER_T *ptCfg, SPI_CFG_
 
 
 
-static int SMC_Handler_SendData(const SPI_MACRO_PARAMETER_T *ptCfg, SPI_CFG_T *ptSpiDev)
+static int SMC_Handler_SendData(const SPI_MACRO_PARAMETER_T *ptCfg, FLASHER_SPI_CFG_T *ptSpiDev)
 {
 	int iResult;
 
@@ -148,7 +148,7 @@ static int SMC_Handler_SendData(const SPI_MACRO_PARAMETER_T *ptCfg, SPI_CFG_T *p
 
 
 
-static int SMC_Handler_ReceiveData(const SPI_MACRO_PARAMETER_T *ptCfg, SPI_CFG_T *ptSpiDev)
+static int SMC_Handler_ReceiveData(const SPI_MACRO_PARAMETER_T *ptCfg, FLASHER_SPI_CFG_T *ptSpiDev)
 {
 	int iResult;
 
@@ -171,7 +171,7 @@ static int SMC_Handler_ReceiveData(const SPI_MACRO_PARAMETER_T *ptCfg, SPI_CFG_T
 
 
 
-static int SMC_Handler_SendIdleBytes(const SPI_MACRO_PARAMETER_T *ptCfg, SPI_CFG_T *ptSpiDev)
+static int SMC_Handler_SendIdleBytes(const SPI_MACRO_PARAMETER_T *ptCfg, FLASHER_SPI_CFG_T *ptSpiDev)
 {
 	int iResult;
 

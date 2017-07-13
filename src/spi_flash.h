@@ -46,7 +46,7 @@
 typedef struct SPI_FLASH_Ttag
 {
 	SPIFLASH_ATTRIBUTES_T tAttributes;	/* attributes of the flash      */
-	SPI_CFG_T tSpiDev;			/* SPI device and it's settings */
+	FLASHER_SPI_CFG_T tSpiDev;			/* SPI device and it's settings */
 	unsigned long ulSectorSize;		/* size of one sector in bytes  */
 	unsigned int uiSlaveId;			/* SPI Slave Id of the flash    */
 	unsigned int uiPageAdrShift;		/* bitshift for the page part of the address, 0 means no page / byte split  */
@@ -55,7 +55,7 @@ typedef struct SPI_FLASH_Ttag
 
 /*-----------------------------------*/
 
-int Drv_SpiInitializeFlash        (const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptFlash);
+int Drv_SpiInitializeFlash        (const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptFlash);
 int Drv_SpiEraseFlashPage         (const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress);
 int Drv_SpiEraseFlashSector       (const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress);
 int Drv_SpiEraseFlashMultiSectors (const SPI_FLASH_T *ptFlash, unsigned long ulLinearStartAddress, unsigned long ulLinearEndAddress);
@@ -67,7 +67,7 @@ int Drv_SpiWritePage              (const SPI_FLASH_T *ptFlash, unsigned long ulL
 
 const char *spi_flash_get_adr_mode_name(SPIFLASH_ADR_T tAdrMode);
 
-int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDev);
+int board_get_spi_driver(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SPI_CFG_T *ptSpiDev);
 
 #endif
 

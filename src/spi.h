@@ -41,16 +41,16 @@
 #define SRT_SQI_CFG_IDLE_IO3_OUT        5
 
 
-typedef enum
+typedef enum FLASHER_SPI_MODE_ENUM
 {
-	SPI_MODE0 = 0,
-	SPI_MODE1 = 1,
-	SPI_MODE2 = 2,
-	SPI_MODE3 = 3
-} SPI_MODE_T;
+	FLASHER_SPI_MODE0 = 0,
+	FLASHER_SPI_MODE1 = 1,
+	FLASHER_SPI_MODE2 = 2,
+	FLASHER_SPI_MODE3 = 3
+} FLASHER_SPI_MODE_T;
 
 
-typedef struct
+typedef struct FLASHER_SPI_CONFIGURATION_STRUCT
 {
 	unsigned int uiUnit;
 	unsigned int uiChipSelect;
@@ -59,47 +59,47 @@ typedef struct
 	unsigned int uiIdleCfg;
 	unsigned int uiMode;
 	unsigned char aucMmio[4];
-} SPI_CONFIGURATION_T;
+} FLASHER_SPI_CONFIGURATION_T;
 
 
 /* predef for the functions */
-struct SPI_CFG_Ttag;
+struct FLASHER_SPI_CFG_STRUCT;
 
-typedef int (*PFN_SPI_INIT)(struct SPI_CFG_Ttag *psCfg, const SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiChipSelect);
-typedef int (*PFN_SPI_SLAVE_SELECT_T)(const struct SPI_CFG_Ttag *psCfg, int fIsSelected);
-typedef int (*PFN_SEND_IDLE_T)(const struct SPI_CFG_Ttag *psCfg, size_t sizIdleChars);
-typedef int (*PFN_SEND_DATA_T)(const struct SPI_CFG_Ttag *psCfg, const unsigned char *pucData, size_t sizData);
-typedef int (*PFN_RECEIVE_DATA_T)(const struct SPI_CFG_Ttag *psCfg, unsigned char *pucData, size_t sizData);
-typedef int (*PFN_EXCHANGE_DATA_T)(const struct SPI_CFG_Ttag *psCfg, const unsigned char *pucOutData, unsigned char *pucInData, size_t sizData);
-typedef void (*PFN_SET_NEW_SPEED_T)(const struct SPI_CFG_Ttag *psCfg, unsigned long ulDeviceSpecificSpeed);
-typedef unsigned char (*PFN_EXCHANGE_BYTE_T)(const struct SPI_CFG_Ttag *ptCfg, unsigned char ucByte);
-typedef unsigned long (*PFN_GET_DEVICE_SPEED_REPRESENTATION_T)(const struct SPI_CFG_Ttag *psCfg, unsigned int uiSpeed);
-typedef void (*PFN_DEACTIVATE_T)(const struct SPI_CFG_Ttag *psCfg);
+typedef int (*PFN_FLASHER_SPI_INIT)(struct FLASHER_SPI_CFG_STRUCT *psCfg, const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiChipSelect);
+typedef int (*PFN_FLASHER_SPI_SLAVE_SELECT_T)(const struct FLASHER_SPI_CFG_STRUCT *psCfg, int fIsSelected);
+typedef int (*PFN_FLASHER_SEND_IDLE_T)(const struct FLASHER_SPI_CFG_STRUCT *psCfg, size_t sizIdleChars);
+typedef int (*PFN_FLASHER_SEND_DATA_T)(const struct FLASHER_SPI_CFG_STRUCT *psCfg, const unsigned char *pucData, size_t sizData);
+typedef int (*PFN_FLASHER_RECEIVE_DATA_T)(const struct FLASHER_SPI_CFG_STRUCT *psCfg, unsigned char *pucData, size_t sizData);
+typedef int (*PFN_FLASHER_EXCHANGE_DATA_T)(const struct FLASHER_SPI_CFG_STRUCT *psCfg, const unsigned char *pucOutData, unsigned char *pucInData, size_t sizData);
+typedef void (*PFN_FLASHER_SET_NEW_SPEED_T)(const struct FLASHER_SPI_CFG_STRUCT *psCfg, unsigned long ulDeviceSpecificSpeed);
+typedef unsigned char (*PFN_FLASHER_EXCHANGE_BYTE_T)(const struct FLASHER_SPI_CFG_STRUCT *ptCfg, unsigned char ucByte);
+typedef unsigned long (*PFN_FLASHER_GET_DEVICE_SPEED_REPRESENTATION_T)(const struct FLASHER_SPI_CFG_STRUCT *psCfg, unsigned int uiSpeed);
+typedef void (*PFN_FLASHER_DEACTIVATE_T)(const struct FLASHER_SPI_CFG_STRUCT *psCfg);
 
 
-typedef struct SPI_CFG_Ttag
+typedef struct FLASHER_SPI_CFG_STRUCT
 {
 	void *pvUnit;                     /* Pointer to the SQI or SPI register block. */
 	unsigned long ulSpeed;            /* Device speed in kHz */
 	unsigned long ulMaximumSpeedKhz;  /* The maximum allowed speed on the interface. */
 	unsigned int uiIdleCfg;           /* the idle configuration */
-	SPI_MODE_T tMode;                 /* bus mode */
+	FLASHER_SPI_MODE_T tMode;         /* bus mode */
 	unsigned int uiChipSelect;        /* chip select */
 
-	PFN_SPI_SLAVE_SELECT_T pfnSelect;
-	PFN_SEND_IDLE_T pfnSendIdle;
-	PFN_SEND_DATA_T pfnSendData;
-	PFN_RECEIVE_DATA_T pfnReceiveData;
-	PFN_EXCHANGE_DATA_T pfnExchangeData;
-	PFN_SET_NEW_SPEED_T pfnSetNewSpeed;
-	PFN_EXCHANGE_BYTE_T pfnExchangeByte;
-	PFN_GET_DEVICE_SPEED_REPRESENTATION_T pfnGetDeviceSpeedRepresentation;
-	PFN_DEACTIVATE_T pfnDeactivate;
+	PFN_FLASHER_SPI_SLAVE_SELECT_T pfnSelect;
+	PFN_FLASHER_SEND_IDLE_T pfnSendIdle;
+	PFN_FLASHER_SEND_DATA_T pfnSendData;
+	PFN_FLASHER_RECEIVE_DATA_T pfnReceiveData;
+	PFN_FLASHER_EXCHANGE_DATA_T pfnExchangeData;
+	PFN_FLASHER_SET_NEW_SPEED_T pfnSetNewSpeed;
+	PFN_FLASHER_EXCHANGE_BYTE_T pfnExchangeByte;
+	PFN_FLASHER_GET_DEVICE_SPEED_REPRESENTATION_T pfnGetDeviceSpeedRepresentation;
+	PFN_FLASHER_DEACTIVATE_T pfnDeactivate;
 
 	unsigned char ucIdleChar;       /* the idle character */
 	unsigned long ulTrcBase;        /* the base bits of the transfer control register */
 	unsigned char aucMmio[4];       /* MMIO pins */
-} SPI_CFG_T;
+} FLASHER_SPI_CFG_T;
 
 
 #endif  /* __SPI_H__ */

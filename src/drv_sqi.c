@@ -181,7 +181,7 @@ static const MMIO_CFG_T aatMmioValues[1][4] =
  * Notes:
  *   This function has no timeout. If the transfer hangs for some reason, it will never return.
  */
-static unsigned char qsi_spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char ucByteSend)
+static unsigned char qsi_spi_exchange_byte(const FLASHER_SPI_CFG_T *ptCfg, unsigned char ucByteSend)
 {
 	HOSTADEF(SQI) * ptSqiArea;
 	unsigned long ulValue;
@@ -215,7 +215,7 @@ static unsigned char qsi_spi_exchange_byte(const SPI_CFG_T *ptCfg, unsigned char
 /*-------------------------------------------------------------------------*/
 
 
-static unsigned long qsi_get_device_speed_representation(const SPI_CFG_T *ptCfg, unsigned int uiSpeed)
+static unsigned long qsi_get_device_speed_representation(const FLASHER_SPI_CFG_T *ptCfg, unsigned int uiSpeed)
 {
 	unsigned long ulDevSpeed;
 	unsigned long ulInputFilter;
@@ -260,7 +260,7 @@ static unsigned long qsi_get_device_speed_representation(const SPI_CFG_T *ptCfg,
 }
 
 
-static int qsi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
+static int qsi_slave_select(const FLASHER_SPI_CFG_T *ptCfg, int fIsSelected)
 {
 	HOSTADEF(SQI) * ptSqiArea;
 	int iResult;
@@ -296,7 +296,7 @@ static int qsi_slave_select(const SPI_CFG_T *ptCfg, int fIsSelected)
 
 
 #if 0
-static int qsi_send_idle(const SPI_CFG_T *ptCfg, size_t sizIdleChars)
+static int qsi_send_idle(const FLASHER_SPI_CFG_T *ptCfg, size_t sizIdleChars)
 {
 	unsigned long ulValue;
 
@@ -329,7 +329,7 @@ static int qsi_send_idle(const SPI_CFG_T *ptCfg, size_t sizIdleChars)
 	return 0;
 }
 #else
-static int qsi_send_idle(const SPI_CFG_T *ptCfg, size_t sizIdleChars)
+static int qsi_send_idle(const FLASHER_SPI_CFG_T *ptCfg, size_t sizIdleChars)
 {
 	while( sizIdleChars>0 )
 	{
@@ -342,7 +342,7 @@ static int qsi_send_idle(const SPI_CFG_T *ptCfg, size_t sizIdleChars)
 
 
 #if 0
-static int qsi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size_t sizData)
+static int qsi_receive_data(const FLASHER_SPI_CFG_T *ptCfg, unsigned char *pucData, size_t sizData)
 {
 	unsigned long ulValue;
 	unsigned char *pucDataEnd;
@@ -387,7 +387,7 @@ static int qsi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size
 	return 0;
 }
 #else
-static int qsi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size_t sizData)
+static int qsi_receive_data(const FLASHER_SPI_CFG_T *ptCfg, unsigned char *pucData, size_t sizData)
 {
 	while( sizData>0 )
 	{
@@ -400,7 +400,7 @@ static int qsi_receive_data(const SPI_CFG_T *ptCfg, unsigned char *pucData, size
 
 
 #if 0
-static int qsi_send_data(const SPI_CFG_T *ptCfg, const unsigned char *pucData, size_t sizData)
+static int qsi_send_data(const FLASHER_SPI_CFG_T *ptCfg, const unsigned char *pucData, size_t sizData)
 {
 	unsigned long ulValue;
 	const unsigned char *pucDataEnd;
@@ -443,7 +443,7 @@ static int qsi_send_data(const SPI_CFG_T *ptCfg, const unsigned char *pucData, s
 	return 0;
 }
 #else
-static int qsi_send_data(const SPI_CFG_T *ptCfg, const unsigned char *pucData, size_t sizData)
+static int qsi_send_data(const FLASHER_SPI_CFG_T *ptCfg, const unsigned char *pucData, size_t sizData)
 {
 	while( sizData>0 )
 	{
@@ -456,7 +456,7 @@ static int qsi_send_data(const SPI_CFG_T *ptCfg, const unsigned char *pucData, s
 
 
 #if 0
-static int qsi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucDataOut, unsigned char *pucDataIn, size_t sizData)
+static int qsi_exchange_data(const FLASHER_SPI_CFG_T *ptCfg, const unsigned char *pucDataOut, unsigned char *pucDataIn, size_t sizData)
 {
 	unsigned long ulValue;
 	const unsigned char *pucOutCnt;
@@ -519,7 +519,7 @@ static int qsi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucDat
 	return 0;
 }
 #else
-static int qsi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucDataOut, unsigned char *pucDataIn, size_t sizData)
+static int qsi_exchange_data(const FLASHER_SPI_CFG_T *ptCfg, const unsigned char *pucDataOut, unsigned char *pucDataIn, size_t sizData)
 {
 	while( sizData>0 )
 	{
@@ -530,7 +530,7 @@ static int qsi_exchange_data(const SPI_CFG_T *ptCfg, const unsigned char *pucDat
 }
 #endif
 
-static void qsi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpecificSpeed)
+static void qsi_set_new_speed(const FLASHER_SPI_CFG_T *ptCfg, unsigned long ulDeviceSpecificSpeed)
 {
 	HOSTADEF(SQI) * ptSqiArea;
 	unsigned long ulValue;
@@ -546,7 +546,7 @@ static void qsi_set_new_speed(const SPI_CFG_T *ptCfg, unsigned long ulDeviceSpec
 }
 
 
-static void qsi_deactivate(const SPI_CFG_T *ptCfg)
+static void qsi_deactivate(const FLASHER_SPI_CFG_T *ptCfg)
 {
 	HOSTADEF(SQI) * ptSqiArea;
 #if ASIC_TYP==ASIC_TYP_NETX56
@@ -602,7 +602,7 @@ static void qsi_deactivate(const SPI_CFG_T *ptCfg)
 }
 
 
-int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiSqiUnit)
+int boot_drv_sqi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, unsigned int uiSqiUnit)
 {
 	HOSTADEF(SQI) *ptSqiArea;
 
@@ -721,12 +721,12 @@ int boot_drv_sqi_init(SPI_CFG_T *ptCfg, const SPI_CONFIGURATION_T *ptSpiCfg, uns
 		/* Start in SPI mode: use only IO0 and IO1 for transfer. */
 		ulValue |= 0 << HOSTSRT(sqi_cr0_sio_cfg);
 		/* Set the clock polarity. */
-		if( (ptCfg->tMode==SPI_MODE2) || (ptCfg->tMode==SPI_MODE3) )
+		if( (ptCfg->tMode==FLASHER_SPI_MODE2) || (ptCfg->tMode==FLASHER_SPI_MODE3) )
 		{
 			ulValue |= HOSTMSK(sqi_cr0_sck_pol);
 		}
 		/* Set the clock phase. */
-		if( (ptCfg->tMode==SPI_MODE1) || (ptCfg->tMode==SPI_MODE3) )
+		if( (ptCfg->tMode==FLASHER_SPI_MODE1) || (ptCfg->tMode==FLASHER_SPI_MODE3) )
 		{
 			ulValue |= HOSTMSK(sqi_cr0_sck_phase);
 		}

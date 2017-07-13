@@ -180,7 +180,7 @@ static unsigned long getDeviceAddress(const SPI_FLASH_T *ptFlash, unsigned long 
 static int read_status(const SPI_FLASH_T *ptFlash, unsigned char *pucStatus)
 {
 	int iResult;
-	const SPI_CFG_T *ptSpiDev;
+	const FLASHER_SPI_CFG_T *ptSpiDev;
 
 
 	DEBUGMSG(ZONE_FUNCTION, ("+read_status(): ptFlash=0x%08x, pucStatus=0x%08x\n", ptFlash, pucStatus));
@@ -268,7 +268,7 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 	const SPIFLASH_ATTRIBUTES_T *ptSc;
 	const SPIFLASH_ATTRIBUTES_T *ptSe;
 	const SPIFLASH_ATTRIBUTES_T *ptSr;
-	SPI_CFG_T *ptSpiDev;
+	FLASHER_SPI_CFG_T *ptSpiDev;
 	union
 	{
 		char *pc;
@@ -436,7 +436,7 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucCmd, size_t sizCmdLen)
 {
 	int   iResult;
-	const SPI_CFG_T *ptSpiDev;
+	const FLASHER_SPI_CFG_T *ptSpiDev;
 
 
 	DEBUGMSG(ZONE_FUNCTION, ("+send_simple_cmd(): ptFlash=0x%08x, pucCmd=0x%08x, sizCmdLen=0x%08x\n", ptFlash, pucCmd, sizCmdLen));
@@ -561,7 +561,7 @@ static int wait_for_ready(const SPI_FLASH_T *ptFlash)
 
 
 /* TODO: move this to the board.c file. */
-int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDev)
+int board_get_spi_driver(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SPI_CFG_T *ptSpiDev)
 {
 	int iResult;
 	unsigned int uiUnit;
@@ -681,11 +681,11 @@ int board_get_spi_driver(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_CFG_T *ptSpiDe
 *            Drv_SpiS_INVALID        Specified Flash Control Block invalid
 *            Drv_SpiS_UNKNOWN_FLASH  failed to detect the serial FLASH
 */
-int Drv_SpiInitializeFlash(const SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptFlash)
+int Drv_SpiInitializeFlash(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptFlash)
 {
 	int   iResult;
 	const SPIFLASH_ATTRIBUTES_T *ptFlashAttr;
-	SPI_CFG_T *ptSpiDev;
+	FLASHER_SPI_CFG_T *ptSpiDev;
 	unsigned int uiCmdLen;
 
 
@@ -1145,7 +1145,7 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 	int           iResult;
 	unsigned long ulDeviceAddress;
 	unsigned char abCmd[4];
-	const SPI_CFG_T *ptSpiDev;
+	const FLASHER_SPI_CFG_T *ptSpiDev;
 
 
 	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiReadFlash(): ptFlash=0x%08x, ulLinearAddress=0x%08x, pucData=0x%08x, sizData=%d\n", ptFlash, ulLinearAddress, pucData, sizData));
@@ -1243,7 +1243,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 	unsigned long   ulDeviceAddress;
 	unsigned char   aucCmd[4];
 	unsigned char   ucCmd;
-	const SPI_CFG_T *ptSpiDev;
+	const FLASHER_SPI_CFG_T *ptSpiDev;
 
 
 	DEBUGMSG(ZONE_FUNCTION, ("+Drv_SpiEraseAndWritePage(): ptFlash=0x%08x, ulLinearAddress=0x%08x, pucData=0x%08x, sizData=%d\n", ptFlash, ulLinearAddress, pucData, sizData));
@@ -1375,7 +1375,7 @@ static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinea
 	int             iResult;
 	unsigned long   ulDeviceAddress;
 	unsigned char   aucCmd[4];
-	const SPI_CFG_T *ptSpiDev;
+	const FLASHER_SPI_CFG_T *ptSpiDev;
 
 
 	DEBUGMSG(ZONE_FUNCTION, ("+write_single_opcode(): ptFlash=0x%08x, ulLinearAddress=0x%08x, pabBuffer=0x%08x\n", ptFlash, ulLinearAddress, pabBuffer));
@@ -1466,7 +1466,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 	int             iResult;
 	unsigned long   ulDeviceAddress;
 	unsigned char   aucCmd[4];
-	const SPI_CFG_T *ptSpiDev;
+	const FLASHER_SPI_CFG_T *ptSpiDev;
 
 
 	DEBUGMSG(ZONE_FUNCTION, ("+write_via_buffer(): ptFlash=0x%08x, ulLinearAddress=0x%08x, pabBuffer=0x%08x\n", ptFlash, ulLinearAddress, pabBuffer));

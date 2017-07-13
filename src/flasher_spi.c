@@ -586,7 +586,7 @@ NETX_CONSOLEAPP_RESULT_T spi_verify(const SPI_FLASH_T *ptFlashDescription, unsig
 /*-----------------------------------*/
 
 
-NETX_CONSOLEAPP_RESULT_T spi_detect(SPI_CONFIGURATION_T *ptSpiConfiguration, SPI_FLASH_T *ptFlashDescription)
+NETX_CONSOLEAPP_RESULT_T spi_detect(FLASHER_SPI_CONFIGURATION_T *ptSpiConfiguration, SPI_FLASH_T *ptFlashDescription)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int iResult;
