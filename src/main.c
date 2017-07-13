@@ -34,6 +34,7 @@
 #include "sha1.h"
 
 #include "flasher_interface.h"
+#include "flasher_header.h"
 #include "units.h"
 #include "uprintf.h"
 #include "systime.h"
@@ -73,7 +74,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_detect(tFlasherInputParameter *ptAppParam
 	case BUS_SPI:
 		/* Use SPI flash */
 		uprintf("SPI flash\n");
-		tResult = spi_detect(&(ptParameter->uSourceParameter.tSpi), &(ptDeviceDescription->uInfo.tSpiInfo));
+		tResult = spi_detect(&(ptParameter->uSourceParameter.tSpi), &(ptDeviceDescription->uInfo.tSpiInfo), (char*)(flasher_version.pucBuffer_End));
 		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
 			ptDeviceDescription->fIsValid = 1;

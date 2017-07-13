@@ -22,7 +22,6 @@
 
 #include "asic_types.h"
 #include "exodecr.h"
-#include "flasher_header.h"
 #include "uprintf.h"
 #include "progress_bar.h"
 
@@ -259,7 +258,7 @@ extern const char _binary_spi_flash_types_exo_end[];
 *                                                                              
 *   \return  RX_OK              status successfully returned
 */
-static int detect_flash(FLASHER_SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptFlashAttr)
+static int detect_flash(FLASHER_SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptFlashAttr, char *pcBufferEnd)
 {
 	int           iResult = 1;
 	int           fFoundId;
@@ -288,16 +287,16 @@ static int detect_flash(FLASHER_SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_
 	if( uiUseDetectList!=0 )
 	{
 		/* Depack the list of known flash devices. */
-		uSpiTypes.pc = exo_decrunch(_binary_spi_flash_types_exo_end, (char*)(flasher_version.pucBuffer_End));
+		uSpiTypes.pc = exo_decrunch(_binary_spi_flash_types_exo_end, pcBufferEnd);
 
-		/* get spi device */
+		/* Get the SPI device. */
 		ptSpiDev = &ptFlash->tSpiDev;
 
-		/* loop over all entries in the list of known flash types */
+		/* Loop over all entries in the list of known flash types. */
 		ptSc = uSpiTypes.pt;
 		ptSe = ptSc + NUMBER_OF_SPIFLASH_ATTRIBUTES;
 
-		/* init found flag in case of an empty list */
+		/* Initialize found flag in case of an empty list. */
 		fFoundId = (1==0);
 		while(ptSc < ptSe)
 		{
@@ -310,7 +309,7 @@ static int detect_flash(FLASHER_SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_
 			{
 				//uprintf("ERROR: detect_flash: HalSPI_SendIdles failed with %d.\n", iResult);
 				DBG_CALL_FAILED_VAL("pfnSendIdle", iResult)
-					break;
+				break;
 			}
 
 			/* select the slave */
@@ -681,7 +680,7 @@ int board_get_spi_driver(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SP
 *            Drv_SpiS_INVALID        Specified Flash Control Block invalid
 *            Drv_SpiS_UNKNOWN_FLASH  failed to detect the serial FLASH
 */
-int Drv_SpiInitializeFlash(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SPI_FLASH_T *ptFlash)
+int Drv_SpiInitializeFlash(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SPI_FLASH_T *ptFlash, char *pcBufferEnd)
 {
 	int   iResult;
 	const SPIFLASH_ATTRIBUTES_T *ptFlashAttr;
@@ -707,7 +706,7 @@ int Drv_SpiInitializeFlash(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_
 	else
 	{
 		/* try to autodetect the flash */
-		iResult = detect_flash(ptFlash, &ptFlashAttr);
+		iResult = detect_flash(ptFlash, &ptFlashAttr, pcBufferEnd);
 		if( iResult!=0 )
 		{
 			//uprintf("ERROR: Drv_SpiInitializeFlash: detect_flash failed with %d.\n", iResult);

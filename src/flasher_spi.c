@@ -586,7 +586,7 @@ NETX_CONSOLEAPP_RESULT_T spi_verify(const FLASHER_SPI_FLASH_T *ptFlashDescriptio
 /*-----------------------------------*/
 
 
-NETX_CONSOLEAPP_RESULT_T spi_detect(FLASHER_SPI_CONFIGURATION_T *ptSpiConfiguration, FLASHER_SPI_FLASH_T *ptFlashDescription)
+NETX_CONSOLEAPP_RESULT_T spi_detect(FLASHER_SPI_CONFIGURATION_T *ptSpiConfiguration, FLASHER_SPI_FLASH_T *ptFlashDescription, char *pcBufferEnd)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int iResult;
@@ -595,7 +595,7 @@ NETX_CONSOLEAPP_RESULT_T spi_detect(FLASHER_SPI_CONFIGURATION_T *ptSpiConfigurat
 	/* try to detect flash */
 	uprintf(". Detecting SPI flash on unit %d, chip select %d...\n", ptSpiConfiguration->uiUnit, ptSpiConfiguration->uiChipSelect);
 	ptFlashDescription->uiSlaveId = ptSpiConfiguration->uiChipSelect;
-	iResult = Drv_SpiInitializeFlash(ptSpiConfiguration, ptFlashDescription);
+	iResult = Drv_SpiInitializeFlash(ptSpiConfiguration, ptFlashDescription, pcBufferEnd);
 	if( iResult!=0 )
 	{
 		/* failed to detect the SPI flash */
