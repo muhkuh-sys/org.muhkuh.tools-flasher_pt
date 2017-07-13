@@ -56,7 +56,7 @@
 
 SPIFLASH_ATTRIBUTES_T tSfdpAttributes;
 
-static int read_sfdp(const SPI_FLASH_T *ptFlash, unsigned long ulAddress, unsigned char *pucData, size_t sizData)
+static int read_sfdp(const FLASHER_SPI_FLASH_T *ptFlash, unsigned long ulAddress, unsigned char *pucData, size_t sizData)
 {
 	int iResult;
 	const FLASHER_SPI_CFG_T *ptSpiDev;
@@ -118,7 +118,7 @@ typedef struct STRUCT_SECTOR_TYPE
 	unsigned char ucOpcode;
 } SECTOR_TYPE_T;
 
-static int read_jedec_flash_parameter(SPI_FLASH_T *ptFlash, unsigned long ulAddress)
+static int read_jedec_flash_parameter(FLASHER_SPI_FLASH_T *ptFlash, unsigned long ulAddress)
 {
 	union UNION_SFDP_DATA
 	{
@@ -254,7 +254,7 @@ static int read_jedec_flash_parameter(SPI_FLASH_T *ptFlash, unsigned long ulAddr
 
 
 
-static int read_parameter_headers(SPI_FLASH_T *ptFlash, size_t sizSfdpHeaders)
+static int read_parameter_headers(FLASHER_SPI_FLASH_T *ptFlash, size_t sizSfdpHeaders)
 {
 	int iResult;
 	union UNION_SFDP_DATA
@@ -387,7 +387,7 @@ static unsigned int get_jedec_id_length(unsigned char *pucArrayPointer, unsigned
     return uiIdSize;
 }
 
-static int read_jedec_id(const SPI_FLASH_T *ptFlash, unsigned char *pucJedecId, unsigned int sizJedecId, unsigned int *puiDetectedSize)
+static int read_jedec_id(const FLASHER_SPI_FLASH_T *ptFlash, unsigned char *pucJedecId, unsigned int sizJedecId, unsigned int *puiDetectedSize)
 {
 	int iResult;
 	const FLASHER_SPI_CFG_T *ptSpiDev;
@@ -459,7 +459,7 @@ static int read_jedec_id(const SPI_FLASH_T *ptFlash, unsigned char *pucJedecId, 
 
 
 
-const SPIFLASH_ATTRIBUTES_T *sfdp_detect(SPI_FLASH_T *ptFlash)
+const SPIFLASH_ATTRIBUTES_T *sfdp_detect(FLASHER_SPI_FLASH_T *ptFlash)
 {
 	FLASHER_SPI_CFG_T *ptSpiDev;
 	int iResult;

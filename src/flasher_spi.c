@@ -33,7 +33,7 @@ unsigned char pucSpiBuffer[SPI_BUFFER_SIZE];
 
 /*-----------------------------------*/
 
-static NETX_CONSOLEAPP_RESULT_T spi_write_with_progress(const SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulDataByteLen, const unsigned char *pucDataStartAdr)
+static NETX_CONSOLEAPP_RESULT_T spi_write_with_progress(const FLASHER_SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulDataByteLen, const unsigned char *pucDataStartAdr)
 {
 	const unsigned char *pucDC;
 	unsigned long ulC, ulE;	
@@ -188,7 +188,7 @@ static NETX_CONSOLEAPP_RESULT_T spi_write_with_progress(const SPI_FLASH_T *ptFla
 }
 
 
-static NETX_CONSOLEAPP_RESULT_T spi_verify_with_progress(const SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulDataByteLen, const unsigned char *pucDataStartAdr)
+static NETX_CONSOLEAPP_RESULT_T spi_verify_with_progress(const FLASHER_SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulDataByteLen, const unsigned char *pucDataStartAdr)
 {
 	int iResult;
 	unsigned long       ulC, ulE;
@@ -259,7 +259,7 @@ static NETX_CONSOLEAPP_RESULT_T spi_verify_with_progress(const SPI_FLASH_T *ptFl
 }
 
 
-static NETX_CONSOLEAPP_RESULT_T spi_read_with_progress(const SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulFlashEndAdr, unsigned char *pucDataAdr)
+static NETX_CONSOLEAPP_RESULT_T spi_read_with_progress(const FLASHER_SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulFlashEndAdr, unsigned char *pucDataAdr)
 {
 	unsigned long ulSegSize, ulMaxSegSize;
 	unsigned long ulProgressCnt;
@@ -306,7 +306,7 @@ static NETX_CONSOLEAPP_RESULT_T spi_read_with_progress(const SPI_FLASH_T *ptFlas
 }
 
 #if CFG_INCLUDE_SHA1!=0
-static NETX_CONSOLEAPP_RESULT_T spi_sha1_with_progress(const SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulFlashEndAdr, SHA_CTX *ptSha1Context)
+static NETX_CONSOLEAPP_RESULT_T spi_sha1_with_progress(const FLASHER_SPI_FLASH_T *ptFlashDev, unsigned long ulFlashStartAdr, unsigned long ulFlashEndAdr, SHA_CTX *ptSha1Context)
 {
 	unsigned long ulSegSize, ulMaxSegSize;
 	unsigned long ulProgressCnt;
@@ -353,7 +353,7 @@ static NETX_CONSOLEAPP_RESULT_T spi_sha1_with_progress(const SPI_FLASH_T *ptFlas
 }
 #endif
 
-static NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFlashDev, unsigned long ulStartAdr, unsigned long ulEndAdr)
+static NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const FLASHER_SPI_FLASH_T *ptFlashDev, unsigned long ulStartAdr, unsigned long ulEndAdr)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	unsigned long ulPageSize;
@@ -485,7 +485,7 @@ static NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const SPI_FLASH_T *ptFla
 
 /*-----------------------------------*/
 
-NETX_CONSOLEAPP_RESULT_T spi_flash(const SPI_FLASH_T *ptFlashDescription, unsigned long ulFlashStartAdr, unsigned long ulDataByteSize, const unsigned char *pucDataStartAdr)
+NETX_CONSOLEAPP_RESULT_T spi_flash(const FLASHER_SPI_FLASH_T *ptFlashDescription, unsigned long ulFlashStartAdr, unsigned long ulDataByteSize, const unsigned char *pucDataStartAdr)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 
@@ -509,7 +509,7 @@ NETX_CONSOLEAPP_RESULT_T spi_flash(const SPI_FLASH_T *ptFlashDescription, unsign
 
 /*-----------------------------------*/
 
-NETX_CONSOLEAPP_RESULT_T spi_erase(const SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr)
+NETX_CONSOLEAPP_RESULT_T spi_erase(const FLASHER_SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 
@@ -527,7 +527,7 @@ NETX_CONSOLEAPP_RESULT_T spi_erase(const SPI_FLASH_T *ptFlashDescription, unsign
 /*-----------------------------------*/
 
 
-NETX_CONSOLEAPP_RESULT_T spi_read(const SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, unsigned char *pucData)
+NETX_CONSOLEAPP_RESULT_T spi_read(const FLASHER_SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, unsigned char *pucData)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 
@@ -547,7 +547,7 @@ NETX_CONSOLEAPP_RESULT_T spi_read(const SPI_FLASH_T *ptFlashDescription, unsigne
 
 
 #if CFG_INCLUDE_SHA1!=0
-NETX_CONSOLEAPP_RESULT_T spi_sha1(const SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, SHA_CTX *ptSha1Context)
+NETX_CONSOLEAPP_RESULT_T spi_sha1(const FLASHER_SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, SHA_CTX *ptSha1Context)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 
@@ -566,7 +566,7 @@ NETX_CONSOLEAPP_RESULT_T spi_sha1(const SPI_FLASH_T *ptFlashDescription, unsigne
 /*-----------------------------------*/
 
 
-NETX_CONSOLEAPP_RESULT_T spi_verify(const SPI_FLASH_T *ptFlashDescription, unsigned long ulFlashStartAdr, unsigned long ulFlashEndAdr, const unsigned char *pucData, void **ppvReturnMessage)
+NETX_CONSOLEAPP_RESULT_T spi_verify(const FLASHER_SPI_FLASH_T *ptFlashDescription, unsigned long ulFlashStartAdr, unsigned long ulFlashEndAdr, const unsigned char *pucData, void **ppvReturnMessage)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	unsigned long ulDataByteSize;
@@ -586,7 +586,7 @@ NETX_CONSOLEAPP_RESULT_T spi_verify(const SPI_FLASH_T *ptFlashDescription, unsig
 /*-----------------------------------*/
 
 
-NETX_CONSOLEAPP_RESULT_T spi_detect(FLASHER_SPI_CONFIGURATION_T *ptSpiConfiguration, SPI_FLASH_T *ptFlashDescription)
+NETX_CONSOLEAPP_RESULT_T spi_detect(FLASHER_SPI_CONFIGURATION_T *ptSpiConfiguration, FLASHER_SPI_FLASH_T *ptFlashDescription)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int iResult;
@@ -617,7 +617,7 @@ NETX_CONSOLEAPP_RESULT_T spi_detect(FLASHER_SPI_CONFIGURATION_T *ptSpiConfigurat
 /*-----------------------------------*/
 
 
-NETX_CONSOLEAPP_RESULT_T spi_isErased(const SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, void **ppvReturnMessage)
+NETX_CONSOLEAPP_RESULT_T spi_isErased(const FLASHER_SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, void **ppvReturnMessage)
 {
 	NETX_CONSOLEAPP_RESULT_T  tResult;
 	unsigned long ulCnt;
@@ -703,7 +703,7 @@ NETX_CONSOLEAPP_RESULT_T spi_isErased(const SPI_FLASH_T *ptFlashDescription, uns
 /*-----------------------------------*/
 
 
-NETX_CONSOLEAPP_RESULT_T spi_getEraseArea(const SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, unsigned long *pulStartAdr, unsigned long *pulEndAdr)
+NETX_CONSOLEAPP_RESULT_T spi_getEraseArea(const FLASHER_SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, unsigned long *pulStartAdr, unsigned long *pulEndAdr)
 {
 	NETX_CONSOLEAPP_RESULT_T  tResult;
 	unsigned long ulEraseBlockSize;

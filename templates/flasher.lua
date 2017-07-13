@@ -495,7 +495,7 @@ function getDeviceId(tPlugin, aAttr, fnCallbackProgress)
 	strDeviceId = nil
 	if tBus==BUS_Spi then
 		-- Extract the flash ID.
-		local iIdxStart = ${OFFSETOF_DEVICE_DESCRIPTION_STRUCT_uInfo}+${OFFSETOF_SPI_FLASH_Ttag_tAttributes}+${OFFSETOF_SPIFLASH_ATTRIBUTES_Ttag_acName} + 1
+		local iIdxStart = ${OFFSETOF_DEVICE_DESCRIPTION_STRUCT_uInfo}+${OFFSETOF_FLASHER_SPI_FLASH_STRUCT_tAttributes}+${OFFSETOF_SPIFLASH_ATTRIBUTES_Ttag_acName} + 1
 		local iIdxEnd = iIdxStart
 		local iIdxMax = iIdxStart + ${SPIFLASH_NAME_SIZE} + 1
 		while iIdxEnd<iIdxMax and string.byte(strDeviceDescriptor, iIdxEnd)~=0 do

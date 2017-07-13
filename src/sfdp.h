@@ -26,7 +26,7 @@
 #ifndef __SFDP_H__
 #define __SFDP_H__
 
-const SPIFLASH_ATTRIBUTES_T *sfdp_detect(SPI_FLASH_T *ptFlash);
+const SPIFLASH_ATTRIBUTES_T *sfdp_detect(FLASHER_SPI_FLASH_T *ptFlash);
 
 #endif  /* __SFDP_H__ */
 

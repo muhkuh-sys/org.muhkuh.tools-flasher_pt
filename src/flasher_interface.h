@@ -67,7 +67,7 @@ typedef struct DEVICE_DESCRIPTION_STRUCT
 	union
 	{
 		FLASH_DEVICE_T tParFlash;
-		SPI_FLASH_T tSpiInfo;
+		FLASHER_SPI_FLASH_T tSpiInfo;
 		INTERNAL_FLASH_T tInternalFlashInfo;
 	} uInfo;
 } DEVICE_DESCRIPTION_T;

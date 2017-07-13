@@ -125,7 +125,7 @@ static unsigned int getMaskLength(unsigned long ulVal)
 
     \return                 device specific address
 */
-static unsigned long getDeviceAddress(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress)
+static unsigned long getDeviceAddress(const FLASHER_SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress)
 {
 	unsigned long ulDeviceAddress = 0;
 	unsigned long ulPageNr;
@@ -177,7 +177,7 @@ static unsigned long getDeviceAddress(const SPI_FLASH_T *ptFlash, unsigned long 
 
     \return  RX_OK              status successfully returned
 */
-static int read_status(const SPI_FLASH_T *ptFlash, unsigned char *pucStatus)
+static int read_status(const FLASHER_SPI_FLASH_T *ptFlash, unsigned char *pucStatus)
 {
 	int iResult;
 	const FLASHER_SPI_CFG_T *ptSpiDev;
@@ -228,7 +228,7 @@ static int read_status(const SPI_FLASH_T *ptFlash, unsigned char *pucStatus)
 
 
 #if CFG_DEBUGMSG!=0
-static int print_status(const SPI_FLASH_T *ptFlash)
+static int print_status(const FLASHER_SPI_FLASH_T *ptFlash)
 {
 	unsigned char ucStatus = 0;
 	int iResult;
@@ -259,7 +259,7 @@ extern const char _binary_spi_flash_types_exo_end[];
 *                                                                              
 *   \return  RX_OK              status successfully returned
 */
-static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptFlashAttr)
+static int detect_flash(FLASHER_SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptFlashAttr)
 {
 	int           iResult = 1;
 	int           fFoundId;
@@ -433,7 +433,7 @@ static int detect_flash(SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptF
 *   \param   uiCmdLen          command length in bytes
 *                                                                              
 *   \return  RX_OK             status successfully returned                  */
-static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucCmd, size_t sizCmdLen)
+static int send_simple_cmd(const FLASHER_SPI_FLASH_T *ptFlash, const unsigned char *pucCmd, size_t sizCmdLen)
 {
 	int   iResult;
 	const FLASHER_SPI_CFG_T *ptSpiDev;
@@ -493,7 +493,7 @@ static int send_simple_cmd(const SPI_FLASH_T *ptFlash, const unsigned char *pucC
 *   \param   ptFlash           Pointer to flash Control Block
 *   \return  iResult           =0 success, <>0 error                         */
 
-static int write_enable(const SPI_FLASH_T *ptFlash)
+static int write_enable(const FLASHER_SPI_FLASH_T *ptFlash)
 {
 	int iResult;
 	unsigned char ucOpcode;
@@ -528,7 +528,7 @@ static int write_enable(const SPI_FLASH_T *ptFlash)
 *               
 *   \param   ptFls             Pointer to FLASH Control Block
 *   \return  RX_OK             FLASH is idle and ready for next operation    */
-static int wait_for_ready(const SPI_FLASH_T *ptFlash)
+static int wait_for_ready(const FLASHER_SPI_FLASH_T *ptFlash)
 {
 	unsigned char ucStatus;
 	int iResult;
@@ -681,7 +681,7 @@ int board_get_spi_driver(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SP
 *            Drv_SpiS_INVALID        Specified Flash Control Block invalid
 *            Drv_SpiS_UNKNOWN_FLASH  failed to detect the serial FLASH
 */
-int Drv_SpiInitializeFlash(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLASH_T *ptFlash)
+int Drv_SpiInitializeFlash(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SPI_FLASH_T *ptFlash)
 {
 	int   iResult;
 	const SPIFLASH_ATTRIBUTES_T *ptFlashAttr;
@@ -793,7 +793,7 @@ int Drv_SpiInitializeFlash(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, SPI_FLAS
 *   \return  RX_OK                           Erasure successful
 *            Drv_SpiS_ERASURE_NOT_SUPPORTED  Erase function not supported or configured
 */
-int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress)
+int Drv_SpiEraseFlashPage(const FLASHER_SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress)
 {
 	int iResult;
 	unsigned char abCmd[4];
@@ -882,7 +882,7 @@ int Drv_SpiEraseFlashPage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddr
 *   \return     RX_OK                           Erasure successful
 *               Drv_SpiS_ERASURE_NOT_SUPPORTED  Erase function not supported or configured
 */
-int Drv_SpiEraseFlashSector(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress)
+int Drv_SpiEraseFlashSector(const FLASHER_SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress)
 {
 	int iResult;
 	unsigned char abCmd[4];
@@ -956,7 +956,7 @@ int Drv_SpiEraseFlashSector(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 *   \return  RX_OK                           Erasure successful
 *            Drv_SpiS_ERASURE_NOT_SUPPORTED  Erase function not supported or configured
 */
-int Drv_SpiEraseFlashMultiSectors(const SPI_FLASH_T *ptFlash, unsigned long ulLinearStartAddress, unsigned long ulLinearEndAddress)
+int Drv_SpiEraseFlashMultiSectors(const FLASHER_SPI_FLASH_T *ptFlash, unsigned long ulLinearStartAddress, unsigned long ulLinearEndAddress)
 {
 	int iResult;
 
@@ -994,7 +994,7 @@ int Drv_SpiEraseFlashMultiSectors(const SPI_FLASH_T *ptFlash, unsigned long ulLi
 *
 *   \return  RX_OK   Erasure successful
 */
-int Drv_SpiEraseFlashComplete(const SPI_FLASH_T *ptFlash)
+int Drv_SpiEraseFlashComplete(const FLASHER_SPI_FLASH_T *ptFlash)
 {
 	int iResult;
 	unsigned int      uiEraseChipCmdLen;
@@ -1060,7 +1060,7 @@ int Drv_SpiEraseFlashComplete(const SPI_FLASH_T *ptFlash)
 *
 *   \return  RX_OK   Erasure successful
 */
-int Drv_SpiWriteFlashPages(const SPI_FLASH_T *ptFlash, unsigned long ulOffs, const unsigned char *pabSrc, unsigned long ulNum)
+int Drv_SpiWriteFlashPages(const FLASHER_SPI_FLASH_T *ptFlash, unsigned long ulOffs, const unsigned char *pabSrc, unsigned long ulNum)
 {
 	int iResult      = 1;
 	unsigned long    ulPageSize;
@@ -1140,7 +1140,7 @@ int Drv_SpiWriteFlashPages(const SPI_FLASH_T *ptFlash, unsigned long ulOffs, con
 *   \return  RX_OK    Programming successful
 */
 
-int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, unsigned char *pucData, size_t sizData)
+int Drv_SpiReadFlash(const FLASHER_SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, unsigned char *pucData, size_t sizData)
 {
 	int           iResult;
 	unsigned long ulDeviceAddress;
@@ -1236,7 +1236,7 @@ int Drv_SpiReadFlash(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, 
 *
 *   \return  RX_OK      if write operation succeeded
 */
-int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pucData, size_t sizData)
+int Drv_SpiEraseAndWritePage(const FLASHER_SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pucData, size_t sizData)
 {
 	int             iResult;
 	size_t sizPage;
@@ -1370,7 +1370,7 @@ int Drv_SpiEraseAndWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearA
 #endif
 
 
-static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pabBuffer)
+static int write_single_opcode(const FLASHER_SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pabBuffer)
 {
 	int             iResult;
 	unsigned long   ulDeviceAddress;
@@ -1461,7 +1461,7 @@ static int write_single_opcode(const SPI_FLASH_T *ptFlash, unsigned long ulLinea
 }
 
 
-static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pabBuffer)
+static int write_via_buffer(const FLASHER_SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pabBuffer)
 {
 	int             iResult;
 	unsigned long   ulDeviceAddress;
@@ -1586,7 +1586,7 @@ static int write_via_buffer(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAd
 }
 
 
-int Drv_SpiWritePage(const SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pucData, size_t sizData)
+int Drv_SpiWritePage(const FLASHER_SPI_FLASH_T *ptFlash, unsigned long ulLinearAddress, const unsigned char *pucData, size_t sizData)
 {
 	int iResult;
 	size_t sizPage;
