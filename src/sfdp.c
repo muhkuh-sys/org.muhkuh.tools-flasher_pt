@@ -298,7 +298,7 @@ static int read_parameter_headers(FLASHER_SPI_FLASH_T *ptFlash, size_t sizSfdpHe
 			uprintf("Found Header ID 0x%02x V%d.%d @ 0x%08x (%d bytes)\n", ucHeaderId, ucHeaderVersion_Maj, ucHeaderVersion_Min, ulHeaderAddress, sizSfdpHeadersDw*sizeof(unsigned long));
 
 			/* Is this a known header? */
-			if( ucHeaderId==0x00 && sizSfdpHeadersDw==9 )
+			if( ucHeaderId==0x00 && sizSfdpHeadersDw>=9 )
 			{
 				iResult = read_jedec_flash_parameter(ptFlash, ulHeaderAddress);
 				if( iResult!=0 )
