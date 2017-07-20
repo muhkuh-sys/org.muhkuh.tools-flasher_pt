@@ -206,6 +206,21 @@
 		    magic="0x00, 0x1f, 0x28, 0x00, 0x01, 0x00" />
 	</SerialFlash>
 
+	<SerialFlash name="S25FL064L" size="8388608" clock="50000">
+		<Description>Cypress S25FL064L</Description>
+		<Note>This flash can not be auto-detected by SFDP as the latency for read commands also shifts the SFDP response by arbitrary clock cycles.</Note>
+		<Layout pageSize="256" sectorPages="16" mode="linear" />
+		<Read readArrayCommand="0x03" ignoreBytes="0" />
+		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="0x00" bufferWriteCommand="0x00" eraseAndPageProgramCommand="0x00" />
+		<Erase erasePageCommand="0x00" eraseSectorCommand="0x20" eraseChipCommand="" />
+		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
+		<Init0 command="" />
+		<Init1 command="" />
+		<Id send="0x9f, 0x00, 0x00, 0x00"
+		    mask="0x00, 0xff, 0xff, 0xff"
+		    magic="0x00, 0x01, 0x60, 0x17" />
+	</SerialFlash>
+
 	<SerialFlash name="NX25P10" size="131072" clock="20000">
 		<Description>NexFlash NX25P10</Description>
 		<Note></Note>
