@@ -54,7 +54,7 @@ info        [p]                          Show busses/units/chip selects
 detect      [p] dev                      Check if flash is recognized
 test        [p] dev                      Test flasher      
 testcli     [p] dev                      Test cli flasher  
-list_interfaces							 List all usable interfaces
+list_interfaces                          List all usable interfaces
 -h                                       Show this help    
         
 p:    -p plugin_name
@@ -662,10 +662,12 @@ end
 
 -- bus 0: parallel, bus 1: serial
 function flasher_interface.getBusWidth(self)
-	if self.aArgs.iBus==1 then
-		return 1
-	else
+	if self.aArgs.iBus==flasher.BUS_Parflash then
 		return 2 -- may be 1, 2 or 4
+	elseif self.aArgs.iBus==flasher.BUS_Spi then
+		return 1
+	elseif self.aArgs.iBus==flasher.BUS_IFlash then
+		return 4
 	end
 end
 
