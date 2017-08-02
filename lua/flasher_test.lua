@@ -6,9 +6,6 @@ module("flasher_test", package.seeall)
 -- Description:
 --   flasher_test.lua: flasher test routines
 --
---  Changes:
---    Date        Author        Description
---  29 feb 12     SL            created
 ---------------------------------------------------------------------------
 ---------------------------------------------------------------------------
 -- SVN Keywords
@@ -204,9 +201,10 @@ end
 
 -- insert a random segment in unused space.
 -- segments must be ordered by offset and non-overlapping
--- fEven = true: generate even offset and size
+-- iWordSize: round addresses to 1/2/4 bytes 
 -- returns true if a segment was inserted, false otherwise
-function insert_random_segment(atSegments, ulDeviceSize, fEven)
+
+function insert_random_segment(atSegments, ulDeviceSize, iWordSize)
 	-- get a random position
 	-- the new segment is inserted between atSegments[iPos] and atSegments[iPos+1]
 	local iPos = math.random(0, #atSegments)
@@ -233,13 +231,9 @@ function insert_random_segment(atSegments, ulDeviceSize, fEven)
 		local offset1 = math.random(offset, offset+size-1)  -- start addr
 		local offset2 = math.random(offset1, offset+size-1) -- end addr (incl)
 		
-		if fEven then
-			-- start addr must be even
-			-- end addr incl must be odd!
-			offset1 = offset1 - (offset1 % 2)
-			offset2 = offset2 - (offset2 % 2) + 1
-		end
-	
+		offset1 = offset1 - (offset1 % iWordSize)
+		offset2 = offset2 - (offset2 % iWordSize) + (iWordSize-1)
+		
 		local size1 = offset2 - offset1 + 1
 		printf("0x%08x+0x%08x --> 0x%08x+0x%08x", offset, size, offset1, size1)
 		local tSegment = {offset = offset1, size = size1}
@@ -304,8 +298,8 @@ function testFlasher(tFlasherInterface, fnLogPrintf)
 		{offset = 0xd0004, size = 0x10004},
 		
 		{offset = 0x20000, size = 2},
-		{offset = 0x21004, size = 2},
-		{offset = 0x22008, size = 2},
+		{offset = 0x21004, size = 4},
+		{offset = 0x22008, size = 6},
 		
 		{offset = 0x23000, size = 2},
 		{offset = 0x23210, size = 2},
@@ -313,11 +307,33 @@ function testFlasher(tFlasherInterface, fnLogPrintf)
 		{offset = ulDeviceSize - 12346, size = 12346},
 	}
 	
+	-- for 32 bit parflash:
+	-- offset/size must be multiples of bus width
+	local atSegments_4={
+		{offset = 0, size = 12348},
+		{offset = 0x10000, size = 0x10000},
+		{offset = 0x30004, size = 0x10000},
+		{offset = 0x50008, size = 0x10000},
+		{offset = 0x6000c, size = 0x10000},
+		
+		{offset = 0x20000, size = 4},
+		{offset = 0x21004, size = 8},
+		{offset = 0x2200c, size = 12},
+		
+		{offset = 0x23000, size = 4},
+		{offset = 0x23210, size = 4},
+		
+		{offset = ulDeviceSize - 12348, size = 12348},
+	}
+    
 	-- select the segments list according to the flash type
-	if tFlasherInterface:getBusWidth()==1 then
+	local iBusWidth = tFlasherInterface:getBusWidth()
+	if iBusWidth==1 then
 		atSegments = atSegments_1
-	else
+	elseif iBusWidth==2 then
 		atSegments = atSegments_2
+	elseif iBusWidth==4 then
+		atSegments = atSegments_4
 	end
 	
 	-- add random segments
@@ -325,11 +341,14 @@ function testFlasher(tFlasherInterface, fnLogPrintf)
 	math.randomseed(os.time())
 	local iSize = #atSegments
 	
-	local fRound = tFlasherInterface:getBusWidth() > 1
+	log_printf("")
+	log_printf("Create random segments:")
 	while #atSegments < iSize + 10 do
-		insert_random_segment(atSegments, ulDeviceSize, fRound)
+		insert_random_segment(atSegments, ulDeviceSize, iBusWidth)
 	end
 	
+	log_printf("")
+	log_printf("Segments:")
 	for iSegment, tSegment in ipairs(atSegments) do
 		local offset = tSegment.offset
 		local size = tSegment.size
@@ -339,6 +358,8 @@ function testFlasher(tFlasherInterface, fnLogPrintf)
 	-- reorder
 	atSegments = reorder_randomly(atSegments)
 	
+	log_printf("")
+	log_printf("Randomly reordered segments:")
 	for iSegment, tSegment in ipairs(atSegments) do
 		local offset = tSegment.offset
 		local size = tSegment.size
@@ -353,12 +374,15 @@ function testFlasher(tFlasherInterface, fnLogPrintf)
 	
 	
 	-- erase
-	log_printf("Erasing flash")
+	log_printf("")
+	log_printf("Erase whole flash")
 	fOk, strMsg = tFlasherInterface:eraseChip()
 	log_printf("Result: %s %s", tostring(fOk), tostring(strMsg))
 	assert(fOk, strMsg)
 	
 	-- flash the segments
+	log_printf("")
+	log_printf("Flash the segments")
 	for iSegment, tSegment in ipairs(atSegments) do
 		log_printf("Flashing Segment %d  offset:0x%08x  size: %d", iSegment, tSegment.offset, tSegment.size)
 		fOk, strMsg = tFlasherInterface:flash(tSegment.offset, tSegment.data)
@@ -368,6 +392,8 @@ function testFlasher(tFlasherInterface, fnLogPrintf)
 	end
 	
 	-- verify the segments
+	log_printf("")
+	log_printf("Verify the segments")
 	for iSegment, tSegment in ipairs(atSegments) do
 		log_printf("Verifying Segment %d  offset:0x%08x  size: %d", iSegment, tSegment.offset, tSegment.size)
 		fOk, strMsg = tFlasherInterface:verify(tSegment.offset, tSegment.data)
@@ -377,6 +403,8 @@ function testFlasher(tFlasherInterface, fnLogPrintf)
 	end
 	
 	-- read back
+	log_printf("")
+	log_printf("Read back the segments")
 	fOk = true
 	for iSegment, tSegment in ipairs(atSegments) do
 		log_printf("Reading Segment %d  offset:0x%08x  size: %d", iSegment, tSegment.offset, tSegment.size)
@@ -393,7 +421,7 @@ function testFlasher(tFlasherInterface, fnLogPrintf)
 		end
 		
 	end
-	assert(fOk, "Errors in read segments")
+	assert(fOk, "Errors while reading segments")
 	
 	
 	
@@ -403,15 +431,18 @@ function testFlasher(tFlasherInterface, fnLogPrintf)
 	-- and that the space in-between is empty (ff)
 
 	-- Read image
-	log_printf("Reading image")
+	log_printf("")
+	log_printf("Read image")
 	strImage, strMsg = tFlasherInterface:readChip()
 	log_printf("Image read")
 	
 	-- Compare the segments and check the space in-between
+	log_printf("")
+	log_printf("Compare the segments")
 	table.sort(atSegments, function(a, b) return a.offset<b.offset end)
 	
 	for iSegment, tSegment in ipairs(atSegments) do
-	log_printf("Comparing Segment %d with image. offset:0x%08x  size: %d", iSegment, tSegment.offset, tSegment.size)
+	log_printf("Compare Segment %d with image. offset:0x%08x  size: %d", iSegment, tSegment.offset, tSegment.size)
 		local iStart = tSegment.offset + 1
 		local iEnd   = tSegment.offset + tSegment.size 
 		local iNextStart
@@ -435,6 +466,8 @@ function testFlasher(tFlasherInterface, fnLogPrintf)
 	
 	
 	-- Erase the segments
+	log_printf("")
+	log_printf("Erase the segments")
 	for iSegment, tSegment in ipairs(atSegments) do
 		log_printf("Erasing Segment %d  offset:0x%08x  size: %d", iSegment, tSegment.offset, tSegment.size)
 		fOk, strMsg = tFlasherInterface:erase(tSegment.offset, tSegment.size)
@@ -444,7 +477,8 @@ function testFlasher(tFlasherInterface, fnLogPrintf)
 	end
 	
 	-- the flash should now be empty
-	log_printf("Checking for emptyness")
+	log_printf("")
+	log_printf("Check emptyness")
 	fOk, strMsg = tFlasherInterface:isChipErased()
 	log_printf("Empty: %s %s", tostring(fOk), tostring(strMsg))
 	assert(fOk)
