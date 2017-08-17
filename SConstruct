@@ -596,6 +596,7 @@ if fBuildIsFull==True:
         'targets/testbench/read_bootimage_intflash0.lua':                  'lua/read_bootimage_intflash0.lua',
         'targets/testbench/read_bootimage_intflash2.lua':                  'lua/read_bootimage_intflash2.lua',
         'targets/testbench/read_complete_flash.lua':                       'lua/read_complete_flash.lua',
+        'targets/testbench/test_netx90_intflash.lua':                      'lua/test_netx90_intflash.lua',
         'targets/testbench/show_erase_areas.lua':                          tDemoShowEraseAreas
     }
 
