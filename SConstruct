@@ -541,11 +541,6 @@ if fBuildIsFull==True:
     #
     # Prepare the build folders for the other artifacts.
     #
-    Command('targets/jonchki/flasher_cli/flasher_cli.lua',            'jonchki/org.muhkuh.tools.flasher_cli/flasher_cli.lua',            Copy("$TARGET", "$SOURCE"))
-    Command('targets/jonchki/flasher_cli/jonchkicfg.xml',             'jonchki/jonchkicfg.xml',                                          Copy("$TARGET", "$SOURCE"))
-    Command('targets/jonchki/flasher_cli/jonchkisys_windows_32.cfg',  'jonchki/org.muhkuh.tools.flasher_cli/jonchkisys_windows_32.cfg',  Copy("$TARGET", "$SOURCE"))
-    Command('targets/jonchki/flasher_cli/jonchkisys_windows_64.cfg',  'jonchki/org.muhkuh.tools.flasher_cli/jonchkisys_windows_64.cfg',  Copy("$TARGET", "$SOURCE"))
-
     atEnv.DEFAULT.Version('targets/jonchki/flasher_cli/flasher_cli.xml', 'jonchki/org.muhkuh.tools.flasher_cli/flasher_cli.xml')
 
 
@@ -601,4 +596,4 @@ if fBuildIsFull==True:
     }
 
     for tDst, tSrc in atCopyFiles.iteritems():
-        Command(tDst, tSrc, Copy("$TARGET", "$SOURCE"))
+        InstallAs(tDst, tSrc)
