@@ -17,10 +17,6 @@ local tArchive = archive.ArchiveWrite()
 
 -- Create a read disk object.
 local tReader = archive.ArchiveReadDisk()
-local tResult = tReader:open(strArchiveRoot)
-if tResult~=0 then
-  error(string.format('Failed to open the local folder "%s" for reading.', strArchiveRoot))
-end
 
 local strExtension
 if strDistId=='windows' then
@@ -61,8 +57,10 @@ local strInstallFolder = t:replace_template('${install_base}')
 local strArchivePrefix = strArtifact
 
 local strArchiveRoot = t.pl.path.abspath(strInstallFolder)
-
-print(strArchive, strArtifact, strInstallFolder, strArchivePrefix)
+local tResult = tReader:open(strArchiveRoot)
+if tResult~=0 then
+  error(string.format('Failed to open the local folder "%s" for reading.', strArchiveRoot))
+end
 
 -- Remove the old archive if it exists.
 if t.pl.path.exists(strArchive)==strArchive then
