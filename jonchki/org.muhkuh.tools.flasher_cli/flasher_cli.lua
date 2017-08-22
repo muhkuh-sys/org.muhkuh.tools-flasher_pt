@@ -5,27 +5,15 @@ local strDistId, strDistVersion, strCpuArch = t:get_platform()
 t:install('${depack_path_org.muhkuh.tools.flasher.lua5.1-flasher}/demo',  '${install_base}/')
 
 -- Create a ZIP archive for Windows and a TAR.GZ for Linux.
-local strExtension
 if strDistId=='windows' then
-  strExtension = 'zip'
 elseif strDistId=='ubuntu' then
-  strExtension = 'tar.gz'
-end
-
-local strArtifact = string.format('flasher_cli_%s%s_%s', strDistId, strDistVersion, strCpuArch)
-local strInstallFolder = t:replace_template('${install_base}')
-local strArchive = t:replace_template(string.format('${install_base}/../%s.%s', strArtifact, strExtension))
-
-print('************', strArtifact, strArchiveFolder, strArchive)
--- Remove the old archive if it exists.
-if t.pl.path.exists(strArchive)==strArchive then
-  t.pl.file.delete(strArchive)
 end
 
 -- Loop over all files in the install folder.
 local archive = require 'archive'
 
-local strArchiveRoot = t.pl.path.abspath(strInstallFolder)
+-- Create a new archive.
+local tArchive = archive.ArchiveWrite()
 
 -- Create a read disk object.
 local tReader = archive.ArchiveReadDisk()
@@ -34,23 +22,53 @@ if tResult~=0 then
   error(string.format('Failed to open the local folder "%s" for reading.', strArchiveRoot))
 end
 
--- Create a new archive.
-local tArchive = archive.ArchiveWrite()
+local strExtension
 if strDistId=='windows' then
+  strExtension = 'zip'
+
   tResult = tArchive:set_format_zip()
   if tResult~=0 then
     error('Failed to set the archive format to ZIP.')
   end
 elseif strDistId=='ubuntu' then
+  strExtension = 'tar.gz'
+
   tResult = tArchive:set_format_gnutar()
   if tResult~=0 then
     error('Failed to set the archive format to GNU TAR.')
   end
-  tResult = tArchive:add_filter_xz()
+  tResult = tArchive:add_filter_gzip()
   if tResult~=0 then
-    error('Failed to add XZ filter.')
+    error('Failed to add GZIP filter.')
   end
+else
+  error('Unknown distribution ID:' .. tostring(strDistId))
 end
+
+-- Translate the CPU architecture to the bits.
+local strCpuBits
+if strCpuArch=='x86' then
+  strCpuBits = '32'
+elseif strCpuArch=='x86_64' then
+  strCpuBits = '64'
+else
+  error('Unknown CPU architecture:' .. tostring(strCpuArch))
+end
+
+local strArtifact = string.format('flasher_cli_%s%s_%sbit', strDistId, strDistVersion, strCpuBits)
+local strArchive = t:replace_template(string.format('${install_base}/../%s.%s', strArtifact, strExtension))
+local strInstallFolder = t:replace_template('${install_base}')
+local strArchivePrefix = strArtifact
+
+local strArchiveRoot = t.pl.path.abspath(strInstallFolder)
+
+print(strArchive, strArtifact, strInstallFolder, strArchivePrefix)
+
+-- Remove the old archive if it exists.
+if t.pl.path.exists(strArchive)==strArchive then
+  t.pl.file.delete(strArchive)
+end
+
 tResult = tArchive:open_filename(strArchive)
 if tResult~=0 then
   error(string.format('Failed to open archive "%s" for writing.', strArchive))
@@ -59,7 +77,7 @@ end
 for tEntry in tReader:iter_header() do
   -- Cut off the archive root.
   local strAbsEntry = tEntry:pathname()
-  local strRelEntry = t.pl.path.relpath(strAbsEntry, strArchiveRoot)
+  local strRelEntry = t.pl.path.join(strArchivePrefix, t.pl.path.relpath(strAbsEntry, strArchiveRoot))
   if strRelEntry~='' then
     tEntry:set_pathname(strRelEntry)
     tResult = tArchive:write_header(tEntry)
