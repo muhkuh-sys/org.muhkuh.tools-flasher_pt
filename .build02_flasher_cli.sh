@@ -6,8 +6,11 @@ VERBOSITY=debug
 # Get the project folder.
 PRJ_DIR=`pwd`
 
+# Install jonchki v0.0.1.1 .
+python2.7 jonchki/jonchkihere.py --jonchki-version 0.0.1.1 ${PRJ_DIR}/targets
+
 # This is the path to the jonchki tool.
-JONCHKI=/tmp/jonchki-1.0.0.1/jonchki
+JONCHKI=${PRJ_DIR}/targets/jonchki-0.0.1.1/jonchki
 
 # This is the base path to the jonchki working folders.
 WORK_BASE=${PRJ_DIR}/targets/jonchki/flasher_cli
