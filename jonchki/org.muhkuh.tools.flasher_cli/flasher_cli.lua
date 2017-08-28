@@ -47,22 +47,12 @@ else
     atFilter = { Archive.archive.ARCHIVE_FILTER_GZIP }
   end
 
-  -- Translate the CPU architecture to bits.
-  local atCpuArchToBits = {
-    ['x86'] = 32,
-    ['x86_64'] = 64
-  }
-  local uiPlatformBits = atCpuArchToBits[strCpuArch]
-  if uiPlatformBits==nil then
-    cLogger:error('Failed to translate the CPU architecture "%s" to bits.', strCpuArch)
-  else
-    local strArtifactVersion = t:replace_template('${root_artifact_artifact}-${root_artifact_version}')
-    local strArchive = t:replace_template(string.format('${install_base}/../%s-%s%s_%dbit.%s', strArtifactVersion, strDistId, strDistVersion, uiPlatformBits, strArchiveExtension))
-    local strDiskPath = t:replace_template('${install_base}')
-    local strArchiveMemberPrefix = strArtifactVersion
+  local strArtifactVersion = t:replace_template('${root_artifact_artifact}-${root_artifact_version}')
+  local strArchive = t:replace_template(string.format('${install_base}/../%s-%s%s_%s.%s', strArtifactVersion, strDistId, strDistVersion, strCpuArch, strArchiveExtension))
+  local strDiskPath = t:replace_template('${install_base}')
+  local strArchiveMemberPrefix = strArtifactVersion
 
-    tResult = Archive:pack_archive(strArchive, tFormat, atFilter, strDiskPath, strArchiveMemberPrefix)
-  end
+  tResult = Archive:pack_archive(strArchive, tFormat, atFilter, strDiskPath, strArchiveMemberPrefix)
 end
 
 return tResult
