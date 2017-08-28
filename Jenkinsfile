@@ -26,7 +26,7 @@ pipeline {
         }
         stage('Save Artifacts') {
             steps {
-                archive 'targets/*.xml,targets/*.zip,targets/*.hash,targets/*.pom'
+                archive 'targets/*.xml,targets/*.zip,targets/*.hash,targets/*.pom,targets/*.tar.gz,targets/*.zip'
             }
         }
         stage('Clean after build') {

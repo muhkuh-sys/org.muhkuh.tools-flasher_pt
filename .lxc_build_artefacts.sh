@@ -37,15 +37,20 @@ lxc exec ${CONTAINER} -- bash -c 'apt-get install --assume-yes lua5.1 lua-filesy
 lxc exec ${CONTAINER} -- bash -c 'cd /tmp/work && bash .build01_flasher.sh'
 lxc exec ${CONTAINER} -- bash -c 'cd /tmp/work && bash .build02_flasher_cli.sh'
 
-# Get all artifacts.
+# Get the flasher artifact.
 FILELIST=`lxc exec ${CONTAINER} -- bash -c 'find "/tmp/work" -path "/tmp/work/targets/jonchki/repository/org/muhkuh/tools/flasher/*" -type f'`
 echo ${FILELIST}
 for strAbsolutePath in ${FILELIST}; do
 	echo "Pull ${strAbsolutePath}"
 	lxc file pull ${CONTAINER}${strAbsolutePath} targets/
 done
-lxc file pull ${CONTAINER}/tmp/work/targets/jonchki/flasher_cli/flasher_cli_windows_32bit.zip targets/
-lxc file pull ${CONTAINER}/tmp/work/targets/jonchki/flasher_cli/flasher_cli_windows_64bit.zip targets/
+# Get all flasher_cli artifacts.
+FILELIST=`lxc exec ${CONTAINER} -- bash -c 'find "/tmp/work" -maxdepth 4 -path "/tmp/work/targets/jonchki/flasher_cli/*" -name "*.tar.gz" -or -name "*.zip"'`
+echo ${FILELIST}
+for strAbsolutePath in ${FILELIST}; do
+	echo "Pull ${strAbsolutePath}"
+	lxc file pull ${CONTAINER}${strAbsolutePath} targets/
+done
 
 # Stop and remove the container.
 lxc stop ${CONTAINER}
