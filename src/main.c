@@ -969,7 +969,7 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 		/* say hi if mode is Detect or GetBoardInfo*/
 			uprintf(
 			"\f\n\n\n\nFlasher v" FLASHER_VERSION_ALL " " FLASHER_VERSION_VCS "\n\n"
-			"Copyright (C) 2005-2013 C.Thelen (cthelen@hilscher.com)\n"
+			"Copyright (C) 2005-2017 C.Thelen (cthelen@hilscher.com)\n"
 			"and M.Trensch.\n"
 			"There is NO warranty.  You may redistribute this software\n"
 			"under the terms of the GNU Library General Public License.\n"
