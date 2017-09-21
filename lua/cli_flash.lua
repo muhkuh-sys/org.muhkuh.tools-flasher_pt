@@ -41,6 +41,7 @@ detect      [p] dev                      Check if flash is recognized
 test        [p] dev                      Test flasher      
 testcli     [p] dev                      Test cli flasher  
 list_interfaces                          List all usable interfaces
+detect_netx [p]                          Detect the netx chip type
 -h                                       Show this help    
         
 p:    -p plugin_name
@@ -181,6 +182,31 @@ end
 
 
 
+function detect_chiptype(aArgs)
+	local strPluginName  = aArgs.strPluginName
+	local fOk = false
+	local tPlugin, strMsg = getPlugin(strPluginName)
+	if tPlugin then
+		tPlugin:Connect()
+		
+		local iChiptype = tPlugin:GetChiptyp()
+		if iChiptype then
+			local strChipName = tPlugin:GetChiptypName(iChiptype)
+			print("")
+			printf("Chip type: (%d) %s", iChiptype, strChipName)
+			print("")
+			fOk = true
+		else
+			strMsg = "Failed to get chip type"
+		end -- if iChiptype
+	else
+		strMsg = strMsg or "Could not connect to device"
+	end -- if tPlugin
+	
+	return fOk, strMsg
+end
+
+
 --------------------------------------------------------------------------
 -- handle command line arguments
 --------------------------------------------------------------------------
@@ -195,6 +221,7 @@ MODE_VERIFY_HASH = 7
 MODE_INFO = 8
 MODE_HELP = 10
 MODE_LIST_INTERFACES = 15
+MODE_DETECT_CHIPTYPE = 16
 
 -- test modes
 MODE_TEST = 11
@@ -217,6 +244,7 @@ arg2Mode = {
 	testcli     	= MODE_TEST_CLI,
 	info        	= MODE_INFO,
 	list_interfaces = MODE_LIST_INTERFACES,
+	detect_netx     = MODE_DETECT_CHIPTYPE,
 	["-h"]      	= MODE_HELP
 }
 
@@ -243,7 +271,8 @@ requiredargs = {
 [MODE_TEST]         = {"b", "u", "cs"},
 [MODE_TEST_CLI]     = {"b", "u", "cs"},
 [MODE_HELP]         = {},
-[MODE_LIST_INTERFACES] = {}
+[MODE_LIST_INTERFACES] = {},
+[MODE_DETECT_CHIPTYPE] = {}
 }
 
 function checkArgs(aArgs)
@@ -754,6 +783,18 @@ elseif aArgs.iMode == MODE_LIST_INTERFACES then
 	list_interfaces()
 	os.exit(0)
 
+elseif aArgs.iMode == MODE_DETECT_CHIPTYPE then
+	fOk, strMsg = detect_chiptype(aArgs)
+	if fOk then
+		if strMsg then 
+			print(strMsg)
+		end
+		os.exit(0)
+	else
+		printf("Error: %s", strMsg or "unknown error")
+		os.exit(1)
+	end
+	
 elseif aArgs.iMode == MODE_TEST_CLI then
 	flasher_interface:configure(aArgs.strPluginName, aArgs.iBus, aArgs.iUnit, aArgs.iChipSelect)
 	fOk, strMsg = flasher_test.testFlasher(flasher_interface)
