@@ -954,7 +954,7 @@ function simple_flasher_string(tPlugin, strData, tBus, ulUnit, ulChipSelect, str
 	
 	fOk, strMsg = flashArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMessage, fnCallbackProgress)
 	print(strMsg)
-	assert(fOk, strMsg or "Error while erasing area")
+	assert(fOk, strMsg or "Error while programming area")
 	
 	print("*** Flashing ok ***")
 end
