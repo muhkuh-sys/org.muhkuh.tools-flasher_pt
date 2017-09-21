@@ -1,16 +1,9 @@
 -----------------------------------------------------------------------------
--- Copyright (C) 2012 Hilscher Gesellschaft für Systemautomation mbH
+-- Copyright (C) 2017 Hilscher Gesellschaft für Systemautomation mbH
 --
 -- Description:
 --   cli_flash.lua: command line flasher tool
 --
---  Changes:
---    Date      Author   Description
---  21 oct 14   SL       adapted FLASHER_PATH to Ivy install
---                       execute muhkuh_cli_init
---  14 mar 12   SL       argument handling, usage text
---                       removed dependency from tester
---  01 mar 12   SL       adapted to use the extended routines in flasher.lua
 -----------------------------------------------------------------------------
 -----------------------------------------------------------------------------
 -- SVN Keywords
@@ -20,7 +13,6 @@ SVN_AUTHOR ="$Author$"
 -----------------------------------------------------------------------------
 
 FLASHER_PATH = "netx/"
-_G.__MUHKUH_WORKING_FOLDER = ""
 
 require("muhkuh_cli_init")
 
@@ -28,12 +20,6 @@ require("muhkuh_cli_init")
 require("mhash")
 require("flasher")
 require("flasher_test")
-
--- plugin-related
-require("select_plugin_cli")
-require("romloader_eth")
-require("romloader_usb")
-require("romloader_uart")
 
 
 --------------------------------------------------------------------------
@@ -194,26 +180,6 @@ function list_interfaces()
 end
 
 
---[[
-function getPlugin(strPluginName)
-	local tPlugin, strError
-	if strPluginName then
-		-- get the plugin by name
-		tPlugin = select_plugin.GetPluginByName(strPluginName)
-		if tPlugin == nil then
-			strError = "Plugin not found or failed to create instance"
-		end
-	else
-		-- Ask the user to pick a plugin.
-		tPlugin = select_plugin.SelectPlugin()
-		if tPlugin == nil then
-			strError = "No plugin selected"
-		end
-	end
-	
-	return tPlugin, strError
-end
---]]
 
 --------------------------------------------------------------------------
 -- handle command line arguments
