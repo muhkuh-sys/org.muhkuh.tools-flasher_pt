@@ -878,6 +878,7 @@ function readArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMess
 		ulSize = getFlashSize(tPlugin, aAttr, fnCallbackMessage, fnCallbackProgress)
 		if ulSize then
 			print(string.format("Flash size: 0x%08x bytes", ulSize))
+			ulSize = ulSize - ulDeviceOffset
 		else
 			return nil, "Could not determine the flash size!"
 		end
@@ -912,6 +913,48 @@ function readArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMess
 end
 
 
+
+
+--------------------------------------------------------------------------
+-- Calculate the SHA1 hash of an area of an area in the flash.
+-- size = 0xffffffff to read from ulDeviceOffset to end of device
+--
+-- Returns the hash as a binary string or nil and an error message.
+-- 
+-- Ok:
+-- "Checksum calculated."
+--
+-- Error messages:
+-- Could not determine the flash size!
+-- "Error while calculating SHA1 hash"
+--
+--------------------------------------------------------------------------
+
+function hashArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMessage, fnCallbackProgress)
+	local fOk
+	local strFlashHashBin
+	local ulDeviceEndOffset
+	
+	if ulDataByteSize == 0xffffffff then 
+		local ulDeviceSize = getFlashSize(tPlugin, aAttr, fnCallbackMessage, fnCallbackProgress)
+		if ulDeviceSize then
+			print(string.format("Flash size: 0x%08x bytes", ulDeviceSize))
+			ulDeviceEndOffset = ulDeviceSize
+		else
+			return nil, "Could not determine the flash size!"
+		end
+	else
+		ulDeviceEndOffset = ulDeviceOffset + ulDataByteSize
+	end
+	
+	fOk, strFlashHashBin = hash(tPlugin, aAttr, ulDeviceOffset, ulDeviceEndOffset, fnCallbackMessage, fnCallbackProgress)
+
+	if fOk == nil then
+		return nil, "Error while calculating SHA1 hash."
+	else
+		return strFlashHashBin, "Checksum calculated."
+	end
+end
 
 
 --------------------------------------------------------------------------

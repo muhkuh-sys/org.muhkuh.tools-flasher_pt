@@ -573,14 +573,14 @@ function exec(aArgs)
 		
 		-- hash, verify_hash: compute the SHA1 of the data in the flash
 		if fOk and (iMode == MODE_HASH or iMode == MODE_VERIFY_HASH) then
-			fOk, strFlashHashBin = flasher.hash(tPlugin, aAttr, ulStartOffset, ulStartOffset + ulLen)
-			if not fOk then
-				fOk = false
-				strMsg = "Could not compute the checksum over the flash!"
-				
-			else
+			strFlashHashBin, strMsg = flasher. hashArea(tPlugin, aAttr, ulStartOffset, ulLen)
+			if strFlashHashBin then
+				fOk = true
 				strFlashHash = getHexString(strFlashHashBin)
 				print("Flash SHA1: " .. strFlashHash)
+			else
+				fOk = false
+				strMsg = strMsg or "Could not compute the hash sum of the flash contents"
 			end
 		end
 		
