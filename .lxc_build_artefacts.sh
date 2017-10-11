@@ -27,12 +27,6 @@ lxc exec ${CONTAINER} -- bash -c 'rm -rf /tmp/platform/targets'
 lxc exec ${CONTAINER} -- bash -c 'mkdir -p /tmp/platform/targets'
 lxc exec ${CONTAINER} -- bash -c 'mount --bind /tmp/platform/targets /tmp/work/platform/targets'
 
-# Update the package list to prevent "not found" messages.
-lxc exec ${CONTAINER} -- bash -c 'apt-get update --assume-yes'
-
-# Install the project specific packages.
-lxc exec ${CONTAINER} -- bash -c 'apt-get install --assume-yes lua5.1 lua-filesystem lua-expat lua51-mhash lua-sql-sqlite3 p7zip-full'
-
 # Build the artefacts.
 lxc exec ${CONTAINER} -- bash -c 'cd /tmp/work && bash .build01_flasher.sh'
 lxc exec ${CONTAINER} -- bash -c 'cd /tmp/work && bash .build02_flasher_cli.sh'
