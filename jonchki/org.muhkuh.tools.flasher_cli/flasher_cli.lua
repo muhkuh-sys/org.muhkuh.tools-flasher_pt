@@ -20,7 +20,7 @@ end
 -- Install the wrapper.
 if strDistId=='ubuntu' then
   -- This is a shell script setting the library search path for the LUA shared object.
-  t:install('../wrapper/linux/lua5.1.sh', '${install_base}/')
+  t:install('../../wrapper/linux/lua5.1.sh', '${install_base}/')
 end
 
 
