@@ -17,6 +17,12 @@ for strSrc, strDst in pairs(atInstall) do
   t:install(strSrc, strDst)
 end
 
+-- Install the wrapper.
+if strDistId=='ubuntu' then
+  -- This is a shell script setting the library search path for the LUA shared object.
+  t:install('../wrapper/linux/lua5.1.sh', '${install_base}/')
+end
+
 
 -- Create the package file.
 local strPackageText = t:replace_template([[PACKAGE_NAME=${root_artifact_artifact}
