@@ -51,6 +51,8 @@ local aucMagic = {
 	[romloader.ROMLOADER_CHIPTYP_NETX56]           = string.char(0xaf, 0xbe, 0xf8),
 	[romloader.ROMLOADER_CHIPTYP_NETX56B]          = string.char(0xaf, 0xbe, 0xf8),
 	[romloader.ROMLOADER_CHIPTYP_NETX4000_RELAXED] = string.char(0xaf, 0xbe, 0xf3),
+	[romloader.ROMLOADER_CHIPTYP_NETX4000_FULL]    = string.char(0xaf, 0xbe, 0xf3),
+	[romloader.ROMLOADER_CHIPTYP_NETX4100_SMALL]   = string.char(0xaf, 0xbe, 0xf3),
 	[romloader.ROMLOADER_CHIPTYP_NETX90_MPW]       = string.char(0xaf, 0xbe, 0xf3),
 }
 local iChiptype = tPlugin:GetChiptyp()
