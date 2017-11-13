@@ -348,8 +348,8 @@
 		<Write writeEnableCommand="0x06" pageProgramCommand="0x02" bufferFillCommand="0x00" bufferWriteCommand="0x00" eraseAndPageProgramCommand="0x00" />
 		<Erase erasePageCommand="0x00" eraseSectorCommand="0x20" eraseChipCommand="" />
 		<Status readStatusCommand="0x05" statusReadyMask="0x01" statusReadyValue="0x00" />
-		<Init0 command="" />
-		<Init1 command="" />
+		<Init0 command="0x06" />
+		<Init1 command="0x98" />
 		<Id send="0x9f, 0x00, 0x00, 0x00"
 		    mask="0x00, 0xff, 0xff, 0xff"
 		    magic="0x00, 0xbf, 0x26, 0x43" />
