@@ -157,6 +157,9 @@ local chiptyp2name = {
 	[romloader.ROMLOADER_CHIPTYP_NETX56]           = "netx56",
 	[romloader.ROMLOADER_CHIPTYP_NETX56B]          = "netx56",
 	[romloader.ROMLOADER_CHIPTYP_NETX4000_RELAXED] = "netx4000_relaxed",
+	-- For the moment, we use the flasher for the netx 4000 relaxed for all netX 4000 variants.
+	[romloader.ROMLOADER_CHIPTYP_NETX4000_FULL]    = "netx4000_relaxed",
+	[romloader.ROMLOADER_CHIPTYP_NETX4100_SMALL]   = "netx4000_relaxed",
 	[romloader.ROMLOADER_CHIPTYP_NETX90_MPW]       = "netx90_mpw",
 }
 
