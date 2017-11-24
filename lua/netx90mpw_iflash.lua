@@ -24,6 +24,9 @@ Usage: lua netx90mpw_iflash.lua mode parameters
 Mode                     Parameters
 disable_redundancy_pages [p]        Disable redundancy pages
 copy_page_0              [p]        Copy page 0 to redundancy pages
+copy_iflash_0_page_0     [p]        Copy page 0 to redundancy pages in intflash 0 only
+copy_iflash_1_page_0     [p]        Copy page 0 to redundancy pages in intflash 1 only
+copy_iflash_2_page_0     [p]        Copy page 0 to redundancy pages in intflash 2 only
 menu                     [p]        Interactive mode
 -h                                  Show this help    
         
@@ -106,10 +109,16 @@ MODE_HELP = 0
 MODE_DISABLE = 1
 MODE_COPY = 2
 MODE_MENU = 3
+MODE_COPY_IFLASH0 = 4
+MODE_COPY_IFLASH1 = 5
+MODE_COPY_IFLASH2 = 6
 
 arg2Mode = {
 	disable_redundancy_pages  = MODE_DISABLE,
 	copy_page_0               = MODE_COPY,
+	copy_iflash_0_page_0      = MODE_COPY_IFLASH0,
+	copy_iflash_1_page_0      = MODE_COPY_IFLASH1,
+	copy_iflash_2_page_0      = MODE_COPY_IFLASH2,
 	menu                      = MODE_MENU,
 	["-h"]                    = MODE_HELP
 }
@@ -224,8 +233,10 @@ function disable_redundancy_pages(tPlugin)
 	return true
 end
 
-function copy_page_0(tPlugin)
+function copy_page_0_all(tPlugin)
 	local fOk, strMsg 
+	
+	disable_output(tPlugin)
 	
 	local aAttr = flasher.download(tPlugin, FLASHER_PATH)
 	if aAttr == nil then
@@ -240,6 +251,29 @@ function copy_page_0(tPlugin)
 	end
 	
 	return fOk, strMsg
+end
+
+
+function copy_page_0_unit(tPlugin, uiUnit)
+	local fOk, strMsg 
+	
+	disable_output(tPlugin)
+	
+	local aAttr = flasher.download(tPlugin, FLASHER_PATH)
+	if aAttr == nil then
+		fOk, strMsg = false, "failed to download the flasher"
+	else
+		fOk, strMsg = copy_page0_to_redundancy(tPlugin, aAttr, uiUnit)
+	end
+	
+	return fOk, strMsg
+end
+
+function disable_output(tPlugin)
+	tPlugin:write_data32(0x2009fff0, 0)
+	tPlugin:write_data32(0x2009fff4, 0)
+	tPlugin:write_data32(0x2009fff8, 0)
+	tPlugin:write_data32(0x2009fffc, 0)
 end
 
 function copy_page0_to_redundancy(tPlugin, aAttr, uiUnit)
@@ -471,7 +505,7 @@ end
 --------------------------------------------------------------------------
 -- main
 --------------------------------------------------------------------------
-
+print(os.date())
 io.output():setvbuf("no")
 
 fOk, strMsg, aArgs = parseArgs()
@@ -495,7 +529,13 @@ elseif aArgs.iMode then
 		if aArgs.iMode == MODE_DISABLE then
 			fOk, strMsg = disable_redundancy_pages(tPlugin)
 		elseif aArgs.iMode == MODE_COPY then
-			fOk, strMsg = copy_page_0(tPlugin)		
+			fOk, strMsg = copy_page_0_all(tPlugin)
+		elseif aArgs.iMode == MODE_COPY_IFLASH0 then
+			fOk, strMsg = copy_page_0_unit(tPlugin, 0)
+		elseif aArgs.iMode == MODE_COPY_IFLASH1 then
+			fOk, strMsg = copy_page_0_unit(tPlugin, 1)
+		elseif aArgs.iMode == MODE_COPY_IFLASH2 then
+			fOk, strMsg = copy_page_0_unit(tPlugin, 2)
 		elseif aArgs.iMode == MODE_MENU then
 			fOk, strMsg = menu(tPlugin)
 		else
@@ -507,6 +547,7 @@ elseif aArgs.iMode then
 		fOk = false
 	end
 	
+	print(os.date())
 	if fOk then
 		if strMsg then 
 			print(strMsg)
