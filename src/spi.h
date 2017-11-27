@@ -40,7 +40,9 @@
 #define MSK_SQI_CFG_IDLE_IO3_OUT        0x20
 #define SRT_SQI_CFG_IDLE_IO3_OUT        5
 
-
+/**
+ * SPI mode.
+ */
 typedef enum FLASHER_SPI_MODE_ENUM
 {
 	FLASHER_SPI_MODE0 = 0,
@@ -49,16 +51,18 @@ typedef enum FLASHER_SPI_MODE_ENUM
 	FLASHER_SPI_MODE3 = 3
 } FLASHER_SPI_MODE_T;
 
-
+/**
+ * Initial configuration of the SPI interface, used as input for spi_detect.
+ */
 typedef struct FLASHER_SPI_CONFIGURATION_STRUCT
 {
-	unsigned int uiUnit;
-	unsigned int uiChipSelect;
-	unsigned long ulInitialSpeedKhz;
-	unsigned long ulMaximumSpeedKhz;
-	unsigned int uiIdleCfg;
-	unsigned int uiMode;
-	unsigned char aucMmio[4];
+	unsigned int uiUnit;              /**< @brief SPI unit number. */
+	unsigned int uiChipSelect;        /**< @brief The chip select of the SPI unit. */
+	unsigned long ulInitialSpeedKhz;  /**< @brief The initial speed during identification. */
+	unsigned long ulMaximumSpeedKhz;  /**< @brief The maximum speed possible on the selected SPI interface. */
+	unsigned int uiIdleCfg;           /**< @brief Idle config. */
+	unsigned int uiMode;              /**< @brief SPI mode (0-3). */
+	unsigned char aucMmio[4];         /**< @brief MMIO config. All 0 for SPI channel 0. */
 } FLASHER_SPI_CONFIGURATION_T;
 
 
@@ -76,15 +80,17 @@ typedef unsigned char (*PFN_FLASHER_EXCHANGE_BYTE_T)(const struct FLASHER_SPI_CF
 typedef unsigned long (*PFN_FLASHER_GET_DEVICE_SPEED_REPRESENTATION_T)(const struct FLASHER_SPI_CFG_STRUCT *psCfg, unsigned int uiSpeed);
 typedef void (*PFN_FLASHER_DEACTIVATE_T)(const struct FLASHER_SPI_CFG_STRUCT *psCfg);
 
-
+/**
+ * Configuration of the SPI interface. It is filled during spi_detect.
+ */
 typedef struct FLASHER_SPI_CFG_STRUCT
 {
-	void *pvUnit;                     /* Pointer to the SQI or SPI register block. */
-	unsigned long ulSpeed;            /* Device speed in kHz */
-	unsigned long ulMaximumSpeedKhz;  /* The maximum allowed speed on the interface. */
-	unsigned int uiIdleCfg;           /* the idle configuration */
-	FLASHER_SPI_MODE_T tMode;         /* bus mode */
-	unsigned int uiChipSelect;        /* chip select */
+	void *pvUnit;                     /**< @brief Pointer to the SQI or SPI register block. */
+	unsigned long ulSpeed;            /**< @brief Device speed in kHz. */
+	unsigned long ulMaximumSpeedKhz;  /**< @brief The maximum allowed speed on the interface. */
+	unsigned int uiIdleCfg;           /**< @brief the idle configuration. */
+	FLASHER_SPI_MODE_T tMode;         /**< @brief bus mode. */
+	unsigned int uiChipSelect;        /**< @brief chip select. */
 
 	PFN_FLASHER_SPI_SLAVE_SELECT_T pfnSelect;
 	PFN_FLASHER_SEND_IDLE_T pfnSendIdle;
@@ -96,9 +102,9 @@ typedef struct FLASHER_SPI_CFG_STRUCT
 	PFN_FLASHER_GET_DEVICE_SPEED_REPRESENTATION_T pfnGetDeviceSpeedRepresentation;
 	PFN_FLASHER_DEACTIVATE_T pfnDeactivate;
 
-	unsigned char ucIdleChar;       /* the idle character */
-	unsigned long ulTrcBase;        /* the base bits of the transfer control register */
-	unsigned char aucMmio[4];       /* MMIO pins */
+	unsigned char ucIdleChar;       /**< @brief the idle character. */
+	unsigned long ulTrcBase;        /**< @brief the base bits of the transfer control register. */
+	unsigned char aucMmio[4];       /**< @brief MMIO pins. */
 } FLASHER_SPI_CFG_T;
 
 

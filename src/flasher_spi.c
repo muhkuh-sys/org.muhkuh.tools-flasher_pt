@@ -18,6 +18,17 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+ /**
+  * @file
+  * This file contains the functions to read and write SPI flashes.
+  *
+  * A general note on the end address/offset:
+  * The end address/offset is the address/offset of the last byte + 1,
+  * or the start address/offset plus the number of bytes to read/write/erase.
+  * For example, to read 4KB from offset 0x1000 to 0x1fff,
+  * you have to pass ulStartAddr=0x1000 and ulEndAddr=0x2000.
+  */
+ 
 #include <string.h>
 
 #include "flasher_spi.h"
@@ -25,6 +36,8 @@
 
 #include "progress_bar.h"
 #include "uprintf.h"
+/** @file spi.h */
+/** @file spi_flash.h */
 
 /*-----------------------------------*/
 
@@ -484,6 +497,21 @@ static NETX_CONSOLEAPP_RESULT_T spi_erase_with_progress(const FLASHER_SPI_FLASH_
 }
 
 /*-----------------------------------*/
+/**
+ * @brief Write data from RAM into the flash device.
+ *
+ * Writes the data in RAM at pucDataStartAdr to the flash starting
+ * from offset ulFlashStartAdr. 
+ *
+ * @param ptFlashDescription  [in]  Device information returned by spi_detect.
+ * @param ulFlashStartAdr     [in]  Start offset in the flash memory.
+ * @param ulDataByteSize      [in]  Size of the data to be written in bytes.
+ * @param pucDataStartAdr     [in]  Address of the data to be written in RAM.
+ *
+ * @return
+ * - NETX_CONSOLEAPP_RESULT_OK: the data has been written to the flash and verified. 
+ * - NETX_CONSOLEAPP_RESULT_ERROR: An error has occurred.
+ */
 
 NETX_CONSOLEAPP_RESULT_T spi_flash(const FLASHER_SPI_FLASH_T *ptFlashDescription, unsigned long ulFlashStartAdr, unsigned long ulDataByteSize, const unsigned char *pucDataStartAdr)
 {
@@ -509,6 +537,22 @@ NETX_CONSOLEAPP_RESULT_T spi_flash(const FLASHER_SPI_FLASH_T *ptFlashDescription
 
 /*-----------------------------------*/
 
+/**
+ * @brief Erase a range of the memory. 
+ *
+ * Erases the memory from ulStartAdr to ulEndAdr.
+ * ulStartAdr to ulEndAdr must be a complete erase block, or range of erase blocks.
+ * Use spi_getEraseArea to compute this range from an arbitrary start and end offset.
+ * 
+ * @param ptFlashDescription [in]  device information returned by spi_detect.
+ * @param ulStartAdr         [in]  Start offset of the first erase block to be erased.
+ * @param ulEndAdr           [in]  End offset of the last erase block to be erased.
+ *
+ * @return
+ * - NETX_CONSOLEAPP_RESULT_OK: success, the memory has been erased.
+ * - NETX_CONSOLEAPP_RESULT_ERROR: An error has occurred.
+ */
+
 NETX_CONSOLEAPP_RESULT_T spi_erase(const FLASHER_SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
@@ -526,6 +570,20 @@ NETX_CONSOLEAPP_RESULT_T spi_erase(const FLASHER_SPI_FLASH_T *ptFlashDescription
 
 /*-----------------------------------*/
 
+/**
+ * @brief Read data from the flash.
+ *
+ * Reads the memory from offset ulStartAdr to ulEndAdr and stores it in RAM at pucData.
+ * 
+ * @param ptFlashDescription  [in]  Device information returned by spi_detect.
+ * @param ulStartAdr          [in]  Start offset of the data to be read from the flash.
+ * @param ulEndAdr            [in]  End offset of the data to be read (offset of the last byte + 1).
+ * @param pucData             [out] Destination address for the data in RAM.
+ *
+ * @return
+ * - NETX_CONSOLEAPP_RESULT_OK: The data has successfully been read.
+ * - NETX_CONSOLEAPP_RESULT_ERROR: An error occurred.
+ */
 
 NETX_CONSOLEAPP_RESULT_T spi_read(const FLASHER_SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, unsigned char *pucData)
 {
@@ -565,6 +623,22 @@ NETX_CONSOLEAPP_RESULT_T spi_sha1(const FLASHER_SPI_FLASH_T *ptFlashDescription,
 
 /*-----------------------------------*/
 
+/**
+ * @brief Compare data in flash to RAM.
+ *
+ * Reads the data from offset ulFlashStartAdr to ulFlashEndAdr and compares it to the data in RAM
+ * at address pucData.
+ *
+ * @param ptFlashDescription  [in]  Device information returned by spi_detect.
+ * @param ulFlashStartAdr     [in]  Start offset of the data to be verified in the flash.
+ * @param ulFlashEndAdr       [in]  End offset of the data to be verified (offset of the last byte + 1).
+ * @param pucData             [in]  Location of the data to be verified in RAM.
+ * @param ppvReturnMessage    [Out] part of the resturn value.
+ *
+ * @return
+ * - NETX_CONSOLEAPP_RESULT_OK, *ppvReturnMessage == NETX_CONSOLEAPP_RESULT_OK: Verify succeeded, the data was compared and is equal.
+ * - NETX_CONSOLEAPP_RESULT_ERROR, *ppvReturnMessage == NETX_CONSOLEAPP_RESULT_ERROR Verify failed, or the data was compared and is not equal.
+ */
 
 NETX_CONSOLEAPP_RESULT_T spi_verify(const FLASHER_SPI_FLASH_T *ptFlashDescription, unsigned long ulFlashStartAdr, unsigned long ulFlashEndAdr, const unsigned char *pucData, void **ppvReturnMessage)
 {
@@ -585,6 +659,23 @@ NETX_CONSOLEAPP_RESULT_T spi_verify(const FLASHER_SPI_FLASH_T *ptFlashDescriptio
 
 /*-----------------------------------*/
 
+/**
+ * @brief Initialize SPI interface and detect serial flash.
+ *
+ * The flasher initializes the SPI interface specified in ptSpiConfiguration and tries to
+ * detect a serial flash.
+ * It tests for a number of known flash devices with specific identification sequences.
+ * If none of these known flashes is found, it tries to read the SFDP information from a flash,
+ * if any is present.
+ *
+ * @param ptSpiConfiguration [in]  Configuration of the SPI interface, e.g. the clock frequency.
+ * @param ptFlashDescription [out] Information about the flash device, if any was identified.
+ * @param pcBufferEnd        [in]  Pointer to the end of a buffer at least 8 KB in size.
+ *
+ * @return
+ * - NETX_CONSOLEAPP_RESULT_OK: a device was detected and information about it is stored in ptFlashDescription.
+ * - NETX_CONSOLEAPP_RESULT_ERROR: no device was detected or an error occurred.
+ */
 
 NETX_CONSOLEAPP_RESULT_T spi_detect(FLASHER_SPI_CONFIGURATION_T *ptSpiConfiguration, FLASHER_SPI_FLASH_T *ptFlashDescription, char *pcBufferEnd)
 {
@@ -616,7 +707,21 @@ NETX_CONSOLEAPP_RESULT_T spi_detect(FLASHER_SPI_CONFIGURATION_T *ptSpiConfigurat
 
 /*-----------------------------------*/
 
-
+/**
+ * @brief Check if an area of the flash memory is erased. 
+ *
+ * Checks if an area of the memory is erased, that is, all bytes read as 0xff.
+ * 
+ * @param ptFlashDescription [in]  Device information returned by spi_detect.
+ * @param ulStartAdr         [in]  Start offset in the flash.
+ * @param ulEndAdr           [in]  End offset in the flash (offset of the last byte to be checked + 1).
+ * @param ppvReturnMessage   [out] Return value.
+ *
+ * @return
+ * - NETX_CONSOLEAPP_RESULT_OK, *ppvReturnMessage == 0xff: The memory has been checked and is erased.
+ * - NETX_CONSOLEAPP_RESULT_OK, *ppvReturnMessage != 0xff The memory has been checked but is not erased.
+ * - NETX_CONSOLEAPP_RESULT_ERROR: An error has occurred.
+ */
 NETX_CONSOLEAPP_RESULT_T spi_isErased(const FLASHER_SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, void **ppvReturnMessage)
 {
 	NETX_CONSOLEAPP_RESULT_T  tResult;
@@ -701,7 +806,25 @@ NETX_CONSOLEAPP_RESULT_T spi_isErased(const FLASHER_SPI_FLASH_T *ptFlashDescript
 
 
 /*-----------------------------------*/
-
+/**
+ * @brief Compute the range of blocks to erase.
+ *
+ * From a given range that we want to erase, this function computes a range of 
+ * complete erase blocks that has to be passed to spi_erase().
+ * The size of erase blocks used is internal to the flasher and cannot be selected.
+ * ulStartAdr is rounded down to the beginning of the erase block containing ulStartAdr.
+ * ulEndAdr is rounded up to the end of the erase block containing ulEndAdr.
+ * 
+ * @param ptFlashDescription [in]  Device information returned by spi_detect.
+ * @param ulStartAdr         [in]  Start offset in the device memory.
+ * @param ulEndAdr           [in]  End offset (TODO: inclusive/exclusive?).
+ * @param pulStartAdr        [out] Start offset of the erase area containing the area to be erased.
+ * @param pulEndAdr          [out] End offset of the erase area.
+ *
+ * @return
+ * - NETX_CONSOLEAPP_RESULT_OK: The start and end address of the erase area are in pulStartAdr/pulEndAdr
+ * - NETX_CONSOLEAPP_RESULT_ERROR: An error has occurred
+ */
 
 NETX_CONSOLEAPP_RESULT_T spi_getEraseArea(const FLASHER_SPI_FLASH_T *ptFlashDescription, unsigned long ulStartAdr, unsigned long ulEndAdr, unsigned long *pulStartAdr, unsigned long *pulEndAdr)
 {
@@ -733,7 +856,6 @@ NETX_CONSOLEAPP_RESULT_T spi_getEraseArea(const FLASHER_SPI_FLASH_T *ptFlashDesc
 	/* all OK */
 	return tResult;
 }
-
 
 /*-----------------------------------*/
 

@@ -43,14 +43,18 @@
 
 /* ------------------------------------- */
 
+/**
+ * This structure holds the information needed to access the specific flash device.
+ * It is filled in by spi_detect(), if a flash device was found.
+ */
 typedef struct FLASHER_SPI_FLASH_STRUCT
 {
-	SPIFLASH_ATTRIBUTES_T tAttributes;      /* attributes of the flash      */
-	FLASHER_SPI_CFG_T tSpiDev;              /* SPI device and it's settings */
-	unsigned long ulSectorSize;             /* size of one sector in bytes  */
-	unsigned int uiSlaveId;                 /* SPI Slave Id of the flash    */
-	unsigned int uiPageAdrShift;            /* bit shift for the page part of the address, 0 means no page / byte split  */
-	unsigned int uiSectorAdrShift;          /* bit shift for one sector, 0 means no page / byte split                    */
+	SPIFLASH_ATTRIBUTES_T tAttributes;      /**< @brief attributes of the flash.      */
+	FLASHER_SPI_CFG_T tSpiDev;              /**< @brief SPI device and it's settings. */
+	unsigned long ulSectorSize;             /**< @brief size of one sector in bytes.  */
+	unsigned int uiSlaveId;                 /**< @brief SPI Slave Id of the flash.    */
+	unsigned int uiPageAdrShift;            /**< @brief bit shift for the page part of the address, 0 means no page / byte split.  */
+	unsigned int uiSectorAdrShift;          /**< @brief bit shift for one sector, 0 means no page / byte split.                    */
 } FLASHER_SPI_FLASH_T;
 
 /*-----------------------------------*/
