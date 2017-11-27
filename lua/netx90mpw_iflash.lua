@@ -23,10 +23,11 @@ Usage: lua netx90mpw_iflash.lua mode parameters
 
 Mode                     Parameters
 disable_redundancy_pages [p]        Disable redundancy pages
-copy_page_0              [p]        Copy page 0 to redundancy pages
+copy_page_0              [p]        Copy page 0 to redundancy pages in intflash 0-2
 copy_iflash_0_page_0     [p]        Copy page 0 to redundancy pages in intflash 0 only
 copy_iflash_1_page_0     [p]        Copy page 0 to redundancy pages in intflash 1 only
 copy_iflash_2_page_0     [p]        Copy page 0 to redundancy pages in intflash 2 only
+copy_iflash_3_page_0     [p]        Copy page 0 to redundancy pages in intflash 0 and 1
 menu                     [p]        Interactive mode
 -h                                  Show this help    
         
@@ -112,6 +113,7 @@ MODE_MENU = 3
 MODE_COPY_IFLASH0 = 4
 MODE_COPY_IFLASH1 = 5
 MODE_COPY_IFLASH2 = 6
+MODE_COPY_IFLASH3 = 7
 
 arg2Mode = {
 	disable_redundancy_pages  = MODE_DISABLE,
@@ -119,6 +121,7 @@ arg2Mode = {
 	copy_iflash_0_page_0      = MODE_COPY_IFLASH0,
 	copy_iflash_1_page_0      = MODE_COPY_IFLASH1,
 	copy_iflash_2_page_0      = MODE_COPY_IFLASH2,
+	copy_iflash_3_page_0      = MODE_COPY_IFLASH3,
 	menu                      = MODE_MENU,
 	["-h"]                    = MODE_HELP
 }
@@ -233,8 +236,12 @@ function disable_redundancy_pages(tPlugin)
 	return true
 end
 
-function copy_page_0_all(tPlugin)
+-- ... is the units to erase, e.g. 
+-- copy_page_0_units(tPlugin, 0, 1, 2)
+-- to copy page 0 on all three intflash units
+function copy_page_0_units(tPlugin, ...)
 	local fOk, strMsg 
+	local auiUnits = {...}
 	
 	disable_output(tPlugin)
 	
@@ -242,7 +249,7 @@ function copy_page_0_all(tPlugin)
 	if aAttr == nil then
 		fOk, strMsg = false, "failed to download the flasher"
 	else
-		for uiUnit = 0, 2 do
+		for i, uiUnit in ipairs(auiUnits) do
 			fOk, strMsg = copy_page0_to_redundancy(tPlugin, aAttr, uiUnit)
 			if fOk ~= true then 
 				break
@@ -254,22 +261,8 @@ function copy_page_0_all(tPlugin)
 end
 
 
-function copy_page_0_unit(tPlugin, uiUnit)
-	local fOk, strMsg 
-	
-	disable_output(tPlugin)
-	
-	local aAttr = flasher.download(tPlugin, FLASHER_PATH)
-	if aAttr == nil then
-		fOk, strMsg = false, "failed to download the flasher"
-	else
-		fOk, strMsg = copy_page0_to_redundancy(tPlugin, aAttr, uiUnit)
-	end
-	
-	return fOk, strMsg
-end
-
 function disable_output(tPlugin)
+	print("Clearing IO vectors")
 	tPlugin:write_data32(0x2009fff0, 0)
 	tPlugin:write_data32(0x2009fff4, 0)
 	tPlugin:write_data32(0x2009fff8, 0)
@@ -529,13 +522,15 @@ elseif aArgs.iMode then
 		if aArgs.iMode == MODE_DISABLE then
 			fOk, strMsg = disable_redundancy_pages(tPlugin)
 		elseif aArgs.iMode == MODE_COPY then
-			fOk, strMsg = copy_page_0_all(tPlugin)
+			fOk, strMsg = copy_page_0_units(tPlugin, 0, 1, 2)
 		elseif aArgs.iMode == MODE_COPY_IFLASH0 then
-			fOk, strMsg = copy_page_0_unit(tPlugin, 0)
+			fOk, strMsg = copy_page_0_units(tPlugin, 0)
 		elseif aArgs.iMode == MODE_COPY_IFLASH1 then
-			fOk, strMsg = copy_page_0_unit(tPlugin, 1)
+			fOk, strMsg = copy_page_0_units(tPlugin, 1)
 		elseif aArgs.iMode == MODE_COPY_IFLASH2 then
-			fOk, strMsg = copy_page_0_unit(tPlugin, 2)
+			fOk, strMsg = copy_page_0_units(tPlugin, 2)
+		elseif aArgs.iMode == MODE_COPY_IFLASH3 then
+			fOk, strMsg = copy_page_0_units(tPlugin, 0, 1)
 		elseif aArgs.iMode == MODE_MENU then
 			fOk, strMsg = menu(tPlugin)
 		else
