@@ -2,7 +2,7 @@
 <?xml-stylesheet type="text/xsl" href="mbs/setup2html.xsl"?>
 
 <muhkuh_buildsystem project="flasher">
-	<project_version>1.5.1</project_version>
+	<project_version>1.5.0</project_version>
 
 	<scons>
 		<group>org.scons</group>
