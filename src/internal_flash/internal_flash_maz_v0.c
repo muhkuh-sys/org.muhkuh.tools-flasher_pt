@@ -28,7 +28,7 @@
 #if ASIC_TYP==ASIC_TYP_NETX90_MPW
 
 #define IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES 0x80000
-#define IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES 0x1000
+#define IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES 0x2000
 
 #define IFLASH_MAZ_V0_PAGE_SIZE_BYTES 16U
 #define IFLASH_MAZ_V0_PAGE_SIZE_DWORD 4U
@@ -512,49 +512,49 @@ static const UNIT_CS_TO_ATTR_T atUnitCsToAttr[] =
 		.uiUnit = 0,
 		.uiChipSelect = 0,
 		.iMain0_Info1 = 0,
-		.ulSizeInBytes = 0x80000,
+		.ulSizeInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES,
 		.tArea = INTERNAL_FLASH_AREA_Flash0_Main
 	},
 	{
 		.uiUnit = 1,
 		.uiChipSelect = 0,
 		.iMain0_Info1 = 0,
-		.ulSizeInBytes = 0x80000,
+		.ulSizeInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES,
 		.tArea = INTERNAL_FLASH_AREA_Flash1_Main
 	},
 	{
 		.uiUnit = 2,
 		.uiChipSelect = 0,
 		.iMain0_Info1 = 0,
-		.ulSizeInBytes = 0x80000,
+		.ulSizeInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES,
 		.tArea = INTERNAL_FLASH_AREA_Flash2_Main
 	},
 	{
 		.uiUnit = 3,
 		.uiChipSelect = 0,
 		.iMain0_Info1 = 0,
-		.ulSizeInBytes = 0x100000,
+		.ulSizeInBytes = 2 * IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES,
 		.tArea = INTERNAL_FLASH_AREA_Flash01_Main
 	},
 	{
 		.uiUnit = 0,
 		.uiChipSelect = 1,
 		.iMain0_Info1 = 1,
-		.ulSizeInBytes = 0x1000,
+		.ulSizeInBytes = IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES,
 		.tArea = INTERNAL_FLASH_AREA_Flash0_Info
 	},
 	{
 		.uiUnit = 1,
 		.uiChipSelect = 1,
 		.iMain0_Info1 = 1,
-		.ulSizeInBytes = 0x1000,
+		.ulSizeInBytes = IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES,
 		.tArea = INTERNAL_FLASH_AREA_Flash1_Info
 	},
 	{
 		.uiUnit = 2,
 		.uiChipSelect = 1,
 		.iMain0_Info1 = 1,
-		.ulSizeInBytes = 0x1000,
+		.ulSizeInBytes = IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES,
 		.tArea = INTERNAL_FLASH_AREA_Flash2_Info
 	}
 };
