@@ -7,7 +7,6 @@
 	      vcs-id="${PROJECT_VERSION_VCS}"
 	      extension="zip"/>
 	<dependencies>
-		<dependency group="org.muhkuh.tools" module="bootloader_windows_driver" artifact="bootloader_windows_driver" version="2.4.6"/>
 		<dependency group="org.muhkuh.tools" module="flasher" artifact="lua5.1-flasher" version="${PROJECT_VERSION}"/>
 	</dependencies>
 </jonchki-artifact>
