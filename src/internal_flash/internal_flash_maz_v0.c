@@ -27,8 +27,9 @@
 /* This unit is only available on the netX90 MPW chip. */
 #if ASIC_TYP==ASIC_TYP_NETX90_MPW
 
-#define IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES 0x80000
-#define IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES 0x2000
+#define IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES  0x80000
+#define IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES  0x2000
+#define IFLASH_NETX90_INFOK_ARRAY_SIZE_BYTES 0x1000
 
 #define IFLASH_MAZ_V0_PAGE_SIZE_BYTES 16U
 #define IFLASH_MAZ_V0_PAGE_SIZE_DWORD 4U
@@ -137,6 +138,15 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 		}
 		break;
 
+	case INTERNAL_FLASH_AREA_Flash0_InfoK:
+		if( ulOffset<IFLASH_NETX90_INFOK_ARRAY_SIZE_BYTES )
+		{
+			ptIFlashCfgArea = ptIflashCfg0ComArea;
+			ulUnitOffsetInBytes = 0;
+			tResult = NETX_CONSOLEAPP_RESULT_OK;
+		}
+		break;
+
 	case INTERNAL_FLASH_AREA_Flash1_Main:
 		if( ulOffset<IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES )
 		{
@@ -155,6 +165,15 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 		}
 		break;
 
+	case INTERNAL_FLASH_AREA_Flash1_InfoK:
+		if( ulOffset<IFLASH_NETX90_INFOK_ARRAY_SIZE_BYTES )
+		{
+			ptIFlashCfgArea = ptIflashCfg1ComArea;
+			ulUnitOffsetInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES;
+			tResult = NETX_CONSOLEAPP_RESULT_OK;
+		}
+		break;
+
 	case INTERNAL_FLASH_AREA_Flash2_Main:
 		if( ulOffset<IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES )
 		{
@@ -166,6 +185,15 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 
 	case INTERNAL_FLASH_AREA_Flash2_Info:
 		if( ulOffset<IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES )
+		{
+			ptIFlashCfgArea = ptIflashCfg2Area;
+			ulUnitOffsetInBytes = 2 * IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES;
+			tResult = NETX_CONSOLEAPP_RESULT_OK;
+		}
+		break;
+
+	case INTERNAL_FLASH_AREA_Flash2_InfoK:
+		if( ulOffset<IFLASH_NETX90_INFOK_ARRAY_SIZE_BYTES )
 		{
 			ptIFlashCfgArea = ptIflashCfg2Area;
 			ulUnitOffsetInBytes = 2 * IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES;
@@ -201,7 +229,7 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 /* Set the mode (read/erase/program) and select main array or info page */
 static void internal_flash_select_mode_and_clear_caches(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea, unsigned long ulMode)
 {
-	int iMain0_Info1;
+	int iMain0_Info1_InfoK2;
 	unsigned long ulValue;
 
 
@@ -210,11 +238,15 @@ static void internal_flash_select_mode_and_clear_caches(const INTERNAL_FLASH_ATT
 	ptIFlashCfgArea->ulIflash_reset = 0;
 
 	/* Select the main memory or info page. */
-	iMain0_Info1 = ptAttr->iMain0_Info1;
+	iMain0_Info1_InfoK2 = ptAttr->iMain0_Info1_InfoK2;
 	ulValue = 0;
-	if( iMain0_Info1!=0 )
+	if( iMain0_Info1_InfoK2==1 )
 	{
 		ulValue = HOSTMSK(iflash_ifren_cfg_ifren);
+	}
+	else if( iMain0_Info1_InfoK2==2 )
+	{
+		ulValue = HOSTMSK(iflash_ifren_cfg_ifren1);
 	}
 	ptIFlashCfgArea->ulIflash_ifren_cfg = ulValue;
 
@@ -501,7 +533,7 @@ typedef struct UNIT_CS_TO_ATTR_STRUCT
 {
 	unsigned int uiUnit;
 	unsigned int uiChipSelect;
-	int iMain0_Info1;
+	int iMain0_Info1_InfoK2;
 	unsigned long ulSizeInBytes;
 	INTERNAL_FLASH_AREA_T tArea;
 } UNIT_CS_TO_ATTR_T;
@@ -511,51 +543,72 @@ static const UNIT_CS_TO_ATTR_T atUnitCsToAttr[] =
 	{
 		.uiUnit = 0,
 		.uiChipSelect = 0,
-		.iMain0_Info1 = 0,
+		.iMain0_Info1_InfoK2 = 0,
 		.ulSizeInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES,
 		.tArea = INTERNAL_FLASH_AREA_Flash0_Main
 	},
 	{
 		.uiUnit = 1,
 		.uiChipSelect = 0,
-		.iMain0_Info1 = 0,
+		.iMain0_Info1_InfoK2 = 0,
 		.ulSizeInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES,
 		.tArea = INTERNAL_FLASH_AREA_Flash1_Main
 	},
 	{
 		.uiUnit = 2,
 		.uiChipSelect = 0,
-		.iMain0_Info1 = 0,
+		.iMain0_Info1_InfoK2 = 0,
 		.ulSizeInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES,
 		.tArea = INTERNAL_FLASH_AREA_Flash2_Main
 	},
 	{
 		.uiUnit = 3,
 		.uiChipSelect = 0,
-		.iMain0_Info1 = 0,
+		.iMain0_Info1_InfoK2 = 0,
 		.ulSizeInBytes = 2 * IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES,
 		.tArea = INTERNAL_FLASH_AREA_Flash01_Main
 	},
 	{
 		.uiUnit = 0,
 		.uiChipSelect = 1,
-		.iMain0_Info1 = 1,
+		.iMain0_Info1_InfoK2 = 1,
 		.ulSizeInBytes = IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES,
 		.tArea = INTERNAL_FLASH_AREA_Flash0_Info
 	},
 	{
 		.uiUnit = 1,
 		.uiChipSelect = 1,
-		.iMain0_Info1 = 1,
+		.iMain0_Info1_InfoK2 = 1,
 		.ulSizeInBytes = IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES,
 		.tArea = INTERNAL_FLASH_AREA_Flash1_Info
 	},
 	{
 		.uiUnit = 2,
 		.uiChipSelect = 1,
-		.iMain0_Info1 = 1,
+		.iMain0_Info1_InfoK2 = 1,
 		.ulSizeInBytes = IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES,
 		.tArea = INTERNAL_FLASH_AREA_Flash2_Info
+	},
+	{
+		.uiUnit = 0,
+		.uiChipSelect = 2,
+		.iMain0_Info1_InfoK2 = 2,
+		.ulSizeInBytes = IFLASH_NETX90_INFOK_ARRAY_SIZE_BYTES,
+		.tArea = INTERNAL_FLASH_AREA_Flash0_InfoK
+	},
+	{
+		.uiUnit = 1,
+		.uiChipSelect = 2,
+		.iMain0_Info1_InfoK2 = 2,
+		.ulSizeInBytes = IFLASH_NETX90_INFOK_ARRAY_SIZE_BYTES,
+		.tArea = INTERNAL_FLASH_AREA_Flash1_InfoK
+	},
+	{
+		.uiUnit = 2,
+		.uiChipSelect = 2,
+		.iMain0_Info1_InfoK2 = 2,
+		.ulSizeInBytes = IFLASH_NETX90_INFOK_ARRAY_SIZE_BYTES,
+		.tArea = INTERNAL_FLASH_AREA_Flash2_InfoK
 	}
 };
 
@@ -584,7 +637,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_detect(CMD_PARAMETER_DETECT_T *pt
 	ptAttr = &(ptDeviceDescription->uInfo.tInternalFlashInfo.uAttributes.tMazV0);
 
 	/* Set the default values. */
-	ptAttr->iMain0_Info1 = 0;
+	ptAttr->iMain0_Info1_InfoK2 = 0;
 	ptAttr->ulSizeInBytes = 0;
 	ptAttr->tArea = INTERNAL_FLASH_AREA_Unknown;
 
@@ -613,7 +666,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_detect(CMD_PARAMETER_DETECT_T *pt
 	}
 	else
 	{
-		ptAttr->iMain0_Info1 = ptHit->iMain0_Info1;
+		ptAttr->iMain0_Info1_InfoK2 = ptHit->iMain0_Info1_InfoK2;
 		ptAttr->ulSizeInBytes = ptHit->ulSizeInBytes;
 		ptAttr->tArea = ptHit->tArea;
 
