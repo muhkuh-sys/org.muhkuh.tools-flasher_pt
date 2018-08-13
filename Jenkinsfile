@@ -1,38 +1,46 @@
-pipeline {
-    agent any
+import groovy.json.JsonSlurperClassic
 
-    stages {
-        stage('Clean before build') {
-            steps {
-                sh 'rm -rf .[^.] .??* *'
+node {
+    def ARTIFACTS_PATH1 = 'targets/jonchki/flasher_cli'
+    def ARTIFACTS_PATH2 = 'targets/jonchki/repository/org/muhkuh/tools/flasher/*'
+    def strBuilds = env.JENKINS_SELECT_BUILDS
+    def atBuilds = new JsonSlurperClassic().parseText(strBuilds)
+
+    docker.image("mbs_ubuntu_1804_x86_64").inside('-u root') {
+        /* Clean before the build. */
+        sh 'rm -rf .[^.] .??* *'
+
+        checkout([$class: 'GitSCM',
+            branches: [[name: '*/master']],
+            doGenerateSubmoduleConfigurations: false,
+            extensions: [
+                [$class: 'SubmoduleOption',
+                    disableSubmodules: false,
+                    recursiveSubmodules: true,
+                    reference: '',
+                    trackingSubmodules: false
+                ]
+            ],
+            submoduleCfg: [],
+            userRemoteConfigs: [[url: 'https://github.com/muhkuh-sys/org.muhkuh.tools-flasher.git']]
+        ])
+
+        /* Build the flasher. */
+        stage("flasher"){
+            sh "python2.7 mbs/mbs"
+        }
+
+        atBuilds.each { atEntry ->
+            stage("${atEntry[0]} ${atEntry[1]} ${atEntry[2]}"){
+                /* Build the project. */
+                sh "python2.7 build_artifact.py ${atEntry[0]} ${atEntry[1]} ${atEntry[2]}"
             }
         }
-        stage('Checkout') {
-            steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/muhkuh-sys/org.muhkuh.tools-flasher.git']]])
-            }
-        }
-        stage('Build Artefacts') {
-            steps {
-                sh './.lxc_build_artefacts.sh'
-            }
-            post {
-                failure {
-                    /* Stop and remove the running container. Do not fail on this commands. */
-                    sh 'lxc stop c0 || true'
-                    sh 'lxc delete c0 || true'
-                }
-            }
-        }
-        stage('Save Artifacts') {
-            steps {
-                archive 'targets/*.xml,targets/*.zip,targets/*.hash,targets/*.pom,targets/*.tar.gz,targets/*.zip'
-            }
-        }
-        stage('Clean after build') {
-            steps {
-                sh 'rm -rf .[^.] .??* *'
-            }
-        }
+
+        /* Archive all artifacts. */
+        archiveArtifacts artifacts: "${ARTIFACTS_PATH1}/*.tar.gz,${ARTIFACTS_PATH1}/*.zip,${ARTIFACTS_PATH2}/*.hash,${ARTIFACTS_PATH2}/*.pom,${ARTIFACTS_PATH2}/*.xml,${ARTIFACTS_PATH2}/*.zip"
+
+        /* Clean up after the build. */
+        sh 'rm -rf .[^.] .??* *'
     }
 }
