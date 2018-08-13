@@ -161,6 +161,7 @@ local chiptyp2name = {
 	[romloader.ROMLOADER_CHIPTYP_NETX4000_FULL]    = "netx4000_relaxed",
 	[romloader.ROMLOADER_CHIPTYP_NETX4100_SMALL]   = "netx4000_relaxed",
 	[romloader.ROMLOADER_CHIPTYP_NETX90_MPW]       = "netx90_mpw",
+	[romloader.ROMLOADER_CHIPTYP_NETX90]           = "netx90"
 }
 
 -- prefix must include a trailing backslash if it's a directory

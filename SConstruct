@@ -26,7 +26,7 @@ import os.path
 #
 # Select the platforms to build
 #
-atPickNetxForBuild_All = ['NETX4000_RELAXED', 'NETX500', 'NETX90_MPW', 'NETX56', 'NETX50', 'NETX10']
+atPickNetxForBuild_All = ['NETX4000_RELAXED', 'NETX500', 'NETX90_MPW', 'NETX90', 'NETX56', 'NETX50', 'NETX10']
 AddOption('--netx',
           dest='atPickNetxForBuild',
           type='choice',
@@ -80,6 +80,9 @@ env_cortexM4 = atEnv.DEFAULT.CreateEnvironment(['gcc-arm-none-eabi-4.9', 'asciid
 if 'NETX90_MPW' in atPickNetxForBuild:
     env_cortexM4.CreateCompilerEnv('NETX90_MPW', ['arch=armv7', 'thumb'], ['arch=armv7e-m', 'thumb'])
     spi_flashes.ApplyToEnv(atEnv.NETX90_MPW)
+if 'NETX90' in atPickNetxForBuild:
+    env_cortexM4.CreateCompilerEnv('NETX90', ['arch=armv7', 'thumb'], ['arch=armv7e-m', 'thumb'])
+    spi_flashes.ApplyToEnv(atEnv.NETX90)
 
 # Build the platform libraries.
 SConscript('platform/SConscript')
@@ -235,7 +238,13 @@ if 'NETX500' in atPickNetxForBuild:
     env_netx500_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
 
 if 'NETX90_MPW' in atPickNetxForBuild:
-    env_netx90_default  = atEnv.NETX90_MPW.Clone()
+    env_netx90_mpw_default  = atEnv.NETX90_MPW.Clone()
+    env_netx90_mpw_default.Replace(LDFILE = File('src/netx90/netx90.ld'))
+    env_netx90_mpw_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx90'])
+    env_netx90_mpw_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '0']])
+
+if 'NETX90' in atPickNetxForBuild:
+    env_netx90_default  = atEnv.NETX90.Clone()
     env_netx90_default.Replace(LDFILE = File('src/netx90/netx90.ld'))
     env_netx90_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx90'])
     env_netx90_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '0']])
@@ -322,9 +331,14 @@ if 'NETX500' in atPickNetxForBuild:
     elf_netx500_nodbg, bin_netx500_nodbg, lib_netx500_nodbg = flasher_build('flasher_netx500', env_netx500_nodbg, 'targets/netx500_nodbg', src_lib_netx500, src_main_netx500)
 
 if 'NETX90_MPW' in atPickNetxForBuild:
+    env_netx90_mpw_nodbg = env_netx90_mpw_default.Clone()
+    env_netx90_mpw_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+    elf_netx90_mpw_nodbg,bin_netx90_mpw_nodbg, lib_netx90_mpw_nodbg = flasher_build('flasher_netx90_mpw', env_netx90_mpw_nodbg, 'targets/netx90_mpw_nodbg', src_lib_netx90, src_main_netx90)
+
+if 'NETX90' in atPickNetxForBuild:
     env_netx90_nodbg = env_netx90_default.Clone()
     env_netx90_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-    elf_netx90_mpw_nodbg,bin_netx90_mpw_nodbg, lib_netx90_mpw_nodbg = flasher_build('flasher_netx90_mpw', env_netx90_nodbg, 'targets/netx90_mpw_nodbg', src_lib_netx90, src_main_netx90)
+    elf_netx90_nodbg,bin_netx90_nodbg, lib_netx90_nodbg = flasher_build('flasher_netx90', env_netx90_nodbg, 'targets/netx90_nodbg', src_lib_netx90, src_main_netx90)
 
 if 'NETX56' in atPickNetxForBuild:
     env_netx56_nodbg = env_netx56_default.Clone()
@@ -357,9 +371,14 @@ if 'NETX500' in atPickNetxForBuild:
     elf_netx500_dbg, bin_netx500_dbg, lib_netx500_dbg = flasher_build('flasher_netx500_debug', env_netx500_dbg, 'targets/netx500_dbg', src_lib_netx500, src_main_netx500)
 
 if 'NETX90_MPW' in atPickNetxForBuild:
+    env_netx90_mpw_dbg = env_netx90_mpw_default.Clone()
+    env_netx90_mpw_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+    elf_netx90_mpw_dbg, bin_netx90_mpw_dbg, lib_netx90_mpw_dbg = flasher_build('flasher_netx90_mpw_debug', env_netx90_mpw_dbg, 'targets/netx90_mpw_dbg', src_lib_netx90, src_main_netx90)
+
+if 'NETX90' in atPickNetxForBuild:
     env_netx90_dbg = env_netx90_default.Clone()
     env_netx90_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-    elf_netx90_mpw_dbg, bin_netx90_mpw_dbg, lib_netx90_mpw_dbg = flasher_build('flasher_netx90_mpw_debug', env_netx90_dbg, 'targets/netx90_mpw_dbg', src_lib_netx90, src_main_netx90)
+    elf_netx90_dbg, bin_netx90_dbg, lib_netx90_dbg = flasher_build('flasher_netx90_debug', env_netx90_dbg, 'targets/netx90_dbg', src_lib_netx90, src_main_netx90)
 
 if 'NETX56' in atPickNetxForBuild:
     env_netx56_dbg = env_netx56_default.Clone()
@@ -410,8 +429,11 @@ elif 'NETX500' in atPickNetxForBuild:
     tEnv = env_netx500_nodbg
     tElf = elf_netx500_nodbg
 elif 'NETX90_MPW' in atPickNetxForBuild:
-    tEnv = env_netx90_nodbg
+    tEnv = env_netx90_mpw_nodbg
     tElf = elf_netx90_mpw_nodbg
+elif 'NETX90' in atPickNetxForBuild:
+    tEnv = env_netx90_nodbg
+    tElf = elf_netx90_nodbg
 elif 'NETX56' in atPickNetxForBuild:
     tEnv = env_netx56_nodbg
     tElf = elf_netx56_nodbg
@@ -482,6 +504,7 @@ if fBuildIsFull==True:
         bin_netx4000_relaxed_nodbg,
         bin_netx500_nodbg,
         bin_netx90_mpw_nodbg,
+        bin_netx90_nodbg,
         bin_netx56_nodbg,
         bin_netx50_nodbg,
         bin_netx10_nodbg)
@@ -490,6 +513,7 @@ if fBuildIsFull==True:
         bin_netx4000_relaxed_dbg,
         bin_netx500_dbg,
         bin_netx90_mpw_dbg,
+        bin_netx90_dbg,
         bin_netx56_dbg,
         bin_netx50_dbg,
         bin_netx10_dbg)
@@ -521,7 +545,7 @@ if fBuildIsFull==True:
         'lua/identify_parflash.lua',
         'lua/identify_serflash.lua',
         'lua/is_erased_parflash.lua',
-		'lua/netx90mpw_iflash.lua',
+        'lua/netx90mpw_iflash.lua',
         'lua/read_bootimage.lua',
         'lua/read_bootimage_intflash0.lua',
         'lua/read_bootimage_intflash2.lua',
@@ -554,6 +578,7 @@ if fBuildIsFull==True:
         'targets/testbench/netx/flasher_netx4000_relaxed.bin':             bin_netx4000_relaxed_nodbg,
         'targets/testbench/netx/flasher_netx500.bin':                      bin_netx500_nodbg,
         'targets/testbench/netx/flasher_netx90_mpw.bin':                   bin_netx90_mpw_nodbg,
+        'targets/testbench/netx/flasher_netx90.bin':                       bin_netx90_nodbg,
         'targets/testbench/netx/flasher_netx56.bin':                       bin_netx56_nodbg,
         'targets/testbench/netx/flasher_netx50.bin':                       bin_netx50_nodbg,
         'targets/testbench/netx/flasher_netx10.bin':                       bin_netx10_nodbg,
@@ -562,6 +587,7 @@ if fBuildIsFull==True:
         'targets/testbench/netx/debug/flasher_netx4000_relaxed_debug.bin': bin_netx4000_relaxed_dbg,
         'targets/testbench/netx/debug/flasher_netx500_debug.bin':          bin_netx500_dbg,
         'targets/testbench/netx/debug/flasher_netx90_mpw_debug.bin':       bin_netx90_mpw_dbg,
+        'targets/testbench/netx/debug/flasher_netx90_debug.bin':           bin_netx90_dbg,
         'targets/testbench/netx/debug/flasher_netx56_debug.bin':           bin_netx56_dbg,
         'targets/testbench/netx/debug/flasher_netx50_debug.bin':           bin_netx50_dbg,
         'targets/testbench/netx/debug/flasher_netx10_debug.bin':           bin_netx10_dbg,
@@ -588,14 +614,14 @@ if fBuildIsFull==True:
         'targets/testbench/identify_parflash.lua':                         'lua/identify_parflash.lua',
         'targets/testbench/identify_serflash.lua':                         'lua/identify_serflash.lua',
         'targets/testbench/is_erased_parflash.lua':                        'lua/is_erased_parflash.lua',
-		'targets/testbench/netx90mpw_iflash.lua':                          'lua/netx90mpw_iflash.lua',
+        'targets/testbench/netx90mpw_iflash.lua':                          'lua/netx90mpw_iflash.lua',
         'targets/testbench/read_bootimage.lua':                            'lua/read_bootimage.lua',
         'targets/testbench/read_bootimage_intflash0.lua':                  'lua/read_bootimage_intflash0.lua',
         'targets/testbench/read_bootimage_intflash2.lua':                  'lua/read_bootimage_intflash2.lua',
         'targets/testbench/read_complete_flash.lua':                       'lua/read_complete_flash.lua',
         'targets/testbench/test_netx90_intflash.lua':                      'lua/test_netx90_intflash.lua',
         'targets/testbench/show_erase_areas.lua':                          tDemoShowEraseAreas,
-        
+
         # collect the lib files in a directory
         'targets/flasher_lib/includes/spi.h':                              'src/spi.h',
         'targets/flasher_lib/includes/flasher_spi.h':                      'src/flasher_spi.h',
@@ -604,17 +630,17 @@ if fBuildIsFull==True:
         'targets/flasher_lib/includes/spi_flash.h':                        'src/spi_flash.h',
         'targets/flasher_lib/includes/flasher_version.h':                  'targets/version/flasher_version.h',
         'targets/flasher_lib/includes/spi_flash_types.h':                  'targets/netx50_nodbg/spi_flash_types/spi_flash_types.h',
-    
+
         'targets/flasher_lib/libflasher_netx4000.a':                       lib_netx4000_relaxed_nodbg,
         'targets/flasher_lib/libflasher_netx500.a':                        lib_netx500_nodbg,
         'targets/flasher_lib/libflasher_netx90mpw.a':                      lib_netx90_mpw_nodbg,
         'targets/flasher_lib/libflasher_netx56.a':                         lib_netx56_nodbg,
         'targets/flasher_lib/libflasher_netx50.a':                         lib_netx50_nodbg,
         'targets/flasher_lib/libflasher_netx50.a':                         lib_netx10_nodbg,
-        
+
         'targets/flasher_lib/libflasher_netx4000_debug.a':                 lib_netx4000_relaxed_dbg,
         'targets/flasher_lib/libflasher_netx500_debug.a':                  lib_netx500_dbg,
-        'targets/flasher_lib/libflasher_netx90mpw_debut.a':                lib_netx90_mpw_dbg,
+        'targets/flasher_lib/libflasher_netx90mpw_debug.a':                lib_netx90_mpw_dbg,
         'targets/flasher_lib/libflasher_netx56_debug.a':                   lib_netx56_dbg,
         'targets/flasher_lib/libflasher_netx50_debug.a':                   lib_netx50_dbg,
         'targets/flasher_lib/libflasher_netx50_debug.a':                   lib_netx10_dbg,
