@@ -296,6 +296,7 @@ def flasher_build(strFlasherName, tEnv, strBuildPath, astrSourcesLib, astrSource
 	tSrcFlasher = tEnv.SetBuildPath(strBuildPath, 'src', astrSourcesMain)
 	tElfFlasher = tEnv.Elf(os.path.join(strBuildPath, strFlasherName+'.elf'), tSrcFlasher + tLibFlasher + [tLibPlatform])
 	tBinFlasher = tEnv.ObjCopy(os.path.join(strBuildPath, strFlasherName+'.bin'), tElfFlasher)
+	tTxtFlasher = tEnv.ObjDump(os.path.join(strBuildPath, strFlasherName+'.txt'), tElfFlasher, OBJDUMP_FLAGS=['--disassemble', '--source', '--all-headers', '--wide'])
 
 	return tElfFlasher,tBinFlasher,tLibFlasher
 
