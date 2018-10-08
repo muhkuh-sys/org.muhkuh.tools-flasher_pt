@@ -157,9 +157,13 @@ class PlatformDetect:
         strEnvProcessorArchitecture = None
         strEnvProcessorArchiteW6432 = None
         if 'PROCESSOR_ARCHITECTURE' in os.environ:
-            strEnvProcessorArchitecture = string.lower(os.environ['PROCESSOR_ARCHITECTURE'])
+            strEnvProcessorArchitecture = string.lower(
+                os.environ['PROCESSOR_ARCHITECTURE']
+            )
         if 'PROCESSOR_ARCHITEW6432' in os.environ:
-            strEnvProcessorArchiteW6432 = string.lower(os.environ['PROCESSOR_ARCHITEW6432'])
+            strEnvProcessorArchiteW6432 = string.lower(
+                os.environ['PROCESSOR_ARCHITEW6432']
+            )
         # See here for details: https://blogs.msdn.microsoft.com/david.wang/
         # 2006/03/27/howto-detect-process-bitness/
         if((strEnvProcessorArchitecture == 'amd64') or
@@ -323,6 +327,7 @@ def __check_jonchki_version(
     strCmdFile
 ):
     fFound = False
+    strCmd = None
     if os.path.isdir(strPath) is not True:
         logging.info('The %s path does not exist.' % strID)
     else:
@@ -372,9 +377,11 @@ def __check_jonchki_version(
                         strCmd = strTool
                     else:
                         strCmd = '%s %s' % (strLua, strTool)
-                    tFile = open(strCmdFile, 'w')
-                    tFile.write('%s\n' % strCmd)
-                    tFile.close()
+
+                    if strCmdFile is not None:
+                        tFile = open(strCmdFile, 'w')
+                        tFile.write('%s\n' % strCmd)
+                        tFile.close()
 
         if fFound is not True:
             logging.info('The path "%s" does not contain a useable %s '
@@ -384,7 +391,7 @@ def __check_jonchki_version(
             # Recursively delete the jonchki folder.
             shutil.rmtree(strPath)
 
-    return fFound
+    return fFound, strCmd
 
 
 def __extract_archive(tFile, strArchiveFormat, strOutputFolder):
@@ -492,7 +499,7 @@ def install(strCfg_JonchkiVersion, strCfg_OutputFolder, **kwargs):
     logging.debug('Jonchki-light path: %s' % strJonchkiLightPath)
     logging.debug('Jonchki-light tool: %s' % strJonchkiLightTool)
 
-    fFoundJonchki = __check_jonchki_version(
+    fFoundJonchki, strJonchkiCmd = __check_jonchki_version(
         'jonchki',
         None,
         strJonchkiPath,
@@ -501,7 +508,7 @@ def install(strCfg_JonchkiVersion, strCfg_OutputFolder, **kwargs):
         strJonchkiCmdFile
     )
     if fFoundJonchki is not True:
-        fFoundJonchkiLight = __check_jonchki_version(
+        fFoundJonchkiLight, strJonchkiCmd = __check_jonchki_version(
             'jonchki-light',
             strCfg_LuaInterpreter,
             strJonchkiLightPath,
@@ -537,8 +544,9 @@ def install(strCfg_JonchkiVersion, strCfg_OutputFolder, **kwargs):
             )
         else:
             strUrlTemplate = (
-                'https://github.com/muhkuh-sys/org.muhkuh.lua-jonchki/releases/'
-                'download/v{JONCHKI_VERSION}/jonchki-{JONCHKI_VERSION}-'
+                'https://github.com/muhkuh-sys/org.muhkuh.lua-jonchki/'
+                'releases/download/v{JONCHKI_VERSION}/jonchki-'
+                '{JONCHKI_VERSION}-'
                 '{HOST_DISTRIBUTION_ID}{HOST_DISTRIBUTION_VERSION}_'
                 '{HOST_CPU_ARCHITECTURE}.{ARCHIVE_EXTENSION}'
             )
@@ -548,14 +556,15 @@ def install(strCfg_JonchkiVersion, strCfg_OutputFolder, **kwargs):
         ):
             strLightUrlTemplate = os.environ['JONCHKI_LIGHT_URL_OVERWRITE']
             logging.info(
-                'Overwriting the jonchki-light URL template with the environment '
-                'variable "JONCHKI_LIGHT_URL_OVERWRITE" to "%s".' %
+                'Overwriting the jonchki-light URL template with the '
+                'environment variable "JONCHKI_LIGHT_URL_OVERWRITE" to "%s".' %
                 strLightUrlTemplate
             )
         else:
             strLightUrlTemplate = (
-                'https://github.com/muhkuh-sys/org.muhkuh.lua-jonchki/releases/'
-                'download/v{JONCHKI_VERSION}/jonchki-light-{JONCHKI_VERSION}.zip'
+                'https://github.com/muhkuh-sys/org.muhkuh.lua-jonchki/'
+                'releases/download/v{JONCHKI_VERSION}/jonchki-light-'
+                '{JONCHKI_VERSION}.zip'
             )
         strLocalFile = strLocalFileTemplate.format(**astrReplace)
         strUrl = strUrlTemplate.format(**astrReplace)
@@ -580,8 +589,8 @@ def install(strCfg_JonchkiVersion, strCfg_OutputFolder, **kwargs):
                     strLightLocalFile
                 )
                 if os.path.exists(strAbsFile) is True:
-                    logging.info('Found the requested light version in the local '
-                                 'files folder.')
+                    logging.info('Found the requested light version in the '
+                                 'local files folder.')
                     tFile = open(strAbsFile, 'rb')
                     fFoundJonchkiLight = True
                     strArchiveFormat = 'zip'
@@ -608,8 +617,8 @@ def install(strCfg_JonchkiVersion, strCfg_OutputFolder, **kwargs):
                     strArchiveFormat = 'zip'
                 else:
                     tFile.close()
-                    raise Exception('Failed to download the full and the light '
-                                    'version.')
+                    raise Exception('Failed to download the full and the '
+                                    'light version.')
 
         # Extract the archive contents to the destination folder.
         __extract_archive(tFile, strArchiveFormat, strCfg_OutputFolder)
@@ -617,7 +626,7 @@ def install(strCfg_JonchkiVersion, strCfg_OutputFolder, **kwargs):
 
         # Is the extracted version valid?
         if fFoundJonchki is True:
-            fFoundJonchki = __check_jonchki_version(
+            fFoundJonchki, strJonchkiCmd = __check_jonchki_version(
                 'jonchki',
                 None,
                 strJonchkiPath,
@@ -626,7 +635,7 @@ def install(strCfg_JonchkiVersion, strCfg_OutputFolder, **kwargs):
                 strJonchkiCmdFile
             )
         elif fFoundJonchkiLight is True:
-            fFoundJonchkiLight = __check_jonchki_version(
+            fFoundJonchkiLight, strJonchkiCmd = __check_jonchki_version(
                 'jonchki-light',
                 strCfg_LuaInterpreter,
                 strJonchkiLightPath,
@@ -634,6 +643,8 @@ def install(strCfg_JonchkiVersion, strCfg_OutputFolder, **kwargs):
                 strCfg_JonchkiVersion,
                 strJonchkiCmdFile
             )
+
+    return strJonchkiCmd
 
 
 if __name__ == '__main__':
