@@ -225,7 +225,7 @@ if os.path.exists(strCfg_workingFolder) is not True:
 
 if os.path.exists(strCfg_artifactConfiguration) is not True:
     raise Exception(
-        'The artifact configuration "%s" does not exist.' % strArtifactCfg
+        'The artifact configuration "%s" does not exist.' % strCfg_artifactConfiguration
     )
 
 # Install jonchki.
