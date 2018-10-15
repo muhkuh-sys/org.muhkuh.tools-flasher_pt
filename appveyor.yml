@@ -6,7 +6,7 @@
 
 
 install:
-  - cinst -y 7zip.commandline python2
+  - cinst -y python2
 
 
 platform:
@@ -19,4 +19,4 @@ before_build:
 
 
 build_script:
-  - python mbs/mbs
+  - python build_artifact.py

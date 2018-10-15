@@ -30,4 +30,4 @@ before_install:
 
 # Build the flasher artifact, install the required Ivy version and build the flasher_cli artifacts.
 script:
-  - ./.build01_flasher.sh
+  - python2.7 build_artifact.py
