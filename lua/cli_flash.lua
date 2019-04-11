@@ -635,7 +635,7 @@ function flasher_interface.configure(self, strPluginName, iBus, iUnit, iChipSele
 		iBus = iBus,
 		iUnit = iUnit,
 		iChipSelect = iChipSelect,
-		strDataFileName = "D:/flashertest.bin"
+		strDataFileName = "flashertest.bin"
 		}
 end
 
