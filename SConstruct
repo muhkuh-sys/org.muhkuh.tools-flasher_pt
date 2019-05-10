@@ -85,10 +85,10 @@ if 'NETX90' in atPickNetxForBuild:
     spi_flashes.ApplyToEnv(atEnv.NETX90)
 
 # Create a build environment for the RISCV based netIOL.
-env_riscv = atEnv.DEFAULT.CreateEnvironment(['gcc-riscv-none-embed-7.2', 'asciidoc'])
+env_riscv = atEnv.DEFAULT.CreateEnvironment(['gcc-riscv-none-embed-7.2', 'asciidoc', 'exoraw-2.0.7_2'])
 if 'NETIOL' in atPickNetxForBuild:
     env_riscv.CreateCompilerEnv('NETIOL', ['arch=rv32im', 'abi=ilp32'], ['arch=rv32imc', 'abi=ilp32'])
-
+    spi_flashes.ApplyToEnv(atEnv.NETIOL)
 
 # Build the platform libraries.
 SConscript('platform/SConscript')
@@ -202,12 +202,22 @@ flasher_sources_lib_netx10 = """
 """
 
 
+flasher_sources_main_netiol = """
+	src/netiol/flasher_header.c
+"""
+
+flasher_sources_lib_netiol = """
+	src/netiol/board.c
+"""
+
+
 src_lib_netx4000 = flasher_sources_lib + flasher_sources_lib_netx4000
 src_lib_netx500  = flasher_sources_lib + flasher_sources_lib_netx500
 src_lib_netx90   = flasher_sources_lib + flasher_sources_lib_netx90
 src_lib_netx56   = flasher_sources_lib + flasher_sources_lib_netx56
 src_lib_netx50   = flasher_sources_lib + flasher_sources_lib_netx50
 src_lib_netx10   = flasher_sources_lib + flasher_sources_lib_netx10
+src_lib_netiol   = flasher_sources_lib + flasher_sources_lib_netiol
 
 src_main_netx4000 = flasher_sources_main + flasher_sources_main_netx4000
 src_main_netx500  = flasher_sources_main + flasher_sources_main_netx500
@@ -215,6 +225,7 @@ src_main_netx90   = flasher_sources_main + flasher_sources_main_netx90
 src_main_netx56   = flasher_sources_main + flasher_sources_main_netx56
 src_main_netx50   = flasher_sources_main + flasher_sources_main_netx50
 src_main_netx10   = flasher_sources_main + flasher_sources_main_netx10
+src_main_netiol   = flasher_sources_main + flasher_sources_main_netiol
 
 
 #----------------------------------------------------------------------------
@@ -273,6 +284,11 @@ if 'NETX10' in atPickNetxForBuild:
     env_netx10_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx10'])
     env_netx10_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
 
+if 'NETIOL' in atPickNetxForBuild:
+    env_netiol_default  = atEnv.NETIOL.Clone()
+    env_netiol_default.Replace(LDFILE = File('src/netiol/netiol.ld'))
+    env_netiol_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netiol'])
+    env_netiol_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '0']])
 
 #----------------------------------------------------------------------------
 #
@@ -362,6 +378,12 @@ if 'NETX10' in atPickNetxForBuild:
     env_netx10_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
     elf_netx10_nodbg, bin_netx10_nodbg, lib_netx10_nodbg = flasher_build('flasher_netx10', env_netx10_nodbg, 'targets/netx10_nodbg', src_lib_netx10, src_main_netx10)
 
+if 'NETIOL' in atPickNetxForBuild:
+    env_netiol_nodbg = env_netiol_default.Clone()
+    env_netiol_nodbg.Replace(LIBS = ['c'])
+    env_netiol_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
+    elf_netiol_nodbg, bin_netiol_nodbg, lib_netiol_nodbg = flasher_build('flasher_netiol', env_netiol_nodbg, 'targets/netiol_nodbg', src_lib_netiol, src_main_netiol)
+
 
 #----------------------------------------------------------------------------
 #
@@ -401,6 +423,13 @@ if 'NETX10' in atPickNetxForBuild:
     env_netx10_dbg = env_netx10_default.Clone()
     env_netx10_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
     elf_netx10_dbg, bin_netx10_dbg, lib_netx10_dbg = flasher_build('flasher_netx10_debug', env_netx10_dbg, 'targets/netx10_dbg', src_lib_netx10, src_main_netx10)
+
+# NOTE: Do not build a debug version, it does not fit into the memory.
+#if 'NETIOL' in atPickNetxForBuild:
+#    env_netiol_dbg = env_netiol_default.Clone()
+#    env_netiol_dbg.Replace(LIBS = ['c'])
+#    env_netiol_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+#    elf_netiol_dbg, bin_netiol_dbg, lib_netiol_dbg = flasher_build('flasher_netiol_debug', env_netiol_dbg, 'targets/netiol_dbg', src_lib_netiol, src_main_netiol)
 
 
 #----------------------------------------------------------------------------
@@ -450,6 +479,9 @@ elif 'NETX50' in atPickNetxForBuild:
 elif 'NETX10' in atPickNetxForBuild:
     tEnv = env_netx10_nodbg
     tElf = elf_netx10_nodbg
+elif 'NETIOL' in atPickNetxForBuild:
+    tEnv = env_netiol_nodbg
+    tElf = elf_netiol_nodbg
 
 lua_flasher = tEnv.GccSymbolTemplate('targets/lua/flasher.lua', tElf, GCCSYMBOLTEMPLATE_TEMPLATE='templates/flasher.lua')
 tDemoShowEraseAreas = tEnv.GccSymbolTemplate('targets/lua/show_erase_areas.lua', tElf, GCCSYMBOLTEMPLATE_TEMPLATE='templates/show_erase_areas.lua')

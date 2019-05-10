@@ -5,10 +5,44 @@
 
 #include "asic_types.h"
 
-@--------------------------------------
+#if ASIC_TYP==ASIC_TYP_NETIOL
+/* The netIOL has a RISCV CPU. */
 
-@ The Cortex-M4 in the netX90 is a THUMB-only CPU.
-@ All others start in 32 bit mode.
+    .func start, start
+    .type start, STT_FUNC
+start:
+	/* Save the current stack position. */
+	/* TODO... */
+
+	/* Set own stack position. */
+	la      x2, stack_top
+
+	/* Clear the .bss section (zero init). */
+	la      x26, __bss_start__
+	la      x27, __bss_end__
+clear_bss:
+	sw      x0, 0(x26)
+	addi    x26, x26, 4
+	ble     x26, x27, clear_bss
+
+	c.j     netx_consoleapp_main
+
+	/* Restore the old stack position. */
+	/* TODO... */
+
+	/* Return to whereever we came from. */
+	/* TODO... For now just stop. */
+debug_stop:
+	jal     x0, debug_stop
+    .end
+
+
+#else
+/*-----------------------------------*/
+
+/* The Cortex-M4 in the netX90 is a THUMB-only CPU.
+ * All others start in 32 bit mode.
+ */
 #if ASIC_TYP==ASIC_TYP_NETX90_MPW || ASIC_TYP==ASIC_TYP_NETX90
 	.syntax unified
 	.thumb
@@ -22,17 +56,17 @@
 start:
 	push    {r0, r1, r2, lr}
 
-	@ Save the stack position of the ROM.
+	/* Save the stack position of the ROM. */
 	mov     r1, sp
 
-	@ Set own stack position
+	/* Set own stack position. */
 	ldr     r2, =stack_top
 	mov     sp, r2
 
-	@ Save the ROM stack position and some additional registers.
+	/* Save the ROM stack position and some additional registers. */
 	push    {r0, r1, r3}
 
-	@ Clear the .bss section.
+	/* Clear the .bss section. */
 	mov     r1, #0
 	ldr     r2, =__bss_start__
 	ldr     r3, =__bss_end__
@@ -41,26 +75,26 @@ clear_bss:
 	cmp     r2, r3
 	bmi     clear_bss
 
-	@ Jump to the main routine.
+	/* Jump to the main routine. */
 	blx     netx_consoleapp_main
 
-	@ Move the result to r2.
+	/* Move the result to r2. */
 	mov     r2, r0
 
-	@ Restore the ROM stack position.
+	/* Restore the ROM stack position. */
 	pop     {r0, r1, r3}
 	mov     sp, r1
 
-	@ Store the result in the structure.
+	/* Store the result in the structure. */
 	str     r2, [r0, #0]
 
-	@ Restore the rest of the registers.
+	/* Restore the rest of the registers. */
 	pop     {r0, r1, r2, lr}
 	bx      lr
 
   .endfunc
 
-@--------------------------------------
+/*-----------------------------------*/
 
   .end
-
+#endif

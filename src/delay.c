@@ -91,6 +91,9 @@ void delay_us(unsigned int uiDelayUs)
 
 	/* Reset the counter max value. */
 	ptGpioArea->ulGpio_counter0_max = 0;
+#elif ASIC_TYP==ASIC_TYP_NETIOL
+	/* TODO: Continue here... */
+
 #else
 	HOSTDEF(ptGpioArea);
 	unsigned long ulTimerValue;
