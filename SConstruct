@@ -26,7 +26,7 @@ import os.path
 #
 # Select the platforms to build
 #
-atPickNetxForBuild_All = ['NETX4000', 'NETX500', 'NETX90_MPW', 'NETX90', 'NETX56', 'NETX50', 'NETX10']
+atPickNetxForBuild_All = ['NETX4000', 'NETX500', 'NETX90_MPW', 'NETX90', 'NETX56', 'NETX50', 'NETX10', 'NETIOL']
 AddOption('--netx',
           dest='atPickNetxForBuild',
           type='choice',
@@ -83,6 +83,12 @@ if 'NETX90_MPW' in atPickNetxForBuild:
 if 'NETX90' in atPickNetxForBuild:
     env_cortexM4.CreateCompilerEnv('NETX90', ['arch=armv7', 'thumb'], ['arch=armv7e-m', 'thumb'])
     spi_flashes.ApplyToEnv(atEnv.NETX90)
+
+# Create a build environment for the RISCV based netIOL.
+env_riscv = atEnv.DEFAULT.CreateEnvironment(['gcc-riscv-none-embed-7.2', 'asciidoc'])
+if 'NETIOL' in atPickNetxForBuild:
+    env_riscv.CreateCompilerEnv('NETIOL', ['arch=rv32im', 'abi=ilp32'], ['arch=rv32imc', 'abi=ilp32'])
+
 
 # Build the platform libraries.
 SConscript('platform/SConscript')

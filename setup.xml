@@ -42,6 +42,12 @@
 			<version>4.9.3_3</version>
 			<typ>tar.bz2</typ>
 		</tool>
-
+		<tool>
+			<group>com.github.gnu-mcu-eclipse</group>
+			<name>gcc-riscv-none-embed</name>
+			<package>gcc-riscv-none-embed_${platform}_${machine}</package>
+			<version>7.2.0.4_1</version>
+			<typ>tar.bz2</typ>
+		</tool>
 	</tools>
 </muhkuh_buildsystem>
