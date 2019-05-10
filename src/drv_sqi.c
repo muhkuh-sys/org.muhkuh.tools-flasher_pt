@@ -26,13 +26,13 @@
 #include "mmio.h"
 #include "netx_io_areas.h"
 
-#if ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#if ASIC_TYP==ASIC_TYP_NETX4000
 #include "portcontrol.h"
 #endif
 
 /* Note: This scheme works only for a single SQI unit. */
 #if ASIC_TYP==ASIC_TYP_NETX10
-static const MMIO_CFG_T aatMmioValues[3][4] =
+static const HOSTMMIODEF aatMmioValues[3][4] =
 {
 	/*
 	 * Chip select 0
@@ -48,7 +48,7 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 	 * Chip select 1
 	 */
 	{
-		MMIO_CFG_spi0_cs1n,             /* chip select */
+		NX10_MMIO_CFG_spi0_cs1n,        /* chip select */
 		0xffU,                          /* clock */
 		0xffU,                          /* MISO */
 		0xffU                           /* MOSI */
@@ -58,14 +58,14 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 	 * Chip select 2
 	 */
 	{
-		MMIO_CFG_spi0_cs2n,             /* chip select */
+		NX10_MMIO_CFG_spi0_cs2n,        /* chip select */
 		0xffU,                          /* clock */
 		0xffU,                          /* MISO */
 		0xffU                           /* MOSI */
 	}
 };
 #elif ASIC_TYP==ASIC_TYP_NETX56
-static const MMIO_CFG_T aatMmioValues[3][4] =
+static const HOSTMMIODEF aatMmioValues[3][4] =
 {
 	/*
 	 * Chip select 0
@@ -91,14 +91,14 @@ static const MMIO_CFG_T aatMmioValues[3][4] =
 	 * Chip select 2
 	 */
 	{
-		MMIO_CFG_spi0_cs2n,             /* chip select */
+		NX56_MMIO_CFG_spi0_cs2n,        /* chip select */
 		0xffU,                          /* clock */
 		0xffU,                          /* MISO */
 		0xffU                           /* MOSI */
 	}
 };
-#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
-static const MMIO_CFG_T aatMmioValues[1][4] =
+#elif ASIC_TYP==ASIC_TYP_NETX4000
+static const HOSTMMIODEF aatMmioValues[1][4] =
 {
 	/* Both SQI ports on the netX4000 are not routed through the MMIO matrix. */
 	/*
@@ -144,7 +144,7 @@ static const unsigned short ausPortcontrol_Index_SQI1_CS0[6] =
 #endif
 
 #elif ASIC_TYP==ASIC_TYP_NETX90_MPW || ASIC_TYP==ASIC_TYP_NETX90
-static const MMIO_CFG_T aatMmioValues[1][4] =
+static const HOSTMMIODEF aatMmioValues[1][4] =
 {
 	/* The SQI port on the netX90 is not routed through the MMIO matrix. */
 	/*
@@ -608,7 +608,7 @@ int flasher_drv_sqi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATI
 
 #if ASIC_TYP==ASIC_TYP_NETX56
 	HOSTDEF(ptAsicCtrlArea);
-#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#elif ASIC_TYP==ASIC_TYP_NETX4000
 #       if 0
 	const unsigned short *pusPortControlIndex;
 #       endif
@@ -627,7 +627,7 @@ int flasher_drv_sqi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATI
 		ptSqiArea = (HOSTADEF(SQI)*)HOSTADDR(sqi);
 	}
 
-#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#elif ASIC_TYP==ASIC_TYP_NETX4000
 	if( uiSqiUnit==0 )
 	{
 		ptSqiArea = (HOSTADEF(SQI)*)HOSTADDR(SQI0);

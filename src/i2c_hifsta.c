@@ -71,7 +71,7 @@ typedef enum
 #define TRIGGER_ROM_WATCHDOG(a) __asm("nop\n")
 
 
-#if ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX56 || ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#if ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX56 || ASIC_TYP==ASIC_TYP_NETX4000
 static void i2c_hifsta_clock(void)
 {
 	/* trigger rom watchdog */
@@ -92,7 +92,7 @@ static void i2c_hifsta_clock(void)
 #endif
 
 
-#if ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 || ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#if ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 || ASIC_TYP==ASIC_TYP_NETX4000
 void i2c_hifsta_rdy_on_run_off(void)
 {
 	HOSTDEF(ptAsicCtrlArea);

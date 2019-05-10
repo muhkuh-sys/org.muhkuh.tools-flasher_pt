@@ -27,8 +27,8 @@
 #ifndef __MMIO_H__
 #define __MMIO_H__
 
-void mmio_activate(const unsigned char *pucMmioPins, size_t sizMmioPins, const MMIO_CFG_T *ptMmioValues);
-void mmio_deactivate(const unsigned char *pucMmioPins, size_t sizMmioPins, const MMIO_CFG_T *ptMmioValues);
+void mmio_activate(const unsigned char *pucMmioPins, size_t sizMmioPins, const HOSTMMIODEF *ptMmioValues);
+void mmio_deactivate(const unsigned char *pucMmioPins, size_t sizMmioPins, const HOSTMMIODEF *ptMmioValues);
 
 #endif	/* __MMIO_H__ */
 

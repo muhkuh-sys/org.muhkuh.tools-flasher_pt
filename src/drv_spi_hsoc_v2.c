@@ -28,101 +28,101 @@
 
 
 #if ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56
-static const MMIO_CFG_T aatMmioValues[3][4] =
+static const HOSTMMIODEF aatMmioValues[3][4] =
 {
 	/*
 	 * Chip select 0
 	 */
 	{
-		MMIO_CFG_spi1_cs0n,		/* chip select */
-		MMIO_CFG_spi1_clk,		/* clock */
-		MMIO_CFG_spi1_miso,		/* MISO */
-		MMIO_CFG_spi1_mosi		/* MOSI */
+		HOSTMMIO(spi1_cs0n),		/* chip select */
+		HOSTMMIO(spi1_clk),		/* clock */
+		HOSTMMIO(spi1_miso),		/* MISO */
+		HOSTMMIO(spi1_mosi)		/* MOSI */
 	},
 
 	/*
 	 * Chip select 1
 	 */
 	{
-		MMIO_CFG_spi1_cs1n,		/* chip select */
-		MMIO_CFG_spi1_clk,		/* clock */
-		MMIO_CFG_spi1_miso,		/* MISO */
-		MMIO_CFG_spi1_mosi		/* MOSI */
+		HOSTMMIO(spi1_cs1n),		/* chip select */
+		HOSTMMIO(spi1_clk),		/* clock */
+		HOSTMMIO(spi1_miso),		/* MISO */
+		HOSTMMIO(spi1_mosi)		/* MOSI */
 	},
 
 	/*
 	 * Chip select 2
 	 */
 	{
-		MMIO_CFG_spi1_cs2n,		/* chip select */
-		MMIO_CFG_spi1_clk,		/* clock */
-		MMIO_CFG_spi1_miso,		/* MISO */
-		MMIO_CFG_spi1_mosi		/* MOSI */
+		HOSTMMIO(spi1_cs2n),		/* chip select */
+		HOSTMMIO(spi1_clk),		/* clock */
+		HOSTMMIO(spi1_miso),		/* MISO */
+		HOSTMMIO(spi1_mosi)		/* MOSI */
 	}
 };
-#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#elif ASIC_TYP==ASIC_TYP_NETX4000
 
-static const MMIO_CFG_T aatMmioValues_SPI0[3][4] =
+static const HOSTMMIODEF aatMmioValues_SPI0[3][4] =
 {
 	/*
 	 * For SPI0 
 	 * Chip select 0
 	 */
 	{
-		MMIO_CFG_SPI0_CS0N,		/* chip select */
-		MMIO_CFG_SPI0_CLK,		/* clock */
-		MMIO_CFG_SPI0_MISO,		/* MISO */
-		MMIO_CFG_SPI0_MOSI		/* MOSI */
+		HOSTMMIO(SPI0_CS0N),		/* chip select */
+		HOSTMMIO(SPI0_CLK),		/* clock */
+		HOSTMMIO(SPI0_MISO),		/* MISO */
+		HOSTMMIO(SPI0_MOSI)		/* MOSI */
 	},
 	/*
 	 * Chip select 1
 	 */
 	{
-		MMIO_CFG_SPI0_CS1N,		/* chip select */
-		MMIO_CFG_SPI0_CLK,		/* clock */
-		MMIO_CFG_SPI0_MISO,		/* MISO */
-		MMIO_CFG_SPI0_MOSI		/* MOSI */
+		HOSTMMIO(SPI0_CS1N),		/* chip select */
+		HOSTMMIO(SPI0_CLK),		/* clock */
+		HOSTMMIO(SPI0_MISO),		/* MISO */
+		HOSTMMIO(SPI0_MOSI)		/* MOSI */
 	},
 	/*
 	 * Chip select 2
 	 */
 	{
-		MMIO_CFG_SPI0_CS2N,		/* chip select */
-		MMIO_CFG_SPI0_CLK,		/* clock */
-		MMIO_CFG_SPI0_MISO,		/* MISO */
-		MMIO_CFG_SPI0_MOSI		/* MOSI */
+		HOSTMMIO(SPI0_CS2N),		/* chip select */
+		HOSTMMIO(SPI0_CLK),		/* clock */
+		HOSTMMIO(SPI0_MISO),		/* MISO */
+		HOSTMMIO(SPI0_MOSI)		/* MOSI */
 	},
 };
 
-static const MMIO_CFG_T aatMmioValues_SPI1[3][4] =
+static const HOSTMMIODEF aatMmioValues_SPI1[3][4] =
 {
 	/*
 	 * For SPI1/XPIC3 SPI
 	 * Chip select 0
 	 */
 	{
-		MMIO_CFG_SPI1_CS0N,		/* chip select */
-		MMIO_CFG_SPI1_CLK,		/* clock */
-		MMIO_CFG_SPI1_MISO,		/* MISO */
-		MMIO_CFG_SPI1_MOSI		/* MOSI */
+		HOSTMMIO(SPI1_CS0N),		/* chip select */
+		HOSTMMIO(SPI1_CLK),		/* clock */
+		HOSTMMIO(SPI1_MISO),		/* MISO */
+		HOSTMMIO(SPI1_MOSI)		/* MOSI */
 	},
 	/*
 	 * Chip select 1
 	 */
 	{
-		MMIO_CFG_SPI1_CS1N,		/* chip select */
-		MMIO_CFG_SPI1_CLK,		/* clock */
-		MMIO_CFG_SPI1_MISO,		/* MISO */
-		MMIO_CFG_SPI1_MOSI		/* MOSI */
+		HOSTMMIO(SPI1_CS1N),		/* chip select */
+		HOSTMMIO(SPI1_CLK),		/* clock */
+		HOSTMMIO(SPI1_MISO),		/* MISO */
+		HOSTMMIO(SPI1_MOSI)		/* MOSI */
 	},
 	/*
 	 * Chip select 2
 	 */
 	{
-		MMIO_CFG_SPI1_CS2N,		/* chip select */
-		MMIO_CFG_SPI1_CLK,		/* clock */
-		MMIO_CFG_SPI1_MISO,		/* MISO */
-		MMIO_CFG_SPI1_MOSI		/* MOSI */
+		HOSTMMIO(SPI1_CS2N),		/* chip select */
+		HOSTMMIO(SPI1_CLK),		/* clock */
+		HOSTMMIO(SPI1_MISO),		/* MISO */
+		HOSTMMIO(SPI1_MOSI)		/* MOSI */
 	},
 };
 
@@ -365,7 +365,7 @@ static void spi_deactivate(const FLASHER_SPI_CFG_T *ptCfg)
 #if ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 
 	mmio_deactivate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[ptCfg->uiChipSelect]);
 	
-#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#elif ASIC_TYP==ASIC_TYP_NETX4000
 	/* In order to pass the proper MMIO config table, we'd need the unit number, which is not passed in FLASHER_SPI_CFG_T.
 	However, mmio_deactivate() only checks if the MMIO config values are 0xff or not, and all the
 	MMIO config tables for the netX 4000 are equal in this respect. */
@@ -433,7 +433,7 @@ int flasher_drv_spi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATI
 	ptSpiUnit->ulSpi_irq_cpu_sel = 0;
 #elif ASIC_TYP==ASIC_TYP_NETX56
 	/* what about the netx 56? */
-#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#elif ASIC_TYP==ASIC_TYP_NETX4000
 	ptSpiUnit->ulSpi_imsc = 0;
 #endif
 
@@ -484,7 +484,7 @@ int flasher_drv_spi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATI
 #if ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 
 	mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues[uiChipSelect]);
 	
-#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#elif ASIC_TYP==ASIC_TYP_NETX4000
 	if (ptSpiCfg->uiUnit == 2) 
 	{
 		mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues_SPI0[uiChipSelect]);

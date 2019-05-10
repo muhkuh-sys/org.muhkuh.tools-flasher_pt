@@ -53,7 +53,7 @@ typedef unsigned short USHORT;
 #define CFI_FLASH_100_INTEL_EXT 0x0003
 #define CFI_FLASH_100_AMD_EXT   0x0004
 
-#if ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#if ASIC_TYP==ASIC_TYP_NETX4000
 #define MAX_SECTORS             512
 #else
 #define MAX_SECTORS             256

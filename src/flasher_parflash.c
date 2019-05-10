@@ -23,7 +23,7 @@
 #include "asic_types.h"
 #include "progress_bar.h"
 #include "uprintf.h"
-#if ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#if ASIC_TYP==ASIC_TYP_NETX4000
 #include "pl353_nor.h"
 #endif
 
@@ -211,7 +211,7 @@ static void setup_flash(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits
 	}
 }
 
-#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#elif ASIC_TYP==ASIC_TYP_NETX4000
 static void setup_flash_rap_nor(const PARFLASH_CONFIGURATION_T *ptCfg, BUS_WIDTH_T tBits)
 {
 	MEMORY_WIDTH_T tBusWidth = tBits == BUS_WIDTH_16Bit? MEMORY_WIDTH_16Bit:MEMORY_WIDTH_08Bit;
@@ -345,7 +345,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 		ptFlashDevice->pfnSetup = setup_flash;
 	}
 	
-#elif ASIC_TYP==ASIC_TYP_NETX4000_RELAXED
+#elif ASIC_TYP==ASIC_TYP_NETX4000
 #if 0
 	if( uiUnit==0 )
 	{

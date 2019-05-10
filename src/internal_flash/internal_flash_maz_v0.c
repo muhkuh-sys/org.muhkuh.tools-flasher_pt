@@ -57,7 +57,7 @@ typedef union IFLASH_PAGE_BUFFER_UNION
 
 typedef struct FLASH_BLOCK_ATTRIBUTES_STRUCT
 {
-	NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea;
+	HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea;
 	unsigned long ulUnitOffsetInBytes;
 } FLASH_BLOCK_ATTRIBUTES_T;
 
@@ -107,7 +107,7 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 	HOSTDEF(ptIflashCfg0ComArea);
 	HOSTDEF(ptIflashCfg1ComArea);
 	HOSTDEF(ptIflashCfg2Area);
-	NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea;
+	HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea;
 	unsigned long ulUnitOffsetInBytes;
 	INTERNAL_FLASH_AREA_T tArea;
 
@@ -230,7 +230,7 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 
 
 
-static void internal_flash_select_page(NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea, int iMain0_Info1_InfoK2)
+static void internal_flash_select_page(HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea, int iMain0_Info1_InfoK2)
 {
 	unsigned long ulValue;
 
@@ -255,7 +255,7 @@ static void internal_flash_select_page(NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea, 
 
 
 /* Set the mode (read/erase/program) and select main array or info page */
-static void internal_flash_select_mode_and_clear_caches(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea, unsigned long ulMode)
+static void internal_flash_select_mode_and_clear_caches(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea, unsigned long ulMode)
 {
 	/* Reset the flash. This clears the "read" caches. */
 	ptIFlashCfgArea->ulIflash_reset = HOSTMSK(iflash_reset_reset);
@@ -273,14 +273,14 @@ static void internal_flash_select_mode_and_clear_caches(const INTERNAL_FLASH_ATT
 
 
 
-static void internal_flash_select_read_mode_and_clear_caches(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea)
+static void internal_flash_select_read_mode_and_clear_caches(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea)
 {
 	internal_flash_select_mode_and_clear_caches(ptAttr, ptIFlashCfgArea, IFLASH_MODE_READ);
 }
 
 
 
-static void iflash_start_and_wait(NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea)
+static void iflash_start_and_wait(HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea)
 {
 	unsigned long ulValue;
 
@@ -298,7 +298,7 @@ static void iflash_start_and_wait(NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea)
 
 
 
-static void iflash_enter_ifren1_access(NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea)
+static void iflash_enter_ifren1_access(HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea)
 {
 	unsigned long ulValue;
 
@@ -335,7 +335,7 @@ static void iflash_enter_ifren1_access(NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea)
 
 
 
-static void iflash_leave_ifren1_access(NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea)
+static void iflash_leave_ifren1_access(HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea)
 {
 	ptIFlashCfgArea->ulIflash_special_cfg = HOSTMSK(iflash_special_cfg_tmr);
 	ptIFlashCfgArea->ulIflash_mode_cfg = IFLASH_MODE_READ;
@@ -343,7 +343,7 @@ static void iflash_leave_ifren1_access(NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea)
 
 
 
-static void iflash_manual_erase(NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea, unsigned long ulXAddr)
+static void iflash_manual_erase(HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea, unsigned long ulXAddr)
 {
 	unsigned long ulValue;
 
@@ -382,7 +382,7 @@ static void iflash_manual_erase(NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea, unsigne
 
 
 
-static void iflash_manual_program(NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea, unsigned long ulXAdr, unsigned long ulYAdr, const unsigned long *pulData)
+static void iflash_manual_program(HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea, unsigned long ulXAdr, unsigned long ulYAdr, const unsigned long *pulData)
 {
 	unsigned long ulValue;
 	unsigned long ulEcc;
@@ -540,7 +540,7 @@ static unsigned long is_block_erased(const FLASH_BLOCK_ATTRIBUTES_T *ptAttr, uns
 static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase_block(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, unsigned long ulOffsetInBytes)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea;
+	HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea;
 	unsigned long ulMisalignmentInBytes;
 	unsigned long ulBlockNumber;
 	unsigned long ulXAddr;
@@ -633,7 +633,7 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase_block(const INTERNAL
 static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash_page(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, unsigned long ulOffsetInBytes, IFLASH_PAGE_BUFFER_T *ptDataToBeFlashed)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	NX90_IFLASH_CFG_AREA_T *ptIFlashCfgArea;
+	HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea;
 	unsigned long ulMisalignment;
 	unsigned long ulXAddr;
 	unsigned long ulYAddr;

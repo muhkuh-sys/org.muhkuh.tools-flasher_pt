@@ -21,14 +21,14 @@
 #include "mmio.h"
 
 
-void mmio_activate(const unsigned char *pucMmioPins, size_t sizMmioPins, const MMIO_CFG_T *ptMmioValues)
+void mmio_activate(const unsigned char *pucMmioPins, size_t sizMmioPins, const HOSTMMIODEF *ptMmioValues)
 {
 	HOSTDEF(ptAsicCtrlArea);
 	HOSTDEF(ptMmioCtrlArea);
 	const unsigned char *pucCnt;
 	const unsigned char *pucEnd;
 	unsigned int uiMmioPin;
-	MMIO_CFG_T tMmioCfg;
+	HOSTMMIODEF tMmioCfg;
 
 
 	/* Loop over all pins in the array. */
@@ -51,14 +51,14 @@ void mmio_activate(const unsigned char *pucMmioPins, size_t sizMmioPins, const M
 }
 
 
-void mmio_deactivate(const unsigned char *pucMmioPins, size_t sizMmioPins, const MMIO_CFG_T *ptMmioValues)
+void mmio_deactivate(const unsigned char *pucMmioPins, size_t sizMmioPins, const HOSTMMIODEF *ptMmioValues)
 {
 	HOSTDEF(ptAsicCtrlArea);
 	HOSTDEF(ptMmioCtrlArea);
 	const unsigned char *pucCnt;
 	const unsigned char *pucEnd;
 	unsigned int uiMmioPin;
-	MMIO_CFG_T tMmioCfg;
+	HOSTMMIODEF tMmioCfg;
 
 
 	/* Loop over all pins in the array. */
@@ -75,7 +75,7 @@ void mmio_deactivate(const unsigned char *pucMmioPins, size_t sizMmioPins, const
 		{
 			/* Deactivate the pin. */
 			ptAsicCtrlArea->ulAsic_ctrl_access_key = ptAsicCtrlArea->ulAsic_ctrl_access_key; /* @suppress("Assignment to itself") */
-			ptMmioCtrlArea->aulMmio_cfg[uiMmioPin] = MMIO_CFG_DISABLE;
+			ptMmioCtrlArea->aulMmio_cfg[uiMmioPin] = HOSTMMIO(DISABLE);
 		}
 	} while( pucCnt<pucEnd );
 }
