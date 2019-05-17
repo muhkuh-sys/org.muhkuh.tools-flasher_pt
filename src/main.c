@@ -45,7 +45,6 @@
 /* ------------------------------------- */
 
 
-
 static NETX_CONSOLEAPP_RESULT_T opMode_detect(tFlasherInputParameter *ptAppParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
@@ -65,11 +64,13 @@ static NETX_CONSOLEAPP_RESULT_T opMode_detect(tFlasherInputParameter *ptAppParam
 	tSourceTyp = ptParameter->tSourceTyp;
 	switch(tSourceTyp)
 	{
+#ifdef CFG_INCLUDE_PARFLASH
 	case BUS_ParFlash:
 		/* Use parallel flash */
 		uprintf("Parallel flash\n");
 		tResult = parflash_detect(ptParameter);
 		break;
+#endif
 
 	case BUS_SPI:
 		/* Use SPI flash */
@@ -90,11 +91,13 @@ static NETX_CONSOLEAPP_RESULT_T opMode_detect(tFlasherInputParameter *ptAppParam
 
 		break;
 
+#ifdef CFG_INCLUDE_INTFLASH
 	case BUS_IFlash:
 		/* Use internal flash */
 		uprintf("internal flash\n");
 		tResult = internal_flash_detect(ptParameter);
 		break;
+#endif
 
 	default:
 		/* Unknown boot device */
@@ -138,11 +141,13 @@ static NETX_CONSOLEAPP_RESULT_T check_device_description(const DEVICE_DESCRIPTIO
 		tSourceTyp = ptDeviceDescription->tSourceTyp;
 		switch(tSourceTyp)
 		{
+#ifdef CFG_INCLUDE_PARFLASH
 		case BUS_ParFlash:
 			/* Use parallel flash. */
 			uprintf(". Device type: Parallel flash\n");
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 			break;
+#endif
 	
 		case BUS_SPI:
 			/* Use SPI flash */
@@ -150,11 +155,13 @@ static NETX_CONSOLEAPP_RESULT_T check_device_description(const DEVICE_DESCRIPTIO
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 			break;
 
+#ifdef CFG_INCLUDE_INTFLASH
 		case BUS_IFlash:
 			/* Use internal flash */
 			uprintf(". Device type: internal flash\n");
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 			break;
+#endif
 	
 		default:
 			/*  unknown boot device */
@@ -186,19 +193,26 @@ static NETX_CONSOLEAPP_RESULT_T opMode_flash(tFlasherInputParameter *ptAppParams
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 	switch(tSourceTyp)
 	{
+#ifdef CFG_INCLUDE_PARFLASH
 	case BUS_ParFlash:
 		/* Use parallel flash. */
 		tResult = parflash_flash(&(ptAppParams->uParameter.tFlash));
 		break;
+#endif
 
 	case BUS_SPI:
 		/* Use SPI flash. */
 		tResult = spi_flash(&(ptParameter->ptDeviceDescription->uInfo.tSpiInfo), ptParameter->ulStartAdr, ptParameter->ulDataByteSize, ptParameter->pucData);
 		break;
 
+#ifdef CFG_INCLUDE_INTFLASH
 	case BUS_IFlash:
 		/* Use internal flash. */
 		tResult = internal_flash_flash(&(ptAppParams->uParameter.tFlash));
+		break;
+#endif
+	default:
+		uprintf("! Unknown device type: 0x%08x\n", tSourceTyp);
 		break;
 	}
 
@@ -226,19 +240,26 @@ static NETX_CONSOLEAPP_RESULT_T opMode_erase(tFlasherInputParameter *ptAppParams
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 	switch(tSourceTyp)
 	{
+#ifdef CFG_INCLUDE_PARFLASH
 	case BUS_ParFlash:
 		/* Use parallel flash. */
 		tResult = parflash_erase(&(ptAppParams->uParameter.tErase));
 		break;
+#endif
 
 	case BUS_SPI:
 		/* Use SPI flash. */
 		tResult = spi_erase(&(ptParameter->ptDeviceDescription->uInfo.tSpiInfo), ptParameter->ulStartAdr, ptParameter->ulEndAdr);
 		break;
 
+#ifdef CFG_INCLUDE_INTFLASH
 	case BUS_IFlash:
 		/* Use internal flash. */
 		tResult = internal_flash_erase(&(ptAppParams->uParameter.tErase));
+		break;
+#endif
+	default:
+		uprintf("! Unknown device type: 0x%08x\n", tSourceTyp);
 		break;
 	}
 	return tResult;
@@ -265,19 +286,26 @@ static NETX_CONSOLEAPP_RESULT_T opMode_read(tFlasherInputParameter *ptAppParams)
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 	switch(tSourceTyp)
 	{
+#ifdef CFG_INCLUDE_PARFLASH
 	case BUS_ParFlash:
 		/* Use parallel flash. */
 		tResult = parflash_read(&(ptAppParams->uParameter.tRead));
 		break;
+#endif
 		
 	case BUS_SPI:
 		/* Use SPI flash. */
 		tResult = spi_read(&(ptParameter->ptDeviceDescription->uInfo.tSpiInfo), ptParameter->ulStartAdr, ptParameter->ulEndAdr, ptParameter->pucData);
 		break;
 
+#ifdef CFG_INCLUDE_INTFLASH
 	case BUS_IFlash:
 		/* Use internal flash. */
 		tResult = internal_flash_read(&(ptAppParams->uParameter.tRead));
+		break;
+#endif
+	default:
+		uprintf("! Unknown device type: 0x%08x\n", tSourceTyp);
 		break;
 	}
 
@@ -306,19 +334,26 @@ static NETX_CONSOLEAPP_RESULT_T opMode_verify(tFlasherInputParameter *ptAppParam
 
 	switch(tSourceTyp)
 	{
+#ifdef CFG_INCLUDE_PARFLASH
 	case BUS_ParFlash:
 		/* Use parallel flash. */
 		tResult = parflash_verify(&(ptAppParams->uParameter.tVerify), ptConsoleParams);
 		break;
+#endif
 		
 	case BUS_SPI:
 		/* Use SPI flash. */
 		tResult = spi_verify(&(ptParameter->ptDeviceDescription->uInfo.tSpiInfo), ptParameter->ulStartAdr, ptParameter->ulEndAdr, ptParameter->pucData, &(ptConsoleParams->pvReturnMessage));
 		break;
 
+#ifdef CFG_INCLUDE_INTFLASH
 	case BUS_IFlash:
 		/* Use internal flash. */
 		tResult = internal_flash_verify(&(ptAppParams->uParameter.tVerify), ptConsoleParams);
+		break;
+#endif
+	default:
+		uprintf("! Unknown device type: 0x%08x\n", tSourceTyp);
 		break;
 	}
 
@@ -346,19 +381,26 @@ static NETX_CONSOLEAPP_RESULT_T opMode_checksum(tFlasherInputParameter *ptAppPar
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 	switch(tSourceTyp)
 	{
+#ifdef CFG_INCLUDE_PARFLASH
 	case BUS_ParFlash:
 		/* Use parallel flash. */
 		tResult = parflash_sha1(&(ptAppParams->uParameter.tChecksum), &tShaContext);
 		break;
+#endif
 		
 	case BUS_SPI:
 		/* Use SPI flash. */
 		tResult = spi_sha1(&(ptParameter->ptDeviceDescription->uInfo.tSpiInfo), ptParameter->ulStartAdr, ptParameter->ulEndAdr, &tShaContext);
 		break;
 
+#ifdef CFG_INCLUDE_INTFLASH
 	case BUS_IFlash:
 		/* Use the internal flash. */
 		tResult = internal_flash_sha1(&(ptAppParams->uParameter.tChecksum), &tShaContext);
+		break;
+#endif
+	default:
+		uprintf("! Unknown device type: 0x%08x\n", tSourceTyp);
 		break;
 	}
 
@@ -391,19 +433,26 @@ static NETX_CONSOLEAPP_RESULT_T opMode_isErased(tFlasherInputParameter *ptAppPar
 	tSourceTyp = ptAppParams->uParameter.tFlash.ptDeviceDescription->tSourceTyp;
 	switch(tSourceTyp)
 	{
+#ifdef CFG_INCLUDE_PARFLASH
 	case BUS_ParFlash:
 		/* Use parallel flash. */
 		tResult = parflash_isErased(&(ptAppParams->uParameter.tIsErased), ptConsoleParams);
 		break;
+#endif
 
 	case BUS_SPI:
 		/* Use SPI flash. */
 		tResult = spi_isErased(&(ptParameter->ptDeviceDescription->uInfo.tSpiInfo), ptParameter->ulStartAdr, ptParameter->ulEndAdr, &(ptConsoleParams->pvReturnMessage));
 		break;
 
+#ifdef CFG_INCLUDE_INTFLASH
 	case BUS_IFlash:
 		/* Use SPI flash. */
 		tResult = internal_flash_isErased(&(ptAppParams->uParameter.tIsErased), ptConsoleParams);
+		break;
+#endif
+	default:
+		uprintf("! Unknown device type: 0x%08x\n", tSourceTyp);
 		break;
 	}
 
@@ -426,14 +475,17 @@ static unsigned long getFlashSize(const DEVICE_DESCRIPTION_T *ptDeviceDescriptio
 	tSrcType = ptDeviceDescription->tSourceTyp;
 	switch(tSrcType)
 	{
+#ifdef CFG_INCLUDE_PARFLASH
 	case BUS_ParFlash:
 		ulFlashSize = ptDeviceDescription->uInfo.tParFlash.ulFlashSize;
 		break;
+#endif
 
 	case BUS_SPI:
 		ulFlashSize = ptDeviceDescription->uInfo.tSpiInfo.tAttributes.ulSize;
 		break;
 
+#ifdef CFG_INCLUDE_INTFLASH
 	case BUS_IFlash:
 		switch(ptDeviceDescription->uInfo.tInternalFlashInfo.tType)
 		{
@@ -444,6 +496,10 @@ static unsigned long getFlashSize(const DEVICE_DESCRIPTION_T *ptDeviceDescriptio
 			ulFlashSize = ptDeviceDescription->uInfo.tInternalFlashInfo.uAttributes.tMazV0.ulSizeInBytes;
 			break;
 		}
+		break;
+#endif
+	default:
+		uprintf("! Unknown device type: 0x%08x\n", tSrcType);
 		break;
 	}
 
@@ -473,19 +529,26 @@ static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(tFlasherInputParameter *ptAp
 	tSrcType = ptAppParams->uParameter.tGetEraseArea.ptDeviceDescription->tSourceTyp;
 	switch(tSrcType)
 	{
+#ifdef CFG_INCLUDE_PARFLASH
 	case BUS_ParFlash:
 		/* Use parallel flash. */
 		tResult = parflash_getEraseArea(&(ptAppParams->uParameter.tGetEraseArea));
 		break;
+#endif
 
 	case BUS_SPI:
 		/* Use SPI flash. */
 		tResult = spi_getEraseArea(&(ptParameter->ptDeviceDescription->uInfo.tSpiInfo), ptParameter->ulStartAdr, ptParameter->ulEndAdr, &(ptParameter->ulStartAdr), &(ptParameter->ulEndAdr));
 		break;
 
+#ifdef CFG_INCLUDE_INTFLASH
 	case BUS_IFlash:
 		/* Use internal flash. */
 		tResult = internal_flash_getEraseArea(&(ptAppParams->uParameter.tGetEraseArea));
+		break;
+#endif
+	default:
+		uprintf("! Unknown device type: 0x%08x\n", tSrcType);
 		break;
 	}
 
@@ -613,7 +676,9 @@ static NETX_CONSOLEAPP_RESULT_T check_params(NETX_CONSOLEAPP_PARAMETER_T *ptCons
 	ulParamVersion = ptAppParams->ulParamVersion;
 	if( ulParamVersion!=FLASHER_INTERFACE_VERSION )
 	{
-		uprintf("! unknown parameter version: %04x.%04x. Expected 0002.0000!\n", ulParamVersion>>16, ulParamVersion&0xffff);
+		uprintf("! unknown parameter version: %04x.%04x. Expected %04x.%04x!\n", 
+			ulParamVersion>>16, ulParamVersion&0xffff, 
+			FLASHER_INTERFACE_VERSION>>16, FLASHER_INTERFACE_VERSION&0xffff);
 		return NETX_CONSOLEAPP_RESULT_ERROR;
 	}
 	

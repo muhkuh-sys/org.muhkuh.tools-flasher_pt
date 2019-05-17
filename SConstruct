@@ -112,7 +112,6 @@ flasher_sources_lib = """
 	src/exodecr.c
 	src/flasher_parflash.c
 	src/flasher_spi.c
-	src/i2c_hifsta.c
 	src/sfdp.c
 	src/spansion.c
 	src/spi_macro_player.c
@@ -207,7 +206,15 @@ flasher_sources_main_netiol = """
 """
 
 flasher_sources_lib_netiol = """
+	src/delay.c
+	src/spi_flash.c
+	src/exodecr.c
+	src/flasher_spi.c
+	src/sfdp.c
+	src/spi_macro_player.c
+	src/units.c
 	src/netiol/board.c
+	src/drv_spi_hsoc_v2.c
 """
 
 
@@ -217,7 +224,7 @@ src_lib_netx90   = flasher_sources_lib + flasher_sources_lib_netx90
 src_lib_netx56   = flasher_sources_lib + flasher_sources_lib_netx56
 src_lib_netx50   = flasher_sources_lib + flasher_sources_lib_netx50
 src_lib_netx10   = flasher_sources_lib + flasher_sources_lib_netx10
-src_lib_netiol   = flasher_sources_lib + flasher_sources_lib_netiol
+src_lib_netiol   = flasher_sources_lib_netiol
 
 src_main_netx4000 = flasher_sources_main + flasher_sources_main_netx4000
 src_main_netx500  = flasher_sources_main + flasher_sources_main_netx500
@@ -242,47 +249,48 @@ atEnv.DEFAULT.Version('targets/version/flasher_version.xsl', 'templates/flasher_
 #
 astrCommonIncludePaths = ['src', 'src/sha1_arm', '#platform/src', '#platform/src/lib', 'targets/spi_flash_types', 'targets/version']
 
+# Note: CFG_INCLUDE_PARFLASH, CFG_INCLUDE_INTFLASH are checked using ifdef. The value is irrelevant.
 if 'NETX4000' in atPickNetxForBuild:
     env_netx4000_default = atEnv.NETX4000.Clone()
     env_netx4000_default.Replace(LDFILE = File('src/netx4000/netx4000.ld'))
     env_netx4000_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx4000'])
-    env_netx4000_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+    env_netx4000_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1'], ['CFG_INCLUDE_PARFLASH', '1']])
 
 if 'NETX500' in atPickNetxForBuild:
     env_netx500_default = atEnv.NETX500.Clone()
     env_netx500_default.Replace(LDFILE = File('src/netx500/netx500.ld'))
     env_netx500_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx500'])
-    env_netx500_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+    env_netx500_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1'], ['CFG_INCLUDE_PARFLASH', '1']])
 
 if 'NETX90_MPW' in atPickNetxForBuild:
     env_netx90_mpw_default  = atEnv.NETX90_MPW.Clone()
     env_netx90_mpw_default.Replace(LDFILE = File('src/netx90/netx90.ld'))
     env_netx90_mpw_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx90'])
-    env_netx90_mpw_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '0']])
+    env_netx90_mpw_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '0'], ['CFG_INCLUDE_PARFLASH', '1'], ['CFG_INCLUDE_INTFLASH', '1']])
 
 if 'NETX90' in atPickNetxForBuild:
     env_netx90_default  = atEnv.NETX90.Clone()
     env_netx90_default.Replace(LDFILE = File('src/netx90/netx90.ld'))
     env_netx90_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx90'])
-    env_netx90_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '0']])
+    env_netx90_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '0'], ['CFG_INCLUDE_PARFLASH', '1'], ['CFG_INCLUDE_INTFLASH', '1']])
 
 if 'NETX56' in atPickNetxForBuild:
     env_netx56_default  = atEnv.NETX56.Clone()
     env_netx56_default.Replace(LDFILE = File('src/netx56/netx56.ld'))
     env_netx56_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx56'])
-    env_netx56_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+    env_netx56_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1'], ['CFG_INCLUDE_PARFLASH', '1']])
 
 if 'NETX50' in atPickNetxForBuild:
     env_netx50_default  = atEnv.NETX50.Clone()
     env_netx50_default.Replace(LDFILE = File('src/netx50/netx50.ld'))
     env_netx50_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx50'])
-    env_netx50_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+    env_netx50_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1'], ['CFG_INCLUDE_PARFLASH', '1']])
 
 if 'NETX10' in atPickNetxForBuild:
     env_netx10_default  = atEnv.NETX10.Clone()
     env_netx10_default.Replace(LDFILE = File('src/netx10/netx10.ld'))
     env_netx10_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx10'])
-    env_netx10_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+    env_netx10_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1'], ['CFG_INCLUDE_PARFLASH', '1']])
 
 if 'NETIOL' in atPickNetxForBuild:
     env_netiol_default  = atEnv.NETIOL.Clone()
@@ -424,12 +432,11 @@ if 'NETX10' in atPickNetxForBuild:
     env_netx10_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
     elf_netx10_dbg, bin_netx10_dbg, lib_netx10_dbg = flasher_build('flasher_netx10_debug', env_netx10_dbg, 'targets/netx10_dbg', src_lib_netx10, src_main_netx10)
 
-# NOTE: Do not build a debug version, it does not fit into the memory.
-#if 'NETIOL' in atPickNetxForBuild:
-#    env_netiol_dbg = env_netiol_default.Clone()
-#    env_netiol_dbg.Replace(LIBS = ['c'])
-#    env_netiol_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-#    elf_netiol_dbg, bin_netiol_dbg, lib_netiol_dbg = flasher_build('flasher_netiol_debug', env_netiol_dbg, 'targets/netiol_dbg', src_lib_netiol, src_main_netiol)
+if 'NETIOL' in atPickNetxForBuild:
+    env_netiol_dbg = env_netiol_default.Clone()
+    env_netiol_dbg.Replace(LIBS = ['c'])
+    env_netiol_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
+    elf_netiol_dbg, bin_netiol_dbg, lib_netiol_dbg = flasher_build('flasher_netiol_debug', env_netiol_dbg, 'targets/netiol_dbg', src_lib_netiol, src_main_netiol)
 
 
 #----------------------------------------------------------------------------
@@ -621,6 +628,7 @@ if fBuildIsFull==True:
         'targets/testbench/netx/flasher_netx56.bin':                       bin_netx56_nodbg,
         'targets/testbench/netx/flasher_netx50.bin':                       bin_netx50_nodbg,
         'targets/testbench/netx/flasher_netx10.bin':                       bin_netx10_nodbg,
+        'targets/testbench/netx/flasher_netiol.bin':                       bin_netiol_nodbg,
 
         # Copy all debug binaries.
         'targets/testbench/netx/debug/flasher_netx4000_debug.bin':         bin_netx4000_dbg,
@@ -630,6 +638,7 @@ if fBuildIsFull==True:
         'targets/testbench/netx/debug/flasher_netx56_debug.bin':           bin_netx56_dbg,
         'targets/testbench/netx/debug/flasher_netx50_debug.bin':           bin_netx50_dbg,
         'targets/testbench/netx/debug/flasher_netx10_debug.bin':           bin_netx10_dbg,
+        'targets/testbench/netx/debug/flasher_netiol_debug.bin':           bin_netiol_dbg,
 
         # Copy all LUA modules.
         'targets/testbench/lua/flasher.lua':                               lua_flasher,
@@ -676,6 +685,7 @@ if fBuildIsFull==True:
         'targets/flasher_lib/libflasher_netx56.a':                         lib_netx56_nodbg,
         'targets/flasher_lib/libflasher_netx50.a':                         lib_netx50_nodbg,
         'targets/flasher_lib/libflasher_netx50.a':                         lib_netx10_nodbg,
+        'targets/flasher_lib/libflasher_netiol.a':                         lib_netiol_nodbg,
 
         'targets/flasher_lib/libflasher_netx4000_debug.a':                 lib_netx4000_dbg,
         'targets/flasher_lib/libflasher_netx500_debug.a':                  lib_netx500_dbg,
@@ -683,6 +693,7 @@ if fBuildIsFull==True:
         'targets/flasher_lib/libflasher_netx56_debug.a':                   lib_netx56_dbg,
         'targets/flasher_lib/libflasher_netx50_debug.a':                   lib_netx50_dbg,
         'targets/flasher_lib/libflasher_netx50_debug.a':                   lib_netx10_dbg,
+        'targets/flasher_lib/libflasher_netiol_debug.a':                   lib_netiol_dbg,
     }
 
     for tDst, tSrc in atCopyFiles.iteritems():
