@@ -23,11 +23,11 @@
 
 #include "drv_spi_hsoc_v2.h"
 
-#include "mmio.h"
 #include "netx_io_areas.h"
 
 
 #if ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56
+#include "mmio.h"
 static const HOSTMMIODEF aatMmioValues[3][4] =
 {
 	/*
@@ -61,6 +61,7 @@ static const HOSTMMIODEF aatMmioValues[3][4] =
 	}
 };
 #elif ASIC_TYP==ASIC_TYP_NETX4000
+#include "mmio.h"
 
 static const HOSTMMIODEF aatMmioValues_SPI0[3][4] =
 {
