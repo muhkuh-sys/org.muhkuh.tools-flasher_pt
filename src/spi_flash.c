@@ -33,7 +33,7 @@
 /* netX10, netX56, netX4000 and netX90 have a SQI and a SPI unit. */
 #	include "drv_sqi.h"
 #	include "drv_spi_hsoc_v2.h"
-#elif ASIC_TYP==ASIC_TYP_NETX50
+#elif ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETIOL
 #	include "drv_spi_hsoc_v2.h"
 #elif ASIC_TYP==ASIC_TYP_NETX500
 #	include "drv_spi_hsoc_v1.h"
@@ -662,6 +662,20 @@ int board_get_spi_driver(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SP
 		iResult = -1;
 		break;
 	}
+
+#elif ASIC_TYP==ASIC_TYP_NETIOL
+	switch( uiUnit )
+	{
+	case 1:
+		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi);
+		iResult = flasher_drv_spi_init(ptSpiDev, ptSpiCfg);
+		break;
+		
+	default:
+		iResult = -1;
+		break;
+	}
+	
 #else
 	DBG_ERROR_VAL("Unknown ASIC type %d. Forgot to extend this function for a new ASIC?", ASIC_TYP)
 	iResult = -1;
