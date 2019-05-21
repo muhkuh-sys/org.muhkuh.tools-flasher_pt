@@ -494,6 +494,15 @@ int flasher_drv_spi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATI
 	{
 		mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues_SPI1[uiChipSelect]);
 	}
+#elif ASIC_TYP==ASIC_TYP_NETIOL
+	/* Select mux for SPI master:  2=010 AI-pins with CS */
+	HOSTDEF(ptAsicCtrlArea)
+	unsigned long ulVal = ptAsicCtrlArea->aulAsic_ctrl_io_config[0];
+	ulVal &= ~MSK_NIOL_asic_ctrl_io_config0_sel_spi;
+	ulVal |= (0x2UL <<  SRT_NIOL_asic_ctrl_io_config0_sel_spi);
+	ulVal |= (0x1cUL << SRT_NIOL_asic_ctrl_io_config0_pw);
+	ptAsicCtrlArea->aulAsic_ctrl_io_config[0] = ulVal;
+	
 #endif
 	return iResult;
 }
