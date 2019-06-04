@@ -14,5 +14,10 @@
 	</info>
 	<dependencies>
 		<dependency group="org.muhkuh.tools" module="muhkuh_base_cli" artifact="lua5.1-muhkuh_base_cli" version="2.3.0"/>
+		<dependency group="com.github.mpeterv" module="argparse" artifact="argparse" version="0.6"/>
+		<dependency group="com.github.moteus" module="lua-log" artifact="lua-log" version="0.1.6"/>
+		<dependency group="com.github.stevedonovan" module="penlight" artifact="penlight" version="1.6"/>
+		<dependency group="org.muhkuh.lua" module="archive" artifact="lua5.1-archive" version="0.0.1"/>
+		<dependency group="uk.co.matthewwild" module="luaexpat" artifact="lua5.1-luaexpat" version="1.3.0"/>
 	</dependencies>
 </jonchki-artifact>

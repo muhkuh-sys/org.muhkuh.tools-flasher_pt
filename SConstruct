@@ -564,7 +564,9 @@ if fBuildIsFull==True:
 
     tArcList.AddFiles('lua/',
         lua_flasher,
-        'lua/flasher_test.lua')
+        'lua/flasher_test.lua',
+        'lua/lua/Version.lua',
+        'lua/lua/wfp_control.lua')
 
     tArcList.AddFiles('demo/',
         'lua/cli_flash.lua',
@@ -589,6 +591,7 @@ if fBuildIsFull==True:
         'lua/read_bootimage_intflash0.lua',
         'lua/read_bootimage_intflash2.lua',
         'lua/read_complete_flash.lua',
+        'lua/wfp.lua',
         tDemoShowEraseAreas)
 
     tArcList.AddFiles('',
@@ -632,7 +635,9 @@ if fBuildIsFull==True:
         'targets/testbench/netx/debug/flasher_netx10_debug.bin':           bin_netx10_dbg,
 
         # Copy all LUA modules.
+        'targets/testbench/lua/Version.lua':                               'lua/lua/Version.lua',
         'targets/testbench/lua/flasher.lua':                               lua_flasher,
+        'targets/testbench/lua/wfp_control.lua':                           'lua/lua/wfp_control.lua',
 
         # Copy all LUA scripts.
         'targets/testbench/cli_flash.lua':                                 'lua/cli_flash.lua',
@@ -659,6 +664,7 @@ if fBuildIsFull==True:
         'targets/testbench/read_bootimage_intflash2.lua':                  'lua/read_bootimage_intflash2.lua',
         'targets/testbench/read_complete_flash.lua':                       'lua/read_complete_flash.lua',
         'targets/testbench/test_netx90_intflash.lua':                      'lua/test_netx90_intflash.lua',
+        'targets/testbench/wfp.lua':                                       'lua/wfp.lua',
         'targets/testbench/show_erase_areas.lua':                          tDemoShowEraseAreas,
 
         # collect the lib files in a directory
