@@ -426,6 +426,30 @@ end
 
 
 
+function WfpControl:openXml(strWfpControlFile)
+  local tResult
+  local tLog = self.tLog
+
+  -- Does the control file exist?
+  if self.pl.path.exists(strWfpControlFile)~=strWfpControlFile then
+    tLog.error('The WFP control file "%s" does not exist.', strWfpControlFile)
+  else
+    -- Read the control file from the WFP archive.
+    tLog.debug('Reading control file "%s".', strWfpControlFile)
+    local strData, strError = self.pl.utils.readfile(strWfpControlFile, false)
+    if strData==nil then
+      tLog.error('Faied to read the control file "%s" not found: %s', strWfpControlFile, strError)
+    else
+      -- Parse the XML file.
+      tResult = self:__parse_configuration(strData)
+    end
+  end
+
+  return tResult
+end
+
+
+
 function WfpControl:getTarget(iChiptype)
   local tTarget
   local tLog = self.tLog
