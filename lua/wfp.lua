@@ -15,7 +15,7 @@ local atLogLevels = {
   'fatal'
 }
 
-local tParser = argparse('wfp', 'Flash "wonderful feelings" packages.')
+local tParser = argparse('wfp', 'Flash, list and create "wonderful feelings" packages.')
   :command_target("strSubcommand")
 
 -- Add the "flash" command and all its options.
@@ -32,6 +32,18 @@ tParserCommandFlash:option('-v --verbose')
   :argname('<LEVEL>')
   :default('debug')
   :target('strLogLevel')
+
+-- Add the "list" command and all its options.
+local tParserCommandList = tParser:command('list l', 'List the contents of the WFP.')
+  :target('fCommandListSelected')
+tParserCommandList:argument('archive', 'The WFP file to process.')
+  :target('strWfpArchiveFile')
+tParserCommandList:option('-v --verbose')
+  :description(string.format('Set the verbosity level to LEVEL. Possible values for LEVEL are %s.', table.concat(atLogLevels, ', ')))
+  :argname('<LEVEL>')
+  :default('debug')
+  :target('strLogLevel')
+
 local tArgs = tParser:parse()
 
 local tLogWriterConsole = require 'log.writer.console'.new()
@@ -55,8 +67,6 @@ local atName2Bus = {
 local tWfpControl = wfp_control(tLogWriterFilter)
 
 local fOk = true
-
-tWfpControl.pl.pretty.dump(tArgs)
 
 if tArgs.fCommandFlashSelected==true then
   -- Read the control file from the WFP archive.
@@ -142,11 +152,45 @@ if tArgs.fCommandFlashSelected==true then
       end
     end
   end
+elseif tArgs.fCommandListSelected==true then
+  -- Read the control file from the WFP archive.
+  tLog.debug('Using WFP archive "%s".', tArgs.strWfpArchiveFile)
+  local tResult = tWfpControl:open(tArgs.strWfpArchiveFile)
+  if tResult==nil then
+    tLog.error('Failed to open the archive "%s"!', tArgs.strWfpArchiveFile)
+    fOk = false
+  else
+    tLog.info('WFP contents:')
+    for strTarget, tTarget in pairs(tWfpControl.atConfigurationTargets) do
+      tLog.info('  "%s":', strTarget)
+
+      -- Loop over all flashes.
+      for _, tTargetFlash in ipairs(tTarget.atFlashes) do
+        local strBusName = tTargetFlash.strBus
+        local tBus = atName2Bus[strBusName]
+        if tBus==nil then
+          tLog.error('Unknown bus "%s" found in WFP control file.', strBusName)
+          fOk = false
+          break
+        else
+          local ulUnit = tTargetFlash.ulUnit
+          local ulChipSelect = tTargetFlash.ulChipSelect
+          tLog.info('    Bus: %s, unit: %d, chip select: %d', strBusName, ulUnit, ulChipSelect)
+          for _, tData in ipairs(tTargetFlash.atData) do
+            local strFile = tData.strFile
+            local ulOffset = tData.ulOffset
+            tLog.info('      0x%08x: "%s"', ulOffset, strFile)
+          end
+        end
+      end
+
+      if fOk~=true then
+        break
+      end
+    end
+  end
 end
 
-if tArchive~=nil then
-  tArchive:close()
-end
 
 if fOk==true then
   tLog.info('')
