@@ -666,7 +666,7 @@ int board_get_spi_driver(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SP
 #elif ASIC_TYP==ASIC_TYP_NETIOL
 	switch( uiUnit )
 	{
-	case 1:
+	case 0:
 		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi);
 		iResult = flasher_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
