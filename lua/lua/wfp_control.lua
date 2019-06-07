@@ -406,14 +406,19 @@ function WfpControl:open(strWfpArchiveFile, strWfpControlFile)
   self.strWfpArchiveFile = strWfpArchiveFile
   self.strWfpControlFile = strWfpControlFile
 
-  -- Read the control file from the WFP archive.
-  tLog.debug('Reading control file "%s" from the WFP archive.', strWfpControlFile)
-  local strData = self:getData(strWfpControlFile)
-  if strData==nil then
-    tLog.error('Control file "%s" not found in the archive "%s"!', strWfpControlFile, strWfpArchiveFile)
+  -- Does the archive exist?
+  if self.pl.path.exists(strWfpArchiveFile)~=strWfpArchiveFile then
+    tLog.error('The WFP archive "%s" does not exist.', strWfpArchiveFile)
   else
-    -- Parse the XML file.
-    tResult = self:__parse_configuration(strData)
+    -- Read the control file from the WFP archive.
+    tLog.debug('Reading control file "%s" from the WFP archive.', strWfpControlFile)
+    local strData = self:getData(strWfpControlFile)
+    if strData==nil then
+      tLog.error('Control file "%s" not found in the archive "%s"!', strWfpControlFile, strWfpArchiveFile)
+    else
+      -- Parse the XML file.
+      tResult = self:__parse_configuration(strData)
+    end
   end
 
   return tResult
