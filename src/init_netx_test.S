@@ -6,17 +6,26 @@
 #include "asic_types.h"
 
 #if ASIC_TYP==ASIC_TYP_NETIOL
-/* The netIOL has a RISCV CPU. */
+/* The netIOL has a RISCV CPU. 
+ *
+ * The init code expects the address of the program parameters in reg a0 
+ * and stores the return value in this address.  
+ *
+ * Note: This init code does not return, but ends in an ebreak.
+ * It also does not save and restore any registers (stack pointer etc.).
+ * Thus, it's only suitable for use with JTAG. 
+*/
 
     .func start, start
     .type start, STT_FUNC
 start:
-	/* Save the current stack position. */
-	/* TODO... */
-
 	/* Set own stack position. */
 	la      x2, stack_top
-
+	
+	/* Push a0 (parameter address). */
+	addi    sp, sp, -4
+	sw      a0, 0(sp)
+	
 	/* Clear the .bss section (zero init). */
 	la      x26, __bss_start__
 	la      x27, __bss_end__
@@ -24,17 +33,57 @@ clear_bss:
 	sw      x0, 0(x26)
 	addi    x26, x26, 4
 	ble     x26, x27, clear_bss
+	
+	/* Call the program. */
+	jal     ra, netx_consoleapp_main
 
-	c.j     netx_consoleapp_main
+	/* The return value (status) is in a0. */
+	/* Pop the parameter address and store the return value. */
+	lw      a1, 0(sp)
+	sw      a0, 0(a1)
+	addi    sp, sp, 4
+	
 
-	/* Restore the old stack position. */
-	/* TODO... */
-
-	/* Return to whereever we came from. */
-	/* TODO... For now just stop. */
+	/* for now, just break */
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	ebreak 
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	/* loop endlessly */
 debug_stop:
 	jal     x0, debug_stop
-    .end
+
+.end
 
 
 #else
