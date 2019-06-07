@@ -46,22 +46,27 @@ local strWfpArchiveFile = 'wfp_test.tar.xz'
 -- Create the WFP controller.
 local tWfpControl = wfp_control(tLogWriterFilter)
 
+local fOk = true
+
 -- Read the control file from the WFP archive.
 tLog.debug('Using WFP archive "%s".', tArgs.strWfpArchiveFile)
 local tResult = tWfpControl:open(tArgs.strWfpArchiveFile)
 if tResult==nil then
   tLog.error('Failed to open the archive "%s"!', tArgs.strWfpArchiveFile)
+  fOk = false
 else
   -- Select a plugin and connect to the netX.
   local tPlugin = tester.getCommonPlugin()
   if not tPlugin then
     tLog.error('No plugin selected, nothing to do!')
+    fOk = false
   else
     local iChiptype = tPlugin:GetChiptyp()
     -- Does the WFP have an entry for the chip?
     local tTarget = tWfpControl:getTarget(iChiptype)
     if tTarget==nil then
       tLog.error('The chip type %s is not supported.', tostring(iChiptype))
+      fOk = false
     else
       -- Download the binary.
       local aAttr = flasher.download(tPlugin, strFlasherPrefix)
@@ -72,6 +77,7 @@ else
         local tBus = atName2Bus[strBusName]
         if tBus==nil then
           tLog.error('Unknown bus "%s" found in WFP control file.', strBusName)
+          fOk = false
           break
         else
           local ulUnit = tTargetFlash.ulUnit
@@ -81,7 +87,9 @@ else
           -- Detect the device.
           fOk = flasher.detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect)
           if fOk~=true then
-            error("Failed to detect the device!")
+            tLog.error("Failed to detect the device!")
+            fOk = false
+            break
           end
 
           for _, tData in ipairs(tTargetFlash.atData) do
@@ -96,23 +104,42 @@ else
               tLog.debug('Flashing %d bytes...', sizData)
 
               fOk, strMsg = flasher.eraseArea(tPlugin, aAttr, ulOffset, sizData)
-              assert(fOk, strMsg or "Error while erasing area")
-
-              fOk, strMsg = flasher.flashArea(tPlugin, aAttr, ulOffset, strData)
-              print(strMsg)
-              assert(fOk, strMsg or "Error while programming area")
+              if fOk~=true then
+                tLog.error('Failed to erase the area: %s', strMsg)
+                fOk = false
+                break
+              else
+                fOk, strMsg = flasher.flashArea(tPlugin, aAttr, ulOffset, strData)
+                if fOk~=true then
+                  tLog.error('Failed to flash the area: %s', strMsg)
+                  fOk = false
+                  break
+                end
+              end
             end
           end
+        end
+
+        if fOk~=true then
+          break
         end
       end
     end
   end
-
-
-
 end
 
 if tArchive~=nil then
   tArchive:close()
 end
 
+if fOk==true then
+  tLog.info('')
+  tLog.info(' #######  ##    ## ')
+  tLog.info('##     ## ##   ##  ')
+  tLog.info('##     ## ##  ##   ')
+  tLog.info('##     ## #####    ')
+  tLog.info('##     ## ##  ##   ')
+  tLog.info('##     ## ##   ##  ')
+  tLog.info(' #######  ##    ## ')
+  tLog.info('')
+end
