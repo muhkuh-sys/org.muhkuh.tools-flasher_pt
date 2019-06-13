@@ -35,6 +35,7 @@
 			<version>4.7.2_2</version>
 			<typ>tar.bz2</typ>
 		</tool>
+		<!-- For netx 4000/90. -->
 		<tool>
 			<group>org.gnu.gcc</group>
 			<name>gcc-arm-none-eabi</name>
@@ -42,6 +43,7 @@
 			<version>4.9.3_3</version>
 			<typ>tar.bz2</typ>
 		</tool>
+		<!-- For netIOL. -->
 		<tool>
 			<group>com.github.gnu-mcu-eclipse</group>
 			<name>gcc-riscv-none-embed</name>
