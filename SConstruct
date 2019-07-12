@@ -121,12 +121,16 @@ flasher_sources_main_netx4000 = """
 
 flasher_sources_lib_netx4000 = """
 	src/netx4000/board.c
+	src/netx4000/cr7_global_timer.c
+	src/netx4000/portcontrol.c
 	src/sha1_arm/sha1.c
 	src/sha1_arm/sha1_arm.S
 	src/drv_spi_hsoc_v2.c
 	src/drv_sqi.c
 	src/mmio.c
 	src/pl353_nor.c
+	src/netx4000/netx4000_sdio.c
+	src/netx4000/netx4000_sdio_wrap.c
 """
 
 
@@ -229,7 +233,7 @@ if 'NETX4000' in atPickNetxForBuild:
     env_netx4000_default = atEnv.NETX4000.Clone()
     env_netx4000_default.Replace(LDFILE = File('src/netx4000/netx4000.ld'))
     env_netx4000_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx4000'])
-    env_netx4000_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1']])
+    env_netx4000_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1'], ['CFG_INCLUDE_SDIO', '1']])
 
 if 'NETX500' in atPickNetxForBuild:
     env_netx500_default = atEnv.NETX500.Clone()

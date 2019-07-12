@@ -1,37 +1,33 @@
-
 #include "portcontrol.h"
-
 #include "netx_io_areas.h"
-/*#include "options.h"*/
 
+#if CFG_DEBUGMSG!=0
+	#include "uprintf.h"
+	/* show all messages by default */
+	static unsigned long s_ulCurSettings = 0xffffffff;
 
-#if CFG_DEBUGMSG==1
-/*#       include "uprintf_debug.h"*/
+	#define DEBUGZONE(n)  (s_ulCurSettings&(0x00000001<<(n)))
 
-#       define DEBUGZONE(n)  (g_t_romloader_options.t_debug_settings.ul_portcontrol&(0x00000001<<(n)))
+	/* NOTE: These defines must match the ZONE_* defines. */
+	#define DBG_ZONE_ERROR      0
+	#define DBG_ZONE_WARNING    1
+	#define DBG_ZONE_FUNCTION   2
+	#define DBG_ZONE_INIT       3
+	#define DBG_ZONE_VERBOSE    7
 
-	/*
-	 * These defines must match the ZONE_* defines
-	 */
-#       define DBG_ZONE_ERROR		0
-#       define DBG_ZONE_WARNING	1
-#       define DBG_ZONE_FUNCTION	2
-#       define DBG_ZONE_INIT		3
-#       define DBG_ZONE_VERBOSE	7
+	#define ZONE_ERROR          DEBUGZONE(DBG_ZONE_ERROR)
+	#define ZONE_WARNING        DEBUGZONE(DBG_ZONE_WARNING)
+	#define ZONE_FUNCTION       DEBUGZONE(DBG_ZONE_FUNCTION)
+	#define ZONE_INIT           DEBUGZONE(DBG_ZONE_INIT)
+	#define ZONE_VERBOSE        DEBUGZONE(DBG_ZONE_VERBOSE)
 
-#       define ZONE_ERROR		DEBUGZONE(DBG_ZONE_ERROR)
-#       define ZONE_WARNING		DEBUGZONE(DBG_ZONE_WARNING)
-#       define ZONE_FUNCTION		DEBUGZONE(DBG_ZONE_FUNCTION)
-#       define ZONE_INIT		DEBUGZONE(DBG_ZONE_INIT)
-#       define ZONE_VERBOSE		DEBUGZONE(DBG_ZONE_VERBOSE)
+	#define DEBUGMSG(cond,printf_exp) ((void)((cond)?(uprintf printf_exp),1:0))
+#else  /* CFG_DEBUGMSG!=0 */
+	#define DEBUGMSG(cond,printf_exp) ((void)0)
+#endif /* CFG_DEBUGMSG!=0 */
+ 
 
-#       define DEBUGMSG(cond,...) ((void)((cond)?(uprintf_debug(__VA_ARGS__)),1:0))
-#else
-#       define DEBUGMSG(cond,...) ((void)0)
-#endif
-
-
-
+#if 0
 void portcontrol_init(void)
 {
 	size_t sizCfgCnt;
@@ -59,7 +55,7 @@ void portcontrol_init(void)
 
 	DEBUGMSG(ZONE_FUNCTION, "-portcontrol_init\n");
 }
-
+#endif
 
 
 void portcontrol_apply(const unsigned short *pusIndex, const unsigned short *pusConfiguration, size_t sizConfiguration)
@@ -72,7 +68,7 @@ void portcontrol_apply(const unsigned short *pusIndex, const unsigned short *pus
 	volatile unsigned long *pulPortControl;
 
 
-	DEBUGMSG(ZONE_FUNCTION, "+portcontrol_apply(0x%08x, 0x%08x, %d)\n", pusIndex, pusConfiguration, sizConfiguration);
+	DEBUGMSG(ZONE_FUNCTION, ("+portcontrol_apply(0x%08x, 0x%08x, %d)\n", pusIndex, pusConfiguration, sizConfiguration));
 
 	pulPortControl = (volatile unsigned long*)HOSTADDR(PORTCONTROL);
 
@@ -88,12 +84,12 @@ void portcontrol_apply(const unsigned short *pusIndex, const unsigned short *pus
 		if( ulConfiguration!=PORTCONTROL_SKIP && ulOffset!=PORTCONTROL_SKIP )
 		{
 			/* Write the configuration. */
-			DEBUGMSG(ZONE_VERBOSE, "P[0x%04x] = 0x%08x\n", ulOffset, ulConfiguration);
+			DEBUGMSG(ZONE_VERBOSE, ("P[0x%04x] = 0x%08x\n", ulOffset, ulConfiguration));
 			pulPortControl[ulOffset] = ulConfiguration;
 		}
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, "-portcontrol_apply\n");
+	DEBUGMSG(ZONE_FUNCTION, ("-portcontrol_apply\n"));
 }
 
 
@@ -108,7 +104,7 @@ void portcontrol_apply_mmio(const unsigned char *pucMmioIndex, const unsigned sh
 	volatile unsigned long *pulPortControl;
 
 
-	DEBUGMSG(ZONE_FUNCTION, "+portcontrol_apply_mmio(0x%08x, 0x%08x, %d)\n", pucMmioIndex, pusConfiguration, sizConfiguration);
+	DEBUGMSG(ZONE_FUNCTION, ("+portcontrol_apply_mmio(0x%08x, 0x%08x, %d)\n", pucMmioIndex, pusConfiguration, sizConfiguration));
 
 	pulPortControl = (volatile unsigned long*)HOSTADDR(PORTCONTROL);
 
@@ -134,16 +130,16 @@ void portcontrol_apply_mmio(const unsigned char *pucMmioIndex, const unsigned sh
 			}
 
 			/* Write the configuration. */
-			DEBUGMSG(ZONE_VERBOSE, "P[0x%04x] = 0x%08x\n", ulOffset, ulConfiguration);
+			DEBUGMSG(ZONE_VERBOSE, ("P[0x%04x] = 0x%08x\n", ulOffset, ulConfiguration));
 			pulPortControl[ulOffset] = ulConfiguration;
 		}
 	}
 
-	DEBUGMSG(ZONE_FUNCTION, "-portcontrol_apply_mmio\n");
+	DEBUGMSG(ZONE_FUNCTION, ("-portcontrol_apply_mmio\n"));
 }
 
 
-
+#if 0
 void portcontrol_restore(const unsigned short *pusIndex, size_t sizConfiguration)
 {
 	const unsigned short *pusIndexCnt;
@@ -222,3 +218,4 @@ void portcontrol_restore_mmio(const unsigned char *pucMmioIndex, size_t sizConfi
 
 	DEBUGMSG(ZONE_FUNCTION, "-portcontrol_restore_mmio\n");
 }
+#endif

@@ -52,13 +52,23 @@ static const UNIT_TABLE_T tUnitTable_BusParFlash =
 };
 
 
+static const UNIT_TABLE_T tUnitTable_BusSDIO =
+{
+	.sizEntries = 1,
+	.atEntries =
+	{
+		{ 0,  "SDIO",      (void * const)HOSTADDR(SDIO) },
+	}
+};
+
 const BUS_TABLE_T tBusTable =
 {
-	.sizEntries = 2,
+	.sizEntries = 3,
 	.atEntries =
 	{
 		{ BUS_ParFlash,  "Parallel Flash",      &tUnitTable_BusParFlash },
-		{ BUS_SPI,       "Serial Flash",        &tUnitTable_BusSPI }
+		{ BUS_SPI,       "Serial Flash",        &tUnitTable_BusSPI },
+		{ BUS_SDIO,      "SD/MMC",              &tUnitTable_BusSDIO }
 	}
 };
 

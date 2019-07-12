@@ -40,10 +40,9 @@
 #include "systime.h"
 
 #include "main.h"
-
+#include "netx4000_sdio_wrap.h"
 
 /* ------------------------------------- */
-
 
 
 static NETX_CONSOLEAPP_RESULT_T opMode_detect(tFlasherInputParameter *ptAppParams)
@@ -95,6 +94,33 @@ static NETX_CONSOLEAPP_RESULT_T opMode_detect(tFlasherInputParameter *ptAppParam
 		uprintf("internal flash\n");
 		tResult = internal_flash_detect(ptParameter);
 		break;
+
+#ifdef CFG_INCLUDE_SDIO
+	case BUS_SDIO:
+		/* Use SDIO */
+		uprintf("SD/EMMC\n");
+		SDIO_HANDLE_T *ptSdioHandle = &(ptParameter->ptDeviceDescription->uInfo.tSdioHandle);
+		//const SDIO_OPTIONS_T *ptSdioOptions = &(ptParameter->uSourceParameter.tSdioOptions);
+		//tResult = sdio_detect_wrap(ptSdioHandle, ptSdioOptions);
+		tResult = sdio_detect_wrap(ptSdioHandle);
+		
+		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+		{
+			ptDeviceDescription->fIsValid = 1;
+			ptDeviceDescription->sizThis = sizeof(DEVICE_DESCRIPTION_T);
+			ptDeviceDescription->ulVersion = FLASHER_INTERFACE_VERSION;
+			ptDeviceDescription->tSourceTyp = BUS_SDIO;
+		}
+		else
+		{
+			/* Clear the result data. */
+			memset(ptDeviceDescription, 0, sizeof(DEVICE_DESCRIPTION_T));
+		}
+
+		
+		
+		break;
+#endif 
 
 	default:
 		/* Unknown boot device */
@@ -153,6 +179,12 @@ static NETX_CONSOLEAPP_RESULT_T check_device_description(const DEVICE_DESCRIPTIO
 		case BUS_IFlash:
 			/* Use internal flash */
 			uprintf(". Device type: internal flash\n");
+			tResult = NETX_CONSOLEAPP_RESULT_OK;
+			break;
+		
+		case BUS_SDIO:
+			/* SDIO */
+			uprintf(". Device type: SDIO\n");
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 			break;
 	
@@ -278,6 +310,11 @@ static NETX_CONSOLEAPP_RESULT_T opMode_read(tFlasherInputParameter *ptAppParams)
 	case BUS_IFlash:
 		/* Use internal flash. */
 		tResult = internal_flash_read(&(ptAppParams->uParameter.tRead));
+		break;
+		
+	case BUS_SDIO:
+		/* Use SDIO */
+		tResult = sdio_read(&(ptParameter->ptDeviceDescription->uInfo.tSdioHandle), ptParameter);
 		break;
 	}
 
@@ -413,6 +450,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_isErased(tFlasherInputParameter *ptAppPar
 
 /* ------------------------------------- */
 
+/* Flash size in bytes, except for SD cards, where it is KB */
 static unsigned long getFlashSize(const DEVICE_DESCRIPTION_T *ptDeviceDescription)
 {
 	BUS_T tSrcType;
@@ -443,6 +481,23 @@ static unsigned long getFlashSize(const DEVICE_DESCRIPTION_T *ptDeviceDescriptio
 		case INTERNAL_FLASH_TYPE_MAZ_V0:
 			ulFlashSize = ptDeviceDescription->uInfo.tInternalFlashInfo.uAttributes.tMazV0.ulSizeInBytes;
 			break;
+		}
+		break;
+		
+	/* 
+		The stored size is in KB. 
+		If the number fits into a DWord, convert it to bytes.
+		If not, set the maximum value.
+	*/
+	case BUS_SDIO:
+		ulFlashSize = ptDeviceDescription->uInfo.tSdioHandle.ulSizeKB;
+		if (ulFlashSize < 0x00400000U) 
+		{
+			ulFlashSize <<= 10; 
+		}
+		else
+		{
+			ulFlashSize = 0xffffffffU;
 		}
 		break;
 	}
