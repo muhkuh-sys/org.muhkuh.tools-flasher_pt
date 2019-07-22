@@ -288,7 +288,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_erase(tFlasherInputParameter *ptAppParams
 #ifdef CFG_INCLUDE_SDIO
 	case BUS_SDIO:
 		/* Use SDIO */
-		//tResult = sdio_erase(&(ptParameter->ptDeviceDescription->uInfo.tSdioHandle), ptParameter);
+		tResult = sdio_erase(ptParameter);
 		break;
 #endif
 
@@ -388,6 +388,13 @@ static NETX_CONSOLEAPP_RESULT_T opMode_verify(tFlasherInputParameter *ptAppParam
 		tResult = internal_flash_verify(ptParameter, ptConsoleParams);
 		break;
 
+#ifdef CFG_INCLUDE_SDIO
+	case BUS_SDIO:
+		/* Use SDIO */
+		tResult = sdio_verify(ptParameter, ptConsoleParams);
+		break;
+#endif
+
 	default:
 		/*  unknown device */
 		uprintf("! Unknown device type: 0x%08x\n", tSourceTyp);
@@ -482,6 +489,13 @@ static NETX_CONSOLEAPP_RESULT_T opMode_isErased(tFlasherInputParameter *ptAppPar
 		/* Use SPI flash. */
 		tResult = internal_flash_isErased(ptParameter, ptConsoleParams);
 		break;
+
+#ifdef CFG_INCLUDE_SDIO
+	case BUS_SDIO:
+		/* Use SDIO */
+		tResult = sdio_is_erased(ptParameter, ptConsoleParams);
+		break;
+#endif
 
 	default:
 		/*  unknown device */
@@ -595,6 +609,12 @@ static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(tFlasherInputParameter *ptAp
 		tResult = internal_flash_getEraseArea(ptParameter);
 		break;
 
+#ifdef CFG_INCLUDE_SDIO
+	case BUS_SDIO:
+		/* Use SDIO */
+		tResult = sdio_get_erase_area(ptParameter);
+		break;
+#endif
 	default:
 		/*  unknown device */
 		uprintf("! Unknown device type: 0x%08x\n", tSrcType);
