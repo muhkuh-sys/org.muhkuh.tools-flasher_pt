@@ -28,8 +28,9 @@
 #include "internal_flash/internal_flash.h"
 #include "spi_flash.h"
 #include "spi_macro_player.h"
+#ifdef CFG_INCLUDE_SDIO
 #include "netx4000_sdio.h"
-
+#endif
 /*-------------------------------------*/
 
 #define FLASHER_INTERFACE_VERSION 0x00030000
@@ -71,7 +72,9 @@ typedef struct DEVICE_DESCRIPTION_STRUCT
 		FLASH_DEVICE_T tParFlash;
 		FLASHER_SPI_FLASH_T tSpiInfo;
 		INTERNAL_FLASH_T tInternalFlashInfo;
+#ifdef CFG_INCLUDE_SDIO
 		SDIO_HANDLE_T tSdioHandle;
+#endif
 	} uInfo;
 } DEVICE_DESCRIPTION_T;
 
