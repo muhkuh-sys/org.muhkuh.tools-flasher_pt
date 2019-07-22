@@ -40,7 +40,10 @@
 #include "systime.h"
 
 #include "main.h"
+
+#ifdef CFG_INCLUDE_SDIO
 #include "netx4000_sdio_wrap.h"
+#endif
 
 /* ------------------------------------- */
 
@@ -116,14 +119,11 @@ static NETX_CONSOLEAPP_RESULT_T opMode_detect(tFlasherInputParameter *ptAppParam
 			/* Clear the result data. */
 			memset(ptDeviceDescription, 0, sizeof(DEVICE_DESCRIPTION_T));
 		}
-
-		
-		
 		break;
 #endif 
 
 	default:
-		/* Unknown boot device */
+		/* unknown device type */
 		uprintf("unknown\n");
 		uprintf("! illegal device id specified: %d\n", tSourceTyp);
 		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
@@ -182,14 +182,16 @@ static NETX_CONSOLEAPP_RESULT_T check_device_description(const DEVICE_DESCRIPTIO
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 			break;
 		
+#ifdef CFG_INCLUDE_SDIO
 		case BUS_SDIO:
 			/* SDIO */
 			uprintf(". Device type: SDIO\n");
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 			break;
+#endif
 	
 		default:
-			/*  unknown boot device */
+			/* unknown device type */
 			uprintf("! Unknown device type: 0x%08x\n", tSourceTyp);
 			break;
 		}
@@ -232,6 +234,18 @@ static NETX_CONSOLEAPP_RESULT_T opMode_flash(tFlasherInputParameter *ptAppParams
 		/* Use internal flash. */
 		tResult = internal_flash_flash(&(ptAppParams->uParameter.tFlash));
 		break;
+
+#ifdef CFG_INCLUDE_SDIO
+	case BUS_SDIO:
+		/* Use SDIO */
+		tResult = sdio_write(&(ptParameter->ptDeviceDescription->uInfo.tSdioHandle), ptParameter);
+		break;
+#endif
+
+	default:
+		uprintf("! illegal device id specified: %d\n", tSourceTyp);
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		break;
 	}
 
 	return tResult;
@@ -270,7 +284,19 @@ static NETX_CONSOLEAPP_RESULT_T opMode_erase(tFlasherInputParameter *ptAppParams
 
 	case BUS_IFlash:
 		/* Use internal flash. */
-		tResult = internal_flash_erase(&(ptAppParams->uParameter.tErase));
+		tResult = internal_flash_erase(ptParameter);
+		break;
+
+#ifdef CFG_INCLUDE_SDIO
+	case BUS_SDIO:
+		/* Use SDIO */
+		//tResult = sdio_erase(&(ptParameter->ptDeviceDescription->uInfo.tSdioHandle), ptParameter);
+		break;
+#endif
+
+	default:
+		/*  unknown device */
+		uprintf("! Unknown device type: 0x%08x\n", tSourceTyp);
 		break;
 	}
 	return tResult;
@@ -312,12 +338,18 @@ static NETX_CONSOLEAPP_RESULT_T opMode_read(tFlasherInputParameter *ptAppParams)
 		tResult = internal_flash_read(&(ptAppParams->uParameter.tRead));
 		break;
 		
+#ifdef CFG_INCLUDE_SDIO
 	case BUS_SDIO:
 		/* Use SDIO */
 		tResult = sdio_read(&(ptParameter->ptDeviceDescription->uInfo.tSdioHandle), ptParameter);
 		break;
-	}
+#endif
 
+	default:
+		/*  unknown device */
+		uprintf("! Unknown device type: 0x%08x\n", tSourceTyp);
+		break;
+	}
 	return tResult;
 }
 
@@ -356,6 +388,11 @@ static NETX_CONSOLEAPP_RESULT_T opMode_verify(tFlasherInputParameter *ptAppParam
 	case BUS_IFlash:
 		/* Use internal flash. */
 		tResult = internal_flash_verify(&(ptAppParams->uParameter.tVerify), ptConsoleParams);
+		break;
+
+	default:
+		/*  unknown device */
+		uprintf("! Unknown device type: 0x%08x\n", tSourceTyp);
 		break;
 	}
 
@@ -396,6 +433,11 @@ static NETX_CONSOLEAPP_RESULT_T opMode_checksum(tFlasherInputParameter *ptAppPar
 	case BUS_IFlash:
 		/* Use the internal flash. */
 		tResult = internal_flash_sha1(&(ptAppParams->uParameter.tChecksum), &tShaContext);
+		break;
+
+	default:
+		/*  unknown device */
+		uprintf("! Unknown device type: 0x%08x\n", tSourceTyp);
 		break;
 	}
 
@@ -441,6 +483,11 @@ static NETX_CONSOLEAPP_RESULT_T opMode_isErased(tFlasherInputParameter *ptAppPar
 	case BUS_IFlash:
 		/* Use SPI flash. */
 		tResult = internal_flash_isErased(&(ptAppParams->uParameter.tIsErased), ptConsoleParams);
+		break;
+
+	default:
+		/*  unknown device */
+		uprintf("! Unknown device type: 0x%08x\n", tSourceTyp);
 		break;
 	}
 
@@ -489,6 +536,7 @@ static unsigned long getFlashSize(const DEVICE_DESCRIPTION_T *ptDeviceDescriptio
 		If the number fits into a DWord, convert it to bytes.
 		If not, set the maximum value.
 	*/
+#ifdef CFG_INCLUDE_SDIO
 	case BUS_SDIO:
 		ulFlashSize = ptDeviceDescription->uInfo.tSdioHandle.ulSizeKB;
 		if (ulFlashSize < 0x00400000U) 
@@ -499,6 +547,12 @@ static unsigned long getFlashSize(const DEVICE_DESCRIPTION_T *ptDeviceDescriptio
 		{
 			ulFlashSize = 0xffffffffU;
 		}
+		break;
+#endif
+
+	default:
+		/*  unknown device */
+		uprintf("! Unknown device type: 0x%08x\n", tSrcType);
 		break;
 	}
 
@@ -541,6 +595,11 @@ static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(tFlasherInputParameter *ptAp
 	case BUS_IFlash:
 		/* Use internal flash. */
 		tResult = internal_flash_getEraseArea(&(ptAppParams->uParameter.tGetEraseArea));
+		break;
+
+	default:
+		/*  unknown device */
+		uprintf("! Unknown device type: 0x%08x\n", tSrcType);
 		break;
 	}
 
@@ -1030,6 +1089,10 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 			"under the terms of the GNU Library General Public License.\n"
 			"For more information about these matters, see the files\n"
 			"named COPYING.\n");
+			
+			uprintf(
+			"\n Test version for SD/EMMC. netx 4000 only.\n"
+			);
 			
 			uprintf("\n");
 			uprintf(". Data pointer:    0x%08x\n", (unsigned long)ptTestParam);
