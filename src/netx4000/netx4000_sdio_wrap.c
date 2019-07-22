@@ -58,11 +58,13 @@ NETX_CONSOLEAPP_RESULT_T sdio_detect_wrap(SDIO_HANDLE_T *ptSdioHandle)
 #define SD_SECTOR_SIZE_MSK (0x1ff)
 
 
-NETX_CONSOLEAPP_RESULT_T sdio_read(const SDIO_HANDLE_T *ptSdioHandle, CMD_PARAMETER_READ_T *ptParams)
+NETX_CONSOLEAPP_RESULT_T sdio_read(CMD_PARAMETER_READ_T *ptParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int iResult;
 
+	const SDIO_HANDLE_T *ptSdioHandle;
+	
 	unsigned long ulProgressCnt;
 	
 	unsigned long ulFlashAdr;
@@ -77,6 +79,8 @@ NETX_CONSOLEAPP_RESULT_T sdio_read(const SDIO_HANDLE_T *ptSdioHandle, CMD_PARAME
 		unsigned long aul[SD_SECTOR_SIZE/4];
 		unsigned char auc[SD_SECTOR_SIZE];
 	} tSector;
+	
+	ptSdioHandle = &ptParams->ptDeviceDescription->uInfo.tSdioHandle;
 	
 	ulFlashAdr = ptParams->ulStartAdr;
 	ulFlashEndAdr = ptParams->ulEndAdr;
@@ -141,11 +145,12 @@ typedef struct CMD_PARAMETER_FLASH_STRUCT
 */
  
 
-NETX_CONSOLEAPP_RESULT_T sdio_write(const SDIO_HANDLE_T *ptSdioHandle, CMD_PARAMETER_FLASH_T *ptParams)
+NETX_CONSOLEAPP_RESULT_T sdio_write(CMD_PARAMETER_FLASH_T *ptParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int iResult;
 
+	const SDIO_HANDLE_T *ptSdioHandle;
 	unsigned long ulProgressCnt;
 	
 	unsigned long ulFlashAdr;
@@ -160,6 +165,8 @@ NETX_CONSOLEAPP_RESULT_T sdio_write(const SDIO_HANDLE_T *ptSdioHandle, CMD_PARAM
 		unsigned long aul[SD_SECTOR_SIZE/4];
 		unsigned char auc[SD_SECTOR_SIZE];
 	} tSector;
+	
+	ptSdioHandle = &ptParams->ptDeviceDescription->uInfo.tSdioHandle;
 	
 	ulFlashAdr = ptParams->ulStartAdr;
 	ulFlashEndAdr = ptParams->ulStartAdr + ptParams->ulDataByteSize;
