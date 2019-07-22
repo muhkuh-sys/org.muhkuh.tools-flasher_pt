@@ -194,20 +194,34 @@ static const unsigned short ausPortcontrol_Index_SDIO[8] =
 #define SDIO_SD_OPTION_WIDTH_1bit 1
 #define SDIO_SD_OPTION_WIDTH_4bit 0
 
-
+/*  15-14 MD7, MD6  Multiple block transfer mode 
+       13 MD5 0 single block transfer 
+              1 multi block transfer  
+       12 MD4 0 write (to SD card)
+              1 read (from SD card)
+       11 MD3 0 command without data (bc, bcr, ac)
+                command with data transfer (adtc)
+     10-8 MD2-MD0 mode/response type
+      7-6 00 = regular command 
+          01 = application specific command
+      5-0 command index
+*/
 #define RAPSDIO_CMD00    0 | (0 << HOSTSRT(SDIO_SD_CMD_C))
 #define RAPSDIO_CMD02    2 | (0 << HOSTSRT(SDIO_SD_CMD_C))
 #define RAPSDIO_CMD03    3 | (0 << HOSTSRT(SDIO_SD_CMD_C))
 #define RAPSDIO_CMD07    7 | (0 << HOSTSRT(SDIO_SD_CMD_C))
-#define RAPSDIO_CMD08    8 | (0 << HOSTSRT(SDIO_SD_CMD_C))
+#define RAPSDIO_CMD08    8 | (0 << HOSTSRT(SDIO_SD_CMD_C)) | (4 << HOSTSRT(SDIO_SD_CMD_MD_RSP)) // MD_RSP = 4
 #define RAPSDIO_CMD09    9 | (0 << HOSTSRT(SDIO_SD_CMD_C))
+#define RAPSDIO_CMD10   10 | (0 << HOSTSRT(SDIO_SD_CMD_C))
 #define RAPSDIO_CMD17   17 | (0 << HOSTSRT(SDIO_SD_CMD_C))
+#define RAPSDIO_CMD24   24 | (0 << HOSTSRT(SDIO_SD_CMD_C))
 #define RAPSDIO_CMD55   55 | (0 << HOSTSRT(SDIO_SD_CMD_C))
 #define RAPSDIO_ACMD06   6 | (1 << HOSTSRT(SDIO_SD_CMD_C))
 #define RAPSDIO_ACMD41  41 | (1 << HOSTSRT(SDIO_SD_CMD_C))
 #define RAPSDIO_ACMD51  51 | (1 << HOSTSRT(SDIO_SD_CMD_C))
 
 #define RAPSDIO_MMC_CMD01   1 | (0 << HOSTSRT(SDIO_SD_CMD_C))
+
 
 
 
@@ -429,7 +443,7 @@ static SDIO_RESULT_T wait_until_idle(void)
 }
 
 
-static SDIO_RESULT_T send_cmd(SDIO_HANDLE_T *ptHandle, unsigned long ulCmd, unsigned long ulArg)
+static SDIO_RESULT_T send_cmd(const SDIO_HANDLE_T *ptHandle, unsigned long ulCmd, unsigned long ulArg)
 {
 	HOSTDEF(ptRAPSDIOArea);
 	unsigned long ulValue;
@@ -439,6 +453,8 @@ static SDIO_RESULT_T send_cmd(SDIO_HANDLE_T *ptHandle, unsigned long ulCmd, unsi
 	unsigned long ulTimeoutUs;
 
 
+	uprintf(". SDIO send_cmd 0x%08x arg 0x%08x\n", ulCmd, ulArg);
+	
 	/* Wait until the card is not busy anymore. */
 	tResult = wait_until_idle();
 	if( tResult==SDIO_RESULT_Ok )
@@ -498,7 +514,7 @@ static SDIO_RESULT_T send_cmd(SDIO_HANDLE_T *ptHandle, unsigned long ulCmd, unsi
 			if( ulValue!=0 )
 			{
 				/* Command error! */
-				uprintf("! SDIO send_cmd error :0x%08x", ulValue);
+				uprintf("! SDIO send_cmd error :0x%08x\n", ulValue);
 
 				/* Acknowledge the error flags. */
 				ptRAPSDIOArea->ulSDIO_SD_INFO2 = ~ulValue;
@@ -521,7 +537,7 @@ static SDIO_RESULT_T send_cmd(SDIO_HANDLE_T *ptHandle, unsigned long ulCmd, unsi
 
 
 
-static SDIO_RESULT_T send_acmd(SDIO_HANDLE_T *ptSdioHandle, unsigned long ulCommand, unsigned long ulArgument)
+static SDIO_RESULT_T send_acmd(const SDIO_HANDLE_T *ptSdioHandle, unsigned long ulCommand, unsigned long ulArgument)
 {
 	HOSTDEF(ptRAPSDIOArea);
 	SDIO_RESULT_T tResult;
@@ -662,8 +678,97 @@ static SDIO_RESULT_T read_data(unsigned long *pulData, size_t sizDataDw, unsigne
 }
 
 
+static SDIO_RESULT_T write_data(unsigned long *pulData, size_t sizDataDw, unsigned long ulTimeout)
+{
+	HOSTDEF(ptRAPSDIOArea);
+	SDIO_RESULT_T tResult;
+	unsigned long ulValue;
+	TIMER_HANDLE_T tTimer;
+	int iTimerHasElapsed;
+	unsigned long *pulCnt;
+	unsigned long *pulEnd;
 
-static SDIO_RESULT_T sdio_poll_acmd41(SDIO_HANDLE_T *ptSdioHandle, unsigned long ulArgument, unsigned long *pulOCR)
+	/* Wait for BRE or timeout */
+	cr7_global_timer_start_us(&tTimer, ulTimeout);
+	tResult = SDIO_RESULT_Ok;
+	do
+	{
+		/* Check for buffer write enable. */
+		ulValue  = ptRAPSDIOArea->ulSDIO_SD_INFO2;
+		ulValue &= HOSTMSK(SDIO_SD_INFO2_BWE);
+		if( ulValue!=0 )
+		{
+			/* Acknowledge the flag. */
+			ptRAPSDIOArea->ulSDIO_SD_INFO2 = ~ulValue;
+			break;
+		}
+
+		iTimerHasElapsed = cr7_global_timer_elapsed(&tTimer);
+		if( iTimerHasElapsed!=0 )
+		{
+			tResult = SDIO_RESULT_DataTimeout;
+		}
+	} while( iTimerHasElapsed==0 );
+
+
+	if( tResult==SDIO_RESULT_Ok )
+	{
+		/* Write the block data. */
+		pulCnt = pulData;
+		pulEnd = pulData + sizDataDw;
+		ulValue = 0;
+		while( pulCnt<pulEnd )
+		{
+			ptRAPSDIOArea->ulSDIO_SD_BUF0 = *(pulCnt++);
+		}
+
+		/* Wait for access end or error. */
+		cr7_global_timer_start_us(&tTimer, ulTimeout);
+		do
+		{
+			/* Check for access end. */
+			ulValue  = ptRAPSDIOArea->ulSDIO_SD_INFO1;
+			ulValue &= HOSTMSK(SDIO_SD_INFO1_INFO2);  /* Info2 = Err2 = End error */
+			if( ulValue!=0 )
+			{
+				/* Acknowledge the flag. */
+				ptRAPSDIOArea->ulSDIO_SD_INFO1 = ~ulValue;
+				break;
+			}
+
+			/* Check for error. */
+			ulValue  = ptRAPSDIOArea->ulSDIO_SD_INFO2;
+			ulValue &=   HOSTMSK(SDIO_SD_INFO2_ERR0)
+				| HOSTMSK(SDIO_SD_INFO2_ERR1)
+				| HOSTMSK(SDIO_SD_INFO2_ERR2)
+				| HOSTMSK(SDIO_SD_INFO2_ERR3)
+				| HOSTMSK(SDIO_SD_INFO2_ERR4)
+				| HOSTMSK(SDIO_SD_INFO2_ERR5)
+				| HOSTMSK(SDIO_SD_INFO2_ERR6)
+				| HOSTMSK(SDIO_SD_INFO2_ILA);
+			if( ulValue!=0 )
+			{
+				/* Acknowledge the error bits. */
+				ptRAPSDIOArea->ulSDIO_SD_INFO2 = ~ulValue;
+				tResult = SDIO_RESULT_ErrorsInSdInfo2;
+				break;
+			}
+			
+			iTimerHasElapsed = cr7_global_timer_elapsed(&tTimer);
+			if( iTimerHasElapsed!=0 )
+			{
+				tResult = SDIO_RESULT_AccessEndTimeout;
+			}
+		} while( iTimerHasElapsed==0 );
+	}
+
+	return tResult;
+}
+
+
+
+
+static SDIO_RESULT_T sdio_poll_acmd41(const SDIO_HANDLE_T *ptSdioHandle, unsigned long ulArgument, unsigned long *pulOCR)
 {
 	HOSTDEF(ptRAPSDIOArea);
 	SDIO_RESULT_T tResult;
@@ -708,7 +813,7 @@ static SDIO_RESULT_T sdio_poll_acmd41(SDIO_HANDLE_T *ptSdioHandle, unsigned long
 
 
 
-static SDIO_RESULT_T sdio_read_scr_register(SDIO_HANDLE_T *ptSdioHandle, unsigned long *pulData)
+static SDIO_RESULT_T sdio_read_scr_register(const SDIO_HANDLE_T *ptSdioHandle, unsigned long *pulData)
 {
 	HOSTDEF(ptRAPSDIOArea);
 	SDIO_RESULT_T tResult;
@@ -742,7 +847,7 @@ static SDIO_RESULT_T sdio_read_scr_register(SDIO_HANDLE_T *ptSdioHandle, unsigne
 
 
 
-static SDIO_RESULT_T sdio_read_csd_register(SDIO_HANDLE_T *ptSdioHandle, unsigned long *pulData)
+static SDIO_RESULT_T sdio_read_csd_register(const SDIO_HANDLE_T *ptSdioHandle, unsigned long *pulData)
 {
 	HOSTDEF(ptRAPSDIOArea);
 	SDIO_RESULT_T tResult;
@@ -767,8 +872,7 @@ static SDIO_RESULT_T sdio_read_csd_register(SDIO_HANDLE_T *ptSdioHandle, unsigne
 }
 
 
-
-static SDIO_RESULT_T read_data_block(SDIO_HANDLE_T *ptSdioHandle, unsigned long ulAddress, unsigned long *pulData)
+static SDIO_RESULT_T read_data_block(const SDIO_HANDLE_T *ptSdioHandle, unsigned long ulAddress, unsigned long *pulData)
 {
 	HOSTDEF(ptRAPSDIOArea);
 	unsigned long ulValue;
@@ -800,6 +904,38 @@ static SDIO_RESULT_T read_data_block(SDIO_HANDLE_T *ptSdioHandle, unsigned long 
 	return tResult;
 }
 
+
+static SDIO_RESULT_T write_data_block(const SDIO_HANDLE_T *ptSdioHandle, unsigned long ulAddress, unsigned long *pulData)
+{
+	HOSTDEF(ptRAPSDIOArea);
+	unsigned long ulValue;
+	SDIO_RESULT_T tResult;
+
+
+	/* Read 512 bytes. */
+	ptRAPSDIOArea->ulSDIO_SD_SIZE = 512;
+
+	tResult = send_cmd(ptSdioHandle, RAPSDIO_CMD24, ulAddress);
+	if( tResult==SDIO_RESULT_Ok )
+	{
+		/* This is an R1 response. */
+		ulValue  = ptRAPSDIOArea->ulSDIO_SD_RSP10;
+		ulValue &= MSK_SDIO_CARD_STATI_ALL_ERRORS;
+		if( ulValue!=0 )
+		{
+			/* Received an error from the card. */
+//			trace_message_ul(TRACEMSG_SDIO_CardError, ulValue);
+			tResult = SDIO_RESULT_ErrorsInResponse;
+		}
+		else
+		{
+			/* Read the data. */
+			tResult = write_data(pulData, 512/sizeof(unsigned long), ptSdioHandle->ulSwCommandTimeoutUs);
+		}
+	}
+
+	return tResult;
+}
 
 
 /*-------------------------------------------------------------------------*/
@@ -871,7 +1007,7 @@ static SDIO_RESULT_T sdio_card_select_voltage(SDIO_HANDLE_T *ptHandle, int iCard
 
 
 
-static SDIO_RESULT_T sdio_set_card_to_identification_state(SDIO_HANDLE_T *ptHandle)
+static SDIO_RESULT_T sdio_set_card_to_identification_state(const SDIO_HANDLE_T *ptHandle)
 {
 	HOSTDEF(ptRAPSDIOArea);
 	SDIO_RESULT_T tResult;
@@ -955,7 +1091,7 @@ static SDIO_RESULT_T sdio_get_relative_card_address(SDIO_HANDLE_T *ptHandle)
 
 
 
-static SDIO_RESULT_T set_card_to_transfer_mode(SDIO_HANDLE_T *ptHandle)
+static SDIO_RESULT_T set_card_to_transfer_mode(const SDIO_HANDLE_T *ptHandle)
 {
 	HOSTDEF(ptRAPSDIOArea);
 	unsigned long ulValue;
@@ -1067,7 +1203,7 @@ static SDIO_RESULT_T switch_to_higher_speed(SDIO_HANDLE_T *ptSdioHandle)
 
 
 
-static SDIO_RESULT_T switch_bus_to_4bit_if_possible(SDIO_HANDLE_T *ptSdioHandle)
+static SDIO_RESULT_T switch_bus_to_4bit_if_possible(const SDIO_HANDLE_T *ptSdioHandle)
 {
 	HOSTDEF(ptRAPSDIOArea);
 	unsigned long ulValue;
@@ -1300,6 +1436,10 @@ static SDIO_RESULT_T sdio_initialize(SDIO_HANDLE_T *ptSdioHandle, const SDIO_OPT
 	int iCardHasCmd08;
 	int iRetries;
 
+	union {
+		unsigned char auc[512];
+		unsigned long aul[128];
+	} uECSD;
 
 	/* Add a pointer to the options. */
 	ptSdioHandle->ptSdioOptions = ptSdioOptions;
@@ -1555,13 +1695,26 @@ static SDIO_RESULT_T sdio_initialize(SDIO_HANDLE_T *ptSdioHandle, const SDIO_OPT
 								tResult = sdio_get_relative_card_address(ptSdioHandle);
 								if( tResult==SDIO_RESULT_Ok )
 								{
+									uprintf("switch_to_higher_speed\n");
 									tResult = switch_to_higher_speed(ptSdioHandle);
 									if( tResult==SDIO_RESULT_Ok )
 									{
+										uprintf("sdio_get_capacity\n");
 										tResult = sdio_get_capacity(ptSdioHandle);
 										if( tResult==SDIO_RESULT_Ok )
 										{
+											uprintf("set_card_to_transfer_mode\n");
 											tResult = set_card_to_transfer_mode(ptSdioHandle);
+											if( tResult==SDIO_RESULT_Ok )
+											{
+												uprintf("Reading block 0\n");
+												tResult= read_data_block(ptSdioHandle, 0, uECSD.aul);
+												if( tResult==SDIO_RESULT_Ok )
+												{
+													uprintf("block 0 data:\n");
+													hexdump(uECSD.auc, sizeof(uECSD));
+												}
+											}
 										}
 									}
 								}
@@ -1608,7 +1761,7 @@ static int sdio_restart(void *pvUser)
 #endif
 
 
-int sdio_read_sector(SDIO_HANDLE_T *ptSdioHandle, unsigned long ulSectorId, unsigned long *pulRead)
+int sdio_read_sector(const SDIO_HANDLE_T *ptSdioHandle, unsigned long ulSectorId, unsigned long *pulRead)
 {
 	SDIO_RESULT_T tResult;
 	int iResult;
@@ -1637,6 +1790,43 @@ int sdio_read_sector(SDIO_HANDLE_T *ptSdioHandle, unsigned long ulSectorId, unsi
 	else
 	{
 		uprintf("Read error\n");
+		iResult = -1;
+	}
+
+	return iResult;
+}
+
+
+
+int sdio_write_sector(const SDIO_HANDLE_T *ptSdioHandle, unsigned long ulSectorId, unsigned long *pulRead)
+{
+	SDIO_RESULT_T tResult;
+	int iResult;
+	unsigned long ulSectorAddress;
+
+
+	//uprintf("Write sector %d\n", ulSectorId);
+
+	/* Non-HC cards use byte addressing while HC cards use the number of
+	 * the sector.
+	 */
+	if( ptSdioHandle->uiCardIsHC==0 )
+	{
+		ulSectorAddress = ulSectorId * 512;
+	}
+	else
+	{
+		ulSectorAddress = ulSectorId;
+	}
+
+	tResult = write_data_block(ptSdioHandle, ulSectorAddress, pulRead);
+	if( tResult==SDIO_RESULT_Ok )
+	{
+		iResult = 0;
+	}
+	else
+	{
+		uprintf("Write error\n");
 		iResult = -1;
 	}
 
@@ -1737,7 +1927,7 @@ int sdio_detect(SDIO_HANDLE_T *ptSdioHandle, const SDIO_OPTIONS_T *ptSdioOptions
 	int iResult;
 	unsigned long ulValue;
 	SDIO_RESULT_T tResult;
-	unsigned long aulSector[512/4];
+	
 
 	/* Be optimistic. */
 	iResult = 0;
@@ -1805,17 +1995,6 @@ int sdio_detect(SDIO_HANDLE_T *ptSdioHandle, const SDIO_OPTIONS_T *ptSdioOptions
 			{
 				uprintf("Capacity: %d KB\n", ptSdioHandle->ulSizeKB);
 				
-				uprintf("Reading first sector\n");
-				iResult = sdio_read_sector(ptSdioHandle, 0, aulSector);
-				if( tResult!=SDIO_RESULT_Ok )
-				{
-					uprintf("Failed to read the first sector: %d\n", tResult);
-					iResult = -1;
-				}
-				else
-				{
-					uprintf("Read OK\n");
-				}
 			}
 		}
 	}

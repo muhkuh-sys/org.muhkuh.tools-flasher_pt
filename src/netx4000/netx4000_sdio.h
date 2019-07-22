@@ -30,7 +30,8 @@ typedef struct SDIO_HANDLE_STRUCT
 } SDIO_HANDLE_T;
 
 int sdio_detect(SDIO_HANDLE_T *ptSdioHandle, const SDIO_OPTIONS_T *ptSdioOptions);
-int sdio_read_sector(SDIO_HANDLE_T *ptSdioHandle, unsigned long ulSectorId, unsigned long *pulRead);
+int sdio_read_sector(const SDIO_HANDLE_T *ptSdioHandle, unsigned long ulSectorId, unsigned long *pulRead);
+int sdio_write_sector(const SDIO_HANDLE_T *ptSdioHandle, unsigned long ulSectorId, unsigned long *pulRead);
 
 
 

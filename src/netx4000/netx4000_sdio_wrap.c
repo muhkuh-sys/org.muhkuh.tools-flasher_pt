@@ -52,9 +52,13 @@ NETX_CONSOLEAPP_RESULT_T sdio_detect_wrap(SDIO_HANDLE_T *ptSdioHandle)
 	return tResult;
 }
 
+/* must be a power of two */
+#define SD_SECTOR_SIZE  (512)
+#define SD_SECTOR_SIZE_LOG (9)
+#define SD_SECTOR_SIZE_MSK (0x1ff)
 
 
-NETX_CONSOLEAPP_RESULT_T sdio_read(SDIO_HANDLE_T *ptSdioHandle, CMD_PARAMETER_READ_T *ptParams)
+NETX_CONSOLEAPP_RESULT_T sdio_read(const SDIO_HANDLE_T *ptSdioHandle, CMD_PARAMETER_READ_T *ptParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int iResult;
@@ -70,8 +74,8 @@ NETX_CONSOLEAPP_RESULT_T sdio_read(SDIO_HANDLE_T *ptSdioHandle, CMD_PARAMETER_RE
 	unsigned long ulChunkLength;
 	
 	union {
-		unsigned long aul[512/4];
-		unsigned char auc[512];
+		unsigned long aul[SD_SECTOR_SIZE/4];
+		unsigned char auc[SD_SECTOR_SIZE];
 	} tSector;
 	
 	ulFlashAdr = ptParams->ulStartAdr;
@@ -85,9 +89,9 @@ NETX_CONSOLEAPP_RESULT_T sdio_read(SDIO_HANDLE_T *ptSdioHandle, CMD_PARAMETER_RE
 	
 	while (ulFlashAdr < ulFlashEndAdr)
 	{
-		ulSectorId = ulFlashAdr >> 9; /* divide by sector size 512 bytes */
-		ulSectorOffset = ulFlashAdr & 0x1ff; /* take the offset in a 512 byte sector */
-		ulChunkLength = 512 - ulSectorOffset;
+		ulSectorId = ulFlashAdr >> SD_SECTOR_SIZE_LOG; /* divide by sector size 512 bytes */
+		ulSectorOffset = ulFlashAdr & SD_SECTOR_SIZE_MSK; /* take the offset in a 512 byte sector */
+		ulChunkLength = SD_SECTOR_SIZE - ulSectorOffset;
 		
 		uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", ulFlashAdr, ulSectorId, ulSectorOffset);
 		//static int sdio_read_sector(SDIO_HANDLE_T *ptSdioHandle, unsigned long ulSectorId, unsigned long *pulRead)
@@ -113,6 +117,102 @@ NETX_CONSOLEAPP_RESULT_T sdio_read(SDIO_HANDLE_T *ptSdioHandle, CMD_PARAMETER_RE
 	if( iResult!=0 )
 	{
 		uprintf("! failed to read from SD/EMMC!\n");
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	else
+	{
+		uprintf(". OK\n");
+		tResult = NETX_CONSOLEAPP_RESULT_OK;
+	}
+	return tResult;
+}
+
+/* 
+    ulStartAddr/ulEndAddr are relative offsets into the flash,
+    pucData is an absolute pointer to the RAM buffer.
+   
+typedef struct CMD_PARAMETER_FLASH_STRUCT
+{
+	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
+	unsigned long ulStartAdr;
+	unsigned long ulDataByteSize;
+	unsigned char *pucData;
+} CMD_PARAMETER_FLASH_T;
+*/
+ 
+
+NETX_CONSOLEAPP_RESULT_T sdio_write(const SDIO_HANDLE_T *ptSdioHandle, CMD_PARAMETER_FLASH_T *ptParams)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	int iResult;
+
+	unsigned long ulProgressCnt;
+	
+	unsigned long ulFlashAdr;
+	unsigned long ulFlashEndAdr;
+	unsigned char *pucDataAdr;
+	
+	unsigned long ulSectorId;
+	unsigned long ulSectorOffset;
+	unsigned long ulChunkLength;
+	
+	union {
+		unsigned long aul[SD_SECTOR_SIZE/4];
+		unsigned char auc[SD_SECTOR_SIZE];
+	} tSector;
+	
+	ulFlashAdr = ptParams->ulStartAdr;
+	ulFlashEndAdr = ptParams->ulStartAdr + ptParams->ulDataByteSize;
+	pucDataAdr = ptParams->pucData;
+
+	ulProgressCnt = 0;
+	progress_bar_init(ulFlashEndAdr-ulFlashAdr);
+	
+	uprintf(". Writing...\n");
+	
+	while (ulFlashAdr < ulFlashEndAdr)
+	{
+		ulSectorId = ulFlashAdr >> SD_SECTOR_SIZE_LOG; /* divide by sector size 512 bytes */
+		ulSectorOffset = ulFlashAdr & SD_SECTOR_SIZE_MSK; /* take the offset in a 512 byte sector */
+		ulChunkLength = SD_SECTOR_SIZE - ulSectorOffset;
+		
+		uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", ulFlashAdr, ulSectorId, ulSectorOffset);
+		//static int sdio_read_sector(SDIO_HANDLE_T *ptSdioHandle, unsigned long ulSectorId, unsigned long *pulRead)
+		
+		if ((ulSectorOffset != 0) || (ulChunkLength != SD_SECTOR_SIZE))
+		{
+			iResult = sdio_read_sector(ptSdioHandle, ulSectorId, tSector.aul);
+			if( iResult!=0 )
+			{
+				uprintf("! failed to read sector %d!\n", ulSectorId);
+				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+				break;
+			}
+		}
+		
+		memcpy(tSector.auc + ulSectorOffset, pucDataAdr, ulChunkLength);
+		
+		iResult = sdio_write_sector(ptSdioHandle, ulSectorId, tSector.aul);
+		if( iResult!=0 )
+		{
+			uprintf("! failed to write sector %d!\n", ulSectorId);
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+			break;
+		}
+		
+		pucDataAdr += ulChunkLength;
+		ulFlashAdr += ulChunkLength;
+		
+		/* inc progress */
+		ulProgressCnt += ulChunkLength;
+		progress_bar_set_position(ulProgressCnt);
+	}
+	
+	progress_bar_finalize();
+	
+	if( iResult!=0 )
+	{
+		uprintf("! failed to read from/write to SD/EMMC!\n");
 		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 	}
 	else
