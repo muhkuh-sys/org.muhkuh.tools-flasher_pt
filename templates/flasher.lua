@@ -1,7 +1,7 @@
 module("flasher", package.seeall)
 
 -----------------------------------------------------------------------------
---   Copyright (C) 2009 by Christoph Thelen                                --
+--   Copyright (C) 2019 by Christoph Thelen                                --
 --   doc_bacardi@users.sourceforge.net                                     --
 --                                                                         --
 --   This program is free software; you can redistribute it and/or modify  --
@@ -23,12 +23,6 @@ module("flasher", package.seeall)
 -- Description:
 --   flasher.lua: flasher interface routines
 --
---  Changes:
---    Date      Author   Description
---   7 mar 12   SL       simple_flasher uses area routines, removed doEraseFlash
---  29 feb 12   SL       new callback routines, abstracted read/write/call
---                       separated loading and downloading of flasher
---                       added flash/read/write/erase Area routines
 -----------------------------------------------------------------------------
 
 require("bit")
@@ -43,7 +37,7 @@ require("romloader")
 BUS_Parflash    = ${BUS_ParFlash}             -- parallel flash
 BUS_Spi         = ${BUS_SPI}             -- serial flash on spi bus
 BUS_IFlash      = ${BUS_IFlash}             -- internal flash
-BUS_IFlash      = ${BUS_SDIO}             -- SD/EMMC
+BUS_SDIO        = ${BUS_SDIO}             -- SD/EMMC
 
 
 
