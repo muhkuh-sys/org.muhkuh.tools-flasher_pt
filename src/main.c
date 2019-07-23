@@ -391,7 +391,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_verify(tFlasherInputParameter *ptAppParam
 #ifdef CFG_INCLUDE_SDIO
 	case BUS_SDIO:
 		/* Use SDIO */
-		tResult = sdio_verify(ptParameter, ptConsoleParams);
+		tResult = sdio_verify(ptParameter, (unsigned long*) &(ptConsoleParams->pvReturnMessage));
 		break;
 #endif
 
@@ -499,7 +499,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_isErased(tFlasherInputParameter *ptAppPar
 #ifdef CFG_INCLUDE_SDIO
 	case BUS_SDIO:
 		/* Use SDIO */
-		tResult = sdio_is_erased(ptParameter, ptConsoleParams);
+		tResult = sdio_is_erased(ptParameter, (unsigned long*) &(ptConsoleParams->pvReturnMessage));
 		break;
 #endif
 

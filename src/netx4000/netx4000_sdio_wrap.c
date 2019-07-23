@@ -262,7 +262,7 @@ NETX_CONSOLEAPP_RESULT_T sdio_sha1(CMD_PARAMETER_CHECKSUM_T *ptParams, SHA_CTX *
 		ptConsoleParams->pvReturnMessage != 0: the data differs
 	return value != NETX_CONSOLEAPP_RESULT_OK: an error occurred
 */
-NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_VERIFY_T *ptParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_VERIFY_T *ptParams, unsigned long *pulVerifyResult)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int fEqual; /* ==0: equal, !=0: not equal */
@@ -307,13 +307,12 @@ NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_VERIFY_T *ptParams, NETX_CONS
 		if( fEqual==0 )
 		{
 			uprintf(". Verify OK. The data in the memory and the flash are identical.\n");
-			ptConsoleParams->pvReturnMessage = (void*) fEqual;
 		}
 		else
 		{
 			uprintf(". Verify failed. The data in the memory and the flash differ.\n");
-			ptConsoleParams->pvReturnMessage = (void*) fEqual;
 		} 
+		*pulVerifyResult = (unsigned long) fEqual;
 	}
 	
 	return tResult;
@@ -454,7 +453,7 @@ NETX_CONSOLEAPP_RESULT_T sdio_get_erase_area(CMD_PARAMETER_GETERASEAREA_T *ptPar
 		ptConsoleParams->pvReturnMessage != 0xff: the area is not empty
 	return value != NETX_CONSOLEAPP_RESULT_OK: an error occurred
 */
-NETX_CONSOLEAPP_RESULT_T sdio_is_erased(CMD_PARAMETER_ISERASED_T *ptParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+NETX_CONSOLEAPP_RESULT_T sdio_is_erased(CMD_PARAMETER_ISERASED_T *ptParams, unsigned long *pulIsErasedResult)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int fIsErased; /* ==0: clean, !=0: dirty */
@@ -504,12 +503,12 @@ NETX_CONSOLEAPP_RESULT_T sdio_is_erased(CMD_PARAMETER_ISERASED_T *ptParams, NETX
 		if( fIsErased==0 )
 		{
 			uprintf(". CLEAN! The area is erased.\n");
-			ptConsoleParams->pvReturnMessage = (void*) 0xffUL;
+			*pulIsErasedResult = 0xffUL;
 		}
 		else
 		{
 			uprintf(". DIRTY! The area is not erased.\n");
-			ptConsoleParams->pvReturnMessage = (void*) 0;
+			*pulIsErasedResult = 0;
 		} 
 	}
 	return tResult;
