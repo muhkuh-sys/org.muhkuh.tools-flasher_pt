@@ -1,8 +1,5 @@
-#include "netx4000_sdio.h"
 #include "netx4000_sdio_wrap.h"
-
-//#include "cr7_global_timer.h"
-//#include "netx_io_areas.h"
+#include "netx4000_sdio.h"
 #include "portcontrol.h"
 #include "uprintf.h"
 #include "progress_bar.h"
@@ -28,6 +25,27 @@ static const SDIO_OPTIONS_T tSdioOptions =
 	.ucHwTimeoutExponentInitialization = 20,
 	.ucHwTimeoutExponentTransfer       = 27
 };
+
+
+/* must be a power of two */
+#define SD_SECTOR_SIZE  (512)
+#define SD_SECTOR_SIZE_LOG (9)
+#define SD_SECTOR_SIZE_MSK (0x1ff)
+
+static unsigned long get_chunk_len(unsigned long ulFlashAdr, unsigned long ulFlashEndAdr, unsigned long ulSectorOffset)
+{
+	unsigned long ulChunkLengthA;
+	unsigned long ulChunkLengthB;
+	unsigned long ulChunkLength;
+	
+	ulChunkLengthA = ulFlashEndAdr - ulFlashAdr; /* remaining range in the flash */
+	ulChunkLengthB = SD_SECTOR_SIZE - ulSectorOffset; /* remaining space in the sector */
+	ulChunkLength = ulChunkLengthA < ulChunkLengthB ? ulChunkLengthA : ulChunkLengthB;
+
+	return ulChunkLength;
+}
+
+
  
 /*-------------------------------------------------------------------------*/
 
@@ -52,10 +70,6 @@ NETX_CONSOLEAPP_RESULT_T sdio_detect_wrap(SDIO_HANDLE_T *ptSdioHandle)
 	return tResult;
 }
 
-/* must be a power of two */
-#define SD_SECTOR_SIZE  (512)
-#define SD_SECTOR_SIZE_LOG (9)
-#define SD_SECTOR_SIZE_MSK (0x1ff)
 
 
 NETX_CONSOLEAPP_RESULT_T sdio_read(CMD_PARAMETER_READ_T *ptParams)
@@ -98,10 +112,9 @@ NETX_CONSOLEAPP_RESULT_T sdio_read(CMD_PARAMETER_READ_T *ptParams)
 	{
 		ulSectorId = ulFlashAdr >> SD_SECTOR_SIZE_LOG; /* divide by sector size 512 bytes */
 		ulSectorOffset = ulFlashAdr & SD_SECTOR_SIZE_MSK; /* take the offset in a 512 byte sector */
-		ulChunkLength = SD_SECTOR_SIZE - ulSectorOffset;
+		ulChunkLength = get_chunk_len(ulFlashAdr, ulFlashEndAdr, ulSectorOffset);
 		
 		uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", ulFlashAdr, ulSectorId, ulSectorOffset);
-		//static int sdio_read_sector(SDIO_HANDLE_T *ptSdioHandle, unsigned long ulSectorId, unsigned long *pulRead)
 		iResult = sdio_read_sector(ptSdioHandle, ulSectorId, tSector.aul);
 		if( iResult!=0 )
 		{
@@ -139,9 +152,8 @@ NETX_CONSOLEAPP_RESULT_T sdio_read(CMD_PARAMETER_READ_T *ptParams)
 		ptConsoleParams->pvReturnMessage == 0: the data is equal
 		ptConsoleParams->pvReturnMessage != 0: the data differs
 	return value != NETX_CONSOLEAPP_RESULT_OK: an error occurred
-	
 */
-NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_READ_T *ptParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_VERIFY_T *ptParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int fEqual; /* ==0: equal, !=0: not equal */
@@ -177,13 +189,13 @@ NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_READ_T *ptParams, NETX_CONSOL
 	ulProgressCnt = 0;
 	progress_bar_init(ulFlashEndAdr-ulFlashAdr);
 	
-	uprintf(". Reading...\n");
+	uprintf(". Verifying...\n");
 	
 	while (ulFlashAdr < ulFlashEndAdr)
 	{
 		ulSectorId = ulFlashAdr >> SD_SECTOR_SIZE_LOG; /* divide by sector size 512 bytes */
 		ulSectorOffset = ulFlashAdr & SD_SECTOR_SIZE_MSK; /* take the offset in a 512 byte sector */
-		ulChunkLength = SD_SECTOR_SIZE - ulSectorOffset;
+		ulChunkLength = get_chunk_len(ulFlashAdr, ulFlashEndAdr, ulSectorOffset);
 		
 		uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", ulFlashAdr, ulSectorId, ulSectorOffset);
 		iResult = sdio_read_sector(ptSdioHandle, ulSectorId, tSector.aul);
@@ -197,7 +209,7 @@ NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_READ_T *ptParams, NETX_CONSOL
 		iResult = memcmp(pucDataAdr, tSector.auc + ulSectorOffset, ulChunkLength);
 		if (iResult != 0)
 		{
-			uprintf(". Verify failed!");
+			uprintf(". Verify failed!\n");
 			fEqual = 1;
 			break;
 		}
@@ -217,17 +229,19 @@ NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_READ_T *ptParams, NETX_CONSOL
 		if( fEqual==0 )
 		{
 			uprintf(". Verify OK. The data in the memory and the flash are identical.\n");
-			ptConsoleParams->pvReturnMessage = (void*) tResult;
+			ptConsoleParams->pvReturnMessage = (void*) fEqual;
 		}
 		else
 		{
 			uprintf(". Verify failed. The data in the memory and the flash differ.\n");
-			ptConsoleParams->pvReturnMessage = (void*) tResult;
+			ptConsoleParams->pvReturnMessage = (void*) fEqual;
 		} 
 	}
 	
 	return tResult;
 }
+
+
 
 
 NETX_CONSOLEAPP_RESULT_T sdio_write(CMD_PARAMETER_FLASH_T *ptParams)
@@ -270,10 +284,9 @@ NETX_CONSOLEAPP_RESULT_T sdio_write(CMD_PARAMETER_FLASH_T *ptParams)
 	{
 		ulSectorId = ulFlashAdr >> SD_SECTOR_SIZE_LOG; /* divide by sector size 512 bytes */
 		ulSectorOffset = ulFlashAdr & SD_SECTOR_SIZE_MSK; /* take the offset in a 512 byte sector */
-		ulChunkLength = SD_SECTOR_SIZE - ulSectorOffset;
+		ulChunkLength = get_chunk_len(ulFlashAdr, ulFlashEndAdr, ulSectorOffset);
 		
 		uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", ulFlashAdr, ulSectorId, ulSectorOffset);
-		//static int sdio_read_sector(SDIO_HANDLE_T *ptSdioHandle, unsigned long ulSectorId, unsigned long *pulRead)
 		
 		if ((ulSectorOffset != 0) || (ulChunkLength != SD_SECTOR_SIZE))
 		{
@@ -318,6 +331,7 @@ NETX_CONSOLEAPP_RESULT_T sdio_write(CMD_PARAMETER_FLASH_T *ptParams)
 }
 
 
+
 NETX_CONSOLEAPP_RESULT_T sdio_erase(CMD_PARAMETER_ERASE_T *ptParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
@@ -355,7 +369,7 @@ NETX_CONSOLEAPP_RESULT_T sdio_erase(CMD_PARAMETER_ERASE_T *ptParams)
 	{
 		ulSectorId = ulFlashAdr >> SD_SECTOR_SIZE_LOG; /* divide by sector size 512 bytes */
 		ulSectorOffset = ulFlashAdr & SD_SECTOR_SIZE_MSK; /* take the offset in a 512 byte sector */
-		ulChunkLength = SD_SECTOR_SIZE - ulSectorOffset;
+		ulChunkLength = get_chunk_len(ulFlashAdr, ulFlashEndAdr, ulSectorOffset);
 		
 		uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", ulFlashAdr, ulSectorId, ulSectorOffset);
 		
@@ -399,6 +413,7 @@ NETX_CONSOLEAPP_RESULT_T sdio_erase(CMD_PARAMETER_ERASE_T *ptParams)
 	}
 	return tResult;
 }
+
 
 
 /* Dummy - returns the same start/end addresses as passed in via the parameters. */
@@ -471,7 +486,7 @@ NETX_CONSOLEAPP_RESULT_T sdio_is_erased(CMD_PARAMETER_ISERASED_T *ptParams, NETX
 	{
 		ulSectorId = ulFlashAdr >> SD_SECTOR_SIZE_LOG; /* divide by sector size 512 bytes */
 		ulSectorOffset = ulFlashAdr & SD_SECTOR_SIZE_MSK; /* take the offset in a 512 byte sector */
-		ulChunkLength = SD_SECTOR_SIZE - ulSectorOffset;
+		ulChunkLength = get_chunk_len(ulFlashAdr, ulFlashEndAdr, ulSectorOffset);
 		
 		uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", ulFlashAdr, ulSectorId, ulSectorOffset);
 		iResult = sdio_read_sector(ptSdioHandle, ulSectorId, tSector.aul);
