@@ -31,22 +31,117 @@ static const SDIO_OPTIONS_T tSdioOptions =
 #define SD_SECTOR_SIZE  (512)
 #define SD_SECTOR_SIZE_LOG (9)
 #define SD_SECTOR_SIZE_MSK (0x1ff)
-
-static unsigned long get_chunk_len(unsigned long ulFlashAdr, unsigned long ulFlashEndAdr, unsigned long ulSectorOffset)
-{
-	unsigned long ulChunkLengthA;
-	unsigned long ulChunkLengthB;
+ 
+typedef struct {
+	unsigned long ulProgressCnt;
+	
+	unsigned long ulFlashAdr;
+	unsigned long ulFlashEndAdr;
+	unsigned char *pucDataAdr;
+	
+	unsigned long ulSectorId;
+	unsigned long ulSectorOffset;
 	unsigned long ulChunkLength;
 	
-	ulChunkLengthA = ulFlashEndAdr - ulFlashAdr; /* remaining range in the flash */
-	ulChunkLengthB = SD_SECTOR_SIZE - ulSectorOffset; /* remaining space in the sector */
-	ulChunkLength = ulChunkLengthA < ulChunkLengthB ? ulChunkLengthA : ulChunkLengthB;
+	union {
+		unsigned long aul[SD_SECTOR_SIZE/4];
+		unsigned char auc[SD_SECTOR_SIZE];
+	} tSector;
+	
+} FLASH_POSITIONS_T;
 
-	return ulChunkLength;
+
+static void flashpos_init(FLASH_POSITIONS_T *ptFlashPos, 
+	unsigned long ulFlashAddr, unsigned long ulFlashEndAddr, unsigned char *pucDataAddr) 
+{
+	ptFlashPos->ulFlashAdr = ulFlashAddr;
+	ptFlashPos->ulFlashEndAdr = ulFlashEndAddr;
+	ptFlashPos->pucDataAdr = pucDataAddr;
+
+	ptFlashPos->ulProgressCnt = 0;
+	progress_bar_init(ulFlashEndAddr-ulFlashAddr);
+	}
+
+	
+static int flashpos_get_chunk(FLASH_POSITIONS_T *ptFlashPos)
+{
+	int iRet = 0;
+	unsigned long ulChunkLengthA;
+	unsigned long ulChunkLengthB;
+	
+	if (ptFlashPos->ulFlashAdr < ptFlashPos->ulFlashEndAdr)
+	{
+		/* divide by sector size 512 bytes */
+		ptFlashPos->ulSectorId = ptFlashPos->ulFlashAdr >> SD_SECTOR_SIZE_LOG; 
+		
+		/* take the offset in a 512 byte sector */
+		ptFlashPos->ulSectorOffset = ptFlashPos->ulFlashAdr & SD_SECTOR_SIZE_MSK; 
+		
+		ulChunkLengthA = ptFlashPos->ulFlashEndAdr - ptFlashPos->ulFlashAdr;
+		ulChunkLengthB = SD_SECTOR_SIZE - ptFlashPos->ulSectorOffset;
+		ptFlashPos->ulChunkLength = ulChunkLengthA < ulChunkLengthB ? ulChunkLengthA : ulChunkLengthB;
+		
+		iRet = 1;
+	}
+	
+	return iRet;
 }
 
 
- 
+static void flashpos_skip_chunk(FLASH_POSITIONS_T *ptFlashPos)
+{
+	ptFlashPos->pucDataAdr += ptFlashPos->ulChunkLength;
+	ptFlashPos->ulFlashAdr += ptFlashPos->ulChunkLength;
+	
+	/* inc progress */
+	ptFlashPos->ulProgressCnt += ptFlashPos->ulChunkLength;
+	progress_bar_set_position(ptFlashPos->ulProgressCnt);
+}
+
+
+static NETX_CONSOLEAPP_RESULT_T flashpos_read_sector(FLASH_POSITIONS_T *ptFlashPos, 
+	const SDIO_HANDLE_T *ptSdioHandle)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	int iResult;
+	
+	/* assume success */
+	tResult = NETX_CONSOLEAPP_RESULT_OK;
+	
+	uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", 
+		ptFlashPos->ulFlashAdr, ptFlashPos->ulSectorId, ptFlashPos->ulSectorOffset);
+	iResult = sdio_read_sector(ptSdioHandle, ptFlashPos->ulSectorId, ptFlashPos->tSector.aul);
+	if( iResult!=0 )
+	{
+		uprintf("! failed to read sector %d!\n", ptFlashPos->ulSectorId);
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	
+	return tResult;
+}
+
+
+static NETX_CONSOLEAPP_RESULT_T flashpos_write_sector(FLASH_POSITIONS_T *ptFlashPos, 
+	const SDIO_HANDLE_T *ptSdioHandle)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	int iResult;
+
+	/* assume success */
+	tResult = NETX_CONSOLEAPP_RESULT_OK;
+
+	uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", 
+		ptFlashPos->ulFlashAdr, ptFlashPos->ulSectorId, ptFlashPos->ulSectorOffset);
+	iResult = sdio_write_sector(ptSdioHandle, ptFlashPos->ulSectorId, ptFlashPos->tSector.aul);
+	if( iResult!=0 )
+	{
+		uprintf("! failed to write sector %d!\n", ptFlashPos->ulSectorId);
+		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+	}
+	
+	return tResult;
+}
+
 /*-------------------------------------------------------------------------*/
 
 NETX_CONSOLEAPP_RESULT_T sdio_detect_wrap(SDIO_HANDLE_T *ptSdioHandle)
@@ -75,61 +170,30 @@ NETX_CONSOLEAPP_RESULT_T sdio_detect_wrap(SDIO_HANDLE_T *ptSdioHandle)
 NETX_CONSOLEAPP_RESULT_T sdio_read(CMD_PARAMETER_READ_T *ptParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	int iResult;
-
+	
+	FLASH_POSITIONS_T tFlashPos;
 	const SDIO_HANDLE_T *ptSdioHandle;
-	
-	unsigned long ulProgressCnt;
-	
-	unsigned long ulFlashAdr;
-	unsigned long ulFlashEndAdr;
-	unsigned char *pucDataAdr;
-	
-	unsigned long ulSectorId;
-	unsigned long ulSectorOffset;
-	unsigned long ulChunkLength;
-	
-	union {
-		unsigned long aul[SD_SECTOR_SIZE/4];
-		unsigned char auc[SD_SECTOR_SIZE];
-	} tSector;
 	
 	/* assume success */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
-	
+
 	ptSdioHandle = &ptParams->ptDeviceDescription->uInfo.tSdioHandle;
 	
-	ulFlashAdr = ptParams->ulStartAdr;
-	ulFlashEndAdr = ptParams->ulEndAdr;
-	pucDataAdr = ptParams->pucData;
-
-	ulProgressCnt = 0;
-	progress_bar_init(ulFlashEndAdr-ulFlashAdr);
+	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulEndAdr, ptParams->pucData);
 	
 	uprintf(". Reading...\n");
 	
-	while (ulFlashAdr < ulFlashEndAdr)
+	while (1 == flashpos_get_chunk(&tFlashPos))
 	{
-		ulSectorId = ulFlashAdr >> SD_SECTOR_SIZE_LOG; /* divide by sector size 512 bytes */
-		ulSectorOffset = ulFlashAdr & SD_SECTOR_SIZE_MSK; /* take the offset in a 512 byte sector */
-		ulChunkLength = get_chunk_len(ulFlashAdr, ulFlashEndAdr, ulSectorOffset);
-		
-		uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", ulFlashAdr, ulSectorId, ulSectorOffset);
-		iResult = sdio_read_sector(ptSdioHandle, ulSectorId, tSector.aul);
-		if( iResult!=0 )
+		tResult = flashpos_read_sector(&tFlashPos, ptSdioHandle);
+		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 		{
-			uprintf("! failed to read sector %d!\n", ulSectorId);
-			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 			break;
 		}
 		
-		memcpy(pucDataAdr, tSector.auc + ulSectorOffset, ulChunkLength);
-		pucDataAdr += ulChunkLength;
-		ulFlashAdr += ulChunkLength;
+		memcpy(tFlashPos.pucDataAdr, tFlashPos.tSector.auc + tFlashPos.ulSectorOffset, tFlashPos.ulChunkLength);
 		
-		/* inc progress */
-		ulProgressCnt += ulChunkLength;
-		progress_bar_set_position(ulProgressCnt);
+		flashpos_skip_chunk(&tFlashPos);
 	}
 	
 	progress_bar_finalize();
@@ -146,6 +210,51 @@ NETX_CONSOLEAPP_RESULT_T sdio_read(CMD_PARAMETER_READ_T *ptParams)
 }
 
 
+#if CFG_INCLUDE_SHA1!=0
+NETX_CONSOLEAPP_RESULT_T sdio_sha1(CMD_PARAMETER_CHECKSUM_T *ptParams, SHA_CTX *ptSha1Context)
+{
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	
+	FLASH_POSITIONS_T tFlashPos;
+	const SDIO_HANDLE_T *ptSdioHandle;
+	
+	/* assume success */
+	tResult = NETX_CONSOLEAPP_RESULT_OK;
+
+	ptSdioHandle = &ptParams->ptDeviceDescription->uInfo.tSdioHandle;
+	
+	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulEndAdr, NULL);
+	
+	uprintf(". Calculating hash...\n");
+	
+	while (1 == flashpos_get_chunk(&tFlashPos))
+	{
+		tResult = flashpos_read_sector(&tFlashPos, ptSdioHandle);
+		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
+		{
+			break;
+		}
+		
+		SHA1_Update(ptSha1Context, (const void*)(tFlashPos.tSector.auc + tFlashPos.ulSectorOffset), tFlashPos.ulChunkLength);
+
+		flashpos_skip_chunk(&tFlashPos);
+	}
+	
+	progress_bar_finalize();
+	
+	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
+	{
+		uprintf(". OK\n");
+	}
+	else
+	{
+		uprintf("! Failed to read area!\n");
+	}
+	return tResult;
+}
+#endif 
+
+ 
 
 /*
 	return value == NETX_CONSOLEAPP_RESULT_OK and 
@@ -159,22 +268,8 @@ NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_VERIFY_T *ptParams, NETX_CONS
 	int fEqual; /* ==0: equal, !=0: not equal */
 	int iResult; /* return values from SDIO functions */
 
+	FLASH_POSITIONS_T tFlashPos;
 	const SDIO_HANDLE_T *ptSdioHandle;
-	
-	unsigned long ulProgressCnt;
-	
-	unsigned long ulFlashAdr;
-	unsigned long ulFlashEndAdr;
-	unsigned char *pucDataAdr;
-	
-	unsigned long ulSectorId;
-	unsigned long ulSectorOffset;
-	unsigned long ulChunkLength;
-	
-	union {
-		unsigned long aul[SD_SECTOR_SIZE/4];
-		unsigned char auc[SD_SECTOR_SIZE];
-	} tSector;
 	
 	/* assume success */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
@@ -182,31 +277,19 @@ NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_VERIFY_T *ptParams, NETX_CONS
 	
 	ptSdioHandle = &ptParams->ptDeviceDescription->uInfo.tSdioHandle;
 	
-	ulFlashAdr = ptParams->ulStartAdr;
-	ulFlashEndAdr = ptParams->ulEndAdr;
-	pucDataAdr = ptParams->pucData;
-
-	ulProgressCnt = 0;
-	progress_bar_init(ulFlashEndAdr-ulFlashAdr);
+	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulEndAdr, ptParams->pucData);
 	
 	uprintf(". Verifying...\n");
 	
-	while (ulFlashAdr < ulFlashEndAdr)
+	while (1 == flashpos_get_chunk(&tFlashPos))
 	{
-		ulSectorId = ulFlashAdr >> SD_SECTOR_SIZE_LOG; /* divide by sector size 512 bytes */
-		ulSectorOffset = ulFlashAdr & SD_SECTOR_SIZE_MSK; /* take the offset in a 512 byte sector */
-		ulChunkLength = get_chunk_len(ulFlashAdr, ulFlashEndAdr, ulSectorOffset);
-		
-		uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", ulFlashAdr, ulSectorId, ulSectorOffset);
-		iResult = sdio_read_sector(ptSdioHandle, ulSectorId, tSector.aul);
-		if( iResult!=0 )
+		tResult = flashpos_read_sector(&tFlashPos, ptSdioHandle);
+		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 		{
-			uprintf("! failed to read sector %d!\n", ulSectorId);
-			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 			break;
 		}
 		
-		iResult = memcmp(pucDataAdr, tSector.auc + ulSectorOffset, ulChunkLength);
+		iResult = memcmp(tFlashPos.pucDataAdr, tFlashPos.tSector.auc + tFlashPos.ulSectorOffset, tFlashPos.ulChunkLength);
 		if (iResult != 0)
 		{
 			uprintf(". Verify failed!\n");
@@ -214,12 +297,7 @@ NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_VERIFY_T *ptParams, NETX_CONS
 			break;
 		}
 		
-		pucDataAdr += ulChunkLength;
-		ulFlashAdr += ulChunkLength;
-		
-		/* inc progress */
-		ulProgressCnt += ulChunkLength;
-		progress_bar_set_position(ulProgressCnt);
+		flashpos_skip_chunk(&tFlashPos);
 	}
 	
 	progress_bar_finalize();
@@ -247,74 +325,39 @@ NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_VERIFY_T *ptParams, NETX_CONS
 NETX_CONSOLEAPP_RESULT_T sdio_write(CMD_PARAMETER_FLASH_T *ptParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	int iResult;
 
 	const SDIO_HANDLE_T *ptSdioHandle;
-	unsigned long ulProgressCnt;
-	
-	unsigned long ulFlashAdr;
-	unsigned long ulFlashEndAdr;
-	unsigned char *pucDataAdr;
-	
-	unsigned long ulSectorId;
-	unsigned long ulSectorOffset;
-	unsigned long ulChunkLength;
-	
-	union {
-		unsigned long aul[SD_SECTOR_SIZE/4];
-		unsigned char auc[SD_SECTOR_SIZE];
-	} tSector;
-	
+	FLASH_POSITIONS_T tFlashPos;
 	
 	/* assume success */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 	
 	ptSdioHandle = &ptParams->ptDeviceDescription->uInfo.tSdioHandle;
 	
-	ulFlashAdr = ptParams->ulStartAdr;
-	ulFlashEndAdr = ptParams->ulStartAdr + ptParams->ulDataByteSize;
-	pucDataAdr = ptParams->pucData;
-
-	ulProgressCnt = 0;
-	progress_bar_init(ulFlashEndAdr-ulFlashAdr);
+	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulStartAdr + ptParams->ulDataByteSize, ptParams->pucData);
 	
 	uprintf(". Writing...\n");
 	
-	while (ulFlashAdr < ulFlashEndAdr)
+	while (1 == flashpos_get_chunk(&tFlashPos))
 	{
-		ulSectorId = ulFlashAdr >> SD_SECTOR_SIZE_LOG; /* divide by sector size 512 bytes */
-		ulSectorOffset = ulFlashAdr & SD_SECTOR_SIZE_MSK; /* take the offset in a 512 byte sector */
-		ulChunkLength = get_chunk_len(ulFlashAdr, ulFlashEndAdr, ulSectorOffset);
-		
-		uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", ulFlashAdr, ulSectorId, ulSectorOffset);
-		
-		if ((ulSectorOffset != 0) || (ulChunkLength != SD_SECTOR_SIZE))
+		if ((tFlashPos.ulSectorOffset != 0) || (tFlashPos.ulChunkLength != SD_SECTOR_SIZE))
 		{
-			iResult = sdio_read_sector(ptSdioHandle, ulSectorId, tSector.aul);
-			if( iResult!=0 )
+			tResult = flashpos_read_sector(&tFlashPos, ptSdioHandle);
+			if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 			{
-				uprintf("! failed to read sector %d!\n", ulSectorId);
-				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 				break;
 			}
 		}
 		
-		memcpy(tSector.auc + ulSectorOffset, pucDataAdr, ulChunkLength);
-		
-		iResult = sdio_write_sector(ptSdioHandle, ulSectorId, tSector.aul);
-		if( iResult!=0 )
+		memcpy(tFlashPos.tSector.auc + tFlashPos.ulSectorOffset, tFlashPos.pucDataAdr, tFlashPos.ulChunkLength);
+
+		tResult = flashpos_write_sector(&tFlashPos, ptSdioHandle);
+		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 		{
-			uprintf("! failed to write sector %d!\n", ulSectorId);
-			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 			break;
 		}
 		
-		pucDataAdr += ulChunkLength;
-		ulFlashAdr += ulChunkLength;
-		
-		/* inc progress */
-		ulProgressCnt += ulChunkLength;
-		progress_bar_set_position(ulProgressCnt);
+		flashpos_skip_chunk(&tFlashPos);
 	}
 	
 	progress_bar_finalize();
@@ -331,74 +374,42 @@ NETX_CONSOLEAPP_RESULT_T sdio_write(CMD_PARAMETER_FLASH_T *ptParams)
 }
 
 
-
 NETX_CONSOLEAPP_RESULT_T sdio_erase(CMD_PARAMETER_ERASE_T *ptParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	int iResult;
 
 	const SDIO_HANDLE_T *ptSdioHandle;
-	unsigned long ulProgressCnt;
-	
-	unsigned long ulFlashAdr;
-	unsigned long ulFlashEndAdr;
-	
-	unsigned long ulSectorId;
-	unsigned long ulSectorOffset;
-	unsigned long ulChunkLength;
-	
-	union {
-		unsigned long aul[SD_SECTOR_SIZE/4];
-		unsigned char auc[SD_SECTOR_SIZE];
-	} tSector;
+	FLASH_POSITIONS_T tFlashPos;
 	
 	/* assume success */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 	
 	ptSdioHandle = &ptParams->ptDeviceDescription->uInfo.tSdioHandle;
 	
-	ulFlashAdr = ptParams->ulStartAdr;
-	ulFlashEndAdr = ptParams->ulEndAdr;
-	
-	ulProgressCnt = 0;
-	progress_bar_init(ulFlashEndAdr-ulFlashAdr);
-	
+	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulEndAdr, NULL);
+
 	uprintf(". Erasing...\n");
 	
-	while (ulFlashAdr < ulFlashEndAdr)
+	while (1 == flashpos_get_chunk(&tFlashPos))
 	{
-		ulSectorId = ulFlashAdr >> SD_SECTOR_SIZE_LOG; /* divide by sector size 512 bytes */
-		ulSectorOffset = ulFlashAdr & SD_SECTOR_SIZE_MSK; /* take the offset in a 512 byte sector */
-		ulChunkLength = get_chunk_len(ulFlashAdr, ulFlashEndAdr, ulSectorOffset);
-		
-		uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", ulFlashAdr, ulSectorId, ulSectorOffset);
-		
-		if ((ulSectorOffset != 0) || (ulChunkLength != SD_SECTOR_SIZE))
+		if ((tFlashPos.ulSectorOffset != 0) || (tFlashPos.ulChunkLength != SD_SECTOR_SIZE))
 		{
-			iResult = sdio_read_sector(ptSdioHandle, ulSectorId, tSector.aul);
-			if( iResult!=0 )
+			tResult = flashpos_read_sector(&tFlashPos, ptSdioHandle);
+			if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 			{
-				uprintf("! failed to read sector %d!\n", ulSectorId);
-				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 				break;
 			}
 		}
 		
-		memset(tSector.auc + ulSectorOffset, 0x00, ulChunkLength);
+		memset(tFlashPos.tSector.auc + tFlashPos.ulSectorOffset, 0x00, tFlashPos.ulChunkLength);
 		
-		iResult = sdio_write_sector(ptSdioHandle, ulSectorId, tSector.aul);
-		if( iResult!=0 )
+		tResult = flashpos_write_sector(&tFlashPos, ptSdioHandle);
+		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 		{
-			uprintf("! failed to write sector %d!\n", ulSectorId);
-			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 			break;
 		}
 		
-		ulFlashAdr += ulChunkLength;
-		
-		/* inc progress */
-		ulProgressCnt += ulChunkLength;
-		progress_bar_set_position(ulProgressCnt);
+		flashpos_skip_chunk(&tFlashPos);
 	}
 	
 	progress_bar_finalize();
@@ -447,58 +458,32 @@ NETX_CONSOLEAPP_RESULT_T sdio_is_erased(CMD_PARAMETER_ISERASED_T *ptParams, NETX
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int fIsErased; /* ==0: clean, !=0: dirty */
-	int iResult;
 
 	const SDIO_HANDLE_T *ptSdioHandle;
-	
-	unsigned long ulProgressCnt;
-	
-	unsigned long ulFlashAdr;
-	unsigned long ulFlashEndAdr;
-	
-	unsigned long ulSectorId;
-	unsigned long ulSectorOffset;
-	unsigned long ulChunkLength;
+	FLASH_POSITIONS_T tFlashPos;
 	
 	unsigned char *pucCnt;
 	unsigned char *pucEnd;
 	
-	union {
-		unsigned long aul[SD_SECTOR_SIZE/4];
-		unsigned char auc[SD_SECTOR_SIZE];
-	} tSector;
-	
 	/* assume success */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 	fIsErased = 0;
-	
 	ptSdioHandle = &ptParams->ptDeviceDescription->uInfo.tSdioHandle;
 	
-	ulFlashAdr = ptParams->ulStartAdr;
-	ulFlashEndAdr = ptParams->ulEndAdr;
-
-	ulProgressCnt = 0;
-	progress_bar_init(ulFlashEndAdr-ulFlashAdr);
+	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulEndAdr, NULL);
 	
 	uprintf(". Is-erased check...\n");
 	
-	while ((ulFlashAdr < ulFlashEndAdr) && (fIsErased == 0))
+	while (1 == flashpos_get_chunk(&tFlashPos) && (fIsErased == 0))
 	{
-		ulSectorId = ulFlashAdr >> SD_SECTOR_SIZE_LOG; /* divide by sector size 512 bytes */
-		ulSectorOffset = ulFlashAdr & SD_SECTOR_SIZE_MSK; /* take the offset in a 512 byte sector */
-		ulChunkLength = get_chunk_len(ulFlashAdr, ulFlashEndAdr, ulSectorOffset);
-		
-		uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", ulFlashAdr, ulSectorId, ulSectorOffset);
-		iResult = sdio_read_sector(ptSdioHandle, ulSectorId, tSector.aul);
-		if( iResult!=0 )
+		tResult = flashpos_read_sector(&tFlashPos, ptSdioHandle);
+		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 		{
-			uprintf("! failed to read sector %d!\n", ulSectorId);
-			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 			break;
 		}
 		
-		pucCnt = tSector.auc+ulSectorOffset;
-		pucEnd = pucCnt+ulChunkLength;
+		pucCnt = tFlashPos.tSector.auc+tFlashPos.ulSectorOffset;
+		pucEnd = pucCnt+tFlashPos.ulChunkLength;
 		
 		while (pucCnt < pucEnd)
 		{
@@ -509,11 +494,7 @@ NETX_CONSOLEAPP_RESULT_T sdio_is_erased(CMD_PARAMETER_ISERASED_T *ptParams, NETX
 			pucCnt++;
 		}
 		
-		ulFlashAdr += ulChunkLength;
-		
-		/* inc progress */
-		ulProgressCnt += ulChunkLength;
-		progress_bar_set_position(ulProgressCnt);
+		flashpos_skip_chunk(&tFlashPos);
 	}
 	
 	progress_bar_finalize();

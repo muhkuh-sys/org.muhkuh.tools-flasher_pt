@@ -440,6 +440,12 @@ static NETX_CONSOLEAPP_RESULT_T opMode_checksum(tFlasherInputParameter *ptAppPar
 		tResult = internal_flash_sha1(ptParameter, &tShaContext);
 		break;
 
+#ifdef CFG_INCLUDE_SDIO
+	case BUS_SDIO:
+		/* Use SDIO */
+		tResult = sdio_sha1(ptParameter, &tShaContext);
+		break;
+#endif
 	default:
 		/*  unknown device */
 		uprintf("! Unknown device type: 0x%08x\n", tSourceTyp);
