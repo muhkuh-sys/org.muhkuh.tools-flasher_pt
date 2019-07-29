@@ -453,7 +453,7 @@ static SDIO_RESULT_T send_cmd(const SDIO_HANDLE_T *ptHandle, unsigned long ulCmd
 	unsigned long ulTimeoutUs;
 
 
-	uprintf(". SDIO send_cmd 0x%08x arg 0x%08x\n", ulCmd, ulArg);
+	//uprintf(". SDIO send_cmd 0x%08x arg 0x%08x\n", ulCmd, ulArg);
 	
 	/* Wait until the card is not busy anymore. */
 	tResult = wait_until_idle();

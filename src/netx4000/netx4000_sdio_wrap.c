@@ -4,6 +4,10 @@
 #include "uprintf.h"
 #include "progress_bar.h"
 
+/* Detection is unreliable when JTAG is used. 
+   The problem does not seem to occur when ulInitialSpeedKHz is set to 800, 
+   however, the standard requires max. 400 kHz during device identification. */
+
 static const SDIO_OPTIONS_T tSdioOptions =
 {
 	.ulPowerUpTimeoutTicks = 200000U,    /* The timeout to get the SDIO core out of the power down mode. This is 1ms. */
@@ -108,8 +112,8 @@ static NETX_CONSOLEAPP_RESULT_T flashpos_read_sector(FLASH_POSITIONS_T *ptFlashP
 	/* assume success */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 	
-	uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", 
-		ptFlashPos->ulFlashAdr, ptFlashPos->ulSectorId, ptFlashPos->ulSectorOffset);
+	/*uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", 
+		ptFlashPos->ulFlashAdr, ptFlashPos->ulSectorId, ptFlashPos->ulSectorOffset);*/
 	iResult = sdio_read_sector(ptSdioHandle, ptFlashPos->ulSectorId, ptFlashPos->tSector.aul);
 	if( iResult!=0 )
 	{
@@ -130,8 +134,8 @@ static NETX_CONSOLEAPP_RESULT_T flashpos_write_sector(FLASH_POSITIONS_T *ptFlash
 	/* assume success */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 
-	uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", 
-		ptFlashPos->ulFlashAdr, ptFlashPos->ulSectorId, ptFlashPos->ulSectorOffset);
+	/*uprintf("addr: 0x%08x  sector ID: %d  sector offset: %d\n", 
+		ptFlashPos->ulFlashAdr, ptFlashPos->ulSectorId, ptFlashPos->ulSectorOffset);*/
 	iResult = sdio_write_sector(ptSdioHandle, ptFlashPos->ulSectorId, ptFlashPos->tSector.aul);
 	if( iResult!=0 )
 	{
@@ -310,7 +314,7 @@ NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_VERIFY_T *ptParams, unsigned 
 		}
 		else
 		{
-			uprintf(". Verify failed. The data in the memory and the flash differ.\n");
+			uprintf("! Verify failed. The data in the memory and the flash differ.\n");
 		} 
 		*pulVerifyResult = (unsigned long) fEqual;
 	}
@@ -324,6 +328,7 @@ NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_VERIFY_T *ptParams, unsigned 
 NETX_CONSOLEAPP_RESULT_T sdio_write(CMD_PARAMETER_FLASH_T *ptParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
+	unsigned long ulVerifyResult;
 
 	const SDIO_HANDLE_T *ptSdioHandle;
 	FLASH_POSITIONS_T tFlashPos;
@@ -361,6 +366,15 @@ NETX_CONSOLEAPP_RESULT_T sdio_write(CMD_PARAMETER_FLASH_T *ptParams)
 	
 	progress_bar_finalize();
 	
+	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
+	{
+		tResult = sdio_verify ((CMD_PARAMETER_VERIFY_T*) ptParams, &ulVerifyResult);
+		if ((tResult != NETX_CONSOLEAPP_RESULT_OK) || ulVerifyResult != 0)
+		{
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+		}
+	}
+
 	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 	{
 		uprintf(". OK\n");
