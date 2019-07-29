@@ -1,3 +1,22 @@
+/***************************************************************************
+ *   Copyright (C) 2019 by Hilscher GmbH                                   *
+ *   cthelen@hilscher.com                                                  *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU Library General Public License as       *
+ *   published by the Free Software Foundation; either version 2 of the    *
+ *   License, or (at your option) any later version.                       *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU Library General Public     *
+ *   License along with this program. If not, see                          *
+ *   <https://www.gnu.org/licenses/>.                                      *
+ ***************************************************************************/
+
 #include "netx4000_sdio.h"
 
 #include "cr7_global_timer.h"
@@ -351,7 +370,6 @@ static void sdio_set_clock(SDIO_HANDLE_T *ptSdioHandle, unsigned long ulSdClkKHz
 
 	/* Get the DIV value. */
 	ulDiv = (ulImclkDivider >> 1) & 0xff;
-//	trace_message_uc(TRACEMSG_SDIO_NewClockDivider, (unsigned char)ulDiv);
 
 	ulValue  = (ulDiv << HOSTSRT(SDIO_SD_CLK_CTRL_DIV)) & HOSTMSK(SDIO_SD_CLK_CTRL_DIV);
 	if( uiAutoClk!=0 )
@@ -431,7 +449,6 @@ static SDIO_RESULT_T wait_until_idle(void)
 
 	if( iTimerHasElapsed!=0 )
 	{
-//		trace_message(TRACEMSG_SDIO_StillBusy);
 		tResult = SDIO_RESULT_CardIsStillBusy;
 	}
 	else
@@ -556,7 +573,6 @@ static SDIO_RESULT_T send_acmd(const SDIO_HANDLE_T *ptSdioHandle, unsigned long 
 		if( ulValue!=0 )
 		{
 			/* Received an error from the card. */
-//			trace_message_ul(TRACEMSG_SDIO_CardError, ulValue);
 			tResult = SDIO_RESULT_ErrorsInResponse;
 		}
 		else
@@ -613,7 +629,6 @@ static SDIO_RESULT_T read_data(unsigned long *pulData, size_t sizDataDw, unsigne
 			/* Acknowledge the error bits. */
 			ptRAPSDIOArea->ulSDIO_SD_INFO2 = ~ulValue;
 
-//			trace_message_ul(TRACEMSG_SDIO_Error, ulValue);
 			tResult = SDIO_RESULT_ErrorsInSdInfo2;
 			break;
 		}
@@ -626,7 +641,6 @@ static SDIO_RESULT_T read_data(unsigned long *pulData, size_t sizDataDw, unsigne
 			/* Acknowledge the error bits. */
 			ptRAPSDIOArea->ulSDIO_SD_INFO1 = ~ulValue;
 
-//			trace_message(TRACEMSG_SDIO_ReadNoData);
 			tResult = SDIO_RESULT_NoData;
 			break;
 		}
@@ -634,7 +648,6 @@ static SDIO_RESULT_T read_data(unsigned long *pulData, size_t sizDataDw, unsigne
 		iTimerHasElapsed = cr7_global_timer_elapsed(&tTimer);
 		if( iTimerHasElapsed!=0 )
 		{
-//			trace_message(TRACEMSG_SDIO_CommandTimeOut);
 			tResult = SDIO_RESULT_DataTimeout;
 		}
 	} while( iTimerHasElapsed==0 );
@@ -668,7 +681,6 @@ static SDIO_RESULT_T read_data(unsigned long *pulData, size_t sizDataDw, unsigne
 			iTimerHasElapsed = cr7_global_timer_elapsed(&tTimer);
 			if( iTimerHasElapsed!=0 )
 			{
-//				trace_message(TRACEMSG_SDIO_CommandTimeOut);
 				tResult = SDIO_RESULT_AccessEndTimeout;
 			}
 		} while( iTimerHasElapsed==0 );
@@ -832,7 +844,6 @@ static SDIO_RESULT_T sdio_read_scr_register(const SDIO_HANDLE_T *ptSdioHandle, u
 		if( ulValue!=0 )
 		{
 			/* Received an error from the card. */
-//			trace_message_ul(TRACEMSG_SDIO_CardError, ulValue);
 			tResult = SDIO_RESULT_ErrorsInResponse;
 		}
 		else
@@ -891,7 +902,6 @@ static SDIO_RESULT_T read_data_block(const SDIO_HANDLE_T *ptSdioHandle, unsigned
 		if( ulValue!=0 )
 		{
 			/* Received an error from the card. */
-//			trace_message_ul(TRACEMSG_SDIO_CardError, ulValue);
 			tResult = SDIO_RESULT_ErrorsInResponse;
 		}
 		else
@@ -924,7 +934,6 @@ static SDIO_RESULT_T write_data_block(const SDIO_HANDLE_T *ptSdioHandle, unsigne
 		if( ulValue!=0 )
 		{
 			/* Received an error from the card. */
-//			trace_message_ul(TRACEMSG_SDIO_CardError, ulValue);
 			tResult = SDIO_RESULT_ErrorsInResponse;
 		}
 		else
@@ -966,7 +975,6 @@ static SDIO_RESULT_T sdio_card_select_voltage(SDIO_HANDLE_T *ptHandle, int iCard
 		if( (ulOcrRegister&(MSK_SD_OCR_VDD_VOLTAGE_32_33|MSK_SD_OCR_VDD_VOLTAGE_33_34))==0 )
 		{
 			/* The card does not support our voltage range. */
-//			trace_message_ul(TRACEMSG_SDIO_UnsupportedVoltageRange, ulOcrRegister);
 			tResult = SDIO_RESULT_UnsupportedVoltageRange;
 		}
 		else
@@ -1540,9 +1548,7 @@ static SDIO_RESULT_T sdio_initialize(SDIO_HANDLE_T *ptSdioHandle, const SDIO_OPT
 	 * One clock cycle has a duration of 2,56us. 74 clock cycles have
 	 * 3031,04us.
 	 */
-//	trace_message(TRACEMSG_SDIO_InitialClocksStart);
 	cr7_global_timer_delay_us(ptSdioHandle->ptSdioOptions->ulInitialClockGenerationUs);
-//	trace_message(TRACEMSG_SDIO_InitialClocksEnd);
 
 	/* Set the clock to the initial value. Enable automatic clock control. */
 	sdio_set_clock(ptSdioHandle, ptSdioHandle->ptSdioOptions->ulInitialSpeedKHz, 1);
