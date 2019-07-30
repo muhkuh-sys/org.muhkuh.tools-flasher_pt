@@ -106,6 +106,10 @@ static int flashpos_get_chunk(FLASH_POSITIONS_T *ptFlashPos)
 		
 		iRet = 1;
 	}
+	else
+	{
+		progress_bar_finalize();
+	}
 	
 	return iRet;
 }
@@ -172,7 +176,7 @@ NETX_CONSOLEAPP_RESULT_T sdio_detect_wrap(SDIO_HANDLE_T *ptSdioHandle)
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int iResult;
 
-	uprintf(". Detecting SD/EMMC on SDIO port...\n");
+	uprintf("# Detecting SD/EMMC on SDIO port...\n");
 
 	iResult = sdio_detect(ptSdioHandle, &tSdioOptions);
 	if( iResult!=0 )
@@ -202,9 +206,9 @@ NETX_CONSOLEAPP_RESULT_T sdio_read(CMD_PARAMETER_READ_T *ptParams)
 
 	ptSdioHandle = &ptParams->ptDeviceDescription->uInfo.tSdioHandle;
 	
-	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulEndAdr, ptParams->pucData);
+	uprintf("# Reading...\n");
 	
-	uprintf(". Reading...\n");
+	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulEndAdr, ptParams->pucData);
 	
 	while (1 == flashpos_get_chunk(&tFlashPos))
 	{
@@ -218,8 +222,6 @@ NETX_CONSOLEAPP_RESULT_T sdio_read(CMD_PARAMETER_READ_T *ptParams)
 		
 		flashpos_skip_chunk(&tFlashPos);
 	}
-	
-	progress_bar_finalize();
 	
 	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 	{
@@ -246,9 +248,9 @@ NETX_CONSOLEAPP_RESULT_T sdio_sha1(CMD_PARAMETER_CHECKSUM_T *ptParams, SHA_CTX *
 
 	ptSdioHandle = &ptParams->ptDeviceDescription->uInfo.tSdioHandle;
 	
-	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulEndAdr, NULL);
+	uprintf("# Calculating hash...\n");
 	
-	uprintf(". Calculating hash...\n");
+	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulEndAdr, NULL);
 	
 	while (1 == flashpos_get_chunk(&tFlashPos))
 	{
@@ -263,8 +265,6 @@ NETX_CONSOLEAPP_RESULT_T sdio_sha1(CMD_PARAMETER_CHECKSUM_T *ptParams, SHA_CTX *
 		flashpos_skip_chunk(&tFlashPos);
 	}
 	
-	progress_bar_finalize();
-	
 	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 	{
 		uprintf(". OK\n");
@@ -278,7 +278,6 @@ NETX_CONSOLEAPP_RESULT_T sdio_sha1(CMD_PARAMETER_CHECKSUM_T *ptParams, SHA_CTX *
 #endif 
 
  
-
 /*
 	return value == NETX_CONSOLEAPP_RESULT_OK and 
 		ptConsoleParams->pvReturnMessage == 0: the data is equal
@@ -289,10 +288,14 @@ NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_VERIFY_T *ptParams, unsigned 
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	int fEqual; /* ==0: equal, !=0: not equal */
-	int iResult; /* return values from SDIO functions */
 
 	FLASH_POSITIONS_T tFlashPos;
 	const SDIO_HANDLE_T *ptSdioHandle;
+
+	unsigned long ulFlashAdr; /* device offset (for error message) */
+	unsigned char *pucBuffer; /* buffer position */
+	unsigned char *pucSector; /* sector position */
+	unsigned char *pucSectorEnd;
 	
 	/* assume success */
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
@@ -300,11 +303,13 @@ NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_VERIFY_T *ptParams, unsigned 
 	
 	ptSdioHandle = &ptParams->ptDeviceDescription->uInfo.tSdioHandle;
 	
+	uprintf("# Verifying...\n");
+	
 	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulEndAdr, ptParams->pucData);
+	ulFlashAdr = ptParams->ulStartAdr;
+	pucBuffer = ptParams->pucData;
 	
-	uprintf(". Verifying...\n");
-	
-	while (1 == flashpos_get_chunk(&tFlashPos))
+	while ((1 == flashpos_get_chunk(&tFlashPos)) && (fEqual == 0))
 	{
 		tResult = flashpos_read_sector(&tFlashPos, ptSdioHandle);
 		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
@@ -312,18 +317,24 @@ NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_VERIFY_T *ptParams, unsigned 
 			break;
 		}
 		
-		iResult = memcmp(tFlashPos.pucDataAdr, tFlashPos.tSector.auc + tFlashPos.ulSectorOffset, tFlashPos.ulChunkLength);
-		if (iResult != 0)
+		pucSector = tFlashPos.tSector.auc+tFlashPos.ulSectorOffset;
+		pucSectorEnd = pucSector+tFlashPos.ulChunkLength;
+		
+		while (pucSector < pucSectorEnd)
 		{
-			uprintf(". Verify failed!\n");
-			fEqual = 1;
-			break;
+			if (*pucSector != *pucBuffer) {
+				uprintf("! verify error at address 0x%08x. buffer: 0x%02x, flash: 0x%02x.\n", 
+				ulFlashAdr, *pucBuffer, *pucSector); 
+				fEqual = 1;
+				break;
+			}
+			++pucSector;
+			++pucBuffer;
+			++ulFlashAdr;
 		}
 		
 		flashpos_skip_chunk(&tFlashPos);
 	}
-	
-	progress_bar_finalize();
 	
 	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 	{
@@ -342,11 +353,11 @@ NETX_CONSOLEAPP_RESULT_T sdio_verify(CMD_PARAMETER_VERIFY_T *ptParams, unsigned 
 }
 
 
-
-
 NETX_CONSOLEAPP_RESULT_T sdio_write(CMD_PARAMETER_FLASH_T *ptParams)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
+	
+	CMD_PARAMETER_VERIFY_T tVerifyParams;
 	unsigned long ulVerifyResult;
 
 	const SDIO_HANDLE_T *ptSdioHandle;
@@ -357,9 +368,9 @@ NETX_CONSOLEAPP_RESULT_T sdio_write(CMD_PARAMETER_FLASH_T *ptParams)
 	
 	ptSdioHandle = &ptParams->ptDeviceDescription->uInfo.tSdioHandle;
 	
-	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulStartAdr + ptParams->ulDataByteSize, ptParams->pucData);
+	uprintf("# Writing...\n");
 	
-	uprintf(". Writing...\n");
+	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulStartAdr + ptParams->ulDataByteSize, ptParams->pucData);
 	
 	while (1 == flashpos_get_chunk(&tFlashPos))
 	{
@@ -383,11 +394,14 @@ NETX_CONSOLEAPP_RESULT_T sdio_write(CMD_PARAMETER_FLASH_T *ptParams)
 		flashpos_skip_chunk(&tFlashPos);
 	}
 	
-	progress_bar_finalize();
-	
 	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 	{
-		tResult = sdio_verify ((CMD_PARAMETER_VERIFY_T*) ptParams, &ulVerifyResult);
+		tVerifyParams.ptDeviceDescription = ptParams->ptDeviceDescription;
+		tVerifyParams.ulStartAdr = ptParams->ulStartAdr;
+		tVerifyParams.ulEndAdr   = ptParams->ulStartAdr + ptParams->ulDataByteSize; 
+		tVerifyParams.pucData    = ptParams->pucData;
+		tResult = sdio_verify (&tVerifyParams, &ulVerifyResult);
+
 		if ((tResult != NETX_CONSOLEAPP_RESULT_OK) || ulVerifyResult != 0)
 		{
 			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
@@ -418,10 +432,10 @@ NETX_CONSOLEAPP_RESULT_T sdio_erase(CMD_PARAMETER_ERASE_T *ptParams)
 	
 	ptSdioHandle = &ptParams->ptDeviceDescription->uInfo.tSdioHandle;
 	
+	uprintf("# Erasing...\n");
+	
 	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulEndAdr, NULL);
 
-	uprintf(". Erasing...\n");
-	
 	while (1 == flashpos_get_chunk(&tFlashPos))
 	{
 		if ((tFlashPos.ulSectorOffset != 0) || (tFlashPos.ulChunkLength != SD_SECTOR_SIZE))
@@ -443,8 +457,6 @@ NETX_CONSOLEAPP_RESULT_T sdio_erase(CMD_PARAMETER_ERASE_T *ptParams)
 		
 		flashpos_skip_chunk(&tFlashPos);
 	}
-	
-	progress_bar_finalize();
 	
 	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 	{
@@ -470,7 +482,7 @@ NETX_CONSOLEAPP_RESULT_T sdio_get_erase_area(CMD_PARAMETER_GETERASEAREA_T *ptPar
 	ulOffsetStart = ptParameter->ulStartAdr;
 	ulOffsetEnd = ptParameter->ulEndAdr;
 
-	uprintf("Erase area: 0x%08x - 0x%08x\n", ulOffsetStart, ulOffsetEnd);
+	uprintf(". Erase area: 0x%08x - 0x%08x\n", ulOffsetStart, ulOffsetEnd);
 
 	ptParameter->ulStartAdr = ulOffsetStart;
 	ptParameter->ulEndAdr = ulOffsetEnd;
@@ -502,11 +514,11 @@ NETX_CONSOLEAPP_RESULT_T sdio_is_erased(CMD_PARAMETER_ISERASED_T *ptParams, unsi
 	fIsErased = 0;
 	ptSdioHandle = &ptParams->ptDeviceDescription->uInfo.tSdioHandle;
 	
+	uprintf("# Is-erased check...\n");
+	
 	flashpos_init(&tFlashPos, ptParams->ulStartAdr, ptParams->ulEndAdr, NULL);
 	
-	uprintf(". Is-erased check...\n");
-	
-	while (1 == flashpos_get_chunk(&tFlashPos) && (fIsErased == 0))
+	while ((1 == flashpos_get_chunk(&tFlashPos)) && (fIsErased == 0))
 	{
 		tResult = flashpos_read_sector(&tFlashPos, ptSdioHandle);
 		if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
@@ -528,8 +540,6 @@ NETX_CONSOLEAPP_RESULT_T sdio_is_erased(CMD_PARAMETER_ISERASED_T *ptParams, unsi
 		
 		flashpos_skip_chunk(&tFlashPos);
 	}
-	
-	progress_bar_finalize();
 	
 	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 	{
