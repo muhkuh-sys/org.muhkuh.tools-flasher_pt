@@ -42,7 +42,7 @@
 #include "main.h"
 
 #ifdef CFG_INCLUDE_SDIO
-#include "netx4000_sdio_wrap.h"
+#include "flasher_sdio.h"
 #endif
 
 /* ------------------------------------- */

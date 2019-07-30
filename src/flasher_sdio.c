@@ -17,7 +17,7 @@
  *   <https://www.gnu.org/licenses/>.                                      *
  ***************************************************************************/
 
-#include "netx4000_sdio_wrap.h"
+#include "flasher_sdio.h"
 #include "netx4000_sdio.h"
 #include "portcontrol.h"
 #include "uprintf.h"

@@ -130,9 +130,8 @@ flasher_sources_lib_netx4000 = """
 	src/mmio.c
 	src/pl353_nor.c
 	src/netx4000/netx4000_sdio.c
-	src/netx4000/netx4000_sdio_wrap.c
+	src/flasher_sdio.c
 """
-
 
 flasher_sources_main_netx90 = """
 	src/netx90/flasher_header.c
