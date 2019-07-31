@@ -51,13 +51,19 @@ SECTIONS
 		*(.text* .rodata*)
 	} >PRAM
 
+	.buffer (NOLOAD):
+	{
+		__BUFFER_START__ = .;
+		. = ORIGIN(PRAM)+LENGTH(PRAM) ;
+		__BUFFER_END__ = .;
+	} >PRAM
 
+	/* Can/should we move this to the end of DRAM/PRAM? */
 	.serialvectors ORIGIN(DRAM) (NOLOAD) :
 	{
 		PROVIDE ( tSerialVectors = . );
 		. = . + 0x10;
 	} >DRAM
-
 
 	.bss :
 	{
@@ -67,14 +73,12 @@ SECTIONS
 		*(.bss .sbss COMMON)
 
 		__bss_end__ = . ;
-		__BUFFER_START__ = .;
 	} >DRAM
 
 	/* NOTE: do not put anything between the bss and the stack section. Here goes the buffer. */
 
 	.stack ORIGIN(DRAM)+LENGTH(DRAM)-0x800 :
 	{
-		__BUFFER_END__ = .;
 		. = . + 0x800;
 		PROVIDE (stack_top = .);
 	} >DRAM

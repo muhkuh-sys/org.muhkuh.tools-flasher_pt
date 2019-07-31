@@ -159,7 +159,9 @@ local chiptyp2name = {
 	[romloader.ROMLOADER_CHIPTYP_NETX4100_SMALL]   = "netx4000",
 	[romloader.ROMLOADER_CHIPTYP_NETX90_MPW]       = "netx90_mpw",
 	[romloader.ROMLOADER_CHIPTYP_NETX90]           = "netx90",
-	[romloader.ROMLOADER_CHIPTYP_NETX90B]          = "netx90"
+	[romloader.ROMLOADER_CHIPTYP_NETX90B]          = "netx90",
+	[romloader.ROMLOADER_CHIPTYP_NETIOLA]          = "netiol",
+	[romloader.ROMLOADER_CHIPTYP_NETIOLB]          = "netiol"
 }
 
 -- prefix must include a trailing backslash if it's a directory
@@ -275,9 +277,12 @@ end
 
 -- download parameters to netX
 local function set_parameterblock(tPlugin, ulAddress, aulParameters, fnCallbackProgress)
-
 	local strBin = ""
 	for i,v in ipairs(aulParameters) do
+		-- print parameters as openOCD TCL instructions
+		-- local strSetMem = "set *((unsigned long *) 0x%08x) = 0x%08x"
+		-- printf(strSetMem, ulAddress+4*(i-1), v)
+		
 		strBin = strBin .. string.char( bit.band(v,0xff), bit.band(bit.rshift(v,8),0xff), bit.band(bit.rshift(v,16),0xff), bit.band(bit.rshift(v,24),0xff) )
 	end
 	write_image(tPlugin, ulAddress, strBin, fnCallbackProgress) 
@@ -903,13 +908,9 @@ function readArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMess
 	while ulSize>0 do
 		-- determine chunk size
 		ulChunkSize = math.min(ulSize, ulBufferLen)
-		print(string.format("ulChunkSize: 0x%08x, %d %u", ulChunkSize, ulChunkSize, ulChunkSize))
 		
 		-- Read chunk into buffer
 		print(string.format("reading flash offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
-		print(string.format("reading flash offset %d-%d.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
-		print(string.format("reading flash offset %u-%u.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
-		print(ulDeviceOffset+ulChunkSize > 0xffffffff)
 		fOk = read(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulChunkSize, ulBufferAddr, fnCallbackMessage, fnCallbackProgress)
 		if not fOk then
 			return nil, "Error while reading from flash!"

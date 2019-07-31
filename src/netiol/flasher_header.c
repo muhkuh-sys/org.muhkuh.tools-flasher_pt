@@ -51,8 +51,7 @@ const FLASHER_VERSION_T flasher_version =
 	},
 	.aulIf =
 	{
-		FLASHER_IF0_NETX56_PFSRAM |
-		FLASHER_IF0_NETX56_SPI,
+		FLASHER_IF0_NETIOL_SPI,
 
 		0,
 

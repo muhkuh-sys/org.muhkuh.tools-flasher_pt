@@ -23,11 +23,11 @@
 
 #include "drv_spi_hsoc_v2.h"
 
-#include "mmio.h"
 #include "netx_io_areas.h"
 
 
 #if ASIC_TYP==ASIC_TYP_NETX50 || ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56
+#include "mmio.h"
 static const HOSTMMIODEF aatMmioValues[3][4] =
 {
 	/*
@@ -61,6 +61,7 @@ static const HOSTMMIODEF aatMmioValues[3][4] =
 	}
 };
 #elif ASIC_TYP==ASIC_TYP_NETX4000
+#include "mmio.h"
 
 static const HOSTMMIODEF aatMmioValues_SPI0[3][4] =
 {
@@ -493,6 +494,15 @@ int flasher_drv_spi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATI
 	{
 		mmio_activate(ptCfg->aucMmio, sizeof(ptCfg->aucMmio), aatMmioValues_SPI1[uiChipSelect]);
 	}
+#elif ASIC_TYP==ASIC_TYP_NETIOL
+	/* Select mux for SPI master:  2=010 AI-pins with CS */
+	HOSTDEF(ptAsicCtrlArea)
+	unsigned long ulVal = ptAsicCtrlArea->aulAsic_ctrl_io_config[0];
+	ulVal &= ~MSK_NIOL_asic_ctrl_io_config0_sel_spi;
+	ulVal |= (0x2UL <<  SRT_NIOL_asic_ctrl_io_config0_sel_spi);
+	ulVal |= (0x1cUL << SRT_NIOL_asic_ctrl_io_config0_pw);
+	ptAsicCtrlArea->aulAsic_ctrl_io_config[0] = ulVal;
+	
 #endif
 	return iResult;
 }
