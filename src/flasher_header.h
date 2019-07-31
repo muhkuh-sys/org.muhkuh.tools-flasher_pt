@@ -76,7 +76,8 @@ typedef enum
 	FLASHER_IF0_NETX4000_FULL_MMC        = 0x04000000,
 	FLASHER_IF0_NETX4000_FULL_NAND       = 0x08000000,
 	FLASHER_IF0_NETX90_MPW_SPI           = 0x10000000,
-	FLASHER_IF0_NETIOL_SPI               = 0x20000000
+	FLASHER_IF0_NETIOL_SPI               = 0x20000000,
+	FLASHER_IF0_NETX4000_SDIO            = 0x40000000,  /* todo: different order? add netx 4000 relaxed/4100? */
 } eFLASHER_IF0;
 
 /*-----------------------------------*/

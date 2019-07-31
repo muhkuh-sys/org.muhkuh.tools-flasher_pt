@@ -1,7 +1,7 @@
 module("flasher", package.seeall)
 
 -----------------------------------------------------------------------------
---   Copyright (C) 2009 by Christoph Thelen                                --
+--   Copyright (C) 2019 by Christoph Thelen                                --
 --   doc_bacardi@users.sourceforge.net                                     --
 --                                                                         --
 --   This program is free software; you can redistribute it and/or modify  --
@@ -23,12 +23,6 @@ module("flasher", package.seeall)
 -- Description:
 --   flasher.lua: flasher interface routines
 --
---  Changes:
---    Date      Author   Description
---   7 mar 12   SL       simple_flasher uses area routines, removed doEraseFlash
---  29 feb 12   SL       new callback routines, abstracted read/write/call
---                       separated loading and downloading of flasher
---                       added flash/read/write/erase Area routines
 -----------------------------------------------------------------------------
 
 require("bit")
@@ -43,6 +37,9 @@ require("romloader")
 BUS_Parflash    = ${BUS_ParFlash}             -- parallel flash
 BUS_Spi         = ${BUS_SPI}             -- serial flash on spi bus
 BUS_IFlash      = ${BUS_IFlash}             -- internal flash
+BUS_SDIO        = ${BUS_SDIO}             -- SD/EMMC
+
+
 
 
 OPERATION_MODE_Flash             = ${OPERATION_MODE_Flash}
@@ -156,10 +153,10 @@ local chiptyp2name = {
 	[romloader.ROMLOADER_CHIPTYP_NETX10]           = "netx10",
 	[romloader.ROMLOADER_CHIPTYP_NETX56]           = "netx56",
 	[romloader.ROMLOADER_CHIPTYP_NETX56B]          = "netx56",
-	[romloader.ROMLOADER_CHIPTYP_NETX4000_RELAXED] = "netx4000_relaxed",
+	[romloader.ROMLOADER_CHIPTYP_NETX4000_RELAXED] = "netx4000",
 	-- For the moment, we use the flasher for the netx 4000 relaxed for all netX 4000 variants.
-	[romloader.ROMLOADER_CHIPTYP_NETX4000_FULL]    = "netx4000_relaxed",
-	[romloader.ROMLOADER_CHIPTYP_NETX4100_SMALL]   = "netx4000_relaxed",
+	[romloader.ROMLOADER_CHIPTYP_NETX4000_FULL]    = "netx4000",
+	[romloader.ROMLOADER_CHIPTYP_NETX4100_SMALL]   = "netx4000",
 	[romloader.ROMLOADER_CHIPTYP_NETX90_MPW]       = "netx90_mpw",
 	[romloader.ROMLOADER_CHIPTYP_NETX90]           = "netx90",
 	[romloader.ROMLOADER_CHIPTYP_NETX90B]          = "netx90"
@@ -447,6 +444,20 @@ function detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, fnCallbackMessage, f
       0,                                    -- reserved
       aAttr.ulDeviceDesc                    -- data block for the device description
     }
+	elseif tBus==BUS_SDIO then
+		aulParameter = {
+			OPERATION_MODE_Detect,                -- operation mode: detect
+			tBus,                                 -- the bus
+			0,                                    -- unit
+			0,                                    -- chip select
+			0,                                    -- reserved
+			0,                                    -- reserved
+			0,                                    -- reserved
+			0,                                    -- reserved
+			0,                                    -- reserved
+			aAttr.ulDeviceDesc                    -- data block for the device description
+		}
+
 	else
 		error("Unknown bus: " .. tostring(tBus))
 	end
@@ -892,9 +903,13 @@ function readArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMess
 	while ulSize>0 do
 		-- determine chunk size
 		ulChunkSize = math.min(ulSize, ulBufferLen)
+		print(string.format("ulChunkSize: 0x%08x, %d %u", ulChunkSize, ulChunkSize, ulChunkSize))
 		
 		-- Read chunk into buffer
 		print(string.format("reading flash offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
+		print(string.format("reading flash offset %d-%d.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
+		print(string.format("reading flash offset %u-%u.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
+		print(ulDeviceOffset+ulChunkSize > 0xffffffff)
 		fOk = read(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulChunkSize, ulBufferAddr, fnCallbackMessage, fnCallbackProgress)
 		if not fOk then
 			return nil, "Error while reading from flash!"
