@@ -526,7 +526,9 @@ function exec(aArgs)
 		end
 		
 		-- flash/erase: erase the area
-		if fOk and (iMode == MODE_FLASH or iMode == MODE_ERASE) then
+		--if fOk and (iMode == MODE_FLASH or iMode == MODE_ERASE) then
+		-- Explicit erase is not necessary when flashing SDIO
+		if fOk and (iMode == MODE_ERASE or (iMode == MODE_FLASH and iBus ~= flasher.BUS_SDIO))then
 			fOk, strMsg = flasher.eraseArea(tPlugin, aAttr, ulStartOffset, ulLen)
 		end
 		

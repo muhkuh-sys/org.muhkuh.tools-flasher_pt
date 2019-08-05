@@ -57,40 +57,40 @@
 void delay_us(unsigned int uiDelayUs)
 {
 #if ASIC_TYP==ASIC_TYP_NETX90_MPW || ASIC_TYP==ASIC_TYP_NETX90
-	HOSTDEF(ptGpioArea);
+	HOSTDEF(ptGpioComArea);
 	unsigned long ulTimerValue;
 	unsigned long ulValue;
 
 
 	/* Stop the counter. */
-	ptGpioArea->ulGpio_counter0_ctrl = 0;
+	ptGpioComArea->ulGpio_counter0_ctrl = 0;
 
 	/* Convert the delay value to 10ns units. */
 	ulTimerValue = uiDelayUs * 100;
 
 	/* Set the maximum timer value. */
-	ptGpioArea->ulGpio_counter0_max = ulTimerValue;
+	ptGpioComArea->ulGpio_counter0_max = ulTimerValue;
 
 	/*  Clear the current timer value. */
-	ptGpioArea->ulGpio_counter0_cnt = 0;
+	ptGpioComArea->ulGpio_counter0_cnt = 0;
 
 	/* Start the timer. */
 	ulValue  = HOSTMSK(gpio_counter0_ctrl_run);
 	ulValue |= HOSTMSK(gpio_counter0_ctrl_once);
-	ptGpioArea->ulGpio_counter0_ctrl = ulValue;
+	ptGpioComArea->ulGpio_counter0_ctrl = ulValue;
 
 	/* Wait until the timer is not running anymore. */
 	do
 	{
-		ulValue  = ptGpioArea->ulGpio_counter0_ctrl;
+		ulValue  = ptGpioComArea->ulGpio_counter0_ctrl;
 		ulValue &= HOSTMSK(gpio_counter0_ctrl_run);
 	} while( ulValue!=0 );
 
 	/* Stop the timer. */
-	ptGpioArea->ulGpio_counter0_ctrl = 0;
+	ptGpioComArea->ulGpio_counter0_ctrl = 0;
 
 	/* Reset the counter max value. */
-	ptGpioArea->ulGpio_counter0_max = 0;
+	ptGpioComArea->ulGpio_counter0_max = 0;
 #elif ASIC_TYP==ASIC_TYP_NETIOL
 	/* TODO: Continue here... */
 

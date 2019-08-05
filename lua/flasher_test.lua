@@ -1,17 +1,11 @@
 module("flasher_test", package.seeall)
 
 ---------------------------------------------------------------------------
--- Copyright (C) 2012 Hilscher Gesellschaft für Systemautomation mbH
+-- Copyright (C) 2019 Hilscher Gesellschaft für Systemautomation mbH
 --
 -- Description:
 --   flasher_test.lua: flasher test routines
 --
----------------------------------------------------------------------------
----------------------------------------------------------------------------
--- SVN Keywords
-SVN_DATE   ="$Date$"
-SVN_VERSION="$Revision$"
-SVN_AUTHOR ="$Author$"
 ---------------------------------------------------------------------------
 
 require("flasher")
@@ -31,6 +25,11 @@ function log_printf(...)
 	end
 end
 
+-- Number of random data segments to add
+iNumAddSegments = 100
+
+-- Limit the reported device size (size of the test area) to 128 MB.
+ulDeviceSizeMax = 0x8000000
 
 --========================================================================
 --                      interface to flasher.lua
@@ -75,6 +74,10 @@ function flasher_interface.configure(self, tPlugin, strFlasherPath, iBus, iUnit,
 end
 
 function flasher_interface.init(self)
+	if self.iBus == flasher.BUS_IFlash then
+		error("This test is not suitable to test intflash. Write chunks may collide in 16 byte pages.")
+	end
+
 	print("Downloading flasher binary")
 	self.aAttr = flasher.download(self.tPlugin, self.strFlasherPath, self.fnCallbackProgress)
 	if not self.aAttr then
@@ -104,18 +107,40 @@ function flasher_interface.getDeviceSize(self)
 		self.fnCallbackMessage, self.fnCallbackProgress)
 		
 	if ulSize then
+		if ulSize > ulDeviceSizeMax then
+			ulSize = ulDeviceSizeMax
+		end
 		return ulSize
 	else
 		return nil, "Failed to get device size"
 	end
 end
 
--- bus 0: parallel, bus 1: serial
+function flasher_interface.getBus(self)
+	return self.iBus
+end
+
 function flasher_interface.getBusWidth(self)
-	if self.iBus==1 then
+	if self.iBus == flasher.BUS_Parflash then
+		return 2 -- 1 or 2 or 4
+	elseif self.iBus == flasher.BUS_Spi then
 		return 1
-	else
-		return 2 -- may be 1, 2 or 4
+	elseif self.iBus == flasher.BUS_IFlash then
+		return 4
+	elseif self.iBus == flasher.BUS_SDIO then
+		return 1
+	end
+end
+
+function flasher_interface.getEmptyByte(self)
+	if self.iBus == flasher.BUS_Parflash then
+		return 0xff
+	elseif self.iBus == flasher.BUS_Spi then
+		return 0xff
+	elseif self.iBus == flasher.BUS_IFlash then
+		return 0xff
+	elseif self.iBus == flasher.BUS_SDIO then
+		return 0x00
 	end
 end
 
@@ -264,6 +289,9 @@ function testFlasher(tFlasherInterface, fnLogPrintf)
 	
 	local ulDeviceSize = tFlasherInterface:getDeviceSize()
 	
+	local bEmptyByte = tFlasherInterface:getEmptyByte()
+	
+	
 	-- for serial flash
 	local atSegments_1={
 		{offset = 0, size = 12345},
@@ -343,7 +371,7 @@ function testFlasher(tFlasherInterface, fnLogPrintf)
 	
 	log_printf("")
 	log_printf("Create random segments:")
-	while #atSegments < iSize + 10 do
+	while #atSegments < iSize + iNumAddSegments do
 		insert_random_segment(atSegments, ulDeviceSize, iBusWidth)
 	end
 	
@@ -459,7 +487,7 @@ function testFlasher(tFlasherInterface, fnLogPrintf)
 
 		log_printf("Checking Range 0x%08x - 0x%08x", iEnd, iNextStart)
 		for iPos = iEnd+1, iNextStart do
-			assert(strImage:byte(iPos) == 0xff, string.format("0x%08x non-empty", iPos))
+			assert(strImage:byte(iPos) == bEmptyByte, string.format("0x%08x non-empty", iPos))
 		end
 	
 	end
