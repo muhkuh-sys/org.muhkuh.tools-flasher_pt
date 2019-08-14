@@ -556,7 +556,8 @@ if fBuildIsFull==True:
         bin_netx90_nodbg,
         bin_netx56_nodbg,
         bin_netx50_nodbg,
-        bin_netx10_nodbg)
+        bin_netx10_nodbg,
+        bin_netiol_nodbg)
 
     tArcList.AddFiles('netx/debug/',
         bin_netx4000_dbg,
@@ -565,7 +566,8 @@ if fBuildIsFull==True:
         bin_netx90_dbg,
         bin_netx56_dbg,
         bin_netx50_dbg,
-        bin_netx10_dbg)
+        bin_netx10_dbg,
+        bin_netiol_dbg)
 
     tArcList.AddFiles('doc/',
         doc,
