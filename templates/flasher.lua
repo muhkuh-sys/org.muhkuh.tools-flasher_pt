@@ -145,31 +145,33 @@ end
 --                    Downloading the flasher
 -----------------------------------------------------------------------------
 
--- map chip type to flasher
-local chiptyp2name = {
-	[romloader.ROMLOADER_CHIPTYP_NETX500]          = "netx500",
-	[romloader.ROMLOADER_CHIPTYP_NETX100]          = "netx500",
-	[romloader.ROMLOADER_CHIPTYP_NETX50]           = "netx50",
-	[romloader.ROMLOADER_CHIPTYP_NETX10]           = "netx10",
-	[romloader.ROMLOADER_CHIPTYP_NETX56]           = "netx56",
-	[romloader.ROMLOADER_CHIPTYP_NETX56B]          = "netx56",
-	[romloader.ROMLOADER_CHIPTYP_NETX4000_RELAXED] = "netx4000",
-	-- For the moment, we use the flasher for the netx 4000 relaxed for all netX 4000 variants.
-	[romloader.ROMLOADER_CHIPTYP_NETX4000_FULL]    = "netx4000",
-	[romloader.ROMLOADER_CHIPTYP_NETX4100_SMALL]   = "netx4000",
-	[romloader.ROMLOADER_CHIPTYP_NETX90_MPW]       = "netx90_mpw",
-	[romloader.ROMLOADER_CHIPTYP_NETX90]           = "netx90",
-	[romloader.ROMLOADER_CHIPTYP_NETX90B]          = "netx90",
-	[romloader.ROMLOADER_CHIPTYP_NETIOLA]          = "netiol",
-	[romloader.ROMLOADER_CHIPTYP_NETIOLB]          = "netiol"
-}
-
 -- prefix must include a trailing backslash if it's a directory
 function get_flasher_binary_path(iChiptype, strPathPrefix, fDebug)
-	local strNetxName = chiptyp2name[iChiptype]
+	local strNetxName = nil
 	local strDebug = fDebug and "_debug" or ""
 	local strPrefix = strPathPrefix or ""
-	
+
+	-- First catch the unlikely case that "iChiptype" is nil.
+	-- Otherwise each ROMLOADER_CHIPTYP_* which is also nil will match.
+	if iChiptype==nil then
+		strNetxName = nil
+	elseif iChiptype==romloader.ROMLOADER_CHIPTYP_NETX500 or iChiptype==romloader.ROMLOADER_CHIPTYP_NETX100 then
+		strNetxName = 'netx500'
+	elseif iChiptype==romloader.ROMLOADER_CHIPTYP_NETX50 then
+		strNetxName = 'netx50'
+	elseif iChiptype==romloader.ROMLOADER_CHIPTYP_NETX10 then
+		strNetxName = 'netx10'
+	elseif iChiptype==romloader.ROMLOADER_CHIPTYP_NETX56 or iChiptype==romloader.ROMLOADER_CHIPTYP_NETX56B then
+		strNetxName = 'netx56'
+	elseif iChiptype==romloader.ROMLOADER_CHIPTYP_NETX4000_RELAXED or iChiptype==romloader.ROMLOADER_CHIPTYP_NETX4000_FULL or iChiptype==romloader.ROMLOADER_CHIPTYP_NETX4100_SMALL then
+		strNetxName = 'netx4000'
+	elseif iChiptype==romloader.ROMLOADER_CHIPTYP_NETX90_MPW then
+		strNetxName = 'netx90_mpw'
+	elseif iChiptype==romloader.ROMLOADER_CHIPTYP_NETX90 or iChiptype==romloader.ROMLOADER_CHIPTYP_NETX90B then
+		strNetxName = 'netx90'
+	elseif iChiptype==romloader.ROMLOADER_CHIPTYP_NETIOLA or iChiptype==romloader.ROMLOADER_CHIPTYP_NETIOLB then
+		strNetxName = 'netiol'
+	end
 	if not strNetxName then
 		error("Unknown chiptyp! " .. tostring(iChiptype))
 	end
