@@ -295,6 +295,19 @@ elseif tArgs.fCommandPackSelected==true then
             tLog.error('Failed to open the archive "%s": %s', strWfpArchiveFile, tArchive:error_string())
             fOk = false
           else
+            -- Add the control file.
+            local tEntry = archive.ArchiveEntry()
+            tEntry:set_pathname('wfp.xml')
+            local strData = pl.utils.readfile(tArgs.strWfpControlFile, true)
+            tEntry:set_size(string.len(strData))
+            tEntry:set_filetype(archive.AE_IFREG)
+            tEntry:set_perm(420)
+            tEntry:set_gname('wfp')
+--            tEntry:set_uname('wfp')
+            tArchive:write_header(tEntry)
+            tArchive:write_data(strData)
+            tArchive:finish_entry()
+
             for _, strFileAbs in ipairs(atSortedFiles) do
               local tEntry = archive.ArchiveEntry()
               tEntry:set_pathname(pl.path.basename(strFileAbs))
