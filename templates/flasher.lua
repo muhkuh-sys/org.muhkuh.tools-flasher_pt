@@ -26,7 +26,6 @@ module("flasher", package.seeall)
 -----------------------------------------------------------------------------
 
 require("bit")
-require("muhkuh")
 require("romloader")
 
 
@@ -249,8 +248,12 @@ function download(tPlugin, strPrefix, fnCallbackProgress)
 	local iChiptype = tPlugin:GetChiptyp()
 	local fDebug = false
 	local strPath = get_flasher_binary_path(iChiptype, strPrefix, fDebug)
-	local strFlasherBin, strMsg = muhkuh.load(strPath)
-	assert(strFlasherBin, strMsg)
+	local tFile, strMsg = io.open(strPath, 'rb')
+	if tFile==nil then
+		error(string.format('Failed to open file "%s" for reading: %s', strPath, strMsg))
+	end
+	local strFlasherBin = tFile:read('*a')
+	tFile:close()
 
 	local aAttr = get_flasher_binary_attributes(strFlasherBin)
 	aAttr.strBinaryName = strFlasherBin
@@ -1046,16 +1049,14 @@ end
 --------------------------------------------------------------------------
 
 function simple_flasher(tPlugin, strDataFileName, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)
-	local strMsg
-	local strData
-
-
 	-- Load the data.
-	strData, strMsg = muhkuh.load(strDataFileName)
-	if not strData then
-		error("Failed to load binary '" .. strDataFileName .. "': " .. strMsg)
+	local tFile, strMsg = io.open(strDataFileName, 'rb')
+	if tFile==nil then
+		error(string.format('Failed to open file "%s" for reading: %s', strPath, strMsg))
 	end
-	
+	local strData = tFile:read('*a')
+	tFile:close()
+
 	simple_flasher_string(tPlugin, strData, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)
 end
 
