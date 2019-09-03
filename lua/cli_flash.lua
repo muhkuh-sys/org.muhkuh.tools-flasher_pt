@@ -665,9 +665,22 @@ function flasher_interface.getBusWidth(self)
 		return 1
 	elseif self.aArgs.iBus==flasher.BUS_IFlash then
 		return 4
+	elseif self.aArgs.iBus == flasher.BUS_SDIO then
+		return 1
 	end
 end
 
+function flasher_interface.getEmptyByte(self)
+	if self.aArgs.iBus == flasher.BUS_Parflash then
+		return 0xff
+	elseif self.aArgs.iBus == flasher.BUS_Spi then
+		return 0xff
+	elseif self.aArgs.iBus == flasher.BUS_IFlash then
+		return 0xff
+	elseif self.aArgs.iBus == flasher.BUS_SDIO then
+		return 0x00
+	end
+end
 
 function flasher_interface.flash(self, ulOffset, strData)
 	local fOk, strMsg = writeBin(self.aArgs.strDataFileName, strData)
