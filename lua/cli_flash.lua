@@ -77,8 +77,32 @@ lua cli_flash.lua erase -b 0 -l 4
 -- helpers
 --------------------------------------------------------------------------
 
+-- strData, strMsg loadBin(strFilePath)
+-- Load a binary file.
+-- returns 
+--   data if successful 
+--   nil, message if an error occurred
+function loadBin(strFilePath)
+	local strData
+	local tFile
+	local strMsg
+	
+	tFile, strMsg = io.open(strFilePath, "rb")
+	if tFile then
+		strData = tFile:read("*a")
+		tFile:close()
+		if strData == nil then
+			strMsg = string.format("Could not read from file %s", strFilePath)
+		end
+	else
+		strMsg = string.format("Could not open file %s: %s", strFilePath, strMsg or "Unknown error")
+	end
+	return strData, strMsg
+end
+
+
 -- fOk, strMsg writeBin(strName, strBin)
--- write binary file into string
+-- Write string to binary file.
 -- returns true or false, message
 function writeBin(strName, bin)
 	local f, msg = io.open(strName, "wb")
@@ -485,10 +509,9 @@ function exec(aArgs)
 		-- load input file  strDataFileName --> strData
 		if fOk and (iMode == MODE_FLASH or iMode == MODE_VERIFY or iMode == MODE_VERIFY_HASH) then
 			print("Loading data file")
-			strData, strMsg = muhkuh.load(strDataFileName)
+			strData, strMsg = loadBin(strDataFileName)
 			if not strData then
 				fOk = false
-				strMsg = "Failed to load binary '" .. strDataFileName .. "': " .. (strMsg or "Unknown error")
 			else
 				ulLen = strData:len()
 			end
@@ -504,24 +527,26 @@ function exec(aArgs)
 			end
 		end
 		
-		if fOk and iMode == MODE_INFO then
-			-- Get the board info table.
-			aBoardInfo = flasher.getBoardInfo(tPlugin, aAttr)
-			if aBoardInfo then
-				printBoardInfo(aBoardInfo)
-				fOk = true
+		if fOk then 
+			if iMode == MODE_INFO then
+				-- Get the board info table.
+				aBoardInfo = flasher.getBoardInfo(tPlugin, aAttr)
+				if aBoardInfo then
+					printBoardInfo(aBoardInfo)
+					fOk = true
+				else
+					fOk = false
+					strMsg = "Failed to read board info"
+				end
+	
 			else
-				fOk = false
-				strMsg = "Failed to read board info"
-			end
-
-		else
-			-- check if the selected flash is present
-			print("Detecting flash device")
-			fOk = flasher.detect(tPlugin, aAttr, iBus, iUnit, iChipSelect)
-			if not fOk then
-				fOk = false
-				strMsg = "Failed to get a device description!"
+				-- check if the selected flash is present
+				print("Detecting flash device")
+				fOk = flasher.detect(tPlugin, aAttr, iBus, iUnit, iChipSelect)
+				if not fOk then
+					fOk = false
+					strMsg = "Failed to get a device description!"
+				end
 			end
 		end
 		
@@ -707,7 +732,6 @@ function flasher_interface.verify(self, ulOffset, strData)
 	return exec(self.aArgs)
 end
 
-
 function flasher_interface.read(self, ulOffset, ulSize)
 	self.aArgs.iMode = MODE_READ
 	self.aArgs.ulStartOffset = ulOffset
@@ -718,27 +742,10 @@ function flasher_interface.read(self, ulOffset, ulSize)
 	if not fOk then
 		return nil, strMsg
 	else
-		local strData = muhkuh.load(self.aArgs.strDataFileName)
-		if not strData then
-			return nil, "Could not read file " .. self.aArgs.strDataFileName
-		else
-			return strData
-		end
+		strData, strMsg = loadBin(self.aArgs.strDataFileName)
 	end
 	
-	--[[
-	if fOk then
-		local fd = io.open(self.aArgs.strDataFileName, "rb")
-		if not fd then
-			return nil, "Could not open file " .. self.aArgs.strDataFileName
-		end
-		strData = fd:read("*a")
-		if not strData then 
-			return nil, "Could not read file " .. self.aArgs.strDataFileName
-		end
-	end
-	return strData
-	--]]
+	return strData, strMsg
 end
 
 
