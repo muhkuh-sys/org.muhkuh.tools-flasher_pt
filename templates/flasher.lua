@@ -975,7 +975,7 @@ function hashArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMess
 	
 	fOk, strFlashHashBin = hash(tPlugin, aAttr, ulDeviceOffset, ulDeviceEndOffset, fnCallbackMessage, fnCallbackProgress)
 
-	if fOk == nil then
+	if fOk~=true then
 		return nil, "Error while calculating SHA1 hash."
 	else
 		return strFlashHashBin, "Checksum calculated."
