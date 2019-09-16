@@ -1189,7 +1189,7 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 #if CFG_INCLUDE_SHA1!=0
 				tResult = opMode_checksum(ptAppParams);
 #else
-				uprintf("Error: the checksum command is not supported by this build.");
+				uprintf("Error: the checksum command is not supported by this build.\n");
 				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
 #endif
 				break;
