@@ -849,7 +849,6 @@ static NETX_CONSOLEAPP_RESULT_T check_params(NETX_CONSOLEAPP_PARAMETER_T *ptCons
 		uprintf(". Buffer address: 0x%08x\n", pucData);
 		break;
 		
-#if CFG_INCLUDE_SHA1!=0
 	case OPERATION_MODE_Checksum:
 		ulPars = FLAG_STARTADR + FLAG_ENDADR + FLAG_DEVICE;
 		ulStartAdr          = ptAppParams->uParameter.tChecksum.ulStartAdr;
@@ -858,7 +857,6 @@ static NETX_CONSOLEAPP_RESULT_T check_params(NETX_CONSOLEAPP_PARAMETER_T *ptCons
 		uprintf(". Mode: Checksum (SHA1)\n");
 		uprintf(". Flash offset [0x%08x, 0x%08x[\n", ulStartAdr, ulEndAdr);
 		break;
-#endif
 		
 	case OPERATION_MODE_IsErased:
 		ulPars = FLAG_STARTADR + FLAG_ENDADR + FLAG_DEVICE;
