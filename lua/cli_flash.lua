@@ -600,7 +600,7 @@ function exec(aArgs)
 		
 		-- hash, verify_hash: compute the SHA1 of the data in the flash
 		if fOk and (iMode == MODE_HASH or iMode == MODE_VERIFY_HASH) then
-			strFlashHashBin, strMsg = flasher. hashArea(tPlugin, aAttr, ulStartOffset, ulLen)
+			strFlashHashBin, strMsg = flasher.hashArea(tPlugin, aAttr, ulStartOffset, ulLen)
 			if strFlashHashBin then
 				fOk = true
 				strFlashHash = getHexString(strFlashHashBin)
