@@ -12,14 +12,7 @@ SVN_VERSION="$Revision$"
 SVN_AUTHOR ="$Author$"
 -----------------------------------------------------------------------------
 
-FLASHER_PATH = "netx/"
-
-require("muhkuh_cli_init")
-
--- flasher-related
-require("mhash")
-require("flasher")
-require("flasher_test")
+-- Requires are below, because they cause a lot of text to be printed.
 
 
 --------------------------------------------------------------------------
@@ -42,7 +35,8 @@ test        [p] dev                      Test flasher
 testcli     [p] dev                      Test cli flasher  
 list_interfaces                          List all usable interfaces
 detect_netx [p]                          Detect the netx chip type
--h                                       Show this help    
+-h                                       Show this help   
+-version                                 Show flasher version 
         
 p:    -p plugin_name
       select plugin
@@ -246,7 +240,7 @@ MODE_INFO = 8
 MODE_HELP = 10
 MODE_LIST_INTERFACES = 15
 MODE_DETECT_CHIPTYPE = 16
-
+MODE_VERSION = 17
 -- test modes
 MODE_TEST = 11
 MODE_TEST_CLI = 12
@@ -269,7 +263,8 @@ arg2Mode = {
 	info        	= MODE_INFO,
 	list_interfaces = MODE_LIST_INTERFACES,
 	detect_netx     = MODE_DETECT_CHIPTYPE,
-	["-h"]      	= MODE_HELP
+	["-h"]      	= MODE_HELP,
+	["-version"]	= MODE_VERSION
 }
 
 
@@ -296,7 +291,8 @@ requiredargs = {
 [MODE_TEST_CLI]     = {"b", "u", "cs"},
 [MODE_HELP]         = {},
 [MODE_LIST_INTERFACES] = {},
-[MODE_DETECT_CHIPTYPE] = {}
+[MODE_DETECT_CHIPTYPE] = {},
+[MODE_VERSION]      = {},
 }
 
 function checkArgs(aArgs)
@@ -783,6 +779,8 @@ end
 -- main
 --------------------------------------------------------------------------
 
+FLASHER_PATH = "netx/"
+
 local aArgs
 local fOk
 local strMsg
@@ -798,43 +796,59 @@ if aArgs == nil then
 	os.exit(1)
 	
 elseif aArgs.iMode == MODE_HELP then
+	require("flasher_version")
+	print(FLASHER_VERSION_STRING)
+	print()
 	print(strUsage)
 	os.exit(0)
 	
-elseif aArgs.iMode == MODE_LIST_INTERFACES then
-	list_interfaces()
+elseif aArgs.iMode == MODE_VERSION then
+	require("flasher_version")
+	print(FLASHER_VERSION_STRING)
 	os.exit(0)
-
-elseif aArgs.iMode == MODE_DETECT_CHIPTYPE then
-	fOk, strMsg = detect_chiptype(aArgs)
-	if fOk then
-		if strMsg then 
-			print(strMsg)
-		end
-		os.exit(0)
-	else
-		printf("Error: %s", strMsg or "unknown error")
-		os.exit(1)
-	end
-	
-elseif aArgs.iMode == MODE_TEST_CLI then
-	flasher_interface:configure(aArgs.strPluginName, aArgs.iBus, aArgs.iUnit, aArgs.iChipSelect)
-	fOk, strMsg = flasher_test.testFlasher(flasher_interface)
-	print(fOk, strMsg)
-	os.exit(0)
-	
+    
 else
-	show_args(aArgs)
+	require("muhkuh_cli_init")
+	require("mhash")
+	require("flasher")
+	require("flasher_test")
 	
-	fOk, strMsg = exec(aArgs)
-	
-	if fOk then
-		if strMsg then 
-			print(strMsg)
-		end
+	if aArgs.iMode == MODE_LIST_INTERFACES then
+		list_interfaces()
 		os.exit(0)
+	
+	elseif aArgs.iMode == MODE_DETECT_CHIPTYPE then
+		fOk, strMsg = detect_chiptype(aArgs)
+		if fOk then
+			if strMsg then 
+				print(strMsg)
+			end
+			os.exit(0)
+		else
+			printf("Error: %s", strMsg or "unknown error")
+			os.exit(1)
+		end
+		
+	elseif aArgs.iMode == MODE_TEST_CLI then
+		flasher_interface:configure(aArgs.strPluginName, aArgs.iBus, aArgs.iUnit, aArgs.iChipSelect)
+		fOk, strMsg = flasher_test.testFlasher(flasher_interface)
+		print(fOk, strMsg)
+		os.exit(0)
+		
 	else
-		print(strMsg or "an unknown error occurred")
-		os.exit(1)
+		show_args(aArgs)
+		
+		fOk, strMsg = exec(aArgs)
+		
+		if fOk then
+			if strMsg then 
+				print(strMsg)
+			end
+			os.exit(0)
+		else
+			print(strMsg or "an unknown error occurred")
+			os.exit(1)
+		end
 	end
 end
+
