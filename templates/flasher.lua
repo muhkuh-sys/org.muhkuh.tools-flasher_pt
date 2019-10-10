@@ -197,13 +197,23 @@ function get_flasher_binary_attributes(strData)
 	aAttr.ulDeviceDesc  = get_dword(strData, ${OFFSETOF_FLASHER_VERSION_STRUCT_pucBuffer_DeviceDescription} + 1)
 	aAttr.ulBufferAdr   = get_dword(strData, ${OFFSETOF_FLASHER_VERSION_STRUCT_pucBuffer_Data} + 1)
 	aAttr.ulBufferEnd   = get_dword(strData, ${OFFSETOF_FLASHER_VERSION_STRUCT_pucBuffer_End} + 1)
-	aAttr.ulBufferLen   = aAttr.ulBufferEnd - aAttr.ulBufferAdr
+	
+-- dirty workaround to align access to intflash to 16byte boundary
+-- make sure that the buffer size is a multiple of 16bytes (one flash line of netX 90 intflash)
+-- TODO: clean fix:
+-- ** implement the feature to provide the possibility for a last buffer indication.
+-- ** This is required for the flash command for netX 90 internal flashes with enabled CRC,
+--    which has a fixed write width of 128bit at a time.
+
+	-- reduce the maximal possible size to a multiple of 128bit or 16 bytes
+	aAttr.ulBufferLen   = bit.band(aAttr.ulBufferEnd - aAttr.ulBufferAdr , 0xFFFFfff0)
 
 	-- Show the information:
 	print(string.format("parameter:          0x%08x", aAttr.ulParameter))
 	print(string.format("device description: 0x%08x", aAttr.ulDeviceDesc))
 	print(string.format("buffer start:       0x%08x", aAttr.ulBufferAdr))
 	print(string.format("buffer end:         0x%08x", aAttr.ulBufferEnd))
+	print(string.format("used buffer size:   0x%08x", aAttr.ulBufferLen))
 
 	return aAttr
 end
