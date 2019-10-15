@@ -546,6 +546,19 @@ function exec(aArgs)
 			end
 		end
 		
+		-- detect: Get the flash size.
+		-- Detection has already been done above.
+		if fOk and iMode == MODE_DETECT then
+			local ulEraseStart, ulEraseEnd = flasher.getEraseArea(tPlugin, aAttr, 0, 0xffffffff)
+			if ulEraseStart and ulEraseEnd then
+				fOk = true
+				strMsg = string.format("Flash device size: %d/0x%08x bytes", ulEraseEnd, ulEraseEnd)
+			else
+				fOk = false 
+				strMsg = "Failed to get device size"
+			end
+		end
+		
 		-- flash/erase: erase the area
 		--if fOk and (iMode == MODE_FLASH or iMode == MODE_ERASE) then
 		-- Explicit erase is not necessary when flashing SDIO
