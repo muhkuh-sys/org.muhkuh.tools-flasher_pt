@@ -603,12 +603,12 @@ function exec(aArgs)
 		-- detect: Get the flash size.
 		-- Detection has already been done above.
 		if fOk and iMode == MODE_DETECT then
-			local ulEraseStart, ulEraseEnd = flasher.getEraseArea(tPlugin, aAttr, 0, 0xffffffff)
-			if ulEraseStart and ulEraseEnd then
+			local ulFlashLen = flasher.getFlashSize(tPlugin, aAttr)
+			if ulFlashLen then
 				fOk = true
-				strMsg = string.format("Flash device size: %d/0x%08x bytes", ulEraseEnd, ulEraseEnd)
+				strMsg = string.format("Flash device size: %d/0x%08x bytes", ulFlashLen, ulFlashLen)
 			else
-				fOk = false 
+				fOk = false
 				strMsg = "Failed to get device size"
 			end
 		end
