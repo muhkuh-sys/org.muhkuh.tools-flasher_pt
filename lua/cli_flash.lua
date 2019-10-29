@@ -547,6 +547,8 @@ function exec(aArgs)
 	local fOk
 	local strMsg
 	
+	local ulDeviceSize
+	
 	local strFileHashBin, strFlashHashBin
 	local strFileHash , strFlashHash
 	
@@ -593,23 +595,26 @@ function exec(aArgs)
 				-- check if the selected flash is present
 				print("Detecting flash device")
 				fOk = flasher.detect(tPlugin, aAttr, iBus, iUnit, iChipSelect)
-				if not fOk then
+				if fOk ~= true then
 					fOk = false
 					strMsg = "Failed to get a device description!"
+				else
+					ulDeviceSize = flasher.getFlashSize(tPlugin, aAttr)
+					if ulDeviceSize == nil then
+						fOk = false
+						strMsg = "Failed to get the device size!"
+					else 
+						-- if offset/len are set, we require that offset+len is less than or equal the device size
+						if ulStartOffset~= nil and ulLen~= nil and ulStartOffset+ulLen > ulDeviceSize and ulLen ~= 0xffffffff then
+							fOk = false
+							strMsg = string.format("Offset+size exceeds flash device size: 0x%08x bytes", ulDeviceSize)
+						else
+							fOk = true
+							strMsg = string.format("Flash device size: %d/0x%08x bytes", ulDeviceSize, ulDeviceSize)
+						end
+						
+					end
 				end
-			end
-		end
-		
-		-- detect: Get the flash size.
-		-- Detection has already been done above.
-		if fOk and iMode == MODE_DETECT then
-			local ulFlashLen = flasher.getFlashSize(tPlugin, aAttr)
-			if ulFlashLen then
-				fOk = true
-				strMsg = string.format("Flash device size: %d/0x%08x bytes", ulFlashLen, ulFlashLen)
-			else
-				fOk = false
-				strMsg = "Failed to get device size"
 			end
 		end
 		
