@@ -1,0 +1,309 @@
+{    
+    "test_config": [
+        {
+            "board_id": "123456789", 
+            "chip_on_board": "netX10",
+            "board_name": "nxhx10ETM",
+            "has_hash": 1,
+            "storage_default": "SRamBus",
+            "chip": {
+                "interfaces": [
+                    "uart", 
+                    "jtag", 
+                    "RS232"
+                ]
+            }, 
+            "storage_available": [
+                {
+                    "storage_type": "Parallel Flash", 
+                    "name_in_flasher": "SRamBus", 
+                    "name": "Parallel Flash", 
+                    "select_code": {
+                        "b": 0, 
+                        "u": 0
+                    }
+                }, 
+                {
+                    "storage_type":"Serial Flash",
+                    "name_in_flasher": "SQI", 
+                    "name": "Serial Flash", 
+                    "select_code": {
+                        "b": 1, 
+                        "u": 0
+                    }
+                },
+                {
+                    "storage_type":"Serial Flash",
+                    "name_in_flasher": "SPI", 
+                    "name": "Serial Flash", 
+                    "select_code": {
+                        "b": 1, 
+                        "u": 1
+                    }
+                }
+            ]
+        },
+        {
+            "board_id": "123456789", 
+            "chip_on_board": "netX500",
+            "board_name": "nxhx500JTAG", 
+            "storage_default": "SRamBus",            
+            "has_hash": 1, 
+            "chip": {
+                "interfaces": [
+                    "uart", 
+                    "jtag", 
+                    "RS232"
+                ]
+            }, 
+            "storage_available": [
+                {
+                    "storage_type": "Parallel Flash", 
+                    "name_in_flasher": "SRamBus", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 0, 
+                        "u": 0
+                    }
+                },
+                {
+                    "storage_type": "Parallel Flash", 
+                    "name_in_flasher": "ExtBus", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 0, 
+                        "u": 1
+                    }
+                },
+                {
+                    "storage_type": "Serial Flash", 
+                    "name_in_flasher": "SPI", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 1, 
+                        "u": 0
+                    }
+                }
+            ]
+        },
+        {
+            "board_id": "123456789", 
+            "chip_on_board": "netX50",
+            "board_name": "netX50", 
+            "storage_default": "SRamBus",
+            "has_hash": 1, 
+            "chip": {
+                "interfaces": [
+                    "uart", 
+                    "jtag", 
+                    "RS232"
+                ]
+            }, 
+            "storage_available": [
+                {
+                    "storage_type": "Parallel Flash", 
+                    "name_in_flasher": "SRamBus", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 0, 
+                        "u": 0
+                    }
+                },
+                {
+                    "storage_type": "Serial Flash", 
+                    "name_in_flasher": "SPI0", 
+                    "name": "SQI-flash", 
+                    "select_code": {
+                        "b": 1, 
+                        "u": 0
+                    }
+                },
+                {
+                    "storage_type": "Serial Flash", 
+                    "name_in_flasher": "SPI1", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 1, 
+                        "u": 1
+                    }
+                }
+            ]
+        },
+        {
+            "board_id": "123456789", 
+            "chip_on_board": "netX90",
+            "board_name": "netX90", 
+            "storage_default": "IFLASH01",
+            "has_hash": 0, 
+            "chip": {
+                "interfaces": [
+                    "uart", 
+                    "jtag", 
+                    "RS232"
+                ]
+            }, 
+            "storage_available": [
+                {
+                    "storage_type": "Serial Flash", 
+                    "name_in_flasher": "SQI", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 1, 
+                        "u": 0
+                    }
+                },
+				{
+                    "storage_type": "Serial Flash", 
+                    "name_in_flasher": "SPI0_APP", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 1, 
+                        "u": 1
+                    }
+                },
+				{
+                    "storage_type": "Serial Flash", 
+                    "name_in_flasher": "SPI1_APP", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 1, 
+                        "u": 2
+                    }
+                },
+				{
+                    "storage_type": "Serial Flash", 
+                    "name_in_flasher": "SPI2_APP", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 1, 
+                        "u": 3
+                    }
+                },
+				{
+                    "storage_type": "Internal Flash", 
+                    "name_in_flasher": "IFLASH0", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 2, 
+                        "u": 0
+                    }
+                },
+				{
+                    "storage_type": "Internal Flash", 
+                    "name_in_flasher": "IFLASH1", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 2, 
+                        "u": 1
+                    }
+                },
+				{
+                    "storage_type": "Internal Flash", 
+                    "name_in_flasher": "IFLASH2", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 2, 
+                        "u": 2
+                    }
+                },
+				{
+                    "storage_type": "Internal Flash", 
+                    "name_in_flasher": "IFLASH01", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 2, 
+                        "u": 3
+                    }
+                }
+            ]
+        },
+		{
+            "board_id": "123456789", 
+            "chip_on_board": "netX4000",
+            "board_name": "netX4000", 
+            "storage_default": "IFLASH01",
+            "has_hash": 1, 
+            "chip": {
+                "interfaces": [
+                    "uart", 
+                    "jtag", 
+                    "RS232"
+                ]
+            }, 
+            "storage_available": [
+                {
+                    "storage_type": "Parallel Flash", 
+                    "name_in_flasher": "SRamBus", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 0, 
+                        "u": 0
+                    }
+                },
+                {
+                    "storage_type": "Parallel Flash", 
+                    "name_in_flasher": "ExtBus", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 0, 
+                        "u": 1
+                    }
+                },
+                {
+                    "storage_type": "Parallel Flash", 
+                    "name_in_flasher": "RAP_SRamBus", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 0, 
+                        "u": 2
+                    }
+                },
+                {
+                    "storage_type": "Serial Flash", 
+                    "name_in_flasher": "SQI0", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 1, 
+                        "u": 0
+                    }
+                },
+                {
+                    "storage_type": "Serial Flash", 
+                    "name_in_flasher": "SQI1", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 1, 
+                        "u": 1
+                    }
+                },
+                {
+                    "storage_type": "Serial Flash", 
+                    "name_in_flasher": "SPI", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 1, 
+                        "u": 2
+                    }
+                },
+                {
+                    "storage_type": "Serial Flash", 
+                    "name_in_flasher": "SPI_XPIC3", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 1, 
+                        "u": 3
+                    }
+                },
+                {
+                    "storage_type": "SD/MMC", 
+                    "name_in_flasher": "SPI_XPIC3", 
+                    "name": "", 
+                    "select_code": {
+                        "b": 3, 
+                        "u": 0
+                    }
+                }
+            ]
+        }        
+    ] 
+}
