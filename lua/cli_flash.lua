@@ -558,6 +558,20 @@ function exec(aArgs)
 		tPlugin:Connect()
 		fOk = true
 		
+		-- On netx 4000, there may be a boot image in intram that makes it
+		-- impossible to boot a firmware from flash by resetting the hardware.
+		-- Therefore we clear the start of the intram boot image.
+		local iChiptype = tPlugin:GetChiptyp()
+		if iChiptype == romloader.ROMLOADER_CHIPTYP_NETX4000_SMALL
+		or iChiptype == romloader.ROMLOADER_CHIPTYP_NETX4000_FULL
+		or iChiptype == romloader.ROMLOADER_CHIPTYP_NETX4000_RELAXED then
+			print("Clear intram image on netx 4000")
+			for i=0, 3 do
+				local ulAddr = 0x05100000 + i*4
+				tPlugin:write_data32(ulAddr, 0)
+			end
+		end
+		
 		-- load input file  strDataFileName --> strData
 		if fOk and (iMode == MODE_FLASH or iMode == MODE_VERIFY or iMode == MODE_VERIFY_HASH) then
 			print("Loading data file")
