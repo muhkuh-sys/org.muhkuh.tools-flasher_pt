@@ -64,7 +64,7 @@ class Dyntest:
     bool_logfiles_init = False
 
     # arround test config
-    testintensety = 'quick'
+    # testintensety = 'quick'
 
     # generated psth
     path_folder_test_env = None

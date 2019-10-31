@@ -22,10 +22,7 @@ class FltHash(Flashertest):
 
     def __init__(self):
         Flashertest.__init__(self)
-        if self.testintensety == 'default':
-            self.test_binary_size = 4*1024
-        else:
-            self.test_binary_size = 100*1024
+        self.test_binary_size = 11*1024
 
     def pre_test_step(self):
         # Generate test-binary-files
