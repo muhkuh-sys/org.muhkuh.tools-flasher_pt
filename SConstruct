@@ -584,7 +584,6 @@ if fBuildIsFull==True:
         lua_flasher,
         'lua/flasher_test.lua',
         'lua/lua/Version.lua',
-        lua_flasher_version,
         'lua/lua/wfp_control.lua')
 
     tArcList.AddFiles('demo/',
@@ -614,6 +613,7 @@ if fBuildIsFull==True:
         tDemoShowEraseAreas)
 
     tArcList.AddFiles('',
+        lua_flasher_version,
         'jonchki/%s.%s/install.lua' % (strGroup, strModule))
 
     strBasePath = os.path.join(strModulePath, '%s-%s' % (strArtifact, PROJECT_VERSION))
