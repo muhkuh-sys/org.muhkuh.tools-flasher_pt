@@ -33,15 +33,16 @@ class FltHash(Flashertest):
         generate_randome_file_by_size_and_name(self.binary_file_write_to_netx, self.test_binary_size)
 
     def init_command_array(self):
+        enable_flasher = {"flasher": True}
         self.command_structure = [
             # write binary file which will be hashed
-            ["cli_flash.lua", "flash", self.bus_port_parameters_flasher, self.plugin_name,
+            [enable_flasher, "cli_flash.lua", "flash", self.bus_port_parameters_flasher, self.plugin_name,
              self.binary_file_write_to_netx],
             # run test-functions
-            ["cli_flash.lua", "verify_hash", self.bus_port_parameters_flasher, self.plugin_name,
+            [enable_flasher, "cli_flash.lua", "verify_hash", self.bus_port_parameters_flasher, self.plugin_name,
              self.binary_file_write_to_netx],  # compares with read file
-            ["cli_flash.lua", "hash", self.bus_port_parameters_flasher, "-l 0x%x" % self.test_binary_size,
+            [enable_flasher, "cli_flash.lua", "hash", self.bus_port_parameters_flasher, "-l 0x%x" % self.test_binary_size,
              self.plugin_name],
-            # ["flash_serflash.lua", interface_to_test_embedd, path_generated_file]  # not working!
+            # [enable_flasher, "flash_serflash.lua", interface_to_test_embedd, path_generated_file]  # not working!
         ]
 

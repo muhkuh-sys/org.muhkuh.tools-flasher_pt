@@ -78,6 +78,7 @@ class Dyntest:
 
         self.logfile_prefix = ""  # for normal the UUID of he test
         self.uuid_test = str(uuid.uuid4())
+        self.dict_add_params = None
         pass
 
     @abstractmethod
@@ -191,7 +192,7 @@ class Flashertest(Dyntest):
         l.info("# Return for PyCharm")
 
 
-    def init_params(self, plugin_name, memory_to_test, test_binary_size, path_lua_files, flasher_binary):
+    def init_params(self, plugin_name, memory_to_test, test_binary_size, path_lua_files, flasher_binary, dict_add_params):
 
         # todo: should be more a temporary solution for debugging, not for testing
         self.plugin_name = "-p %s" % plugin_name["plugin_name"]
@@ -206,6 +207,7 @@ class Flashertest(Dyntest):
         self.flasher_binary = flasher_binary
         self.path_lua_files = path_lua_files
         self.bool_params_init = True
+        self.dict_add_params = dict_add_params
 
     @abstractmethod
     def init_command_array(self):
@@ -224,19 +226,55 @@ class Flashertest(Dyntest):
         raise NotImplementedError('Please provide a preparation method fro class >%s<, even if it is "pass"!' %
                                   self.__class__.__name__)
 
+    # def convert_final_command_entries_to_commands(self):
+    #     if self.command_strings:
+    #         assert True
+    #
+    #     l.info("Generate commands:")
+    #     for idx, ele in enumerate(self.command_structure):
+    #
+    #         # make full file path
+    #         tmp_full_file_path = os.path.join(self.path_lua_files, ele[0])
+    #         self.command_structure[idx][0] = tmp_full_file_path
+    #         # concat all to one string
+    #         tmp_final_test_command = self.flasher_binary
+    #         for int_ele in ele:
+    #             tmp_final_test_command += " %s" % int_ele
+    #         # append
+    #         self.command_strings.append(tmp_final_test_command)
+    #         #todo: later: this should be also a json tolerant structure, combining input and output.
+    #         l.info(self.command_strings[-1])
+
     def convert_final_command_entries_to_commands(self):
         if self.command_strings:
             assert True
 
+        # define positions inside command_structure list
+        prog_select = 0      # used to select the program, which should be executed
+        parameter_start = 1  # first optional parameter for the program
+
         l.info("Generate commands:")
         for idx, ele in enumerate(self.command_structure):
 
+            #detect the program to use
+            dict_prog_select = ele[prog_select] # type = dict
+            assert(type(dict_prog_select) is dict)
+            tmp_final_test_command = None
+            for prog in dict_prog_select.iterkeys():
+                if prog == "flasher":
+                    # concat all to one string
+                    tmp_final_test_command = self.flasher_binary
+                elif prog == "openocd":
+                    # concat all to one string
+                    tmp_final_test_command = dict_prog_select["bin_path"]
+                else:
+                    l.error("key %s is not supported" % prog)
+
+
             # make full file path
-            tmp_full_file_path = os.path.join(self.path_lua_files, ele[0])
-            self.command_structure[idx][0] = tmp_full_file_path
-            # concat all to one string
-            tmp_final_test_command = self.flasher_binary
-            for int_ele in ele:
+            tmp_full_file_path = os.path.join(self.path_lua_files, ele[parameter_start])
+            self.command_structure[idx][parameter_start] = tmp_full_file_path
+            for int_ele in ele[parameter_start:]:
                 tmp_final_test_command += " %s" % int_ele
             # append
             self.command_strings.append(tmp_final_test_command)

@@ -31,8 +31,10 @@ class NxtFlasher_51(Flashertest):
     def init_command_array(self):
         test_file = os.path.join(file_dir, "kk_image.bin")
 
+        enable_flasher = {"flasher": True}
+
         self.command_structure = [
-            ["cli_flash.lua", "flash", self.plugin_name, "%s %s" % (self.bus_port_parameters_flasher, test_file)],
-            ["cli_flash.lua", "verify", self.plugin_name, "%s %s" % (self.bus_port_parameters_flasher, test_file)],
+            [enable_flasher, "cli_flash.lua", "flash", self.plugin_name, "%s %s" % (self.bus_port_parameters_flasher, test_file)],
+            [enable_flasher, "cli_flash.lua", "verify", self.plugin_name, "%s %s" % (self.bus_port_parameters_flasher, test_file)],
         ]
 

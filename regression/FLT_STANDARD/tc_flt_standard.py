@@ -35,16 +35,17 @@ class FltStandardSqiFlash(Flashertest):
         generate_randome_file_by_size_and_name(self.binary_file_write_to_netx, self.test_binary_size)
 
     def init_command_array(self):
+        enable_flasher = {"flasher": True}
         self.command_structure = [
-            ["cli_flash.lua", "-h"],
-            ["cli_flash.lua", "list_interfaces"],
-            ["cli_flash.lua", "detect_netx", self.plugin_name],
-            ["cli_flash.lua", "detect", self.bus_port_parameters_flasher, self.plugin_name],
-            ["cli_flash.lua", "erase", self.bus_port_parameters_flasher, "-l 0x%x" % self.test_binary_size, self.plugin_name],
-            ["cli_flash.lua", "flash", self.bus_port_parameters_flasher, self.plugin_name, self.binary_file_write_to_netx],
-            ["cli_flash.lua", "read", self.bus_port_parameters_flasher, "-l 0x%x" % self.test_binary_size, self.plugin_name,
+            [enable_flasher, "cli_flash.lua", "-h"],
+            [enable_flasher, "cli_flash.lua", "list_interfaces"],
+            [enable_flasher, "cli_flash.lua", "detect_netx", self.plugin_name],
+            [enable_flasher, "cli_flash.lua", "detect", self.bus_port_parameters_flasher, self.plugin_name],
+            [enable_flasher, "cli_flash.lua", "erase", self.bus_port_parameters_flasher, "-l 0x%x" % self.test_binary_size, self.plugin_name],
+            [enable_flasher, "cli_flash.lua", "flash", self.bus_port_parameters_flasher, self.plugin_name, self.binary_file_write_to_netx],
+            [enable_flasher, "cli_flash.lua", "read", self.bus_port_parameters_flasher, "-l 0x%x" % self.test_binary_size, self.plugin_name,
              self.binary_file_read_from_netx],
-            ["cli_flash.lua", "verify", self.bus_port_parameters_flasher, self.plugin_name, self.binary_file_write_to_netx],
+            [enable_flasher, "cli_flash.lua", "verify", self.bus_port_parameters_flasher, self.plugin_name, self.binary_file_write_to_netx],
         ]
 
 
@@ -72,13 +73,14 @@ class FltStandardOtherFlash(Flashertest):
         generate_randome_file_by_size_and_name(self.binary_file_write_to_netx, self.test_binary_size)
 
     def init_command_array(self):
-        self.command_structure = [
-            ["cli_flash.lua", "detect", self.bus_port_parameters_flasher, self.plugin_name],
-            ["cli_flash.lua", "flash", self.bus_port_parameters_flasher, self.plugin_name, self.binary_file_write_to_netx],
-            ["cli_flash.lua", "read", self.bus_port_parameters_flasher, "-l 0x%x" % self.test_binary_size, self.plugin_name,
+       enable_flasher = {"flasher": True}
+       self.command_structure = [
+            [enable_flasher, "cli_flash.lua", "detect", self.bus_port_parameters_flasher, self.plugin_name],
+            [enable_flasher, "cli_flash.lua", "flash", self.bus_port_parameters_flasher, self.plugin_name, self.binary_file_write_to_netx],
+            [enable_flasher, "cli_flash.lua", "read", self.bus_port_parameters_flasher, "-l 0x%x" % self.test_binary_size, self.plugin_name,
              self.binary_file_read_from_netx],
-            ["cli_flash.lua", "verify", self.bus_port_parameters_flasher, self.plugin_name, self.binary_file_write_to_netx],
-            ["cli_flash.lua", "erase", self.bus_port_parameters_flasher, "-l 0x%x" % self.test_binary_size,
+            [enable_flasher, "cli_flash.lua", "verify", self.bus_port_parameters_flasher, self.plugin_name, self.binary_file_write_to_netx],
+            [enable_flasher, "cli_flash.lua", "erase", self.bus_port_parameters_flasher, "-l 0x%x" % self.test_binary_size,
              self.plugin_name],
         ]
 

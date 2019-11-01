@@ -13,6 +13,7 @@ from ptb_api.SW_Test_flasher.src.class_dyntest import *
 from NXTFLASHER_51.tc_nxtflasher_51 import NxtFlasher_51
 from FLT_STANDARD.tc_flt_standard import FltStandardSqiFlash, FltStandardOtherFlash
 from FLT_HASH.tc_flt_hash import FltHash
+from NXTFLASHER_55.tc_nxtflasher_55 import  NxtFlasher_55
 
 
 
@@ -22,22 +23,24 @@ class UnitTestFlasherTest(unittest.TestCase):
         # parameter provided by the higher level to qualify the test suite
 
         # select for netX500
-        self.plugin_name = {"plugin_name": "romloader_jtag_netX_ARM926@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 1, "netx_chip_type_id": "netx500"}
-        self.memories_to_test = [{"b": 1, "u": 0, "cs": 0, "name": "SQI-Flash Winbond ABC", "size": 4 * 1024 * 1024},
-                                 {"b": 0, "u": 0, "cs": 0, "name": "Par Flash", "size": 16 * 1024 * 1024},
-                                 ]
+        #self.plugin_name = {"plugin_name": "romloader_jtag_netX_ARM926@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 1, "netx_chip_type_id": "netx500"}
+        #self.memories_to_test = [{"b": 1, "u": 0, "cs": 0, "name": "SQI-Flash Winbond ABC", "size": 4 * 1024 * 1024},
+        #                         {"b": 0, "u": 0, "cs": 0, "name": "Par Flash", "size": 16 * 1024 * 1024},
+        #                         ]
 
-        # select for netX56B
+        #select for netX51B
         #self.plugin_name = {"plugin_name": "romloader_jtag_netX_ARM966@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 7, "netx_chip_type_id": "netx51_52_stepB"}
-        #self.memories_to_test = [{"b": 1, "u": 0, "cs": 0, "name": "SQI-Flash Winbond ABC", "size": 4*1024*1024}]
+        #self.memories_to_test = [{"b": 1, "u": 0, "cs": 0, "name": "SQI-Flash Winbond ABC", "size": 4*1024*1024},
+        #                         ]
 
         # select for netX90_rev1
-        #self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 14, "netx_chip_type_id": "netx90_rev1"}
-        #self.memories_to_test = [{"b": 1, "u": 0, "cs": 0, "name": "SQI-Flash Winbond ABC", "size": 4*1024*1024},
-        #                         {"b": 2, "u": 0, "cs": 0, "name": "INT flash 0", "size": 512 * 1024},
-        #                         {"b": 2, "u": 1, "cs": 0, "name": "INT flash 1", "size": 512 * 1024},
-        #                         {"b": 2, "u": 2, "cs": 0, "name": "INT flash 2", "size": 512 * 1024},
-        #                         {"b": 2, "u": 3, "cs": 0, "name": "INT flash 0/1", "size": 1024 * 1024}]
+        self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 14, "netx_chip_type_id": "netx90_rev1"}
+        self.memories_to_test = [{"b": 1, "u": 0, "cs": 0, "name": "SQI-Flash Winbond ABC", "size": 4*1024*1024},
+                                 {"b": 2, "u": 0, "cs": 0, "name": "INT flash 0", "size": 512 * 1024},
+                                 {"b": 2, "u": 1, "cs": 0, "name": "INT flash 1", "size": 512 * 1024},
+                                 {"b": 2, "u": 2, "cs": 0, "name": "INT flash 2", "size": 512 * 1024},
+                                 {"b": 2, "u": 3, "cs": 0, "name": "INT flash 0/1", "size": 1024 * 1024},
+                                 ]
 
 
         # parameter provided from pirate test bay
@@ -48,6 +51,7 @@ class UnitTestFlasherTest(unittest.TestCase):
 
         self.path_flasher_binary = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\test\\flasher_cli-1.6.0_RC1-windows_x86_64\\flasher_cli-1.6.0\\lua5.1.exe")
         self.path_flasher_files = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\test\\flasher_cli-1.6.0_RC1-windows_x86_64\\flasher_cli-1.6.0")
+
 
         self.path_logfiles = os.path.join(file_dir, "log")
 
@@ -98,7 +102,8 @@ class UnitTestFlasherTest(unittest.TestCase):
             tc.init_params(self.plugin_name, memory_to_test,
                            num_bytes_to_test,
                            self.path_flasher_files,
-                           self.path_flasher_binary)
+                           self.path_flasher_binary,
+                           {})
             tc.run_test()
             test_result = tc.numErrors_a[-1]
             # collect all test results
@@ -137,7 +142,8 @@ class UnitTestFlasherTest(unittest.TestCase):
             tc.init_params(self.plugin_name, memory_to_test,
                            num_bytes_to_test,
                            self.path_flasher_files,
-                           self.path_flasher_binary)
+                           self.path_flasher_binary,
+                           {})
             tc.run_test()
             test_result = tc.numErrors_a[-1]
             # collect all test results
@@ -183,7 +189,8 @@ class UnitTestFlasherTest(unittest.TestCase):
             tc.init_params(self.plugin_name, memory_to_test ,
                            num_bytes_to_test,
                            self.path_flasher_files,
-                           self.path_flasher_binary)
+                           self.path_flasher_binary,
+                           {})
             tc.run_test()
             test_result = tc.numErrors_a[-1]
             # collect all test results
@@ -230,7 +237,8 @@ class UnitTestFlasherTest(unittest.TestCase):
             tc.init_params(self.plugin_name, memory_to_test ,
                            "",
                           self.path_flasher_files,
-                          self.path_flasher_binary)
+                          self.path_flasher_binary,
+                           {})
             tc.run_test()
             test_result = tc.numErrors_a[-1]
             # collect all test results
