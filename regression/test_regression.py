@@ -13,7 +13,7 @@ from ptb_api.SW_Test_flasher.src.class_dyntest import *
 from NXTFLASHER_51.tc_nxtflasher_51 import NxtFlasher_51
 from FLT_STANDARD.tc_flt_standard import FltStandardSqiFlash, FltStandardOtherFlash
 from FLT_HASH.tc_flt_hash import FltHash
-from NXTFLASHER_55.tc_nxtflasher_55 import  NxtFlasher_55
+from NXTFLASHER_55.tc_nxtflasher_55 import NxtFlasher_55
 
 
 
@@ -33,8 +33,11 @@ class UnitTestFlasherTest(unittest.TestCase):
         #self.memories_to_test = [{"b": 1, "u": 0, "cs": 0, "name": "SQI-Flash Winbond ABC", "size": 4*1024*1024},
         #                         ]
 
+        # select for netX90_rev0
+        #self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 13, "netx_chip_type_id": "netx90_rev0"}
+        self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 13, "netx_chip_type_id": "netx90_rev0"}
         # select for netX90_rev1
-        self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 14, "netx_chip_type_id": "netx90_rev1"}
+        # self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 14, "netx_chip_type_id": "netx90_rev1"}
         self.memories_to_test = [{"b": 1, "u": 0, "cs": 0, "name": "SQI-Flash Winbond ABC", "size": 4*1024*1024},
                                  {"b": 2, "u": 0, "cs": 0, "name": "INT flash 0", "size": 512 * 1024},
                                  {"b": 2, "u": 1, "cs": 0, "name": "INT flash 1", "size": 512 * 1024},
@@ -46,11 +49,14 @@ class UnitTestFlasherTest(unittest.TestCase):
         # parameter provided from pirate test bay
         self.testGroup = ["short", "standard", "long"]
 
+        #self.path_flasher_binary = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\flasher_cli-1.5.1-windows_x86\\flasher_cli-1.5.1\\lua5.1.exe")
+        #self.path_flasher_files = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\flasher_cli-1.5.1-windows_x86\\flasher_cli-1.5.1")
+
         #self.path_flasher_binary = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\flasher_cli-1.5.8-windows_x86_BETA2_build101\\flasher_cli-1.5.8\\lua5.1.exe")
         #self.path_flasher_files = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\flasher_cli-1.5.8-windows_x86_BETA2_build101\\flasher_cli-1.5.8")
 
-        self.path_flasher_binary = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\test\\flasher_cli-1.6.0_RC1-windows_x86_64\\flasher_cli-1.6.0\\lua5.1.exe")
-        self.path_flasher_files = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\test\\flasher_cli-1.6.0_RC1-windows_x86_64\\flasher_cli-1.6.0")
+        self.path_flasher_binary = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\test\\flasher_cli-1.6.0_RC2-windows_x86\\flasher_cli-1.6.0\\lua5.1.exe")
+        self.path_flasher_files = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\test\\flasher_cli-1.6.0_RC2-windows_x86\\flasher_cli-1.6.0")
 
 
         self.path_logfiles = os.path.join(file_dir, "log")
@@ -249,6 +255,43 @@ class UnitTestFlasherTest(unittest.TestCase):
         else:
             self.skipTest("Test only for netX56B with external SQI flash")
 
+
+    def test_NXTFLASHER_55(self):
+        """
+        Testdescription
+
+        if special SW is running, than the flasher can not connect to the netX via JTAG port
+        tested with netX 90 rev 0
+
+        NXHX90-JTAG REV3 No 20160
+
+        :return:
+        """
+
+        # TODO: port test case to netX 90 rev 1
+
+        # execute only for netX 90 rev 0
+        if self.plugin_name["netx_chip_type"] in [13]:
+            pass
+        else:
+            self.skipTest("Test %s only for netX 90 rev0" % NxtFlasher_55().__class__.__name__)
+
+
+        # loop over all available flashes
+        test_results = 0
+        # store information, if a test was executed
+        test_started = 0
+
+        tc = NxtFlasher_55()
+        memory_to_test = {"b": 2, "u": 3, "cs": 0, "name": "INT flash 0/1", "size": 1024 * 1024}  # use dummy values
+        tc.init_params(self.plugin_name, memory_to_test ,
+                       "",
+                      self.path_flasher_files,
+                      self.path_flasher_binary,
+                       {})
+        tc.run_test()
+        test_result = tc.numErrors_a[-1]
+        self.assertEqual(0, test_result[1])
 
 
 if __name__ == '__main__':

@@ -62,6 +62,7 @@ class Dyntest:
 
     additional_info_to_logfile = ""     # some logfile info more
     bool_logfiles_init = False
+    bool_logfile_location_init = False
 
     # arround test config
     # testintensety = 'quick'
@@ -123,6 +124,14 @@ class Dyntest:
         delete_all_files_in_folder(cls.logfiles_last_run)
         delete_all_files_in_folder(cls.logfiles_working_dir)
 
+        # todo: this does not work, because the file is in use, while it will be read in for zip file generation
+        # if not cls.bool_logfile_location_init:
+        #     # Add a file logger
+        #     f = logging.FileHandler(os.path.join(cls.logfiles_last_run, "test.log"))
+        #     f.setFormatter(formatter_file)
+        #     l.addHandler(f)
+        #     cls.bool_logfile_location_init = True
+
     def set_additional_logfile_info(self, additional_info_to_logfile):
         self.logfile_prefix = self.__class__.__name__
         self.additional_info_to_logfile = additional_info_to_logfile
@@ -178,6 +187,7 @@ class Flashertest(Dyntest):
         Dyntest.__init__(self)
         self.test_binary_size = None
         self.command_strings = []  # strings generated from command array abouve
+        self.bool_interrupt_batch_f = False
 
     def run_test(self):
         l.info("# run %s with uuid: %s" % (self.__class__.__name__, self.uuid_test))
@@ -223,7 +233,7 @@ class Flashertest(Dyntest):
         Must be executed before "init_command_array()"
         :return:
         """
-        raise NotImplementedError('Please provide a preparation method fro class >%s<, even if it is "pass"!' %
+        raise NotImplementedError('Please provide a preparation method for class >%s<, even if it is "pass"!' %
                                   self.__class__.__name__)
 
     # def convert_final_command_entries_to_commands(self):
@@ -264,16 +274,20 @@ class Flashertest(Dyntest):
                 if prog == "flasher":
                     # concat all to one string
                     tmp_final_test_command = self.flasher_binary
+                    # make full file path
+                    tmp_full_file_path = os.path.join(self.path_lua_files, ele[parameter_start])
+                    self.command_structure[idx][parameter_start] = tmp_full_file_path
+
                 elif prog == "openocd":
                     # concat all to one string
                     tmp_final_test_command = dict_prog_select["bin_path"]
+                elif prog == "bin_path":
+                    # skip known parameter used for path to binary
+                    pass
                 else:
                     l.error("key %s is not supported" % prog)
 
 
-            # make full file path
-            tmp_full_file_path = os.path.join(self.path_lua_files, ele[parameter_start])
-            self.command_structure[idx][parameter_start] = tmp_full_file_path
             for int_ele in ele[parameter_start:]:
                 tmp_final_test_command += " %s" % int_ele
             # append
@@ -283,6 +297,8 @@ class Flashertest(Dyntest):
 
     def run_batch_commands(self):
         default_carrier = command_carrier()
+        default_carrier.bool_interrupt_batch = self.bool_interrupt_batch_f
+
         default_carrier.change_dir_to_bin = True  # relevant for executing flasher with linux correct
         l.info("Execute generated commands above!")
         # todo: rework the command carrier, this is kind of not cool. (redundant code)

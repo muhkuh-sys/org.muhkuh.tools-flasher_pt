@@ -36,6 +36,9 @@ class command_carrier:
   time_end = None
   time_execute = None
 
+  def __init__(self):
+    self.bool_interrupt_batch = False  # stop execution of batch in case of an error
+
   def time_calc(self):
     self.time_execute = self.time_end - self.time_start
 
@@ -74,6 +77,7 @@ class command_carrier:
   stream_stderr = None  # stream to used for communication. may be default stdx or a file to write to.
 
 
+
 def helper_gen_headder(cmd_carry, form):
   tmp = "%s\n[pirate][file][%s][cmd]: %s\n\n---BEGIN LOG---\n" % (
   datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), form, cmd_carry.cmd)
@@ -89,7 +93,7 @@ def helper_gen_footer(cmd_carry, form):
 
 def runCommandBase(cmd_carry):
   '''
-  Basic function for executing a externl programm.
+  Basic function for executing an external program.
 
   This does not alter a thing, justrun end return all values
   :param cmd_carry: Structure carrying several infos around the executed programm
@@ -210,7 +214,6 @@ def batch_command_base(cmd_carry_default, array_command, path_logfile = '.', log
     l.error("Provided path for logfiles does not exist. exit cause of error!")
     return 42
 
-  l.info("logging to %s"%helper_logfile_gen_path(path_logfile, 'stream', 42, logfile_prefix, "theCommand -param1 @ |\\?/ > log.123"))
   result = []
   l.info("Representation of executed commands are reduced by the absoulte path. Only filename and binary are displayed!")
   for idx, cmd in enumerate(array_command):
@@ -227,6 +230,11 @@ def batch_command_base(cmd_carry_default, array_command, path_logfile = '.', log
     runCommandBase(tmp_batch_cpy)
     result.append(tmp_batch_cpy)
     l.info("[% 2d]    return value: %s" % (idx, tmp_batch_cpy.ret_val))
+
+    # integer != 0 => True
+    if tmp_batch_cpy.bool_interrupt_batch and tmp_batch_cpy.ret_val:
+      l.error("Abort batch because of an error")
+      break
 
   return result
 

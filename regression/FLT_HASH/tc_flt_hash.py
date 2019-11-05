@@ -31,6 +31,7 @@ class FltHash(Flashertest):
                                                        "test_%s_writefile_to_netx.bin" % self.__class__.__name__))
 
         generate_randome_file_by_size_and_name(self.binary_file_write_to_netx, self.test_binary_size)
+        shutil.copy(self.binary_file_write_to_netx, self.logfiles_last_run)
 
     def init_command_array(self):
         enable_flasher = {"flasher": True}
