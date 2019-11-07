@@ -23,10 +23,10 @@ class UnitTestFlasherTest(unittest.TestCase):
         # parameter provided by the higher level to qualify the test suite
 
         # select for netX500
-        #self.plugin_name = {"plugin_name": "romloader_jtag_netX_ARM926@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 1, "netx_chip_type_id": "netx500"}
-        #self.memories_to_test = [{"b": 1, "u": 0, "cs": 0, "name": "SQI-Flash Winbond ABC", "size": 4 * 1024 * 1024},
-        #                         {"b": 0, "u": 0, "cs": 0, "name": "Par Flash", "size": 16 * 1024 * 1024},
-        #                         ]
+        self.plugin_name = {"plugin_name": "romloader_jtag_netX_ARM926@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 1, "netx_chip_type_id": "netx500"}
+        self.memories_to_test = [{"b": 1, "u": 0, "cs": 0, "name": "SQI-Flash Winbond ABC", "size": 4 * 1024 * 1024},
+                                 {"b": 0, "u": 0, "cs": 0, "name": "Par Flash", "size": 16 * 1024 * 1024},
+                                 ]
 
         #select for netX51B
         #self.plugin_name = {"plugin_name": "romloader_jtag_netX_ARM966@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 7, "netx_chip_type_id": "netx51_52_stepB"}
@@ -38,18 +38,18 @@ class UnitTestFlasherTest(unittest.TestCase):
         #self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 13, "netx_chip_type_id": "netx90_rev0"}
         #self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 13, "netx_chip_type_id": "netx90_rev0"}
         # select for netX90_rev1
-        self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 14, "netx_chip_type_id": "netx90_rev1"}
-        self.memories_to_test = [{"b": 1, "u": 0, "cs": 0, "name": "SQI-Flash Winbond ABC", "size": 4*1024*1024},
-                                 {"b": 2, "u": 0, "cs": 0, "name": "INT flash 0", "size": 512 * 1024},
-                                 {"b": 2, "u": 1, "cs": 0, "name": "INT flash 1", "size": 512 * 1024},
-                                 {"b": 2, "u": 2, "cs": 0, "name": "INT flash 2", "size": 512 * 1024},
-                                 {"b": 2, "u": 3, "cs": 0, "name": "INT flash 0/1", "size": 1024 * 1024},
-                                 ]
+        #self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 14, "netx_chip_type_id": "netx90_rev1"}
+        #self.memories_to_test = [{"b": 1, "u": 0, "cs": 0, "name": "SQI-Flash Winbond ABC", "size": 4*1024*1024},
+        #                         {"b": 2, "u": 0, "cs": 0, "name": "INT flash 0", "size": 512 * 1024},
+        #                         {"b": 2, "u": 1, "cs": 0, "name": "INT flash 1", "size": 512 * 1024},
+        #                         {"b": 2, "u": 2, "cs": 0, "name": "INT flash 2", "size": 512 * 1024},
+        #                         {"b": 2, "u": 3, "cs": 0, "name": "INT flash 0/1", "size": 1024 * 1024},
+        #                         ]
 
 
         # parameter provided from pirate test bay
         #self.RunTestsGroups = ["regr_short", "regr_standard", "regr_long", "all"]
-        self.RunTestsGroups = ["regr_short"]
+        self.RunTestsGroups = ["regr_short", "regr_standard"]
 
         #self.path_flasher_binary = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\flasher_cli-1.5.1-windows_x86\\flasher_cli-1.5.1\\lua5.1.exe")
         #self.path_flasher_files = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\flasher_cli-1.5.1-windows_x86\\flasher_cli-1.5.1")
