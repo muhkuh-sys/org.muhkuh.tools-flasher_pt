@@ -11,7 +11,7 @@ sys.path.append(base_root)
 
 from ptb_api.SW_Test_flasher.src.class_dyntest import *
 from NXTFLASHER_51.tc_nxtflasher_51 import NxtFlasher_51
-from FLT_STANDARD.tc_flt_standard import FltStandardSqiFlash, FltStandardOtherFlash
+from FLT_STANDARD.tc_flt_standard import FltStandardSqiFlash, FltStandardOtherFlash, FltTestcliSqiFlash
 from FLT_HASH.tc_flt_hash import FltHash
 from NXTFLASHER_55.tc_nxtflasher_55 import NxtFlasher_55
 
@@ -30,14 +30,15 @@ class UnitTestFlasherTest(unittest.TestCase):
 
         #select for netX51B
         #self.plugin_name = {"plugin_name": "romloader_jtag_netX_ARM966@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 7, "netx_chip_type_id": "netx51_52_stepB"}
+        #self.plugin_name = {"plugin_name": "romloader_uart_COM35", "netx_port": "UART", "netx_protocol": "UART", "netx_chip_type": 7, "netx_chip_type_id": "netx51_52_stepB"}
         #self.memories_to_test = [{"b": 1, "u": 0, "cs": 0, "name": "SQI-Flash Winbond ABC", "size": 4*1024*1024},
-        #                         ]
+        #                        ]
 
         # select for netX90_rev0
         #self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 13, "netx_chip_type_id": "netx90_rev0"}
-        self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 13, "netx_chip_type_id": "netx90_rev0"}
+        #self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 13, "netx_chip_type_id": "netx90_rev0"}
         # select for netX90_rev1
-        # self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 14, "netx_chip_type_id": "netx90_rev1"}
+        self.plugin_name = {"plugin_name": "romloader_jtag_netX90_COM@NXJTAG-USB@1:2", "netx_port": "JTAG", "netx_protocol": "JTAG", "netx_chip_type": 14, "netx_chip_type_id": "netx90_rev1"}
         self.memories_to_test = [{"b": 1, "u": 0, "cs": 0, "name": "SQI-Flash Winbond ABC", "size": 4*1024*1024},
                                  {"b": 2, "u": 0, "cs": 0, "name": "INT flash 0", "size": 512 * 1024},
                                  {"b": 2, "u": 1, "cs": 0, "name": "INT flash 1", "size": 512 * 1024},
@@ -47,7 +48,8 @@ class UnitTestFlasherTest(unittest.TestCase):
 
 
         # parameter provided from pirate test bay
-        self.testGroup = ["short", "standard", "long"]
+        #self.RunTestsGroups = ["regr_short", "regr_standard", "regr_long", "all"]
+        self.RunTestsGroups = ["regr_short"]
 
         #self.path_flasher_binary = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\flasher_cli-1.5.1-windows_x86\\flasher_cli-1.5.1\\lua5.1.exe")
         #self.path_flasher_files = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\flasher_cli-1.5.1-windows_x86\\flasher_cli-1.5.1")
@@ -57,7 +59,6 @@ class UnitTestFlasherTest(unittest.TestCase):
 
         self.path_flasher_binary = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\test\\flasher_cli-1.6.0_RC2-windows_x86\\flasher_cli-1.6.0\\lua5.1.exe")
         self.path_flasher_files = os.path.realpath("C:\\Daten_local_only\\Tools\\Hilscher\\flasher\\test\\flasher_cli-1.6.0_RC2-windows_x86\\flasher_cli-1.6.0")
-
 
         self.path_logfiles = os.path.join(file_dir, "log")
 
@@ -73,8 +74,6 @@ class UnitTestFlasherTest(unittest.TestCase):
         # * special
         # self.testGroupInternal = ["short", "special"]
 
-
-
         Flashertest.init_logfiles(self.path_logfiles)
 
 
@@ -87,6 +86,17 @@ class UnitTestFlasherTest(unittest.TestCase):
 
         :return:
         """
+
+        # skip test, if not inside the list to be executed
+        enableTest = 0
+        for TestGroup in self.RunTestsGroups:
+            if TestGroup in ["regr_short", "all"]:
+                # set flasg to enable test
+                enableTest = 1
+
+        if not enableTest:
+           self.skipTest("test_Standard_SQI_flash NOT inlcuded inside test group(s): %s" % self.RunTestsGroups)
+
 
         num_bytes_to_test = 1024 * 1024
 
@@ -130,6 +140,17 @@ class UnitTestFlasherTest(unittest.TestCase):
         :return:
         """
 
+        # skip test, if not inside the list to be executed
+        enableTest = 0
+        for TestGroup in self.RunTestsGroups:
+            if TestGroup in ["regr_short", "all"]:
+                # set flasg to enable test
+                enableTest = 1
+
+        if not enableTest:
+           self.skipTest("test_Standard_Other_Flashes NOT inlcuded inside test group(s): %s" % self.RunTestsGroups)
+
+
         num_bytes_to_test = 1024 * 1024
 
         test_started = 0
@@ -170,6 +191,17 @@ class UnitTestFlasherTest(unittest.TestCase):
         :return:
         """
 
+        # skip test, if not inside the list to be executed
+        enableTest = 0
+        for TestGroup in self.RunTestsGroups:
+            if TestGroup in ["regr_short", "all"]:
+                # set flasg to enable test
+                enableTest = 1
+
+        if not enableTest:
+           self.skipTest("test_hash_SQI_flash NOT inlcuded inside test group(s): %s" % self.RunTestsGroups)
+
+
         # skip for netX90, because the flasher for netX 90 does not implement the hash function
         if self.plugin_name["netx_chip_type"] in [10, 13, 14]:
             self.skipTest("not supported for netX 90")
@@ -208,12 +240,72 @@ class UnitTestFlasherTest(unittest.TestCase):
             self.fail("No SQI flash available for netX %d" % self.plugin_name["netx_chip_type"])
 
 
+    def test_testcli_SQI_flash(self):
+        """
+        Testdescription
+        run test "testcli" only on SQI flash
+
+        :return:
+        """
+
+        # skip test, if not inside the list to be executed
+        enableTest = 0
+        for TestGroup in self.RunTestsGroups:
+            if TestGroup in ["regr_standard", "all"]:
+                # set flasg to enable test
+                enableTest = 1
+
+        if not enableTest:
+           self.skipTest("test_testcli_SQI_flash NOT inlcuded inside test group(s): %s" % self.RunTestsGroups)
+
+
+
+        test_started = 0
+        test_results = 0
+        for memory_to_test in self.memories_to_test:
+            # test requires external SQI flash
+            if (memory_to_test["b"] in [1] and
+                    memory_to_test["u"] in [0] and
+                    memory_to_test["cs"] in [0]):
+                test_started = 1
+            else:
+                # skip other memory interfaces
+                l.info(" *** Skip for netX %d memory: %s" % (self.plugin_name["netx_chip_type"], memory_to_test))
+                continue
+
+            tc = FltTestcliSqiFlash()
+            tc.init_params(self.plugin_name, memory_to_test,
+                           "",
+                           self.path_flasher_files,
+                           self.path_flasher_binary,
+                           {})
+            tc.run_test()
+            test_result = tc.numErrors_a[-1]
+            # collect all test results
+            test_results += test_result[1]
+
+        if test_started == 1:
+            self.assertEqual(0, test_results)
+        else:
+            self.fail("No SQI flash available for netX %d" % self.plugin_name["netx_chip_type"])
+
+
     def test_NXTFLASHER_51(self):
         """
         Testdescription
 
         :return:
         """
+
+        # skip test, if not inside the list to be executed
+        enableTest = 0
+        for TestGroup in self.RunTestsGroups:
+            if TestGroup in ["NXTFLASHER_51", "all"]:
+                # set flasg to enable test
+                enableTest = 1
+
+        if not enableTest:
+           self.skipTest("test_NXTFLASHER_51 NOT inlcuded inside test group(s): %s" % self.RunTestsGroups)
 
         # execute only for netX56B
         if self.plugin_name["netx_chip_type"] in [7]:
@@ -267,6 +359,16 @@ class UnitTestFlasherTest(unittest.TestCase):
 
         :return:
         """
+
+        # skip test, if not inside the list to be executed
+        enableTest = 0
+        for TestGroup in self.RunTestsGroups:
+            if TestGroup in ["NXTFLASHER_55", "all"]:
+                # set flasg to enable test
+                enableTest = 1
+
+        if not enableTest:
+           self.skipTest("test_NXTFLASHER_55 NOT inlcuded inside test group(s): %s" % self.RunTestsGroups)
 
         # TODO: port test case to netX 90 rev 1
 

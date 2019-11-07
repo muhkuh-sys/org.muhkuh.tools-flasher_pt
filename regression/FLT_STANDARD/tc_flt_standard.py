@@ -38,7 +38,9 @@ class FltStandardSqiFlash(Flashertest):
         enable_flasher = {"flasher": True}
         self.command_structure = [
             [enable_flasher, "cli_flash.lua", "-h"],
+            [enable_flasher, "cli_flash.lua", "-version"],
             [enable_flasher, "cli_flash.lua", "list_interfaces"],
+            [enable_flasher, "cli_flash.lua", "info", self.plugin_name],
             [enable_flasher, "cli_flash.lua", "detect_netx", self.plugin_name],
             [enable_flasher, "cli_flash.lua", "detect", self.bus_port_parameters_flasher, self.plugin_name],
             [enable_flasher, "cli_flash.lua", "erase", self.bus_port_parameters_flasher, "-l 0x%x" % self.test_binary_size, self.plugin_name],
@@ -47,6 +49,38 @@ class FltStandardSqiFlash(Flashertest):
              self.binary_file_read_from_netx],
             [enable_flasher, "cli_flash.lua", "verify", self.bus_port_parameters_flasher, self.plugin_name, self.binary_file_write_to_netx],
         ]
+
+
+class FltTestcliSqiFlash(Flashertest):
+    """
+    define the standard tests, which are additionally to the tests inside class FltStandardSqiFlash
+    """
+
+    test_command_list = None
+
+    binary_file_read_from_netx = None
+    binary_file_write_to_netx = None
+
+    def __init__(self):
+        Flashertest.__init__(self)
+        self.test_binary_size = 4*1024*1024
+
+    def pre_test_step(self):
+        # Generate test-binary-files
+        assert self.bool_logfiles_init
+        self.binary_file_read_from_netx = os.path.realpath(os.path.join(self.logfiles_working_dir,
+                                                       "test_%s_read_file_from_netx.bin" % self.__class__.__name__))
+        self.binary_file_write_to_netx = os.path.realpath(os.path.join(self.logfiles_working_dir,
+                                                       "test_%s_writefile_to_netx.bin" % self.__class__.__name__))
+        generate_randome_file_by_size_and_name(self.binary_file_write_to_netx, self.test_binary_size)
+
+    def init_command_array(self):
+        enable_flasher = {"flasher": True}
+        self.command_structure = [
+            [enable_flasher, "cli_flash.lua", "testcli", self.plugin_name],
+        ]
+
+
 
 
 class FltStandardOtherFlash(Flashertest):

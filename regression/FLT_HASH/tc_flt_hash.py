@@ -41,9 +41,11 @@ class FltHash(Flashertest):
              self.binary_file_write_to_netx],
             # run test-functions
             [enable_flasher, "cli_flash.lua", "verify_hash", self.bus_port_parameters_flasher, self.plugin_name,
-             self.binary_file_write_to_netx],  # compares with read file
+             self.binary_file_write_to_netx],  # compares with read file and uses a hash for compare
             [enable_flasher, "cli_flash.lua", "hash", self.bus_port_parameters_flasher, "-l 0x%x" % self.test_binary_size,
-             self.plugin_name],
+             self.plugin_name], # calculate the hash
+            # todo: compare with the expected hash value
+
             # [enable_flasher, "flash_serflash.lua", interface_to_test_embedd, path_generated_file]  # not working!
         ]
 
