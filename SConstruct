@@ -248,7 +248,7 @@ atEnv.DEFAULT.Version('targets/version/flasher_version.xsl', 'templates/flasher_
 from datetime import datetime
 tBuildTime = datetime.now()
 strBuildTime = tBuildTime.strftime("%Y-%B-%d-T%H:%M")
-tDict = {'BUILD_TIME': strBuildTime, 'BUILD_TYPE': 'RC2'}
+tDict = {'BUILD_TIME': strBuildTime, 'BUILD_TYPE': ''}
 lua_flasher_version_tmp = atEnv.DEFAULT.Version('targets/version/flasher_version_TMP.lua', 'templates/flasher_version.lua')
 lua_flasher_version = atEnv.DEFAULT.Filter('#/targets/version/flasher_version.lua', lua_flasher_version_tmp, SUBSTITUTIONS=tDict)
 
