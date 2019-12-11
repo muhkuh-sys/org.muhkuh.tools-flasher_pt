@@ -245,12 +245,6 @@ src_main_netiol   = flasher_sources_main + flasher_sources_main_netiol
 atEnv.DEFAULT.Version('targets/version/flasher_version.h', 'templates/flasher_version.h')
 atEnv.DEFAULT.Version('targets/version/flasher_version.xsl', 'templates/flasher_version.xsl')
 
-from datetime import datetime
-tBuildTime = datetime.now()
-strBuildTime = tBuildTime.strftime("%Y-%B-%d-T%H:%M")
-tDict = {'BUILD_TIME': strBuildTime, 'BUILD_TYPE': ''}
-lua_flasher_version_tmp = atEnv.DEFAULT.Version('targets/version/flasher_version_TMP.lua', 'templates/flasher_version.lua')
-lua_flasher_version = atEnv.DEFAULT.Filter('#/targets/version/flasher_version.lua', lua_flasher_version_tmp, SUBSTITUTIONS=tDict)
 
 #----------------------------------------------------------------------------
 #
@@ -613,7 +607,6 @@ if fBuildIsFull==True:
         tDemoShowEraseAreas)
 
     tArcList.AddFiles('',
-        lua_flasher_version,
         'jonchki/%s.%s/install.lua' % (strGroup, strModule))
 
     strBasePath = os.path.join(strModulePath, '%s-%s' % (strArtifact, PROJECT_VERSION))
@@ -661,7 +654,6 @@ if fBuildIsFull==True:
         'targets/testbench/lua/wfp_control.lua':                           'lua/lua/wfp_control.lua',
 
         # Copy all LUA scripts.
-        'targets/testbench/flasher_version.lua':                           lua_flasher_version,
         'targets/testbench/cli_flash.lua':                                 'lua/cli_flash.lua',
         'targets/testbench/demo_getBoardInfo.lua':                         'lua/demo_getBoardInfo.lua',
         'targets/testbench/erase_complete_flash.lua':                      'lua/erase_complete_flash.lua',
