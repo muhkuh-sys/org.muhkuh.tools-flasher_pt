@@ -38,7 +38,7 @@ strCfg_jonchkiHerePath = os.path.join(
 )
 
 # This is the Jonchki version to use.
-strCfg_jonchkiVersion = '0.0.3.1'
+strCfg_jonchkiVersion = '0.0.5.1'
 
 # Select the verbose level for jonchki.
 # Possible values are "debug", "info", "warning", "error" and "fatal".
