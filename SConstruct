@@ -537,7 +537,7 @@ doc = atEnv.DEFAULT.Asciidoc('targets/doc/flasher.html', 'doc/flasher.asciidoc',
 #
 if fBuildIsFull==True:
     strGroup = 'org.muhkuh.tools'
-    strModule = 'flasher'
+    strModule = 'flasher_pt'
 
     # Split the group by dots.
     aGroup = strGroup.split('.')

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jonchki-artifact version="1.0">
 	<info group="org.muhkuh.tools"
-	      module="flasher"
+	      module="flasher_pt"
 	      artifact="lua5.1-flasher"
 	      version="${PROJECT_VERSION}"
 	      vcs-id="${PROJECT_VERSION_VCS}"
 	      extension="zip">
 		<license name="GPL-2.0"/>
-		<author name="Flasher team" url="https://github.com/muhkuh-sys/flasher" />
+		<author name="Flasher team" url="https://github.com/muhkuh-sys/org.muhkuh.tools-flasher_pt" />
 		<description>
 			The flasher is an application for systems based on the Hilscher "netX" CPU. It writes data to flash or EEPROM chips.
 		</description>

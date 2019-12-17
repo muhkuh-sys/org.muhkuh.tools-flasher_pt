@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jonchki-artifact version="1.0">
 	<info group="org.muhkuh.tools"
-	      module="flasher"
+	      module="flasher_pt"
 	      artifact="flasher_cli"
 	      version="${PROJECT_VERSION}"
 	      vcs-id="${PROJECT_VERSION_VCS}"
 	      extension="zip"/>
 	<dependencies>
-		<dependency group="org.muhkuh.tools" module="flasher" artifact="lua5.1-flasher" version="${PROJECT_VERSION}"/>
+		<dependency group="org.muhkuh.tools" module="flasher_pt" artifact="lua5.1-flasher" version="${PROJECT_VERSION}"/>
 	</dependencies>
 </jonchki-artifact>

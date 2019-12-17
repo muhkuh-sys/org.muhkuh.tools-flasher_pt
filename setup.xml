@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="mbs/setup2html.xsl"?>
 
-<muhkuh_buildsystem project="flasher">
-	<project_version>1.6.0</project_version>
+<muhkuh_buildsystem project="org.muhkuh.tools-flasher_pt">
+	<project_version>1.6.1</project_version>
 
 	<scons>
 		<group>org.scons</group>

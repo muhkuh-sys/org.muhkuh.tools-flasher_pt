@@ -8,11 +8,10 @@ local pl = require'pl.import_into'()
 
 local atInstall = {
   -- Copy all demo scripts to the installation base.
-  ['${depack_path_org.muhkuh.tools.flasher.lua5.1-flasher}/demo'] = '${install_base}/',
+  ['${depack_path_org.muhkuh.tools.flasher_pt.lua5.1-flasher}/demo'] = '${install_base}/',
 
   -- Copy the report.
-  ['${report_path}']                                              = '${install_base}/.jonchki/',
-  ['${report_xslt}']                                              = '${install_base}/.jonchki/'
+  ['${report_path}'] = '${install_base}/.jonchki/'
 }
 for strSrc, strDst in pairs(atInstall) do
   t:install(strSrc, strDst)
