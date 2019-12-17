@@ -736,6 +736,7 @@ end
 
 
 function eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMessage, fnCallbackProgress)
+	fnCallbackProgress = fnCallbackProgress or default_callback_progress
 	local fIsErased
 	local ulEndOffset
 	local ulEraseStart,ulEraseEnd
@@ -743,7 +744,7 @@ function eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMessage, fn
 	-- If length = 0xffffffff we get the erase area now in order to detect the flash size.
 	if ulSize == 0xffffffff then
 		ulEndOffset = ulSize
-		ulEraseStart,ulEraseEnd = getEraseArea(tPlugin, aAttr, ulDeviceOffset, ulEndOffset, fnCallbackMessage, fnCallbackProgress)
+		ulEraseStart,ulEraseEnd = getEraseArea(tPlugin, aAttr, ulDeviceOffset, ulEndOffset, fnCallbackMessage, default_callback_progress)
 		if not (ulEraseStart and ulEraseEnd) then
 			return false, "getEraseArea failed!"
 		end
@@ -755,8 +756,14 @@ function eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMessage, fn
 	
 
 	print(string.format("Area:  [0x%08x, 0x%08x[", ulDeviceOffset, ulEndOffset))
+
+	-- The total number of bytes to process is 3x the erase area.
+	local ulProgressStageOffset = ulEndOffset - ulDeviceOffset
+	local ulProgressTotal = 3 * ulProgressStageOffset
+
 	print("Checking if the area is already empty")
-	fIsErased = isErased(tPlugin, aAttr, ulDeviceOffset, ulEndOffset, fnCallbackMessage, fnCallbackProgress)
+	local fnProgressStage1 = function(ulCnt, ulMax) fnCallbackProgress(ulCnt, ulProgressTotal) end
+	fIsErased = isErased(tPlugin, aAttr, ulDeviceOffset, ulEndOffset, fnCallbackMessage, fnProgressStage1)
 
 	if fIsErased==nil then
 		return false, "Failed to check if the area is erased!"
@@ -765,7 +772,7 @@ function eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMessage, fn
 	else
 		-- Get the erase area unless we have already gotten it.
 		if not (ulEraseStart and ulEraseEnd) then
-			ulEraseStart,ulEraseEnd = getEraseArea(tPlugin, aAttr, ulDeviceOffset, ulEndOffset, fnCallbackMessage, fnCallbackProgress)
+			ulEraseStart,ulEraseEnd = getEraseArea(tPlugin, aAttr, ulDeviceOffset, ulEndOffset, fnCallbackMessage, default_callback_progress)
 			if not (ulEraseStart and ulEraseEnd) then
 				return false, "getEraseArea failed!"
 			end
@@ -774,12 +781,14 @@ function eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMessage, fn
 		print("Erasing flash")
 		print(string.format("Erase: [0x%08x, 0x%08x[", ulEraseStart, ulEraseEnd))
 
-		fIsErased = erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
+		local fnProgressStage2 = function(ulCnt, ulMax) fnCallbackProgress(ulCnt+ulProgressStageOffset, ulProgressTotal) end
+		fIsErased = erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnProgressStage2)
 		if fIsErased~=true then
 			return false, "Failed to erase the area! (Failure during erase)"
 		else
 			print("Checking if the area has been erased")
-			fIsErased = isErased(tPlugin, aAttr,  ulDeviceOffset, ulEndOffset, fnCallbackMessage, fnCallbackProgress)
+			local fnProgressStage3 = function(ulCnt, ulMax) fnCallbackProgress(ulCnt+2*ulProgressStageOffset, ulProgressTotal) end
+			fIsErased = isErased(tPlugin, aAttr,  ulDeviceOffset, ulEndOffset, fnCallbackMessage, fnProgressStage3)
 			if fIsErased~=true then
 				return false, "Failed to erase the area! (isErased check failed)"
 			end
@@ -801,13 +810,18 @@ end
 -- Image flashed.
 
 function flashArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMessage, fnCallbackProgress)
+	fnCallbackProgress = fnCallbackProgress or default_callback_progress
 	local fOk
 	local ulDataByteSize = strData:len()
 	local ulDataOffset = 0
+	local ulProgressOffset = 0
 	local ulBufferAdr = aAttr.ulBufferAdr
 	local ulBufferLen = aAttr.ulBufferLen
 	local ulChunkSize
 	local strChunk
+
+	-- The total number of bytes to process is 2x the flash area.
+	local ulProgressTotal = 2 * ulDataByteSize
 	
 	while ulDataOffset<ulDataByteSize do
 		-- Extract the next chunk.
@@ -815,21 +829,25 @@ function flashArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMessage, f
 		-- Align the end of the chunk to a 16 byte boundary, unless this is the last chunk.
 		-- Note: Additionally, ulDeviceOffset must also be a multiple of 16 bytes.
 		local ulEnd = ulDataOffset+ulBufferLen
-		if ulEnd < strData:len() then
+		if ulEnd < ulDataByteSize then
 			ulEnd = ulEnd - (ulEnd % 16) 
 		end
 		strChunk = strData:sub(ulDataOffset+1, ulEnd)
 		ulChunkSize = strChunk:len()
 
 		-- Download the chunk to the buffer.
-		write_image(tPlugin, ulBufferAdr, strChunk, fnCallbackProgress)
+		local fnProgressStage1 = function(ulCnt, ulMax) fnCallbackProgress(ulCnt+ulProgressOffset, ulProgressTotal) end
+		write_image(tPlugin, ulBufferAdr, strChunk, fnProgressStage1)
+		ulProgressOffset = ulProgressOffset + ulChunkSize
 
 		-- Flash the chunk.
 		print(string.format("flashing offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
-		fOk = flasher.flash(tPlugin, aAttr, ulDeviceOffset, ulChunkSize, ulBufferAdr, fnCallbackMessage, fnCallbackProgress)
+		local fnProgressStage2 = function(ulCnt, ulMax) fnCallbackProgress(ulCnt+ulProgressOffset, ulProgressTotal) end
+		fOk = flasher.flash(tPlugin, aAttr, ulDeviceOffset, ulChunkSize, ulBufferAdr, fnCallbackMessage, fnProgressStage2)
 		if not fOk then
 			return false, "Failed to flash data!"
 		end
+		ulProgressOffset = ulProgressOffset + ulChunkSize
 
 		-- Increase pointers.
 		ulDataOffset = ulDataOffset + ulChunkSize
