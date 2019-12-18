@@ -69,7 +69,7 @@ function Version:_convertStringToList(strVersion)
 
   if tResult==true then
     -- Does the list contain at least one version number?
-    if table.maxn(auiComponents)==0 then
+    if #auiComponents==0 then
       tResult = nil
       strError = string.format("Invalid version: the string '%s' contains no version components.", strVersion)
     else
