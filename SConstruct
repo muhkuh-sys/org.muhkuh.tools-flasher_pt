@@ -576,7 +576,6 @@ if fBuildIsFull==True:
 
     tArcList.AddFiles('lua/',
         lua_flasher,
-        'lua/flasher_test.lua',
         'lua/lua/Version.lua',
         'lua/lua/wfp_control.lua')
 
