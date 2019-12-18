@@ -7,6 +7,7 @@
 	      vcs-id="${PROJECT_VERSION_VCS}"
 	      extension="zip"/>
 	<dependencies>
-		<dependency group="org.muhkuh.tools" module="flasher_pt" artifact="lua5.1-flasher" version="${PROJECT_VERSION}"/>
+		<dependency group="org.lua" module="lua" artifact="lua" version="5.1"/>
+		<dependency group="org.muhkuh.tools" module="flasher_pt" artifact="flasher" version="${PROJECT_VERSION}"/>
 	</dependencies>
 </jonchki-artifact>
