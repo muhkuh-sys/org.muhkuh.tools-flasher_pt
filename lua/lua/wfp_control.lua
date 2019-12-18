@@ -7,6 +7,8 @@ function WfpControl:_init(tLogWriter)
   -- The "penlight" module is used to parse the configuration file.
   self.pl = require'pl.import_into'()
 
+  self.archive = require 'archive'
+
   -- lxp is used to parse the XML data.
   self.lxp = require 'lxp'
 
@@ -69,7 +71,7 @@ function WfpControl:__search_archive_contents(strEntry)
       tLog.debug('Open WFP archive "%s".', self.strWfpArchiveFile)
 
       -- Create a new reader which supports all formats and filters.
-      tArchive = archive.ArchiveRead()
+      tArchive = self.archive.ArchiveRead()
       tArchive:support_filter_all()
       tArchive:support_format_all()
 
@@ -274,11 +276,82 @@ function WfpControl.__parseCfg_StartElement(tParser, strName, atAttributes)
         aLxpAttr.tLog.error('Error in line %d, col %d: attribute "offset" is no number: "%s".', iPosLine, iPosColumn, strOffset)
       end
 
+      local strCondition = atAttributes['condition']
+      local atConditions = {}
+      if strCondition~=nil then
+        local astrConditions = aLxpAttr.pl.stringx.split(strCondition, ',')
+        for _, strCondition in ipairs(astrConditions) do
+          local strKey, strValue = string.match(strCondition, '([^=]+)=(.*)')
+          if strKey==nil then
+            aLxpAttr.tResult = nil
+            aLxpAttr.tLog.error('Error in line %d, col %d: invalid condition: "%s".', iPosLine, iPosColumn, strCondition)
+          elseif atConditions[strKey]~=nil then
+            aLxpAttr.tResult = nil
+            aLxpAttr.tLog.error('Redefinition of condition "%s".', strKey)
+          else
+            atConditions[strKey] = strValue
+          end
+        end
+      end
+
       local tData = {}
       tData.strFile = strFile
       tData.ulOffset = ulOffset
+      tData.atConditions = atConditions
 
       table.insert(aLxpAttr.tCurrentFlash.atData, tData)
+    end
+
+  elseif strCurrentPath=='/FlasherPackage/Target/Flash/Erase' then
+    local strOffset = atAttributes['offset']
+    if strOffset==nil or strOffset=='' then
+      -- No offset specified.
+      aLxpAttr.tResult = nil
+      aLxpAttr.tLog.error('Error in line %d, col %d: attribute "offset" is not set.', iPosLine, iPosColumn)
+    else
+      local ulOffset = tonumber(strOffset)
+      if ulOffset==nil then
+        aLxpAttr.tResult = nil
+        aLxpAttr.tLog.error('Error in line %d, col %d: attribute "offset" is no number: "%s".', iPosLine, iPosColumn, strOffset)
+
+        local strSize = atAttributes['size']
+        if strSize==nil or strSize=='' then
+          -- No size specified.
+          aLxpAttr.tResult = nil
+          aLxpAttr.tLog.error('Error in line %d, col %d: attribute "size" is not set.', iPosLine, iPosColumn)
+        else
+          local ulSize = tonumber(strSize)
+          if ulSize==nil then
+            aLxpAttr.tResult = nil
+            aLxpAttr.tLog.error('Error in line %d, col %d: attribute "size" is no number: "%s".', iPosLine, iPosColumn, strSize)
+          else
+            local strCondition = atAttributes['condition']
+            local atConditions = {}
+            if strCondition~=nil then
+              local astrConditions = aLxpAttr.pl.stringx.split(strConditions, ',')
+              for _, strCondition in ipairs(astrConditions) do
+                local strKey, strValue = string.match(strCondition, '([^=]+)=(.*)')
+                if strKey==nil then
+                  aLxpAttr.tResult = nil
+                  aLxpAttr.tLog.error('Error in line %d, col %d: invalid condition: "%s".', iPosLine, iPosColumn, strCondition)
+                elseif atConditions[strKey]~=nil then
+                  aLxpAttr.tResult = nil
+                  aLxpAttr.tLog.error('Redefinition of condition "%s".', strKey)
+                else
+                  atConditions[strKey] = strValue
+                end
+              end
+            end
+
+            local tErase = {}
+            tErase.strFile = strFile
+            tErase.ulOffset = ulOffset
+            tErase.atConditions = atConditions
+
+            table.insert(aLxpAttr.tCurrentFlash.atData, tErase)
+          end
+        end
+      end
     end
   end
 end
@@ -303,7 +376,7 @@ function WfpControl.__parseCfg_EndElement(tParser, strName)
       aLxpAttr.atTargets[strNetx] = aLxpAttr.tCurrentTarget
     else
       -- Append all flash entries.
-      self.pl.tablex(aLxpAttr.atTargets[strNetx].atFlashes, aLxpAttr.tCurrentTarget.atFlashes)
+      aLxpAttr.pl.tablex(aLxpAttr.atTargets[strNetx].atFlashes, aLxpAttr.tCurrentTarget.atFlashes)
     end
     aLxpAttr.tCurrentTarget = nil
 
@@ -353,7 +426,8 @@ function WfpControl:__parse_configuration(strConfiguration)
     atTargets = {},
 
     tResult = true,
-    tLog = self.tLog
+    tLog = self.tLog,
+    pl = self.pl
   }
 
   local aLxpCallbacks = {}
@@ -465,5 +539,29 @@ function WfpControl:getTarget(iChiptype)
   return tTarget
 end
 
+
+
+function WfpControl:matchConditions(atData, atConditions)
+  local tResult = true
+  local tLog = self.tLog
+  -- Loop over all conditions.
+  for strConditionKey, strConditionValue in pairs(atConditions) do
+    tLog.debug('Condition check: is %s=%s ?', strConditionKey, strConditionValue)
+    local strDataValue = atData[strConditionKey]
+    if strDataValue==nil then
+      tLog.debug('The key %s does not exist. The condition is FALSE.', strConditionKey)
+      tResult = nil
+      break
+    else
+      if strConditionValue~=strDataValue then
+        tLog.debug('The value of %s is not %s but %s. The condition is FALSE.', strConditionKey, strConditionValue, strDataValue)
+        tResult = nil
+        break
+      end
+    end
+  end
+
+  return tResult
+end
 
 return WfpControl
