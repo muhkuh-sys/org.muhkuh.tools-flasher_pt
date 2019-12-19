@@ -4,6 +4,12 @@ local WfpControl = class()
 
 
 function WfpControl:_init(tLogWriter)
+  -- Get the LUA version number in the form major * 100 + minor .
+  local strMaj, strMin = string.match(_VERSION, '^Lua (%d+)%.(%d+)$')
+  if strMaj~=nil then
+    self.LUA_VER_NUM = tonumber(strMaj) * 100 + tonumber(strMin)
+  end
+
   -- The "penlight" module is used to parse the configuration file.
   self.pl = require'pl.import_into'()
 
@@ -277,27 +283,14 @@ function WfpControl.__parseCfg_StartElement(tParser, strName, atAttributes)
       end
 
       local strCondition = atAttributes['condition']
-      local atConditions = {}
-      if strCondition~=nil then
-        local astrConditions = aLxpAttr.pl.stringx.split(strCondition, ',')
-        for _, strCondition in ipairs(astrConditions) do
-          local strKey, strValue = string.match(strCondition, '([^=]+)=(.*)')
-          if strKey==nil then
-            aLxpAttr.tResult = nil
-            aLxpAttr.tLog.error('Error in line %d, col %d: invalid condition: "%s".', iPosLine, iPosColumn, strCondition)
-          elseif atConditions[strKey]~=nil then
-            aLxpAttr.tResult = nil
-            aLxpAttr.tLog.error('Redefinition of condition "%s".', strKey)
-          else
-            atConditions[strKey] = strValue
-          end
-        end
+      if strCondition==nil then
+        strCondition = ''
       end
 
       local tData = {}
       tData.strFile = strFile
       tData.ulOffset = ulOffset
-      tData.atConditions = atConditions
+      tData.strCondition = strCondition
 
       table.insert(aLxpAttr.tCurrentFlash.atData, tData)
     end
@@ -326,27 +319,14 @@ function WfpControl.__parseCfg_StartElement(tParser, strName, atAttributes)
             aLxpAttr.tLog.error('Error in line %d, col %d: attribute "size" is no number: "%s".', iPosLine, iPosColumn, strSize)
           else
             local strCondition = atAttributes['condition']
-            local atConditions = {}
-            if strCondition~=nil then
-              local astrConditions = aLxpAttr.pl.stringx.split(strConditions, ',')
-              for _, strCondition in ipairs(astrConditions) do
-                local strKey, strValue = string.match(strCondition, '([^=]+)=(.*)')
-                if strKey==nil then
-                  aLxpAttr.tResult = nil
-                  aLxpAttr.tLog.error('Error in line %d, col %d: invalid condition: "%s".', iPosLine, iPosColumn, strCondition)
-                elseif atConditions[strKey]~=nil then
-                  aLxpAttr.tResult = nil
-                  aLxpAttr.tLog.error('Redefinition of condition "%s".', strKey)
-                else
-                  atConditions[strKey] = strValue
-                end
-              end
+            if strCondition==nil then
+              strCondition = ''
             end
 
             local tErase = {}
             tErase.strFile = strFile
             tErase.ulOffset = ulOffset
-            tErase.atConditions = atConditions
+            tErase.strCondition = strCondition
 
             table.insert(aLxpAttr.tCurrentFlash.atData, tErase)
           end
@@ -541,26 +521,68 @@ end
 
 
 
-function WfpControl:matchConditions(atData, atConditions)
-  local tResult = true
+function WfpControl:__runInSandbox(atValues, strExpression)
+  local tResult
   local tLog = self.tLog
-  -- Loop over all conditions.
-  for strConditionKey, strConditionValue in pairs(atConditions) do
-    tLog.debug('Condition check: is %s=%s ?', strConditionKey, strConditionValue)
-    local strDataValue = atData[strConditionKey]
-    if strDataValue==nil then
-      tLog.debug('The key %s does not exist. The condition is FALSE.', strConditionKey)
-      tResult = nil
-      break
-    else
-      if strConditionValue~=strDataValue then
-        tLog.debug('The value of %s is not %s but %s. The condition is FALSE.', strConditionKey, strConditionValue, strDataValue)
-        tResult = nil
-        break
+
+  if self.LUA_VER_NUM==501 then
+    -- Create a sandbox.
+    local atEnv = {
+      ['error']=error,
+      ['ipairs']=ipairs,
+      ['next']=next,
+      ['pairs']=pairs,
+      ['print']=print,
+      ['select']=select,
+      ['tonumber']=tonumber,
+      ['tostring']=tostring,
+      ['type']=type,
+      ['math']=math,
+      ['string']=string,
+      ['table']=table
+    }
+    for strKey, tValue in pairs(atValues) do
+      local strValue
+      local strType = type(tValue)
+      if strType~='number' and strType~='boolean' and strType~='string' then
+        error(string.format('Invalid value type for key %s: %s', strKey, strType))
       end
+      atEnv[strKey] = tValue
     end
+    local tFn, strError = loadstring(string.format('return %s', strExpression))
+    if tFn==nil then
+      error(string.format('Invalid expression "%s": %s', strExpression, tostring(strError)))
+    end
+    setfenv(tFn, atEnv)
+    local fRun, tFnResult = pcall(tFn)
+    if fRun==false then
+      error(string.format('Failed to run the expression "%s": %s', strExpression, tostring(tResult)))
+    end
+    local strType = type(tFnResult)
+    if strType~='boolean' then
+      error(string.format('Invalid condition return type for expression "%s": %s', strExpression, strType))
+    end
+    tResult = tFnResult
+  else
+    error('Add sandbox code for ' .. _VERSION)
   end
 
+  return tResult
+end
+
+
+
+function WfpControl:matchCondition(atData, strCondition)
+  local tResult = true
+  local tLog = self.tLog
+  -- Does a condition exist?
+  if string.len(strCondition)==0 then
+    tLog.debug('Condition check: no condition -> true')
+  else
+    -- Evaluate the condition in a sandbox.
+    tResult = self:__runInSandbox(atData, strCondition)
+    tLog.debug('Condition check: "%s" -> %s', strCondition, tostring(tResult))
+  end
   return tResult
 end
 
