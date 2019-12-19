@@ -2,7 +2,7 @@ import groovy.json.JsonSlurperClassic
 
 node {
     def ARTIFACTS_PATH1 = 'targets/jonchki/flasher_cli'
-    def ARTIFACTS_PATH2 = 'targets/jonchki/repository/org/muhkuh/tools/flasher/*'
+    def ARTIFACTS_PATH2 = 'targets/jonchki/repository/org/muhkuh/tools/flasher_pt/*'
     def strBuilds = env.JENKINS_SELECT_BUILDS
     def atBuilds = new JsonSlurperClassic().parseText(strBuilds)
 
@@ -22,7 +22,7 @@ node {
                 ]
             ],
             submoduleCfg: [],
-            userRemoteConfigs: [[url: 'https://github.com/muhkuh-sys/org.muhkuh.tools-flasher.git']]
+            userRemoteConfigs: [[url: 'https://github.com/muhkuh-sys/org.muhkuh.tools-flasher_pt.git']]
         ])
 
         /* Build the flasher. */
