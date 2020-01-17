@@ -19,7 +19,7 @@
 -----------------------------------------------------------------------------
 
 local class = require 'pl.class'
-local Flasher = require 'test_class'
+local Flasher = class()
 
 
 function Flasher:_init(tLog)
