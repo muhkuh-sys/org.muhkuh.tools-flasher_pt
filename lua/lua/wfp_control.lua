@@ -53,7 +53,9 @@ function WfpControl:_init(tLogWriter)
     [romloader.ROMLOADER_CHIPTYP_NETX4100_SMALL]   = "NETX4000",
     [romloader.ROMLOADER_CHIPTYP_NETX90_MPW]       = "NETX90_MPW",
     [romloader.ROMLOADER_CHIPTYP_NETX90]           = "NETX90",
-    [romloader.ROMLOADER_CHIPTYP_NETX90B]          = "NETX90"
+    [romloader.ROMLOADER_CHIPTYP_NETX90B]          = "NETX90",
+    [romloader.ROMLOADER_CHIPTYP_NETIOLA]          = "NETIOL",
+    [romloader.ROMLOADER_CHIPTYP_NETIOLB]          = "NETIOL"
   }
 end
 
