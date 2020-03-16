@@ -706,5 +706,5 @@ if fBuildIsFull==True:
         'targets/flasher_lib/libflasher_netiol_debug.a':                   lib_netiol_dbg,
     }
 
-    for tDst, tSrc in atCopyFiles.iteritems():
+    for tDst, tSrc in atCopyFiles.items():
         InstallAs(tDst, tSrc)
