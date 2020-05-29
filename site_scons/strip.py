@@ -65,7 +65,7 @@ def ApplyToEnv(env):
 
     # Set the default strip options.
     env['STRIP'] = re.sub('-ar$', '-strip', env['AR'])
-    env['STRIP_FLAGS'] = ['--strip-all']
+    env['STRIP_FLAGS'] = ['--strip-debug']
 
     strip_act = SCons.Action.Action(strip_action, strip_string)
     strip_bld = SCons.Script.Builder(
