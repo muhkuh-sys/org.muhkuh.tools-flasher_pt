@@ -14,7 +14,7 @@ def get(strRepositoryPath):
             long=True,
             dirty='+'
         )
-        tMatch = re.match('[0-9a-f]{12}\+?$', strGitId)
+        tMatch = re.match(r'[0-9a-f]{12}\+?$', strGitId)
         if tMatch is not None:
             # This is a repository with no tags.
             # Use the raw SHA sum.
@@ -22,7 +22,7 @@ def get(strRepositoryPath):
             strProjectVersionVcsLong = strGitId
         else:
             tMatch = re.match(
-                'v(\d+(\.\d+)*)-(\d+)-g([0-9a-f]{12})$',
+                r'v(\d+(\.\d+)*)-(\d+)-g([0-9a-f]{12})$',
                 strGitId
             )
             if tMatch is not None:
@@ -42,7 +42,7 @@ def get(strRepositoryPath):
                     strProjectVersionVcsLong = tMatch.group(4)
             else:
                 tMatch = re.match(
-                    'v(\d+(\.\d+)*)-(\d+)-g([0-9a-f]{12})\+?$',
+                    r'v(\d+(\.\d+)*)-(\d+)-g([0-9a-f]{12})\+?$',
                     strGitId
                 )
                 if tMatch is not None:
