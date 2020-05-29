@@ -598,6 +598,33 @@ if fBuildIsFull==True:
         'lua/lua/Version.lua',
         'lua/lua/wfp_control.lua')
 
+    tArcList.AddFiles('lib/',
+        tArtifacts_netx4000_nodbg['lib_stripped'],
+        tArtifacts_netx500_nodbg['lib_stripped'],
+        tArtifacts_netx90_mpw_nodbg['lib_stripped'],
+        tArtifacts_netx90_nodbg['lib_stripped'],
+        tArtifacts_netx56_nodbg['lib_stripped'],
+        tArtifacts_netx50_nodbg['lib_stripped'],
+        tArtifacts_netx10_nodbg['lib_stripped'],
+        tArtifacts_netiol_nodbg['lib_stripped'],
+        tArtifacts_netx4000_dbg['lib_stripped'],
+        tArtifacts_netx500_dbg['lib_stripped'],
+        tArtifacts_netx90_mpw_dbg['lib_stripped'],
+        tArtifacts_netx90_dbg['lib_stripped'],
+        tArtifacts_netx56_dbg['lib_stripped'],
+        tArtifacts_netx50_dbg['lib_stripped'],
+        tArtifacts_netx10_dbg['lib_stripped'],
+        tArtifacts_netiol_dbg['lib_stripped'])
+    tArcList.AddFiles('lib/includes/',
+        'targets/flasher_lib/includes/flasher_spi.h',
+        'targets/flasher_lib/includes/flasher_version.h',
+        'targets/flasher_lib/includes/netx_consoleapp.h',
+        'targets/flasher_lib/includes/spi_flash.h',
+        'targets/flasher_lib/includes/spi_flash_types.h',
+        'targets/flasher_lib/includes/spi.h')
+    tArcList.AddFiles('lib/includes/sha1_arm/',
+        'targets/flasher_lib/includes/sha1_arm/sha1.h')
+
     tArcList.AddFiles('demo/',
         'lua/cli_flash.lua',
         'lua/demo_getBoardInfo.lua',
