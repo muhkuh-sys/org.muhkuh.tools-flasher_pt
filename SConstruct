@@ -626,7 +626,6 @@ if fBuildIsFull==True:
         'targets/flasher_lib/includes/sha1_arm/sha1.h')
 
     tArcList.AddFiles('demo/',
-        'lua/demo_getBoardInfo.lua',
         'lua/erase_complete_flash.lua',
         'lua/erase_first_flash_sector.lua',
         'lua/erase_first_flash_sector_intflash0.lua',
@@ -693,7 +692,6 @@ if fBuildIsFull==True:
         'targets/testbench/lua/wfp_control.lua':                           'lua/lua/wfp_control.lua',
 
         # Copy all LUA scripts.
-        'targets/testbench/demo_getBoardInfo.lua':                         'lua/demo_getBoardInfo.lua',
         'targets/testbench/erase_complete_flash.lua':                      'lua/erase_complete_flash.lua',
         'targets/testbench/erase_first_flash_sector.lua':                  'lua/erase_first_flash_sector.lua',
         'targets/testbench/erase_first_flash_sector_intflash0.lua':        'lua/erase_first_flash_sector_intflash0.lua',
