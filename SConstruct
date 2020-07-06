@@ -626,7 +626,6 @@ if fBuildIsFull==True:
         'targets/flasher_lib/includes/sha1_arm/sha1.h')
 
     tArcList.AddFiles('demo/',
-        'lua/cli_flash.lua',
         'lua/demo_getBoardInfo.lua',
         'lua/erase_complete_flash.lua',
         'lua/erase_first_flash_sector.lua',
@@ -699,7 +698,6 @@ if fBuildIsFull==True:
         'targets/testbench/lua/wfp_control.lua':                           'lua/lua/wfp_control.lua',
 
         # Copy all LUA scripts.
-        'targets/testbench/cli_flash.lua':                                 'lua/cli_flash.lua',
         'targets/testbench/demo_getBoardInfo.lua':                         'lua/demo_getBoardInfo.lua',
         'targets/testbench/erase_complete_flash.lua':                      'lua/erase_complete_flash.lua',
         'targets/testbench/erase_first_flash_sector.lua':                  'lua/erase_first_flash_sector.lua',
@@ -711,7 +709,6 @@ if fBuildIsFull==True:
         'targets/testbench/flash_intflash2.lua':                           'lua/flash_intflash2.lua',
         'targets/testbench/flash_parflash.lua':                            'lua/flash_parflash.lua',
         'targets/testbench/flash_serflash.lua':                            'lua/flash_serflash.lua',
-        'targets/testbench/flasher_test.lua':                              'lua/flasher_test.lua',
         'targets/testbench/get_erase_areas_parflash.lua':                  'lua/get_erase_areas_parflash.lua',
         'targets/testbench/identify_intflash0.lua':                        'lua/identify_intflash0.lua',
         'targets/testbench/identify_parflash.lua':                         'lua/identify_parflash.lua',
