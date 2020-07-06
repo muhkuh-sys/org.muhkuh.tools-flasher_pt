@@ -22,18 +22,16 @@ end
 -- Download the binary.
 local aAttr = tFlasher:download(tPlugin, "netx/", tester.progress)
 
--- Use INTFLASH0.
-local fOk = tFlasher:detect(tPlugin, aAttr, flasher.BUS_IFlash, 2, 0)
+-- Use INTFLASH1.
+local fOk = tFlasher:detect(tPlugin, aAttr, tFlasher.BUS_IFlash, 1, 0)
 if not fOk then
   error("Failed to get a device description!")
 end
 
--- Get the erase area for the range 0 .. 1.
-ulEraseStart, ulEraseEnd = tFlasher:getEraseArea(tPlugin, aAttr, 0, 1)
-if not ulEraseStart then
-  error("Failed to get erase areas!")
-end
-print(string.format("The first erase area is: 0x%08x-0x%08x", ulEraseStart, ulEraseEnd))
+-- Get the complete devicesize.
+ulFlashSize = tFlasher:getFlashSize(tPlugin, aAttr, tester.callback, tester.callback_progress)
+print(string.format("The device size is: 0x%08x", ulFlashSize))
+local ulEraseStart, ulEraseEnd = 0, ulFlashSize
 
 -- Check if the erase area is already clear.
 local fIsErased

@@ -1,57 +1,68 @@
-require("muhkuh_cli_init")
-require("flasher")
+require 'muhkuh_cli_init'
 
+local tLogWriter = require 'log.writer.console.color'.new()
+local tLog = require "log".new(
+  'debug',
+  tLogWriter,
+  require "log.formatter.format".new()
+)
+
+_G.tester = require 'tester_cli'(tLog)
+-- Ask the user to select a plugin.
+_G.tester.fInteractivePluginSelection = true
+
+local tFlasher = require 'flasher'(tLog)
 
 if #arg~=1 then
 	error("Missing parameter: image file name.")
 end
 strFileName = arg[1]
 
-
-
-tPlugin = tester.getCommonPlugin()
-if not tPlugin then
-	error("No plugin selected, nothing to do!")
+tPlugin = tester:getCommonPlugin()
+if tPlugin==nil then
+  error("No plugin selected, nothing to do!")
 end
 
 -- Download the binary.
-aAttr = flasher.download(tPlugin, "netx/", tester.progress)
+local aAttr = tFlasher:download(tPlugin, "netx/", _G.tester.progress)
 
 -- Use SPI Flash CS0.
-local fOk = flasher.detect(tPlugin, aAttr, flasher.BUS_Spi, 0, 0)
+local tBus = tFlasher.BUS_Spi
+local ulUnit = 0
+local ulChipSelect = 0
+fOk = tFlasher:detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect)
 if not fOk then
-	error("Failed to get a device description!")
+  error("Failed to get a device description!")
 end
 
 -- Get the complete devicesize.
-ulFlashSize = flasher.getFlashSize(tPlugin, aAttr, tester.callback, tester.callback_progress)
-print(string.format("The device size is: 0x%08x", ulFlashSize))
+ulFlashSize = tFlasher:getFlashSize(tPlugin, aAttr, tester.callback, tester.callback_progress)
+tLog.info('The device size is: 0x%08x', ulFlashSize)
 
 -- Read the complete flash.
-strFlashContents, strMessage = flasher.readArea(tPlugin, aAttr, 0, ulFlashSize, tester.callback, tester.callback_progress)
+strFlashContents, strMessage = tFlasher:readArea(tPlugin, aAttr, 0, ulFlashSize, tester.callback, tester.callback_progress)
 if not strFlashContents then
-	error("Failed to read the flash: " .. strMessage)
+  error("Failed to read the flash: " .. strMessage)
 end
 
 -- Save the flash contents.
 local tFile, strMsg = io.open(strFileName, "wb")
 if not tFile then
-	error("Failed to open file " .. strName .. " for writing: " .. strMsg)
+  error("Failed to open file " .. strName .. " for writing: " .. strMsg)
 end
 
 tFile:write(strFlashContents)
 tFile:close()
 
-print("")
-print(" #######  ##    ## ")
-print("##     ## ##   ##  ")
-print("##     ## ##  ##   ")
-print("##     ## #####    ")
-print("##     ## ##  ##   ")
-print("##     ## ##   ##  ")
-print(" #######  ##    ## ")
-print("")
+tLog.info("")
+tLog.info(" #######  ##    ## ")
+tLog.info("##     ## ##   ##  ")
+tLog.info("##     ## ##  ##   ")
+tLog.info("##     ## #####    ")
+tLog.info("##     ## ##  ##   ")
+tLog.info("##     ## ##   ##  ")
+tLog.info(" #######  ##    ## ")
+tLog.info("")
 
--- Disconnect the plugin.
-tester.closeCommonPlugin()
-
+-- disconnect the plugin
+tPlugin:Disconnect()

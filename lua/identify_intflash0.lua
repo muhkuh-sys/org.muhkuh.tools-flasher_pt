@@ -1,29 +1,44 @@
-require("muhkuh_cli_init")
-require("flasher")
+require 'muhkuh_cli_init'
 
-tPlugin = tester.getCommonPlugin()
+local tLogWriter = require 'log.writer.console.color'.new()
+local tLog = require "log".new(
+  'debug',
+  tLogWriter,
+  require "log.formatter.format".new()
+)
+
+_G.tester = require 'tester_cli'(tLog)
+-- Ask the user to select a plugin.
+_G.tester.fInteractivePluginSelection = true
+
+local tFlasher = require 'flasher'(tLog)
+
+tPlugin = tester:getCommonPlugin()
 if tPlugin==nil then
-	error("No plugin selected, nothing to do!")
+  error("No plugin selected, nothing to do!")
 end
 
 -- Download the binary.
-local aAttr = flasher.download(tPlugin, "netx/", tester.progress)
+local aAttr = tFlasher:download(tPlugin, "netx/", _G.tester.progress)
 
--- Use SPI Flash CS0.
-local fOk = flasher.detect(tPlugin, aAttr, flasher.BUS_IFlash, 0, 0)
+-- Use Intflash 0.
+local tBus = tFlasher.BUS_IFlash
+local ulUnit = 0
+local ulChipSelect = 0
+fOk = tFlasher:detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect)
 if not fOk then
-	error("Failed to get a device description!")
+  error("Failed to get a device description!")
 end
 
-print("")
-print(" #######  ##    ## ")
-print("##     ## ##   ##  ")
-print("##     ## ##  ##   ")
-print("##     ## #####    ")
-print("##     ## ##  ##   ")
-print("##     ## ##   ##  ")
-print(" #######  ##    ## ")
-print("")
+tLog.info("")
+tLog.info(" #######  ##    ## ")
+tLog.info("##     ## ##   ##  ")
+tLog.info("##     ## ##  ##   ")
+tLog.info("##     ## #####    ")
+tLog.info("##     ## ##  ##   ")
+tLog.info("##     ## ##   ##  ")
+tLog.info(" #######  ##    ## ")
+tLog.info("")
 
 -- disconnect the plugin
 tPlugin:Disconnect()
