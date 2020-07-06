@@ -7,6 +7,9 @@ local archives = require 'installer.archives'
 local pl = require'pl.import_into'()
 
 local atInstall = {
+  -- Copy the muhkuh cli init script. The active plugins are defined here.
+  ['muhkuh_cli_init.lua'] = '${install_base}/',
+
   -- Copy all demo scripts to the installation base.
   ['${depack_path_org.muhkuh.tools.flasher_pt.flasher}/demo'] = '${install_base}/',
 
@@ -15,15 +18,6 @@ local atInstall = {
 }
 for strSrc, strDst in pairs(atInstall) do
   t:install(strSrc, strDst)
-end
-
--- Install the wrapper.
-if strDistId=='ubuntu' then
-  -- Copy the muhkuh CLI init for linux.
-  t:install('../../jonchki/org.muhkuh.tools.flasher_cli/linux/muhkuh_cli_init.lua', '${install_base}/')
-elseif strDistId=='windows' then
-  -- Copy the muhkuh CLI init for windows.
-  t:install('../../jonchki/org.muhkuh.tools.flasher_cli/windows/muhkuh_cli_init.lua', '${install_base}/')
 end
 
 
