@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+      with: 
+        submodules: true
+    # needs python 2.7
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '2.7'
+
+    - name: build
+      run: python2.7 build_artifact.py
