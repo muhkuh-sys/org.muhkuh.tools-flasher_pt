@@ -94,12 +94,12 @@ strProjectVersionVcs, strProjectVersionVcsLong = vcs_id.get(
 )
 print(strProjectVersionVcs, strProjectVersionVcsLong)
 
-# Build the netX tools.
-astrArguments = [
-    sys.executable,
-    'mbs/mbs'
-]
-subprocess.check_call(astrArguments, cwd=strCfg_projectFolder)
+## Build the netX tools.
+#astrArguments = [
+#    sys.executable,
+#    'mbs/mbs'
+#]
+#subprocess.check_call(astrArguments, cwd=strCfg_projectFolder)
 
 # Install jonchki.
 strJonchki = jonchkihere.install(
