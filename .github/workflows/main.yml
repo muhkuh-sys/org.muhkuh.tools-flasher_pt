@@ -1,4 +1,4 @@
-name: CI
+name: CI Build
 
 on:
   push:
@@ -9,19 +9,78 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-16.04, ubuntu-18.04]     
-
+        platform:
+        - # Ubuntu 16.04 x86
+          distribution-id: ubuntu
+          distribution-version: "16.04"
+          cpu-architecture: x86
+        - # Ubuntu 16.04 x86_64
+          distribution-id: ubuntu
+          distribution-version: "16.04"
+          cpu-architecture: x86_64
+        - # Ubuntu 18.04 x86
+          distribution-id: ubuntu
+          distribution-version: "18.04"
+          cpu-architecture: x86
+        - # Ubuntu 18.04 x86_64
+          distribution-id: ubuntu
+          distribution-version: "18.04"
+          cpu-architecture: x86_64
+        - # Ubuntu 18.04 arm64
+          distribution-id: ubuntu
+          distribution-version: "18.04"
+          cpu-architecture: arm64
+        - # Ubuntu 19.10 x86
+          distribution-id: ubuntu
+          distribution-version: "19.10"
+          cpu-architecture: x86
+        - # Ubuntu 19.10 x86_64
+          distribution-id: ubuntu
+          distribution-version: "19.10"
+          cpu-architecture: x86_64
+        - # Ubuntu 19.10 arm64
+          distribution-id: ubuntu
+          distribution-version: "19.10"
+          cpu-architecture: arm64
+        - # Ubuntu 20.04 x86_64
+          distribution-id: ubuntu
+          distribution-version: "20.04"
+          cpu-architecture: x86_64
+        - # Ubuntu 20.04 arm64
+          distribution-id: ubuntu
+          distribution-version: "20.04"
+          cpu-architecture: arm64
+        - # Windows x86
+          distribution-id: windows
+          distribution-version: ""
+          cpu-architecture: x86
+        - # Windows x86_64
+          distribution-id: windows
+          distribution-version: ""
+          cpu-architecture: x86_64
+    container: ghcr.io/muhkuh-sys/mbs_ubuntu_1804_x86_64:latest
     steps:
-    - uses: actions/checkout@v2
-      with: 
-        submodules: true
-    # needs python 2.7
-    - uses: actions/setup-python@v2
+    - name: Checkout repository
+      # Use the old checkout v1 here. The newer v2 requires git 2.28 which is not available in the standard distribution.
+      uses: actions/checkout@v1
       with:
-        python-version: '2.7'
-
-    - name: build
-      run: python2.7 build_artifact.py
+        submodules: recursive
+    - name: Build the flasher artifact
+      run: python3 mbs/mbs
+    - name: Build the flasher_cli artifact
+      run: python2.7 build_artifact.py ${{ matrix.platform.distribution-id }} ${{ matrix.platform.distribution-version }} ${{ matrix.platform.cpu-architecture }}
+    - name: Upload flasher artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: flasher_${{ matrix.platform.distribution-id }}_${{ matrix.platform.distribution-version }}_${{ matrix.platform.cpu-architecture }}
+        path: targets/jonchki/repository/**
+    - name: Upload flasher_cli artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: flasher_cli_${{ matrix.platform.distribution-id }}_${{ matrix.platform.distribution-version }}_${{ matrix.platform.cpu-architecture }}
+        path: |
+          targets/jonchki/flasher_cli/*.tar.gz
+          targets/jonchki/flasher_cli/*.zip
