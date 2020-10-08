@@ -252,7 +252,7 @@ src_main_netiol   = flasher_sources_main + flasher_sources_main_netiol
 #
 # Get the source code version from the VCS.
 #
-atEnv.DEFAULT.Version('targets/version/flasher_version.h', 'templates/flasher_version.h')
+tFlasherVersionH = atEnv.DEFAULT.Version('targets/version/flasher_version.h', 'templates/flasher_version.h')
 atEnv.DEFAULT.Version('targets/version/flasher_version.xsl', 'templates/flasher_version.xsl')
 
 
@@ -484,33 +484,42 @@ if 'NETX500' in atPickNetxForBuild:
 # ELF file in this project.
 #
 
-# Get the first available build environment and ELF file.
+# Get the first available build environment, ELF file and SPI flash types header.
 tEnv = None
 tElf = None
+tSpiFlashTypesH = None
 if 'NETX4000' in atPickNetxForBuild:
     tEnv = env_netx4000_nodbg
     tElf = tArtifacts_netx4000_nodbg['elf']
+    tSpiFlashTypesH = File('targets/netx4000_nodbg/spi_flash_types/spi_flash_types.h')
 elif 'NETX500' in atPickNetxForBuild:
     tEnv = env_netx500_nodbg
     tElf = tArtifacts_netx500_nodbg['elf']
+    tSpiFlashTypesH = File('targets/netx500_nodbg/spi_flash_types/spi_flash_types.h')
 elif 'NETX90_MPW' in atPickNetxForBuild:
     tEnv = env_netx90_mpw_nodbg
     tElf = tArtifacts_netx90_mpw_nodbg['elf']
+    tSpiFlashTypesH = File('targets/netx90_mpw_nodbg/spi_flash_types/spi_flash_types.h')
 elif 'NETX90' in atPickNetxForBuild:
     tEnv = env_netx90_nodbg
     tElf = tArtifacts_netx90_nodbg['elf']
+    tSpiFlashTypesH = File('targets/netx90_nodbg/spi_flash_types/spi_flash_types.h')
 elif 'NETX56' in atPickNetxForBuild:
     tEnv = env_netx56_nodbg
     tElf = tArtifacts_netx56_nodbg['elf']
+    tSpiFlashTypesH = File('targets/netx56_nodbg/spi_flash_types/spi_flash_types.h')
 elif 'NETX50' in atPickNetxForBuild:
     tEnv = env_netx50_nodbg
     tElf = tArtifacts_netx50_nodbg['elf']
+    tSpiFlashTypesH = File('targets/netx50_nodbg/spi_flash_types/spi_flash_types.h')
 elif 'NETX10' in atPickNetxForBuild:
     tEnv = env_netx10_nodbg
     tElf = tArtifacts_netx10_nodbg['elf']
+    tSpiFlashTypesH = File('targets/netx10_nodbg/spi_flash_types/spi_flash_types.h')
 elif 'NETIOL' in atPickNetxForBuild:
     tEnv = env_netiol_nodbg
     tElf = tArtifacts_netiol_nodbg['elf']
+    tSpiFlashTypesH = File('targets/netiol_nodbg/spi_flash_types/spi_flash_types.h')
 
 lua_flasher = tEnv.GccSymbolTemplate('targets/lua/flasher.lua', tElf, GCCSYMBOLTEMPLATE_TEMPLATE='templates/flasher.lua')
 tDemoShowEraseAreas = tEnv.GccSymbolTemplate('targets/lua/show_erase_areas.lua', tElf, GCCSYMBOLTEMPLATE_TEMPLATE='templates/show_erase_areas.lua')
@@ -616,12 +625,19 @@ if fBuildIsFull==True:
         tArtifacts_netx10_dbg['lib_stripped'],
         tArtifacts_netiol_dbg['lib_stripped'])
     tArcList.AddFiles('lib/includes/',
-        'targets/flasher_lib/includes/flasher_spi.h',
-        'targets/flasher_lib/includes/flasher_version.h',
-        'targets/flasher_lib/includes/netx_consoleapp.h',
-        'targets/flasher_lib/includes/spi_flash.h',
-        'targets/flasher_lib/includes/spi_flash_types.h',
-        'targets/flasher_lib/includes/spi.h')
+        'src/cfi_flash.h',
+        'src/flasher_interface.h',
+        'src/flasher_sdio.h',
+        'src/flasher_spi.h',
+        'src/netx4000/netx4000_sdio.h',
+        'src/netx_consoleapp.h',
+        'src/spi.h',
+        'src/spi_flash.h',
+        'src/spi_macro_player.h',
+        tFlasherVersionH,
+        tSpiFlashTypesH)
+    tArcList.AddFiles('lib/includes/internal_flash/',
+        'targets/flasher_lib/includes/internal_flash/internal_flash.h')
     tArcList.AddFiles('lib/includes/sha1_arm/',
         'targets/flasher_lib/includes/sha1_arm/sha1.h')
 
@@ -712,13 +728,18 @@ if fBuildIsFull==True:
         'targets/testbench/show_erase_areas.lua':                          tDemoShowEraseAreas,
 
         # collect the lib files in a directory
-        'targets/flasher_lib/includes/spi.h':                              'src/spi.h',
+        'targets/flasher_lib/includes/cfi_flash.h':                        'src/cfi_flash.h',
+        'targets/flasher_lib/includes/flasher_interface.h':                'src/flasher_interface.h',
+        'targets/flasher_lib/includes/flasher_sdio.h':                     'src/flasher_sdio.h',
         'targets/flasher_lib/includes/flasher_spi.h':                      'src/flasher_spi.h',
+        'targets/flasher_lib/includes/flasher_version.h':                  tFlasherVersionH,
+        'targets/flasher_lib/includes/netx4000_sdio.h':                    'src/netx4000/netx4000_sdio.h',
         'targets/flasher_lib/includes/netx_consoleapp.h':                  'src/netx_consoleapp.h',
-        'targets/flasher_lib/includes/sha1_arm/sha1.h':                    'src/sha1_arm/sha1.h',
+        'targets/flasher_lib/includes/spi.h':                              'src/spi.h',
         'targets/flasher_lib/includes/spi_flash.h':                        'src/spi_flash.h',
-        'targets/flasher_lib/includes/flasher_version.h':                  'targets/version/flasher_version.h',
-        'targets/flasher_lib/includes/spi_flash_types.h':                  'targets/netx50_nodbg/spi_flash_types/spi_flash_types.h',
+        'targets/flasher_lib/includes/spi_flash_types.h':                  tSpiFlashTypesH,
+        'targets/flasher_lib/includes/internal_flash/internal_flash.h':    'src/internal_flash/internal_flash.h',
+        'targets/flasher_lib/includes/sha1_arm/sha1.h':                    'src/sha1_arm/sha1.h',
 
         'targets/flasher_lib/libflasher_netx4000.a':                       tArtifacts_netx4000_nodbg['lib_stripped'],
         'targets/flasher_lib/libflasher_netx500.a':                        tArtifacts_netx500_nodbg['lib_stripped'],
