@@ -7,10 +7,10 @@ local tLog = require 'log'.new(
   require 'log.formatter.format'.new()
 )
 
+-- Register the CLI tester.
 _G.tester = require 'tester_cli'(tLog)
 -- Ask the user to select a plugin.
 _G.tester.fInteractivePluginSelection = true
-
 
 local tFlasher = require 'flasher'(tLog)
 
