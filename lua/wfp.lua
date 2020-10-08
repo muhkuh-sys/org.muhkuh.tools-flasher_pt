@@ -1,5 +1,5 @@
 require 'muhkuh_cli_init'
-require 'flasher'
+
 local archive = require 'archive'
 local argparse = require 'argparse'
 local wfp_control = require 'wfp_control'
@@ -88,12 +88,19 @@ local tLog = require 'log'.new(
   require 'log.formatter.format'.new()
 )
 
+-- Register the CLI tester.
+_G.tester = require 'tester_cli'(tLog)
+-- Ask the user to select a plugin.
+_G.tester.fInteractivePluginSelection = true
+
+local tFlasher = require 'flasher'(tLog)
+
 
 local atName2Bus = {
-  ['Parflash'] = flasher.BUS_Parflash,
-  ['Spi']      = flasher.BUS_Spi,
-  ['IFlash']   = flasher.BUS_IFlash,
-  ['SDIO']     = flasher.BUS_SDIO
+  ['Parflash'] = tFlasher.BUS_Parflash,
+  ['Spi']      = tFlasher.BUS_Spi,
+  ['IFlash']   = tFlasher.BUS_IFlash,
+  ['SDIO']     = tFlasher.BUS_SDIO
 }
 
 
@@ -112,7 +119,7 @@ if tArgs.fCommandFlashSelected==true then
     fOk = false
   else
     -- Select a plugin and connect to the netX.
-    local tPlugin = tester.getCommonPlugin()
+    local tPlugin = _G.tester:getCommonPlugin()
     if not tPlugin then
       tLog.error('No plugin selected, nothing to do!')
       fOk = false
@@ -125,7 +132,7 @@ if tArgs.fCommandFlashSelected==true then
         fOk = false
       else
         -- Download the binary.
-        local aAttr = flasher.download(tPlugin, strFlasherPrefix)
+        local aAttr = tFlasher:download(tPlugin, strFlasherPrefix)
 
         -- Loop over all flashes.
         for _, tTargetFlash in ipairs(tTarget.atFlashes) do
@@ -141,7 +148,7 @@ if tArgs.fCommandFlashSelected==true then
             tLog.debug('Processing bus: %s, unit: %d, chip select: %d', strBusName, ulUnit, ulChipSelect)
 
             -- Detect the device.
-            fOk = flasher.detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect)
+            fOk = tFlasher:detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect)
             if fOk~=true then
               tLog.error("Failed to detect the device!")
               fOk = false
@@ -162,13 +169,13 @@ if tArgs.fCommandFlashSelected==true then
                 else
                   tLog.debug('Flashing %d bytes...', sizData)
 
-                  fOk, strMsg = flasher.eraseArea(tPlugin, aAttr, ulOffset, sizData)
+                  fOk, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulOffset, sizData)
                   if fOk~=true then
                     tLog.error('Failed to erase the area: %s', strMsg)
                     fOk = false
                     break
                   else
-                    fOk, strMsg = flasher.flashArea(tPlugin, aAttr, ulOffset, strData)
+                    fOk, strMsg = tFlasher:flashArea(tPlugin, aAttr, ulOffset, strData)
                     if fOk~=true then
                       tLog.error('Failed to flash the area: %s', strMsg)
                       fOk = false
