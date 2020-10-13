@@ -2,7 +2,6 @@
 
 from jonchki import cli_args
 from jonchki import jonchkihere
-from jonchki import vcs_id
 
 import os
 import subprocess
@@ -88,18 +87,12 @@ strCfg_artifactConfiguration = os.path.join(
 # -
 # --------------------------------------------------------------------------
 
-# Try to get the VCS ID.
-strProjectVersionVcs, strProjectVersionVcsLong = vcs_id.get(
-    strCfg_projectFolder
-)
-print(strProjectVersionVcs, strProjectVersionVcsLong)
-
-## Build the netX tools.
-#astrArguments = [
-#    sys.executable,
-#    'mbs/mbs'
-#]
-#subprocess.check_call(astrArguments, cwd=strCfg_projectFolder)
+# Build the netX tools.
+astrArguments = [
+    sys.executable,
+    'mbs/mbs'
+]
+subprocess.check_call(astrArguments, cwd=strCfg_projectFolder)
 
 # Install jonchki.
 strJonchki = jonchkihere.install(
