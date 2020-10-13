@@ -68,10 +68,8 @@ jobs:
       uses: actions/checkout@v1
       with:
         submodules: recursive
-    - name: Build the flasher artifact
-      run: python3 mbs/mbs
-    - name: Build the flasher_cli artifact
-      run: python2.7 build_artifact.py ${{ matrix.platform.distribution-id }} ${{ matrix.platform.distribution-version }} ${{ matrix.platform.cpu-architecture }}
+    - name: Build
+      run: python3 build_artifact.py ${{ matrix.platform.distribution-id }} ${{ matrix.platform.distribution-version }} ${{ matrix.platform.cpu-architecture }}
     - name: Upload flasher artifacts
       uses: actions/upload-artifact@v2
       with:
