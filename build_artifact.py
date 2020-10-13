@@ -37,7 +37,7 @@ strCfg_jonchkiHerePath = os.path.join(
 )
 
 # This is the Jonchki version to use.
-strCfg_jonchkiVersion = '0.0.5.1'
+strCfg_jonchkiVersion = '0.0.6.1'
 
 # Select the verbose level for jonchki.
 # Possible values are "debug", "info", "warning", "error" and "fatal".
@@ -57,6 +57,10 @@ strCfg_jonchkiInstallationFolder = os.path.join(
     'targets'
 )
 
+strCfg_jonchkiLog = os.path.join(
+    strCfg_workingFolder,
+    'jonchki.log'
+)
 strCfg_jonchkiSystemConfiguration = os.path.join(
     strCfg_projectFolder,
     'jonchki',
@@ -74,6 +78,10 @@ strCfg_jonchkiFinalizer = os.path.join(
     'jonchki',
     'org.muhkuh.tools.flasher_cli',
     'finalizer.lua'
+)
+strCfg_jonchkiDependencyLog = os.path.join(
+    strCfg_projectFolder,
+    'dependency-log.xml'
 )
 # This is the artifact configuration file.
 strCfg_artifactConfiguration = os.path.join(
@@ -118,9 +126,11 @@ sys.stderr.flush()
 astrArguments = [strJonchki]
 astrArguments.append('install-dependencies')
 astrArguments.extend(['-v', strCfg_jonchkiVerbose])
+astrArguments.extend(['--logfile', strCfg_jonchkiLog])
 astrArguments.extend(['--syscfg', strCfg_jonchkiSystemConfiguration])
 astrArguments.extend(['--prjcfg', strCfg_jonchkiProjectConfiguration])
 astrArguments.extend(['--finalizer', strCfg_jonchkiFinalizer])
+astrArguments.extend(['--dependency-log', strCfg_jonchkiDependencyLog])
 astrArguments.extend(astrJonchkiPlatform)
 astrArguments.append(strCfg_artifactConfiguration)
 sys.exit(subprocess.call(astrArguments, cwd=strCfg_workingFolder))
