@@ -1192,9 +1192,9 @@ function Flasher:sdi_receive_data(tPlugin, aAttr, sizData, fnCallbackProgress, f
     sizData
   }
 
-  local ulValue = Flasher:callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
+  local ulValue = self:callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
   if ulValue==0 then
-    strRxData = Flasher:read_image(tPlugin, ulRxBuffer, sizData, fnCallbackProgress)
+    strRxData = self:read_image(tPlugin, ulRxBuffer, sizData, fnCallbackProgress)
   end
 
   return strRxData
@@ -1209,7 +1209,7 @@ function Flasher:sdi_idle_bytes(tPlugin, aAttr, sizIdleBytes, fnCallbackProgress
     aAttr.ulDeviceDesc,                   -- the SPI configuration
     sizIdleBytes
   }
-  local ulValue = Flasher:callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
+  local ulValue = self:callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
 
   return ulValue == 0
 end
