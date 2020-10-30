@@ -208,8 +208,12 @@ if tArgs.fCommandFlashSelected==true then
                   else
                     -- Loading the file data from the archive.
                     local strData = tWfpControl:getData(strFile)
-                    local sizData = string.len(strData)
-                    if strData~=nil then
+                    if strData==nil then
+                      tLog.error('Failed to get the data %s', strFile)
+                      fOk = false
+                      break
+                    else
+                      local sizData = string.len(strData)
                       if tArgs.fDryRun==true then
                         tLog.warning('Not touching the flash as dry run is selected.')
                       else
