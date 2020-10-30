@@ -198,7 +198,7 @@ if tArgs.fCommandFlashSelected==true then
                     end
                   end
                 else
-                  local strFile = tData.strFile
+                  local strFile = pl.path.basename(tData.strFile)
                   local ulOffset = tData.ulOffset
                   local strCondition = tData.strCondition
                   tLog.info('Found file "%s" with offset 0x%08x and condition "%s".', strFile, ulOffset, strCondition)
