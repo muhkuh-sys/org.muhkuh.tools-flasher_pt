@@ -12,8 +12,8 @@
 		<dependency group="org.muhkuh.lua" module="archive" artifact="lua5.1-archive" version="0.0.1.8"/>
 		<dependency group="org.muhkuh.lua" module="mhash" artifact="lua5.1-mhash" version="0.9.9.9.7"/>
 		<dependency group="org.muhkuh.lua" module="romloader_pt" artifact="lua5.1-romloader" version="2.4.9"/>
-		<dependency group="org.muhkuh.tools" module="flasher_pt" artifact="flasher" version="1.6.4"/>
-		<dependency group="org.muhkuh.tools" module="flasher_pt" artifact="flasher_cli" version="1.6.4"/>
+		<dependency group="org.muhkuh.tools" module="flasher_pt" artifact="flasher" version="1.6.5"/>
+		<dependency group="org.muhkuh.tools" module="flasher_pt" artifact="flasher_cli" version="1.6.5"/>
 		<dependency group="org.muhkuh.tools" module="muhkuh_base_cli" artifact="lua5.1-muhkuh_base_cli" version="2.4.5"/>
 		<dependency group="org.openocd" module="openocd_pt" artifact="openocd" version="0.10.0.7"/>
 		<dependency group="uk.co.matthewwild" module="luaexpat" artifact="lua5.1-luaexpat" version="1.3.0.5"/>
