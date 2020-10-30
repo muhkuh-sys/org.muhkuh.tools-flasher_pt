@@ -156,30 +156,48 @@ if tArgs.fCommandFlashSelected==true then
             end
 
             for _, tData in ipairs(tTargetFlash.atData) do
-              local strFile = tData.strFile
-              local ulOffset = tData.ulOffset
-              tLog.debug('Found file "%s" with offset 0x%08x.', strFile, ulOffset)
+              -- Is this an erase command?
+              if tData.strFile==nil then
+                local ulOffset = tData.ulOffset
+                local ulSize = tData.ulSize
+                local strCondition = tData.strCondition
+                tLog.info('Found erase 0x%08x-0x%08x and condition "%s".', ulOffset, ulOffset+ulSize, strCondition)
 
-              -- Loading the file data from the archive.
-              local strData = tWfpControl:getData(strFile)
-              local sizData = string.len(strData)
-              if strData~=nil then
                 if tArgs.fDryRun==true then
                   tLog.warning('Not touching the flash as dry run is selected.')
                 else
-                  tLog.debug('Flashing %d bytes...', sizData)
-
-                  fOk, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulOffset, sizData)
+                  fOk, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulOffset, ulSize)
                   if fOk~=true then
                     tLog.error('Failed to erase the area: %s', strMsg)
-                    fOk = false
                     break
+                  end
+                end
+              else
+                local strFile = tData.strFile
+                local ulOffset = tData.ulOffset
+                tLog.debug('Found file "%s" with offset 0x%08x.', strFile, ulOffset)
+
+                -- Loading the file data from the archive.
+                local strData = tWfpControl:getData(strFile)
+                local sizData = string.len(strData)
+                if strData~=nil then
+                  if tArgs.fDryRun==true then
+                    tLog.warning('Not touching the flash as dry run is selected.')
                   else
-                    fOk, strMsg = tFlasher:flashArea(tPlugin, aAttr, ulOffset, strData)
+                    tLog.debug('Flashing %d bytes...', sizData)
+
+                    fOk, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulOffset, sizData)
                     if fOk~=true then
-                      tLog.error('Failed to flash the area: %s', strMsg)
+                      tLog.error('Failed to erase the area: %s', strMsg)
                       fOk = false
                       break
+                    else
+                      fOk, strMsg = tFlasher:flashArea(tPlugin, aAttr, ulOffset, strData)
+                      if fOk~=true then
+                        tLog.error('Failed to flash the area: %s', strMsg)
+                        fOk = false
+                        break
+                      end
                     end
                   end
                 end
@@ -221,7 +239,13 @@ elseif tArgs.fCommandListSelected==true then
           for _, tData in ipairs(tTargetFlash.atData) do
             local strFile = tData.strFile
             local ulOffset = tData.ulOffset
-            tLog.info('      0x%08x: "%s"', ulOffset, strFile)
+            if strFile==nil then
+              -- This seems to be an erase command.
+              local ulSize = tData.ulSize
+              tLog.info('      erase [0x%08x,0x%08x[%s', ulOffset, ulOffset+ulSize, strConditionPretty)
+            else
+              tLog.info('      write 0x%08x: "%s"%s', ulOffset, strFile, strConditionPretty)
+            end
           end
         end
       end
@@ -272,34 +296,37 @@ elseif tArgs.fCommandPackSelected==true then
           else
             for _, tData in ipairs(tTargetFlash.atData) do
               local strFile = tData.strFile
-              local strFileAbs = strFile
-              if pl.path.isabs(strFileAbs)~=true then
-                strFileAbs = pl.path.join(strWorkingPath, strFileAbs)
-                tLog.debug('Extending the relative path "%s" to "%s".', strFile, strFileAbs)
-              end
-              local strFileBase = pl.path.basename(strFile)
-              if atFiles[strFileBase]==nil then
-                if pl.path.exists(strFileAbs)~=strFileAbs then
-                  tLog.error('The path "%s" does not exist.', strFileAbs)
-                  fOk = false
-                elseif pl.path.isfile(strFileAbs)~=true then
-                  tLog.error('The path "%s" does not point to a file.', strFileAbs)
-                  fOk = false
-                else
-                  tLog.debug('Adding file "%s" to the list.', strFileAbs)
-                  atFiles[strFileBase] = strFileAbs
-                  local tAttr = {
-                    ucBus = tBus,
-                    ucUnit = tTargetFlash.ulUnit,
-                    ucChipSelect = tTargetFlash.ulChipSelect,
-                    ulOffset = tData.ulOffset,
-                    strFilename = strFileAbs
-                  }
-                  table.insert(atSortedFiles, tAttr)
+              -- Skip erase entries.
+              if strFile~=nil then
+                local strFileAbs = strFile
+                if pl.path.isabs(strFileAbs)~=true then
+                  strFileAbs = pl.path.join(strWorkingPath, strFileAbs)
+                  tLog.debug('Extending the relative path "%s" to "%s".', strFile, strFileAbs)
                 end
-              elseif atFiles[strFileBase]~=strFileAbs then
-                tLog.error('Multiple files with the base name "%s" found.', strFileBase)
-                fOk = false
+                local strFileBase = pl.path.basename(strFile)
+                if atFiles[strFileBase]==nil then
+                  if pl.path.exists(strFileAbs)~=strFileAbs then
+                    tLog.error('The path "%s" does not exist.', strFileAbs)
+                    fOk = false
+                  elseif pl.path.isfile(strFileAbs)~=true then
+                    tLog.error('The path "%s" does not point to a file.', strFileAbs)
+                    fOk = false
+                  else
+                    tLog.debug('Adding file "%s" to the list.', strFileAbs)
+                    atFiles[strFileBase] = strFileAbs
+                    local tAttr = {
+                      ucBus = tBus,
+                      ucUnit = tTargetFlash.ulUnit,
+                      ucChipSelect = tTargetFlash.ulChipSelect,
+                      ulOffset = tData.ulOffset,
+                      strFilename = strFileAbs
+                    }
+                    table.insert(atSortedFiles, tAttr)
+                  end
+                elseif atFiles[strFileBase]~=strFileAbs then
+                  tLog.error('Multiple files with the base name "%s" found.', strFileBase)
+                  fOk = false
+                end
               end
             end
           end
