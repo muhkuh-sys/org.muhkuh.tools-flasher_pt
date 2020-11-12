@@ -40,6 +40,9 @@ function WfpControl:_init(tLogWriter)
   -- This is the open archive.
   self.tArchive = nil
 
+  -- This is the list of conditions from the parsed XML.
+  self.atConditions = nil
+
   -- Map chip type to the name.
   self.atChiptyp2name = {
     [romloader.ROMLOADER_CHIPTYP_NETX500]          = "NETX500",
@@ -176,6 +179,29 @@ function WfpControl.__parseCfg_StartElement(tParser, strName, atAttributes)
         aLxpAttr.tLog.error('Error in line %d, col %d: invalid "version": %s', iPosLine, iPosColumn, strError)
       end
       aLxpAttr.tVersion = tVersion
+    end
+
+  elseif strCurrentPath=='/FlasherPackage/Conditions/Condition' then
+    -- The attribute "name" is required.
+    local strName = atAttributes['name']
+    if strName==nil or strName=='' then
+      aLxpAttr.tResult = nil
+      aLxpAttr.tLog.error('Error in line %d, col %d: missing attribute "name".', iPosLine, iPosColumn)
+    else
+      -- The attribute "default" is optional.
+      local strDefault = atAttributes['default']
+      -- The attribute "test" is optional. If set, it must be "none", "list" or "re".
+      local strTest = atAttributes['test']
+      -- The default is "none".
+      if strTest==nil or strTest=='' then
+        strTest = 'none'
+      end
+      if strTest~='none' and strTest~='list' and strTest~='re' then
+        aLxpAttr.tResult = nil
+        aLxpAttr.tLog.error('Error in line %d, col %d: invalid attribute "test", must be "none", "list" or "re".', iPosLine, iPosColumn)
+      else
+        aLxpAttr.tCondition = { name=strName, default=strDefault, test=strTest }
+      end
     end
 
   elseif strCurrentPath=='/FlasherPackage/Target' then
@@ -350,7 +376,11 @@ function WfpControl.__parseCfg_EndElement(tParser, strName)
   local iPosLine, iPosColumn, iPosAbs = tParser:pos()
 
   local strCurrentPath = aLxpAttr.strCurrentPath
-  if strCurrentPath=='/FlasherPackage/Target' then
+  if strCurrentPath=='/FlasherPackage/Conditions/Condition' then
+    table.insert(aLxpAttr.atConditions, aLxpAttr.tCondition)
+    aLxpAttr.tCondition = nil
+
+  elseif strCurrentPath=='/FlasherPackage/Target' then
     local strNetx = aLxpAttr.tCurrentTarget.netX
     -- Does the target already exist?
     if aLxpAttr.atTargets[strNetx]==nil then
@@ -380,10 +410,16 @@ end
 -- @param strData The character data.
 function WfpControl.__parseCfg_CharacterData(tParser, strData)
   local aLxpAttr = tParser:getcallbacks().userdata
+  local pl = aLxpAttr.pl
 
---  if aLxpAttr.strCurrentPath=="/jonchki-artifact/info/description" then
---    aLxpAttr.tInfo.strDescription = strData
---  end
+  if aLxpAttr.strCurrentPath=="/FlasherPackage/Conditions/Condition" then
+    local tData = strData
+    local tCondition = aLxpAttr.tCondition
+    if tCondition.test=='list' then
+      tData = pl.tablex.imap(pl.stringx.strip, pl.stringx.split(strData, ','))
+    end
+    aLxpAttr.tCondition.constraints = tData
+  end
 end
 
 
@@ -405,7 +441,9 @@ function WfpControl:__parse_configuration(strConfiguration)
     tCurrentFlash = nil,
 
     tVersion = nil,
+    tCondition = nil,
     atTargets = {},
+    atConditions = {},
 
     tResult = true,
     tLog = self.tLog,
@@ -436,6 +474,7 @@ function WfpControl:__parse_configuration(strConfiguration)
   else
     self.tConfigurationVersion = aLxpCallbacks.userdata.tVersion
     self.atConfigurationTargets = aLxpCallbacks.userdata.atTargets
+    self.atConditions = aLxpCallbacks.userdata.atConditions
 
     -- Check if all required components are present.
     -- NOTE: the dependency block is optional.
@@ -587,5 +626,64 @@ function WfpControl:matchCondition(atData, strCondition)
   end
   return tResult
 end
+
+
+
+function WfpControl:getConditions()
+  return self.atConditions
+end
+
+
+function WfpControl:validateCondition(strKey, strValue)
+  local tResult
+  local strError
+  local atConditions = self.atConditions
+
+  -- Search the condition in the list.
+  local tHit
+  for _, tCondition in ipairs(atConditions) do
+    if tCondition.name==strKey then
+      tHit = tCondition
+      break
+    end
+  end
+  if tHit==nil then
+    -- No condition -> always ok.
+    tResult = true
+  else
+    local strTest = tHit.test
+    if strTest=='none' then
+      -- No test -> always ok.
+      tResult = true
+    elseif strTest=='list' then
+      local atList = tHit.constraints
+      for _, strElement in ipairs(atList) do
+        if strElement==strValue then
+          tResult = true
+          break
+        end
+      end
+      if tResult~=true then
+        tResult = false
+        strError = string.format('"%s" is not part of the list %s', strValue, table.concat(atList, ','))
+      end
+    elseif strTest=='re' then
+      local strRe = tHit.constraints
+      local tMatch = string.match(strValue, strRe)
+      if tMatch==nil then
+        tResult = false
+        strError = string.format('"%s" does not match the regular expression %s', strValue, strRe)
+      else
+        tResult = true
+      end
+    else
+      -- Unknown test always fails.
+      tResult = false
+    end
+  end
+
+  return tResult, strError
+end
+
 
 return WfpControl

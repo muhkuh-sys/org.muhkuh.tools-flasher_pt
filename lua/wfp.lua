@@ -115,30 +115,61 @@ local pl = tWfpControl.pl
 local fOk = true
 
 if tArgs.fCommandFlashSelected==true then
-  -- Parse the conditions.
-  local atWfpConditions = {}
-  for _, strCondition in ipairs(tArgs.astrConditions) do
-    local strKey, strValue = string.match(strCondition, '%s*([^ =]+)%s*=%s*([^ =]+)%s*')
-    if strKey==nil then
-      tLog.error('Condition "%s" is invalid.', strCondition)
-      fOk = false
-    elseif atWfpConditions[strKey]~=nil then
-      tLog.error('Redefinition of condition "%s" from "%s" to "%s".', strKey, strValue, atWfpConditions[strKey])
-      fOk = false
-    else
-      tLog.info('Setting condition "%s" = "%s".', strKey, strValue)
-      atWfpConditions[strKey] = strValue
+  -- Read the control file from the WFP archive.
+  tLog.debug('Using WFP archive "%s".', tArgs.strWfpArchiveFile)
+  local tResult = tWfpControl:open(tArgs.strWfpArchiveFile)
+  if tResult==nil then
+    tLog.error('Failed to open the archive "%s"!', tArgs.strWfpArchiveFile)
+    fOk = false
+  else
+    -- Parse the conditions.
+    local atConditions = tWfpControl:getConditions()
+    local atWfpConditions = {}
+    for _, strCondition in ipairs(tArgs.astrConditions) do
+      local strKey, strValue = string.match(strCondition, '%s*([^ =]+)%s*=%s*([^ =]+)%s*')
+      if strKey==nil then
+        tLog.error('Condition "%s" is invalid.', strCondition)
+        fOk = false
+      elseif atWfpConditions[strKey]~=nil then
+        tLog.error('Redefinition of condition "%s" from "%s" to "%s".', strKey, strValue, atWfpConditions[strKey])
+        fOk = false
+      else
+        tLog.info('Setting condition "%s" = "%s".', strKey, strValue)
+        atWfpConditions[strKey] = strValue
+      end
     end
-  end
 
-  if fOk==true then
-    -- Read the control file from the WFP archive.
-    tLog.debug('Using WFP archive "%s".', tArgs.strWfpArchiveFile)
-    local tResult = tWfpControl:open(tArgs.strWfpArchiveFile)
-    if tResult==nil then
-      tLog.error('Failed to open the archive "%s"!', tArgs.strWfpArchiveFile)
-      fOk = false
-    else
+    if fOk==true then
+      -- Set the default values for missing conditions.
+      for _, tCondition in ipairs(atConditions) do
+        local strName = tCondition.name
+        local tDefault = tCondition.default
+        if atWfpConditions[strName]==nil and tDefault~=nil then
+          tLog.debug('Set condition "%s" to the default value of "%s".', strName, tostring(tDefault))
+          atWfpConditions[strName] = tDefault
+        end
+      end
+
+      -- Validate all conditions.
+      for _, tCondition in ipairs(atConditions) do
+        local strName = tCondition.name
+        local strValue = atWfpConditions[strName]
+        -- Does the condition exist?
+        if strValue==nil then
+          tLog.error('The condition "%s" is not set.', strName)
+          fOk = false
+        else
+          -- Validate the condition.
+          local fCondOk, strError = tWfpControl:validateCondition(strName, strValue)
+          if fCondOk~=true then
+           tLog.error('The condition "%s" is invalid: %s', strName, tostring(strError))
+           fOk = false
+          end
+        end
+      end
+    end
+
+    if fOk==true then
       -- Select a plugin and connect to the netX.
       local tPlugin = _G.tester:getCommonPlugin()
       if not tPlugin then
@@ -255,6 +286,23 @@ elseif tArgs.fCommandListSelected==true then
     tLog.error('Failed to open the archive "%s"!', tArgs.strWfpArchiveFile)
     fOk = false
   else
+    tLog.info('WFP conditions:')
+    local atConditions = tWfpControl:getConditions()
+    for uiConditionIdx, tCondition in ipairs(atConditions) do
+      local strTest = tCondition.test
+      local tConstraints = tCondition.constraints
+      local strCheck = ''
+      if strTest=='re' then
+        strCheck = string.format(', must match the regular expression %s', tostring(tConstraints))
+      elseif strTest=='list' then
+        strCheck = string.format(', must be one of the list %s', table.concat(tConstraints ,','))
+      else
+        strCheck = string.format(', unknown check "%s" with constraints "%s"', strCheck, tostring(tConstraints))
+      end
+      tLog.info('  Condition "%s", default "%s"%s', tCondition.name, tCondition.default, strCheck)
+    end
+    tLog.info('')
+
     tLog.info('WFP contents:')
     for strTarget, tTarget in pairs(tWfpControl.atConfigurationTargets) do
       tLog.info('  "%s":', strTarget)
