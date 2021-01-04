@@ -35,7 +35,6 @@
 
 #include "flasher_interface.h"
 #include "flasher_header.h"
-#include "units.h"
 #include "uprintf.h"
 #include "systime.h"
 
@@ -675,48 +674,17 @@ static NETX_CONSOLEAPP_RESULT_T opMode_getEraseArea(tFlasherInputParameter *ptAp
 /* ------------------------------------- */
 
 
-static NETX_CONSOLEAPP_RESULT_T opMode_getBoardInfo(tFlasherInputParameter *ptAppParams, NETX_CONSOLEAPP_PARAMETER_T *ptConsoleParams)
+static NETX_CONSOLEAPP_RESULT_T opMode_getBoardInfo(tFlasherInputParameter *ptAppParams)
 {
-	NETX_CONSOLEAPP_RESULT_T tResult;
-	unsigned long ulBusId;
-	unsigned long ulUnitId;
-	unsigned char *pucBuffer;
+	const void *pvBuffer;
 	size_t sizBuffer;
-	BUS_T tBusId;
-	size_t sizData;
 
 
+	board_get_unit_description(&pvBuffer, &sizBuffer);
+	ptAppParams->uParameter.tGetBoardInfo.pucBuffer = pvBuffer;
+	ptAppParams->uParameter.tGetBoardInfo.sizBuffer = sizBuffer;
 
-	ulBusId = ptAppParams->uParameter.tGetBoardInfo.ulBusId;
-	ulUnitId = ptAppParams->uParameter.tGetBoardInfo.ulUnitId;
-
-	pucBuffer = ptAppParams->uParameter.tGetBoardInfo.pucBuffer;
-	sizBuffer = ptAppParams->uParameter.tGetBoardInfo.sizBuffer;
-
-	if( ulBusId==0xffffffffU )
-	{
-		sizData = units_make_bus_table(pucBuffer, sizBuffer);
-		ptConsoleParams->pvReturnMessage = (void*)sizData;
-
-		tResult = NETX_CONSOLEAPP_RESULT_OK;
-	}
-	else if( ulUnitId==0xffffffffU )
-	{
-		tBusId = (BUS_T)ulBusId;
-		sizData = units_make_unit_table(tBusId, pucBuffer, sizBuffer);
-		ptConsoleParams->pvReturnMessage = (void*)sizData;
-
-		tResult = NETX_CONSOLEAPP_RESULT_OK;
-	}
-	else
-	{
-		/* No unit info yet. */
-		ptConsoleParams->pvReturnMessage = NULL;
-
-		tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	}
-
-	return tResult;
+	return NETX_CONSOLEAPP_RESULT_OK;
 }
 
 
@@ -1203,7 +1171,7 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 				break;
 
 			case OPERATION_MODE_GetBoardInfo:
-				tResult = opMode_getBoardInfo(ptAppParams, ptTestParam);
+				tResult = opMode_getBoardInfo(ptAppParams);
 				break;
 
 			case OPERATION_MODE_EasyErase:

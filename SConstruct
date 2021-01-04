@@ -126,7 +126,6 @@ flasher_sources_lib = """
 	src/spansion.c
 	src/spi_macro_player.c
 	src/strata.c
-	src/units.c
 """
 
 
@@ -225,7 +224,6 @@ flasher_sources_lib_netiol = """
 	src/flasher_spi.c
 	src/sfdp.c
 	src/spi_macro_player.c
-	src/units.c
 	src/netiol/board.c
 	src/drv_spi_hsoc_v2.c
 """

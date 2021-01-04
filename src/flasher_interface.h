@@ -79,11 +79,21 @@ typedef struct DEVICE_DESCRIPTION_STRUCT
 } DEVICE_DESCRIPTION_T;
 
 
-/* 
+typedef struct UNIT_DESCRIPTION_STRUCT
+{
+	unsigned char ucBus;
+	unsigned char ucUnit;
+	unsigned char ucCS;
+	unsigned char ucFlags;
+	char acId[28];
+} UNIT_DESCRIPTION_T;
+
+
+/*
     ulStartAddr/ulEndAddr are relative offsets into the flash,
     pucData is an absolute pointer to the RAM buffer.
 */
-   
+
 typedef struct CMD_PARAMETER_FLASH_STRUCT
 {
 	const DEVICE_DESCRIPTION_T *ptDeviceDescription;
@@ -160,10 +170,8 @@ typedef struct CMD_PARAMETER_GETERASEAREA_STRUCT
 
 typedef struct CMD_PARAMETER_GETBOARDINFO_STRUCT
 {
-	unsigned long ulBusId;
-	unsigned long ulUnitId;
-	unsigned char *pucBuffer;
-	size_t sizBuffer;
+	const unsigned char *pucBuffer;
+	unsigned int sizBuffer;
 } CMD_PARAMETER_GETBOARDINFO_T;
 
 

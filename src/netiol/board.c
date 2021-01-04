@@ -20,30 +20,16 @@
 
 
 #include "board.h"
-
-#include "units.h"
-
+#include "flasher_interface.h"
 
 /*-------------------------------------------------------------------------*/
 
 
-static const UNIT_TABLE_T tUnitTable_BusSPI =
+static const UNIT_DESCRIPTION_T atUnits[] =
 {
-	.sizEntries = 1,
-	.atEntries =
-	{
-		{ 0,  "SPI",    (void * const)HOSTADDR(spi) }
-	}
-};
-
-
-const BUS_TABLE_T tBusTable =
-{
-	.sizEntries = 1,
-	.atEntries =
-	{
-		{ BUS_SPI,       "Serial Flash",        &tUnitTable_BusSPI }
-	}
+	{ .ucBus=BUS_SPI,      .ucUnit=0, .ucCS=0, .ucFlags=0, .acId="SPI_CS0" },
+	{ .ucBus=BUS_SPI,      .ucUnit=0, .ucCS=1, .ucFlags=0, .acId="SPI_CS1" },
+	{ .ucBus=BUS_SPI,      .ucUnit=0, .ucCS=2, .ucFlags=0, .acId="SPI_CS2" }
 };
 
 
@@ -55,3 +41,9 @@ NETX_CONSOLEAPP_RESULT_T board_init(void)
 	return NETX_CONSOLEAPP_RESULT_OK;
 }
 
+
+void board_get_unit_description(const void **ppvBuffer, unsigned int *psizBuffer)
+{
+	*ppvBuffer = atUnits;
+	*psizBuffer = sizeof(atUnits);
+}

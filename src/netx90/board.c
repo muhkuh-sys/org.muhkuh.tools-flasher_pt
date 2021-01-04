@@ -20,51 +20,26 @@
 
 
 #include "board.h"
-
-#include "units.h"
-
+#include "flasher_interface.h"
 
 /*-------------------------------------------------------------------------*/
 
-
-static const UNIT_TABLE_T tUnitTable_BusSPI =
+static const UNIT_DESCRIPTION_T atUnits[] =
 {
-	.sizEntries = 4,
-	.atEntries =
-	{
-		{ 0,  "SQI",       (void * const)HOSTADDR(sqi) },
-		{ 1,  "SPI0_APP",  (void * const)HOSTADDR(spi0_app) },
-		{ 2,  "SPI1_APP",  (void * const)HOSTADDR(spi1_app) },
-		{ 3,  "SPI2_APP",  (void * const)HOSTADDR(spi2_app) }
-	}
+	{ .ucBus=BUS_SPI,      .ucUnit=0, .ucCS=0, .ucFlags=0, .acId="SQI_CS0" },
+	{ .ucBus=BUS_SPI,      .ucUnit=0, .ucCS=1, .ucFlags=0, .acId="SQI_CS1" },
+	{ .ucBus=BUS_SPI,      .ucUnit=0, .ucCS=2, .ucFlags=0, .acId="SQI_CS2" },
+	{ .ucBus=BUS_IFlash,   .ucUnit=0, .ucCS=0, .ucFlags=0, .acId="IF0" },
+	{ .ucBus=BUS_IFlash,   .ucUnit=0, .ucCS=1, .ucFlags=0, .acId="IF0_INFO" },
+	{ .ucBus=BUS_IFlash,   .ucUnit=0, .ucCS=2, .ucFlags=0, .acId="IF0_K" },
+	{ .ucBus=BUS_IFlash,   .ucUnit=1, .ucCS=0, .ucFlags=0, .acId="IF1" },
+	{ .ucBus=BUS_IFlash,   .ucUnit=1, .ucCS=1, .ucFlags=0, .acId="IF1_INFO" },
+	{ .ucBus=BUS_IFlash,   .ucUnit=1, .ucCS=2, .ucFlags=0, .acId="IF1_K" },
+	{ .ucBus=BUS_IFlash,   .ucUnit=2, .ucCS=0, .ucFlags=0, .acId="IF2" },
+	{ .ucBus=BUS_IFlash,   .ucUnit=2, .ucCS=1, .ucFlags=0, .acId="IF2_INFO" },
+	{ .ucBus=BUS_IFlash,   .ucUnit=2, .ucCS=2, .ucFlags=0, .acId="IF2_K" },
+	{ .ucBus=BUS_IFlash,   .ucUnit=3, .ucCS=0, .ucFlags=0, .acId="IF01" }
 };
-
-
-
-static const UNIT_TABLE_T tUnitTable_BusIFLASH =
-{
-	.sizEntries = 4,
-	.atEntries =
-	{
-		{ 0,  "IFLASH0",   NULL },
-		{ 1,  "IFLASH1",   NULL },
-		{ 2,  "IFLASH2",   NULL },
-		{ 3,  "IFLASH01",  NULL }
-	}
-};
-
-
-
-const BUS_TABLE_T tBusTable =
-{
-	.sizEntries = 2,
-	.atEntries =
-	{
-		{ BUS_SPI,       "Serial Flash",        &tUnitTable_BusSPI },
-		{ BUS_IFlash,    "Internal Flash",      &tUnitTable_BusIFLASH }
-	}
-};
-
 
 /*-------------------------------------------------------------------------*/
 
@@ -74,3 +49,9 @@ NETX_CONSOLEAPP_RESULT_T board_init(void)
 	return NETX_CONSOLEAPP_RESULT_OK;
 }
 
+
+void board_get_unit_description(const void **ppvBuffer, unsigned int *psizBuffer)
+{
+	*ppvBuffer = atUnits;
+	*psizBuffer = sizeof(atUnits);
+}

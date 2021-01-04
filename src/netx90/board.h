@@ -22,11 +22,8 @@
 #define __BOARD_H__
 
 #include "netx_consoleapp.h"
-#include "units.h"
-
-extern const BUS_TABLE_T tBusTable;
-
 
 NETX_CONSOLEAPP_RESULT_T board_init(void);
+void board_get_unit_description(const void **ppvBuffer, unsigned int *psizBuffer);
 
 #endif /* __BOARD_H__ */

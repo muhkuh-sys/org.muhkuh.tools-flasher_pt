@@ -20,43 +20,22 @@
 
 
 #include "board.h"
-
-#include "units.h"
-
+#include "flasher_interface.h"
 
 /*-------------------------------------------------------------------------*/
 
-
-static const UNIT_TABLE_T tUnitTable_BusSPI =
+static const UNIT_DESCRIPTION_T atUnits[] =
 {
-	.sizEntries = 2,
-	.atEntries =
-	{
-		{ 0,  "SQI",    (void * const)HOSTADDR(sqi) },
-		{ 1,  "SPI",    (void * const)HOSTADDR(spi_motion) }
-	}
+	{ .ucBus=BUS_SPI,      .ucUnit=0, .ucCS=0, .ucFlags=0, .acId="SQI_CS0" },
+	{ .ucBus=BUS_SPI,      .ucUnit=0, .ucCS=1, .ucFlags=0, .acId="SQI_CS1" },
+	{ .ucBus=BUS_SPI,      .ucUnit=0, .ucCS=2, .ucFlags=0, .acId="SQI_CS2" },
+	{ .ucBus=BUS_SPI,      .ucUnit=1, .ucCS=0, .ucFlags=0, .acId="SPI_CS0" },
+	{ .ucBus=BUS_SPI,      .ucUnit=1, .ucCS=1, .ucFlags=0, .acId="SPI_CS1" },
+	{ .ucBus=BUS_SPI,      .ucUnit=1, .ucCS=2, .ucFlags=0, .acId="SPI_CS2" },
+	{ .ucBus=BUS_ParFlash, .ucUnit=0, .ucCS=0, .ucFlags=0, .acId="PFL_MEM_CS0" },
+	{ .ucBus=BUS_ParFlash, .ucUnit=0, .ucCS=1, .ucFlags=0, .acId="PFL_MEM_CS1" },
+	{ .ucBus=BUS_ParFlash, .ucUnit=0, .ucCS=2, .ucFlags=0, .acId="PFL_MEM_CS2" }
 };
-
-
-static const UNIT_TABLE_T tUnitTable_BusParFlash =
-{
-	.sizEntries = 1,
-	.atEntries =
-	{
-		{ 0,  "SRamBus",    NULL }
-	}
-};
-
-const BUS_TABLE_T tBusTable =
-{
-	.sizEntries = 2,
-	.atEntries =
-	{
-		{ BUS_ParFlash,  "Parallel Flash",      &tUnitTable_BusParFlash },
-		{ BUS_SPI,       "Serial Flash",        &tUnitTable_BusSPI }
-	}
-};
-
 
 /*-------------------------------------------------------------------------*/
 
@@ -66,3 +45,9 @@ NETX_CONSOLEAPP_RESULT_T board_init(void)
 	return NETX_CONSOLEAPP_RESULT_OK;
 }
 
+
+void board_get_unit_description(const void **ppvBuffer, unsigned int *psizBuffer)
+{
+	*ppvBuffer = atUnits;
+	*psizBuffer = sizeof(atUnits);
+}

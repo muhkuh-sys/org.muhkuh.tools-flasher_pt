@@ -328,54 +328,53 @@ end
 -----------------------------------------------------------------------------
 
 
--- get "static" information about the buses, depending on the chip type:
--- SRAM bus parflash, extension bus parflash, SPI serial flash, SQI serial flash
-function Flasher:getInfoBlock(tPlugin, aAttr, ulBusIdx, ulUnitIdx, fnCallbackMessage, fnCallbackProgress)
+function Flasher:getBoardInfo(tPlugin, aAttr, fnCallbackMessage, fnCallbackProgress)
+  local tLog = self.tLog
   local aResult = nil
 
   local aulParameter = 
   {
     self.OPERATION_MODE_GetBoardInfo,      -- operation mode: get board info
-    ulBusIdx,
-    ulUnitIdx,
-    aAttr.ulBufferAdr,
-    aAttr.ulBufferLen
+    0,                                     -- Placeholder for the buffer address.
+    0                                      -- Placeholder for the buffer size.
   }
 
   local ulValue = self:callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
 
   if ulValue==0 then
-    -- Get the size of the board description.
-    local sizInfoMax = tPlugin:read_data32(aAttr.ulParameter+0x08)
-    if sizInfoMax>0 then
-      -- Get the board information.
-      strInfo = self:read_image(tPlugin, aAttr.ulBufferAdr, sizInfoMax, fnCallbackProgress)
+    -- Get the buffer address and size.
+    local pucBuffer = tPlugin:read_data32(aAttr.ulParameter+0x14)
+    local sizBuffer = tPlugin:read_data32(aAttr.ulParameter+0x18)
+    tLog.debug('Buffer 0x%08x 0x%08x', pucBuffer, sizBuffer)
 
-      -- Get the number of entries.
-      local sizEntryNum = strInfo:byte(1)
+    -- The size of the data should be a multiple of 32 bytes.
+    if sizBuffer==0 then
+      tLog.warning('No device info available.')
+    elseif (sizBuffer % 32)~=0 then
+      tLog.error('The size of the device info data is %d bytes. This is not a multiple of 32.', sizBuffer)
+    elseif sizBuffer>0x3fff then
+      tLog.error('The size of the device info data is %d bytes. Cowardly refusing to read more than 16KBytes.', sizBuffer)
+    else
+      local strInfo = self:read_image(tPlugin, pucBuffer, sizBuffer, fnCallbackProgress)
+
       aResult = {}
-      -- Loop over all entries.
-      strNames = strInfo:sub(2)
-      for strIdx,strName in string.gmatch(strNames, "(.)([^%z]+)%z") do
-        table.insert(aResult, { iIdx=strIdx:byte(1), strName=strName })
+      -- Split the data into chunks of 32 bytes.
+      for uiPos=1,sizBuffer,32 do
+        local tAttr = {
+          bus=string.byte(strInfo, uiPos),
+          unit=string.byte(strInfo, uiPos+1),
+          cs=string.byte(strInfo, uiPos+2),
+          flags=string.byte(strInfo, uiPos+3),
+          id=string.match(string.sub(strInfo, uiPos+4, uiPos+32), '^[%w%p]+')
+        }
+        tLog.debug('Found B%d_U%d_C%d = %s with flags=0x%02x', tAttr.bus, tAttr.unit, tAttr.cs, tAttr.id, tAttr.flags)
+
+        table.insert(aResult, tAttr)
       end
     end
   end
 
   return aResult
-end
-
-
-function Flasher:getBoardInfo(tPlugin, aAttr, fnCallbackMessage, fnCallbackProgress)
-  -- Get the bus infos.
-  local aBoardInfo = self:getInfoBlock(tPlugin, aAttr, 0xffffffff, 0xffffffff, fnCallbackMessage, fnCallbackProgress)
-  for iCnt,aBusInfo in ipairs(aBoardInfo) do
-    -- Get the unit info.
-    local aUnitInfo = self:getInfoBlock(tPlugin, aAttr, aBusInfo.iIdx, 0xffffffff, fnCallbackMessage, fnCallbackProgress)
-    aBusInfo.aUnitInfo = aUnitInfo
-  end
-
-  return aBoardInfo
 end
 
 
