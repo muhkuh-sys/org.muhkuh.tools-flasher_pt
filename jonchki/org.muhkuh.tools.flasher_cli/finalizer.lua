@@ -8,7 +8,7 @@ local pl = require'pl.import_into'()
 
 local atInstall = {
   -- Copy the muhkuh cli init script. The active plugins are defined here.
-  ['muhkuh_cli_init.lua'] = '${install_base}/',
+  ['muhkuh_cli_init.lua'] = '${install_lua_path}/',
 
   -- Copy all tools to the installation base.
   ['${depack_path_org.muhkuh.tools.flasher_pt.flasher}/tools'] = '${install_base}/',
