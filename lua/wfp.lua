@@ -2,6 +2,7 @@ require 'muhkuh_cli_init'
 
 local archive = require 'archive'
 local argparse = require 'argparse'
+local pl = require 'pl.import_into'()
 local wfp_control = require 'wfp_control'
 
 
@@ -16,7 +17,31 @@ local function __writeU32(tFile, ulData)
 end
 
 
-local strFlasherPrefix = 'netx/'
+
+local function __getNetxPath()
+  local strPathNetx
+
+  -- Split the Lua module path.
+  local astrPaths = pl.stringx.split(package.path, ';')
+  for _, strPath in ipairs(astrPaths) do
+    -- Only process search paths which end in "?.lua".
+    if string.sub(strPath, -5)=='?.lua' then
+      -- Cut off the "?.lua" part.
+      -- Expect the "netx" folder one below the module folder.
+      local strPath = pl.path.join(pl.path.dirname(pl.path.dirname(pl.path.abspath(strPath))), 'netx')
+      if pl.path.exists(strPath)~=nil and pl.path.isdir(strPath)==true then
+        -- Append a directory separator at the end of the path.
+        -- Otherwise the flasher will not be happy.
+        strPathNetx = strPath .. pl.path.sep
+        break
+      end
+    end
+  end
+  return strPathNetx
+end
+local strFlasherPrefix = __getNetxPath()
+
+
 
 local atLogLevels = {
   'debug',
@@ -110,7 +135,6 @@ local atName2Bus = {
 
 -- Create the WFP controller.
 local tWfpControl = wfp_control(tLogWriterFilter)
-local pl = tWfpControl.pl
 
 local fOk = true
 
