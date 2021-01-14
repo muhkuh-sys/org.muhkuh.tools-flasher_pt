@@ -5,7 +5,7 @@ local argparse = require 'argparse'
 local wfp_control = require 'wfp_control'
 
 
-local function writeU32(tFile, ulData)
+local function __writeU32(tFile, ulData)
   local ucB0 = math.fmod(ulData, 256)
   ulData = (ulData - ucB0) / 256
   local ucB1 = math.fmod(ulData, 256)
@@ -500,8 +500,8 @@ elseif tArgs.fCommandPackSelected==true then
               tArchive:write(string.char(tAttr.ucBus))
               tArchive:write(string.char(tAttr.ucUnit))
               tArchive:write(string.char(tAttr.ucChipSelect))
-              writeU32(tArchive, tAttr.ulOffset)
-              writeU32(tArchive, string.len(strData))
+              __writeU32(tArchive, tAttr.ulOffset)
+              __writeU32(tArchive, string.len(strData))
 
               -- Write the data.
               tArchive:write(strData)
