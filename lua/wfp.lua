@@ -51,7 +51,7 @@ local atLogLevels = {
   'fatal'
 }
 
-local tParser = argparse('wfp', 'Flash, list and create "wonderful feelings" packages.')
+local tParser = argparse('wfp', 'Flash, list and create WFP packages.')
   :command_target("strSubcommand")
 
 -- Add the "flash" command and all its options.
