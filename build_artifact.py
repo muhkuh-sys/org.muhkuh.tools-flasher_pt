@@ -108,6 +108,8 @@ strJonchki = jonchkihere.install(
     strCfg_jonchkiInstallationFolder,
     LOCAL_ARCHIVES=strCfg_jonchkiLocalArchives
 )
+if strJonchki is None:
+    raise Exception('Failed to install Jonchki.')
 
 # Create the testbench folder if it does not exist yet.
 if os.path.exists(strCfg_workingFolder) is not True:
