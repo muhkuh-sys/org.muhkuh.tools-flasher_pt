@@ -37,7 +37,7 @@
                             							
                             <targetPlatform id="org.eclipse.cdt.build.core.prefbase.toolchain.260933795.1257642158" name=""/>
                             							
-                            <builder arguments="mbs/mbs" buildPath="${ProjDirPath}" command="${ProjDirPath}/mbs/autopy/autopy_${OsType}.bat" id="org.eclipse.cdt.build.core.settings.default.builder.574447047" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
+                            <builder arguments="mbs/mbs" buildPath="${ProjDirPath}" command="${ProjDirPath}/mbs/autopy/autopy3_${OsType}.bat" id="org.eclipse.cdt.build.core.settings.default.builder.574447047" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
                             							
                             <tool id="org.eclipse.cdt.build.core.settings.holder.libs.506853918" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
                             							
@@ -217,7 +217,7 @@
                             							
                             <targetPlatform id="org.eclipse.cdt.build.core.prefbase.toolchain.1648128104.699387122" name=""/>
                             							
-                            <builder arguments="mbs/mbs" buildPath="${ProjDirPath}" command="${ProjDirPath}/mbs/autopy/autopy_${OsType}.bat" id="org.eclipse.cdt.build.core.settings.default.builder.1102958729" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
+                            <builder arguments="mbs/mbs" buildPath="${ProjDirPath}" command="${ProjDirPath}/mbs/autopy/autopy3_${OsType}.bat" id="org.eclipse.cdt.build.core.settings.default.builder.1102958729" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
                             							
                             <tool id="org.eclipse.cdt.build.core.settings.holder.libs.949508144" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
                             							
@@ -399,7 +399,7 @@
                             							
                             <targetPlatform id="org.eclipse.cdt.build.core.prefbase.toolchain.1237870569.381951133" name=""/>
                             							
-                            <builder arguments="mbs/mbs" buildPath="${ProjDirPath}" command="${ProjDirPath}/mbs/autopy/autopy_${OsType}.bat" id="org.eclipse.cdt.build.core.settings.default.builder.553384787" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
+                            <builder arguments="mbs/mbs" buildPath="${ProjDirPath}" command="${ProjDirPath}/mbs/autopy/autopy3_${OsType}.bat" id="org.eclipse.cdt.build.core.settings.default.builder.553384787" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
                             							
                             <tool id="org.eclipse.cdt.build.core.settings.holder.libs.1436328832" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
                             							
