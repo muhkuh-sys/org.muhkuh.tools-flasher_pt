@@ -110,7 +110,7 @@ function Shell:_init(tLog)
     },
     {
       cmd = 'write',
-      pattern = lpeg.Cg(lpeg.P('write'), 'cmd') * Space * lpeg.Cg(DeviceName, 'device') * lpeg.Cg(Integer, 'start') * lpeg.Cg(Filename, 'filename') * -1,
+      pattern = lpeg.Cg(lpeg.P('write'), 'cmd') * Space * lpeg.Cg(DeviceName, 'device') * Space * lpeg.Cg(Integer, 'startaddress') * Space * lpeg.Cg(Filename, 'filename') * -1,
       run = self.__run_write
     },
     {
