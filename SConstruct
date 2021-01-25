@@ -656,6 +656,7 @@ if fBuildIsFull==True:
         'lua/direct_api_examples/read_bootimage_intflash2.lua',
         'lua/direct_api_examples/read_complete_flash.lua')
     tArcList.AddFiles('tools/',
+        'lua/fsh.lua',
         'lua/wfp.lua',
         tDemoShowEraseAreas)
 
@@ -707,6 +708,7 @@ if fBuildIsFull==True:
         'targets/testbench/lua/wfp_control.lua':                           'lua/lua/wfp_control.lua',
 
         # Copy all LUA scripts.
+        'targets/testbench/fsh.lua':                                       'lua/fsh.lua',
         'targets/testbench/wfp.lua':                                       'lua/wfp.lua',
         'targets/testbench/show_erase_areas.lua':                          tDemoShowEraseAreas,
 

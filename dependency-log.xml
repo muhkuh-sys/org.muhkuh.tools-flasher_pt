@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <dependency-log>
 	<dependencies>
+		<dependency group="br.puc-rio.inf.www.roberto" module="lpeg" artifact="lua5.1-lpeg" version="1.0.2.1"/>
+		<dependency group="com.github.hoelzro" module="lua-linenoise" artifact="lua5.1-lua-linenoise" version="0.9.1"/>
 		<dependency group="com.github.hoelzro" module="lua-term" artifact="lua5.1-lua-term" version="0.7.3"/>
 		<dependency group="com.github.keplerproject" module="luafilesystem" artifact="lua5.1-luafilesystem" version="1.7.0.2.3"/>
 		<dependency group="com.github.moteus" module="lua-log" artifact="lua-log" version="0.1.6.3"/>
