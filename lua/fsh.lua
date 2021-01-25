@@ -822,9 +822,10 @@ function Shell:__run_read(tCmd)
       if tResult==true then
         local ulStart, ulLength = self:__getRange(tCmd)
         if ulStart~=nil then
-          print(string.format('Reading [0x%08x,0x%08x[ .', ulStart, ulStart+ulLength))
+          local ulEnd = ulStart+ulLength
+          print(string.format('Reading [0x%08x,0x%08x[ .', ulStart, ulEnd))
 
-          local strBin, strMsg = tFlasher:readArea(tPlugin, aAttr, ulStart, ulLength)
+          local strBin, strMsg = tFlasher:readArea(tPlugin, aAttr, ulStart, ulEnd)
           if strBin==nil then
             print(self.colors.bright .. self.colors.white .. 'Failed to read: ' .. tostring(strMsg))
 
@@ -991,9 +992,10 @@ function Shell:__run_erase(tCmd)
       if tResult==true then
         local ulStart, ulLength = self:__getRange(tCmd)
         if ulStart~=nil then
+          local ulEnd = ulStart + ulLength
           -- Erase the area.
           local strMsg
-          tResult, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulStart, ulLength)
+          tResult, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulStart, ulEnd)
           if tResult==true then
             print(self.colors.bright .. self.colors.white .. 'OK')
           else
@@ -1031,9 +1033,10 @@ function Shell:__run_iserased(tCmd)
       if tResult==true then
         local ulStart, ulLength = self:__getRange(tCmd)
         if ulStart~=nil then
+          local ulEnd = ulStart + ulLength
           -- Erase the area.
           local strMsg
-          tResult, strMsg = tFlasher:isErased(tPlugin, aAttr, ulStart, ulLength)
+          tResult, strMsg = tFlasher:isErased(tPlugin, aAttr, ulStart, ulEnd)
           if tResult==true then
             print(self.colors.bright .. self.colors.white .. 'Clean. The area is erased.')
           else
@@ -1081,9 +1084,10 @@ function Shell:__run_hash(tCmd)
       if tResult==true then
         local ulStart, ulLength = self:__getRange(tCmd)
         if ulStart~=nil then
+          local ulEnd = ulStart + ulLength
           -- Erase the area.
           local strMsg
-          tResult, strMsg = tFlasher:hashArea(tPlugin, aAttr, ulStart, ulLength)
+          tResult, strMsg = tFlasher:hashArea(tPlugin, aAttr, ulStart, ulEnd)
           if tResult~=nil then
             print(self.colors.bright .. self.colors.white .. 'OK. SHA1SUM = ' .. self:str2hex(tResult))
           else
