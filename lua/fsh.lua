@@ -125,7 +125,7 @@ function Shell:_init(tLog)
     },
     {
       cmd = 'verify',
-      pattern = lpeg.Cg(lpeg.P('verify'), 'cmd') * Space * lpeg.Cg(DeviceName, 'device') * Space * Range * Space * lpeg.Cg(Filename, 'filename') * -1,
+      pattern = lpeg.Cg(lpeg.P('verify'), 'cmd') * Space * lpeg.Cg(DeviceName, 'device') * Space * lpeg.Cg(Integer, 'startaddress') * Space * lpeg.Cg(Filename, 'filename') * -1,
       run = self.__run_verify
     },
     {
@@ -399,12 +399,7 @@ function Shell:_init(tLog)
     },
     {
       pattern = lpeg.P('verify') * Space * DeviceName * Space * -1,
-      hint = 'all  or  [startaddress] [endaddress]  or  [startaddress] + [length]',
-      words = { 'all' }
-    },
-    {
-      pattern = lpeg.P('verify') * Space * DeviceName * Space * lpeg.Cg(lpeg.P('al') + lpeg.P('a')) * -1,
-      words = { 'all' }
+      hint = '[startaddress]'
     },
     {
       pattern = lpeg.P('verify') * Space * DeviceName * Space * UnfinishedInteger * -1,
@@ -412,27 +407,11 @@ function Shell:_init(tLog)
     },
     {
       pattern = lpeg.P('verify') * Space * DeviceName * Space * Integer * Space * -1,
-      hint = '[endaddress]  or  + [length]'
-    },
-    {
-      pattern = lpeg.P('verify') * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
-      hint = '    this is the endaddress'
-    },
-    {
-      pattern = lpeg.P('verify') * Space * DeviceName * Space * Integer * Space * lpeg.P('+') * OptionalSpace * -1,
-      hint = '[length]'
-    },
-    {
-      pattern = lpeg.P('verify') * Space * DeviceName * Space * Integer * Space * lpeg.P('+') * Space * UnfinishedInteger * -1,
-      hint = '    this is the length'
-    },
-    {
-      pattern = lpeg.P('verify') * Space * DeviceName * Space * (lpeg.P('all') + (Integer * Space * (Integer + (lpeg.P('+') * OptionalSpace * Integer)))) * Space * -1,
       hint = '[filename]',
       words = function(strMatch) return self:__getFilenameWords(strMatch) end
     },
     {
-      pattern = lpeg.P('verify') * Space * DeviceName * Space * (lpeg.P('all') + (Integer * Space * (Integer + (lpeg.P('+') * OptionalSpace * Integer)))) * Space * lpeg.Cg(Filename) * -1,
+      pattern = lpeg.P('verify') * Space * DeviceName * Space * Integer * Space * lpeg.Cg(Filename) * -1,
       words = function(strMatch) return self:__getFilenameWords(strMatch) end
     },
 
