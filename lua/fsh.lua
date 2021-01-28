@@ -992,10 +992,9 @@ function Shell:__run_erase(tCmd)
       if tResult==true then
         local ulStart, ulLength = self:__getRange(tCmd)
         if ulStart~=nil then
-          local ulEnd = ulStart + ulLength
           -- Erase the area.
           local strMsg
-          tResult, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulStart, ulEnd)
+          tResult, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulStart, ulLength)
           if tResult==true then
             print(self.colors.bright .. self.colors.white .. 'OK')
           else
@@ -1084,10 +1083,9 @@ function Shell:__run_hash(tCmd)
       if tResult==true then
         local ulStart, ulLength = self:__getRange(tCmd)
         if ulStart~=nil then
-          local ulEnd = ulStart + ulLength
-          -- Erase the area.
+          -- Hash the area.
           local strMsg
-          tResult, strMsg = tFlasher:hashArea(tPlugin, aAttr, ulStart, ulEnd)
+          tResult, strMsg = tFlasher:hashArea(tPlugin, aAttr, ulStart, ulLength)
           if tResult~=nil then
             print(self.colors.bright .. self.colors.white .. 'OK. SHA1SUM = ' .. self:str2hex(tResult))
           else
