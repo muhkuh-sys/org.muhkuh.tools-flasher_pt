@@ -1366,7 +1366,7 @@ function Shell:run()
   local lpeg = self.lpeg
   local tGrammar = self.__lineGrammar
   local pl = self.pl
-  local strHistory = 'history.txt'
+  local strHistory = '.fsh_history.txt'
   local tLog = self.tLog
 
   local strPathNetx = self:__getNetxPath()
