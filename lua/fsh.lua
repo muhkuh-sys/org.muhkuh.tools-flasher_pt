@@ -21,10 +21,6 @@ function Shell:_init(tLog)
   self.aAttr = nil
   self.__aBoardInfo = {}
 
-  -- Set some styles.
-  self.strStyle_Hints = self.colors.magenta
-  self.strStyle_FlasherMessages = self.colors.bright .. self.colors.black
-
   self.__atDetectedDevices = {}
   self.__astrPluginNames = {}
   self.__aSanitizedBoardNames = {}
@@ -805,11 +801,9 @@ function Shell:__run_read(tCmd)
   local aAttr = self.aAttr
   local pl = self.pl
 
-  -- Prepare for flasher output.
-  io.write(self.colors.reset .. self.strStyle_FlasherMessages)
 
   if tPlugin==nil or aAttr==nil then
-    print(self.colors.bright .. self.colors.white .. 'Not connected.')
+    print('Not connected.')
 
   else
     -- Get the bus, unit and chipselect.
@@ -827,14 +821,14 @@ function Shell:__run_read(tCmd)
 
           local strBin, strMsg = tFlasher:readArea(tPlugin, aAttr, ulStart, ulEnd)
           if strBin==nil then
-            print(self.colors.bright .. self.colors.white .. 'Failed to read: ' .. tostring(strMsg))
+            print('Failed to read: ' .. tostring(strMsg))
 
           else
             tResult, strMsg = pl.utils.writefile(tCmd.filename, strBin, true)
             if tResult==true then
-              print(self.colors.bright .. self.colors.white .. 'OK')
+              print('OK')
             else
-              print(self.colors.bright .. self.colors.white .. string.format('Failed to write the data to the file "%s": %s', tCmd.filename, strMsg))
+              print(string.format('Failed to write the data to the file "%s": %s', tCmd.filename, strMsg))
             end
           end
         end
@@ -853,11 +847,9 @@ function Shell:__run_verify(tCmd)
   local aAttr = self.aAttr
   local pl = self.pl
 
-  -- Prepare for flasher output.
-  io.write(self.colors.reset .. self.strStyle_FlasherMessages)
 
   if tPlugin==nil or aAttr==nil then
-    print(self.colors.bright .. self.colors.white .. 'Not connected.')
+    print('Not connected.')
 
   else
     -- Get the bus, unit and chipselect.
@@ -872,23 +864,23 @@ function Shell:__run_verify(tCmd)
 
         local strFilename = tCmd.filename
         if pl.path.exists(strFilename)==nil then
-          print(self.colors.bright .. self.colors.white .. string.format('The file "%s" does not exist.', strFilename))
+          print(string.format('The file "%s" does not exist.', strFilename))
         elseif pl.path.isfile(strFilename)~=true then
-          print(self.colors.bright .. self.colors.white .. string.format('The path "%s" is not a file.', strFilename))
+          print(string.format('The path "%s" is not a file.', strFilename))
         else
           print(string.format('Verify "%s" at offset 0x%08x...', strFilename, ulStart))
 
           local strBin, strMsg = pl.utils.readfile(strFilename, true)
           if strBin==nil then
-            print(self.colors.bright .. self.colors.white .. string.format('Failed to read "%s" : ', strFilename, tostring(strMsg)))
+            print(string.format('Failed to read "%s" : ', strFilename, tostring(strMsg)))
 
           else
             -- Erase the area.
             tResult, strMsg = tFlasher:verifyArea(tPlugin, aAttr, ulStart, strBin)
             if tResult==true then
-              print(self.colors.bright .. self.colors.white .. string.format('Verify OK. The data in the flash at offset 0x%08x equals the file "%s".', ulStart, strFilename))
+              print(string.format('Verify OK. The data in the flash at offset 0x%08x equals the file "%s".', ulStart, strFilename))
             else
-              print(self.colors.bright .. self.colors.white .. string.format('Verify error. The flash contents at offset 0x%08x differ from the file "%s".', ulStart, strFilename))
+              print(string.format('Verify error. The flash contents at offset 0x%08x differ from the file "%s".', ulStart, strFilename))
             end
           end
         end
@@ -907,11 +899,9 @@ function Shell:__run_write(tCmd)
   local aAttr = self.aAttr
   local pl = self.pl
 
-  -- Prepare for flasher output.
-  io.write(self.colors.reset .. self.strStyle_FlasherMessages)
 
   if tPlugin==nil or aAttr==nil then
-    print(self.colors.bright .. self.colors.white .. 'Not connected.')
+    print('Not connected.')
 
   else
     -- Get the bus, unit and chipselect.
@@ -926,15 +916,15 @@ function Shell:__run_write(tCmd)
 
         local strFilename = tCmd.filename
         if pl.path.exists(strFilename)==nil then
-          print(self.colors.bright .. self.colors.white .. string.format('The file "%s" does not exist.', strFilename))
+          print(string.format('The file "%s" does not exist.', strFilename))
         elseif pl.path.isfile(strFilename)~=true then
-          print(self.colors.bright .. self.colors.white .. string.format('The path "%s" is not a file.', strFilename))
+          print(string.format('The path "%s" is not a file.', strFilename))
         else
           print(string.format('Writing "%s" to offset 0x%08x...', strFilename, ulStart))
 
           local strBin, strMsg = pl.utils.readfile(strFilename, true)
           if strBin==nil then
-            print(self.colors.bright .. self.colors.white .. string.format('Failed to read "%s" : ', strFilename, tostring(strMsg)))
+            print(string.format('Failed to read "%s" : ', strFilename, tostring(strMsg)))
 
           else
             -- Get the size of the data in bytes.
@@ -955,9 +945,9 @@ function Shell:__run_write(tCmd)
             end
 
             if tResult==true then
-              print(self.colors.bright .. self.colors.white .. 'OK')
+              print('OK')
             else
-              print(self.colors.bright .. self.colors.white .. string.format('Failed to write the data: %s', strMsg))
+              print(string.format('Failed to write the data: %s', strMsg))
             end
           end
         end
@@ -975,11 +965,9 @@ function Shell:__run_erase(tCmd)
   local tPlugin = self.tPlugin
   local aAttr = self.aAttr
 
-  -- Prepare for flasher output.
-  io.write(self.colors.reset .. self.strStyle_FlasherMessages)
 
   if tPlugin==nil or aAttr==nil then
-    print(self.colors.bright .. self.colors.white .. 'Not connected.')
+    print('Not connected.')
 
   else
     -- Get the bus, unit and chipselect.
@@ -996,9 +984,9 @@ function Shell:__run_erase(tCmd)
           local strMsg
           tResult, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulStart, ulLength)
           if tResult==true then
-            print(self.colors.bright .. self.colors.white .. 'OK')
+            print('OK')
           else
-            print(self.colors.bright .. self.colors.white .. string.format('Failed to erase the data: %s', strMsg))
+            print(string.format('Failed to erase the data: %s', strMsg))
           end
         end
       end
@@ -1015,11 +1003,9 @@ function Shell:__run_iserased(tCmd)
   local tPlugin = self.tPlugin
   local aAttr = self.aAttr
 
-  -- Prepare for flasher output.
-  io.write(self.colors.reset .. self.strStyle_FlasherMessages)
 
   if tPlugin==nil or aAttr==nil then
-    print(self.colors.bright .. self.colors.white .. 'Not connected.')
+    print('Not connected.')
 
   else
     -- Get the bus, unit and chipselect.
@@ -1037,9 +1023,9 @@ function Shell:__run_iserased(tCmd)
           local strMsg
           tResult, strMsg = tFlasher:isErased(tPlugin, aAttr, ulStart, ulEnd)
           if tResult==true then
-            print(self.colors.bright .. self.colors.white .. 'Clean. The area is erased.')
+            print('Clean. The area is erased.')
           else
-            print(self.colors.bright .. self.colors.white .. 'Dirty. The area is not erased.')
+            print('Dirty. The area is not erased.')
           end
         end
       end
@@ -1066,11 +1052,9 @@ function Shell:__run_hash(tCmd)
   local tPlugin = self.tPlugin
   local aAttr = self.aAttr
 
-  -- Prepare for flasher output.
-  io.write(self.colors.reset .. self.strStyle_FlasherMessages)
 
   if tPlugin==nil or aAttr==nil then
-    print(self.colors.bright .. self.colors.white .. 'Not connected.')
+    print('Not connected.')
 
   else
     -- Get the bus, unit and chipselect.
@@ -1087,9 +1071,9 @@ function Shell:__run_hash(tCmd)
           local strMsg
           tResult, strMsg = tFlasher:hashArea(tPlugin, aAttr, ulStart, ulLength)
           if tResult~=nil then
-            print(self.colors.bright .. self.colors.white .. 'OK. SHA1SUM = ' .. self:str2hex(tResult))
+            print('OK. SHA1SUM = ' .. self:str2hex(tResult))
           else
-            print(self.colors.bright .. self.colors.white .. string.format('Failed to hash the data: %s', strMsg))
+            print(string.format('Failed to hash the data: %s', strMsg))
           end
         end
       end
@@ -1107,8 +1091,6 @@ function Shell:__run_scan()
   self.__atDetectedDevices = {}
   self.__astrPluginNames = {}
 
-  -- Prepare for output from the scan process.
-  io.write(self.colors.reset .. self.strStyle_FlasherMessages)
 
   print('Scanning for devices...')
   local aDetectedInterfaces = {}
@@ -1146,8 +1128,6 @@ end
 function Shell:__run_connect(tCmd)
   local tFlasher = self.tFlasher
 
-  -- Prepare for output from the scan process.
-  io.write(self.colors.reset .. self.strStyle_FlasherMessages)
 
   local atDetectedDevices = self.__atDetectedDevices
   if #atDetectedDevices==0 then
@@ -1210,9 +1190,6 @@ end
 
 
 function Shell:__run_disconnect()
-  -- Prepare for output from the scan process.
-  io.write(self.colors.reset .. self.strStyle_FlasherMessages)
-
   local tPlugin = self.tPlugin
   if tPlugin==nil then
     print 'Not connected, no need to disconnect...'
@@ -1373,9 +1350,6 @@ function Shell:__hints(strLine)
             strHint = self:__getMatchingHints(astrWords, tMatch)
           end
         end
-        if strHint~=nil then
-          strHint = self.strStyle_Hints .. strHint
-        end
         break
       end
     end
@@ -1405,7 +1379,7 @@ function Shell:run()
   linenoise.historyload(strHistory) -- load existing history
 --  linenoise.enableutf8()
 
-  print(colors.bright .. colors.blue .. 'Welcome to FlaSH, the flasher shell v0.0.1 .')
+  print 'Welcome to FlaSH, the flasher shell v0.0.1 .'
   print 'Written by Christoph Thelen in 2018.'
   print 'The flasher shell is distributed under the GPL v3 license.'
   print 'Type "help" to get started. Use tab to complete commands.'
@@ -1429,7 +1403,7 @@ function Shell:run()
       end
     )
     linenoise.sethints(function(strLine)
-        return self:__hints(strLine)
+        return self:__hints(strLine), { color=35, bold=false }
       end
     )
 
