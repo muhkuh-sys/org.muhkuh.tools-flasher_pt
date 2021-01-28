@@ -1422,8 +1422,6 @@ function Shell:run()
       if tCmd==nil then
         print('Failed to parse the line.')
       else
-        pl.pretty.dump(tCmd)
-
         -- There should be a command at the "cmd" key.
         -- If there is no command, this is a comment.
         local strCmd = tCmd.cmd
