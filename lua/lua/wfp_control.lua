@@ -566,47 +566,43 @@ function WfpControl:__runInSandbox(atValues, strExpression)
   local tResult
   local tLog = self.tLog
 
-  if self.LUA_VER_NUM==501 then
-    -- Create a sandbox.
-    local atEnv = {
-      ['error']=error,
-      ['ipairs']=ipairs,
-      ['next']=next,
-      ['pairs']=pairs,
-      ['print']=print,
-      ['select']=select,
-      ['tonumber']=tonumber,
-      ['tostring']=tostring,
-      ['type']=type,
-      ['math']=math,
-      ['string']=string,
-      ['table']=table
-    }
-    for strKey, tValue in pairs(atValues) do
-      local strValue
-      local strType = type(tValue)
-      if strType~='number' and strType~='boolean' and strType~='string' then
-        error(string.format('Invalid value type for key %s: %s', strKey, strType))
-      end
-      atEnv[strKey] = tValue
+  -- Create a sandbox.
+  local atEnv = {
+    ['error']=error,
+    ['ipairs']=ipairs,
+    ['next']=next,
+    ['pairs']=pairs,
+    ['print']=print,
+    ['select']=select,
+    ['tonumber']=tonumber,
+    ['tostring']=tostring,
+    ['type']=type,
+    ['math']=math,
+    ['string']=string,
+    ['table']=table
+  }
+  for strKey, tValue in pairs(atValues) do
+    local strValue
+    local strType = type(tValue)
+    if strType~='number' and strType~='boolean' and strType~='string' then
+      error(string.format('Invalid value type for key %s: %s', strKey, strType))
     end
-    local tFn, strError = loadstring(string.format('return %s', strExpression))
-    if tFn==nil then
-      error(string.format('Invalid expression "%s": %s', strExpression, tostring(strError)))
-    end
-    setfenv(tFn, atEnv)
-    local fRun, tFnResult = pcall(tFn)
-    if fRun==false then
-      error(string.format('Failed to run the expression "%s": %s', strExpression, tostring(tResult)))
-    end
-    local strType = type(tFnResult)
-    if strType~='boolean' then
-      error(string.format('Invalid condition return type for expression "%s": %s', strExpression, strType))
-    end
-    tResult = tFnResult
-  else
-    error('Add sandbox code for ' .. _VERSION)
+    atEnv[strKey] = tValue
   end
+  local strCode = string.format('return %s', strExpression)
+  local tFn, strError = pl.compat.load(strCode, 'condition code', 't', atEnv)
+  if tFn==nil then
+    error(string.format('Invalid expression "%s": %s', strExpression, tostring(strError)))
+  end
+  local fRun, tFnResult = pcall(tFn)
+  if fRun==false then
+    error(string.format('Failed to run the expression "%s": %s', strExpression, tostring(tResult)))
+  end
+  local strType = type(tFnResult)
+  if strType~='boolean' then
+    error(string.format('Invalid condition return type for expression "%s": %s', strExpression, strType))
+  end
+  tResult = tFnResult
 
   return tResult
 end
