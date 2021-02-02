@@ -524,7 +524,7 @@ static int write_enable(const FLASHER_SPI_FLASH_T *ptFlash)
 
 /*! wait_for_ready
 *   wait for the flash to finish a write operation
-*               
+*
 *   \param   ptFls             Pointer to FLASH Control Block
 *   \return  RX_OK             FLASH is idle and ready for next operation    */
 static int wait_for_ready(const FLASHER_SPI_FLASH_T *ptFlash)
@@ -534,7 +534,7 @@ static int wait_for_ready(const FLASHER_SPI_FLASH_T *ptFlash)
 
 
 	DEBUGMSG(ZONE_FUNCTION, ("+wait_for_ready(): ptFlash=0x%08x\n", ptFlash));
-	
+
 	do
 	{
 		/*  read status and extract busy bit */
@@ -553,7 +553,7 @@ static int wait_for_ready(const FLASHER_SPI_FLASH_T *ptFlash)
 		
 		/* wait until the remaining status bits match the expected value */
 	} while( ucStatus!=ptFlash->tAttributes.ucStatusReadyValue );
-	
+
 	DEBUGMSG(ZONE_FUNCTION, ("-wait_for_ready(): iResult=%d.\n", iResult));
 	return iResult;
 }

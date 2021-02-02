@@ -619,21 +619,21 @@ static NETX_CONSOLEAPP_RESULT_T parflash_compare(
 	const FLASH_DEVICE_T *ptFlashDescription, 
 	unsigned long ulStartAdr, unsigned long ulEndAdr, 
 	const unsigned char* pucDataStartAdr);
-	
+
 NETX_CONSOLEAPP_RESULT_T parflash_flash(const CMD_PARAMETER_FLASH_T *ptParameter)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	
+
 	const unsigned char *pucDataStartAdr;
 	unsigned long ulFlashStartAdr;
 	unsigned long ulDataByteSize;
-	
+
 	unsigned long ulProgressBarPosition;
-	
+
 	const FLASH_DEVICE_T *ptFlashDescription;
 	const SECTOR_INFO_T *ptSector;
 	unsigned long ulSectorOffset;
-	
+
 	unsigned long ulChunkSize;
 	FLASH_ERRORS_E tFlashError;
 
@@ -686,7 +686,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_flash(const CMD_PARAMETER_FLASH_T *ptParameter
 		}
 		progress_bar_finalize();
 	}
-		
+
 	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 	{
 		ulFlashStartAdr = ptParameter->ulStartAdr;
@@ -777,20 +777,20 @@ NETX_CONSOLEAPP_RESULT_T parflash_read(const CMD_PARAMETER_READ_T *ptParameter)
 	CADR_T tSrc;
 	ADR_T tDst;
 	CADR_T tSrcEnd;
-	
+
 	unsigned long ulProgressBarPosition;
 
 	ptFlashDescription = &(ptParameter->ptDeviceDescription->uInfo.tParFlash);
 	ulStartAdr = ptParameter->ulStartAdr;
 	ulEndAdr = ptParameter->ulEndAdr;
 	pucDataStartAdr = ptParameter->pucData;
-	
+
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 	uprintf("#Reading from flash...\n");
 
 	progress_bar_init(ulEndAdr-ulStartAdr);
 	ulProgressBarPosition = 0;
-	
+
 	/* Get the source start address. */
 	tSrc.puc  = ptFlashDescription->pucFlashBase;
 	tSrc.puc += ulStartAdr;
@@ -817,7 +817,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_read(const CMD_PARAMETER_READ_T *ptParameter)
 	progress_bar_finalize();
 	
 	uprintf(". done\n");
-	
+
 	return tResult;
 }
 
@@ -825,7 +825,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_read(const CMD_PARAMETER_READ_T *ptParameter)
 NETX_CONSOLEAPP_RESULT_T parflash_sha1(const CMD_PARAMETER_CHECKSUM_T *ptParameter, SHA_CTX *ptSha1Context)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	
+
 	const FLASH_DEVICE_T *ptFlashDescription;
 	unsigned long ulStartAdr;
 	unsigned long ulEndAdr;
@@ -838,7 +838,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_sha1(const CMD_PARAMETER_CHECKSUM_T *ptParamet
 	ulEndAdr = ptParameter->ulEndAdr;
 
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
-	
+
 	uprintf("# Calculating checksum...\n");
 	ulOffset = 0;
 	progress_bar_init(ulEndAdr-ulStartAdr);
@@ -849,10 +849,10 @@ NETX_CONSOLEAPP_RESULT_T parflash_sha1(const CMD_PARAMETER_CHECKSUM_T *ptParamet
 		{
 			ulBlockSize = 0x10000;
 		}
-		
+
 		pvFlashAddr = (const void*)(ptFlashDescription->pucFlashBase + ulStartAdr + ulOffset);
 		SHA1_Update(ptSha1Context, pvFlashAddr, ulBlockSize);
-		
+
 		ulOffset += ulBlockSize;
 		
 		progress_bar_set_position(ulOffset);
@@ -860,7 +860,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_sha1(const CMD_PARAMETER_CHECKSUM_T *ptParamet
 	}
 	
 	uprintf(". hash done\n");
-	
+
 	return tResult;
 }
 #endif
@@ -875,7 +875,7 @@ static NETX_CONSOLEAPP_RESULT_T parflash_compare(const FLASH_DEVICE_T *ptFlashDe
 	CADR_T tSrc;
 	CADR_T tDst;
 	CADR_T tSrcEnd;
-	
+
 	unsigned long ulProgressBarPosition;
 
 	uprintf("# Verifying...\n");
@@ -893,7 +893,7 @@ static NETX_CONSOLEAPP_RESULT_T parflash_compare(const FLASH_DEVICE_T *ptFlashDe
 
 	progress_bar_init(ulEndAdr-ulStartAdr);
 	ulProgressBarPosition = 0;
-	
+
 	/* Loop over the complete area. */
 	while( tSrc.puc<tSrcEnd.puc )
 	{
@@ -926,7 +926,7 @@ NETX_CONSOLEAPP_RESULT_T parflash_verify(const CMD_PARAMETER_VERIFY_T *ptParamet
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
 	NETX_CONSOLEAPP_RESULT_T tEqual;
-	
+
 	const FLASH_DEVICE_T *ptFlashDescription;
 	unsigned long ulStartAdr;
 	unsigned long ulEndAdr;
@@ -936,11 +936,10 @@ NETX_CONSOLEAPP_RESULT_T parflash_verify(const CMD_PARAMETER_VERIFY_T *ptParamet
 	ulStartAdr = ptParameter->ulStartAdr;
 	ulEndAdr = ptParameter->ulEndAdr;
 	pucDataStartAdr = ptParameter->pucData;
-	
+
 	tResult = NETX_CONSOLEAPP_RESULT_OK;
 	tEqual = parflash_compare(ptFlashDescription, ulStartAdr, ulEndAdr, pucDataStartAdr);
 	ptConsoleParams->pvReturnMessage = (void*)tEqual;
-	
+
 	return tResult;
 }
-

@@ -538,7 +538,7 @@ NETX_CONSOLEAPP_RESULT_T spi_flash(const FLASHER_SPI_FLASH_T *ptFlashDescription
 /*-----------------------------------*/
 
 /**
- * @brief Erase a range of the memory. 
+ * @brief Erase a range of the memory.
  *
  * Erases the memory from offset ulStartAdr to ulEndAdr-1.
  * ulStartAdr to ulEndAdr-1 must be a complete erase block, or range of erase blocks.
