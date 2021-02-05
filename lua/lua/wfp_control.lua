@@ -565,6 +565,7 @@ end
 function WfpControl:__runInSandbox(atValues, strExpression)
   local tResult
   local tLog = self.tLog
+  local pl = self.pl
 
   -- Create a sandbox.
   local atEnv = {
