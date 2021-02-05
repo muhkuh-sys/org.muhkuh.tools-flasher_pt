@@ -49,7 +49,7 @@ function Shell:_init(tLog)
   local UnfinishedInteger = UnfinishedHexInteger + DecimalInteger
 
   -- A plugin name consists of alphanumeric characters and the underscore.
-  local PluginName = (lpeg.R('az') + lpeg.R('AZ') + lpeg.R('09') + lpeg.P('_'))^1
+  local PluginName = (lpeg.R('az') + lpeg.R('AZ') + lpeg.R('09') + lpeg.P('_') + lpeg.P('-') + lpeg.P('@') + lpeg.P(',') + lpeg.P(':'))^1
 
   -- A device name consists of alphanumeric characters and the underscore.
   local DeviceName = (lpeg.R('az') + lpeg.R('AZ') + lpeg.R('09') + lpeg.P('_'))^1
