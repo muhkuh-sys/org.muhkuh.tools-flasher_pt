@@ -829,11 +829,11 @@ function Shell:__run_read(tCmd)
             print('Failed to read: ' .. tostring(strMsg))
 
           else
-            tResult, strMsg = pl.utils.writefile(tCmd.filename, strBin, true)
+            tResult, strMsg = pl.utils.writefile(pl.path.expanduser(tCmd.filename), strBin, true)
             if tResult==true then
               print('OK')
             else
-              print(string.format('Failed to write the data to the file "%s": %s', tCmd.filename, strMsg))
+              print(string.format('Failed to write the data to the file "%s": %s', pl.path.expanduser(tCmd.filename), strMsg))
             end
           end
         end
@@ -867,7 +867,7 @@ function Shell:__run_verify(tCmd)
       if tResult==true then
         local ulStart = tCmd.startaddress
 
-        local strFilename = tCmd.filename
+        local strFilename = pl.path.expanduser(tCmd.filename)
         if pl.path.exists(strFilename)==nil then
           print(string.format('The file "%s" does not exist.', strFilename))
         elseif pl.path.isfile(strFilename)~=true then
@@ -919,7 +919,7 @@ function Shell:__run_write(tCmd)
       if tResult==true then
         local ulStart = tCmd.startaddress
 
-        local strFilename = tCmd.filename
+        local strFilename = pl.path.expanduser(tCmd.filename)
         if pl.path.exists(strFilename)==nil then
           print(string.format('The file "%s" does not exist.', strFilename))
         elseif pl.path.isfile(strFilename)~=true then
