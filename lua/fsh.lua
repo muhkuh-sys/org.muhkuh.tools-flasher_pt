@@ -43,8 +43,8 @@ function Shell:_init(tLog)
   -- The "unfinished" variant accepts also unfinished hexadecimal numbers
   -- like "0x".
   local DecimalInteger = lpeg.R('09')^1
-  local HexInteger = lpeg.P("0x") * (lpeg.R('09') + lpeg.R('af'))^1
-  local UnfinishedHexInteger = lpeg.P("0x") * (lpeg.R('09') + lpeg.R('af'))^0
+  local HexInteger = lpeg.P("0x") * (lpeg.R('09') + lpeg.R('af') + lpeg.R('AF'))^1
+  local UnfinishedHexInteger = lpeg.P("0x") * (lpeg.R('09') + lpeg.R('af') + lpeg.R('AF'))^0
   local Integer = HexInteger + DecimalInteger
   local UnfinishedInteger = UnfinishedHexInteger + DecimalInteger
 
