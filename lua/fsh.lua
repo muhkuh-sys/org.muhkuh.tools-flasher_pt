@@ -15,7 +15,8 @@ function Shell:_init(tLog)
   self.colors = self.term.colors
   self.tFlasher = require 'flasher'(tLog)
   self.tLog = tLog
-
+  self.tCmd_input = self.pl.List()
+  
   -- No connection yet.
   self.tPlugin = nil
   self.aAttr = nil
@@ -148,7 +149,12 @@ function Shell:_init(tLog)
       cmd = 'quit',
       pattern = OptionalSpace * Cg(P('quit'), 'cmd') * OptionalSpace * -1,
       run = self.__run_quit
-    }
+    },
+    {
+      cmd = 'input',
+      pattern = OptionalSpace * Cg(P('input'), 'cmd') * Space * Cg(Filename, 'filename') * OptionalSpace * -1,
+      run = self.__run_input
+    },
   }
   self.__atCommands = atCommands
 
@@ -163,6 +169,7 @@ function Shell:_init(tLog)
     end
   end
 
+  self.__AllCommands = AllCommands
   self.__lineGrammar = Ct((AllCommands * (Comment^-1)) + Comment)
 
   -- Create a table with all commands as a string.
@@ -456,6 +463,17 @@ function Shell:_init(tLog)
       hint = '    this is the length'
     },
 
+    -- input command.
+    {
+      pattern = OptionalSpace * P('input') * Space * -1,
+      hint = '[filename]',
+      words = function(strMatch) return self:__getFilenameWords(strMatch) end
+    },
+    {
+      pattern = OptionalSpace * P('input') * Space * Cg(Filename) * -1,
+      words = function(strMatch) return self:__getFilenameWords(strMatch) end
+    },
+
     -- Help command.
     {
       pattern = OptionalSpace * P('help') * Space * -1,
@@ -612,6 +630,21 @@ The help command has several topics:
 Getting started.
 
 TODO...
+    ]]
+  },
+
+  {
+    topic = 'input',
+    description = 'The input command.',
+    text = [[
+Reads a specified input file and verify whether each line is a valid command.
+The input file should be for example in the following format:
+
+connect romloader_uart_ttyUSB0 
+erase IF01 all 
+iserased IF01 all 
+write IF01 0x00000000 TestData/testDataA.txt 
+verify IF01 0x00000000 testDataA.txt 
     ]]
   },
 
@@ -1044,9 +1077,9 @@ end
 -- Return the input String as Hex value
 function Shell:__str2hex(strData)
   -- one of the magic characters: '.' represents any single character
-    return (str:gsub('.', function (c)
+  return (str:gsub('.', function (c)
         return string.format('%02X', string.byte(c))
-    end))
+      end))
 end
 
 
@@ -1213,112 +1246,108 @@ end
 ------------------------------------------------------------------------------
 
 
-function Shell:__run_quit()
-  -- Disconnect any existing plugin.
-  self:__run_disconnect()
+-- reads the specified input file and verify whether each line is a valid command
+function Shell:__run_input(tCmd)
+  local pl = self.pl
+  local tLog = self.tLog
+  local lpeg = self.lpeg
+  local AllCommands = self.__AllCommands
 
-  -- Quit the application.
-  return false
-end
+  if type (tCmd.filename) ~= 'string' then
+    tLog.error('The file name must be a string')
+  else
+    local strFilename = pl.path.expanduser(tCmd.filename)
+
+    if pl.path.exists(strFilename) == false then
+      tLog.error('The specified path does not exist')
+    else
+      if pl.path.isfile(strFilename) == false  then
+        tLog.error('The specified path does not contain a file name')
+      else
+        self.tCmd_input:extend(pl.utils.readlines(strFilename))
+
+        -- filters all lines of the input file with the given command patters
+        self.tCmd_input = self.tCmd_input:filter (function(x) 
+            return (lpeg.match(AllCommands, x) ~= nil) end
+            ,AllCommands,lpeg.match)
+          if self.tCmd_input:len() == 0 then
+            tLog.error('Invalid File Format')
+          end
+        end
+      end
+    end
+
+    return true
+  end
 
 
 ------------------------------------------------------------------------------
 
 
-function Shell:__getCompletions(tCompletions, strLine, astrWords, strMatch)
-  local sizMatch = string.len(strMatch)
-  if sizMatch==0 then
-    -- Add all available words.
-    for _, strWord in ipairs(astrWords) do
-      tCompletions:add(strLine .. strWord)
+  function Shell:__run_quit()
+    -- Disconnect any existing plugin.
+    self:__run_disconnect()
+
+    -- Quit the application.
+    return false
+  end
+
+
+------------------------------------------------------------------------------
+
+
+  function Shell:__getCompletions(tCompletions, strLine, astrWords, strMatch)
+    local sizMatch = string.len(strMatch)
+    if sizMatch==0 then
+      -- Add all available words.
+      for _, strWord in ipairs(astrWords) do
+        tCompletions:add(strLine .. strWord)
+      end
+    else
+      -- Get the prefix of the line without the match.
+      local strPrefix = string.sub(strLine, 1, -1-string.len(strMatch))
+      -- Add the devices matching the input.
+      for _, strWord in pairs(astrWords) do
+        local sizWord = string.len(strWord)
+        if sizWord>=sizMatch and string.sub(strWord, 1, sizMatch)==strMatch then
+          tCompletions:add(strPrefix .. strWord)
+        end
+      end
     end
-  else
-    -- Get the prefix of the line without the match.
-    local strPrefix = string.sub(strLine, 1, -1-string.len(strMatch))
-    -- Add the devices matching the input.
+  end
+
+
+
+  function Shell:__getMatchingHints(astrWords, strMatch)
+    local sizMatch = string.len(strMatch)
+
+    local atHints = {}
     for _, strWord in pairs(astrWords) do
       local sizWord = string.len(strWord)
+      -- Does the word start with the match?
       if sizWord>=sizMatch and string.sub(strWord, 1, sizMatch)==strMatch then
-        tCompletions:add(strPrefix .. strWord)
-      end
-    end
-  end
-end
-
-
-
-function Shell:__getMatchingHints(astrWords, strMatch)
-  local sizMatch = string.len(strMatch)
-
-  local atHints = {}
-  for _, strWord in pairs(astrWords) do
-    local sizWord = string.len(strWord)
-    -- Does the word start with the match?
-    if sizWord>=sizMatch and string.sub(strWord, 1, sizMatch)==strMatch then
-      -- Do not add the complete argument for the first match. It completes the typed letters.
-      if #atHints==0 then
-        table.insert(atHints, string.sub(strWord, sizMatch+1))
-      else
-        table.insert(atHints, strWord)
-      end
-    end
-  end
-
-  local strHint
-  if #atHints>0 then
-    strHint = table.concat(atHints, ' ')
-  end
-
-  return strHint
-end
-
-
-
-function Shell:__completer(tCompletions, strLine)
-  local lpeg = self.lpeg
-
-  -- Loop over all available patterns.
-  for _, tPattern in ipairs(self.__atInteractivePatterns) do
-    -- Does the pattern match?
-    local tMatch = lpeg.match(tPattern.pattern, strLine)
-    -- The match is either the index if there are no captures or a string if
-    -- there is one capture. Pattern can also return a table of captures, but
-    -- this is not supported here.
-    local strMatchType = type(tMatch)
-    -- Replace matches without captures by the empty string.
-    if strMatchType=='number' then
-      tMatch = ''
-      strMatchType = type(tMatch)
-    end
-    if strMatchType=='string' then
-      -- Yes, the pattern matches.
-      if tPattern.words~=nil then
-        -- Is this a function or a table?
-        local astrWords
-        local strType = type(tPattern.words)
-        if strType=='table' then
-          astrWords = tPattern.words
-        elseif strType=='function' then
-          astrWords = tPattern.words(tMatch)
-        end
-        if astrWords~=nil then
-          self:__getCompletions(tCompletions, strLine, astrWords, tMatch)
+        -- Do not add the complete argument for the first match. It completes the typed letters.
+        if #atHints==0 then
+          table.insert(atHints, string.sub(strWord, sizMatch+1))
+        else
+          table.insert(atHints, strWord)
         end
       end
-      break
     end
+
+    local strHint
+    if #atHints>0 then
+      strHint = table.concat(atHints, ' ')
+    end
+
+    return strHint
   end
-end
 
 
 
-function Shell:__hints(strLine)
-  local strHint
-  local sizLine = string.len(strLine)
-  local lpeg = self.lpeg
+  function Shell:__completer(tCompletions, strLine)
+    local lpeg = self.lpeg
 
-  -- Do not give a hint for the empty line. This does not work for the initial prompt.
-  if sizLine>0 then
     -- Loop over all available patterns.
     for _, tPattern in ipairs(self.__atInteractivePatterns) do
       -- Does the pattern match?
@@ -1334,14 +1363,7 @@ function Shell:__hints(strLine)
       end
       if strMatchType=='string' then
         -- Yes, the pattern matches.
-        if tPattern.hint~=nil then
-          local strType = type(tPattern.hint)
-          if strType=='string' then
-            strHint = tPattern.hint
-          elseif strType=='function' then
-            strHint = tPattern.hint(tMatch)
-          end
-        elseif tPattern.words~=nil then
+        if tPattern.words~=nil then
           -- Is this a function or a table?
           local astrWords
           local strType = type(tPattern.words)
@@ -1351,7 +1373,7 @@ function Shell:__hints(strLine)
             astrWords = tPattern.words(tMatch)
           end
           if astrWords~=nil then
-            strHint = self:__getMatchingHints(astrWords, tMatch)
+            self:__getCompletions(tCompletions, strLine, astrWords, tMatch)
           end
         end
         break
@@ -1359,38 +1381,87 @@ function Shell:__hints(strLine)
     end
   end
 
-  return strHint
-end
 
 
-function Shell:run()
-  local atCommands = self.__atCommands
-  local colors = self.colors
-  local linenoise = self.linenoise
-  local lpeg = self.lpeg
-  local tGrammar = self.__lineGrammar
-  local pl = self.pl
-  local strHistory = '.fsh_history.txt'
-  local tLog = self.tLog
+  function Shell:__hints(strLine)
+    local strHint
+    local sizLine = string.len(strLine)
+    local lpeg = self.lpeg
 
-  local strPathNetx = self:__getNetxPath()
-  if strPathNetx==nil then
-    error('Failed to find the "netx" folder.')
+    -- Do not give a hint for the empty line. This does not work for the initial prompt.
+    if sizLine>0 then
+      -- Loop over all available patterns.
+      for _, tPattern in ipairs(self.__atInteractivePatterns) do
+        -- Does the pattern match?
+        local tMatch = lpeg.match(tPattern.pattern, strLine)
+        -- The match is either the index if there are no captures or a string if
+        -- there is one capture. Pattern can also return a table of captures, but
+        -- this is not supported here.
+        local strMatchType = type(tMatch)
+        -- Replace matches without captures by the empty string.
+        if strMatchType=='number' then
+          tMatch = ''
+          strMatchType = type(tMatch)
+        end
+        if strMatchType=='string' then
+          -- Yes, the pattern matches.
+          if tPattern.hint~=nil then
+            local strType = type(tPattern.hint)
+            if strType=='string' then
+              strHint = tPattern.hint
+            elseif strType=='function' then
+              strHint = tPattern.hint(tMatch)
+            end
+          elseif tPattern.words~=nil then
+            -- Is this a function or a table?
+            local astrWords
+            local strType = type(tPattern.words)
+            if strType=='table' then
+              astrWords = tPattern.words
+            elseif strType=='function' then
+              astrWords = tPattern.words(tMatch)
+            end
+            if astrWords~=nil then
+              strHint = self:__getMatchingHints(astrWords, tMatch)
+            end
+          end
+          break
+        end
+      end
+    end
+
+    return strHint
   end
-  tLog.debug('Found the netX path at "%s".', strPathNetx)
-  self.__strPathNetx = strPathNetx
 
-  linenoise.historyload(strHistory) -- load existing history
+
+  function Shell:run()
+    local atCommands = self.__atCommands
+    local colors = self.colors
+    local linenoise = self.linenoise
+    local lpeg = self.lpeg
+    local tGrammar = self.__lineGrammar
+    local pl = self.pl
+    local strHistory = '.fsh_history.txt'
+    local tLog = self.tLog
+
+    local strPathNetx = self:__getNetxPath()
+    if strPathNetx==nil then
+      error('Failed to find the "netx" folder.')
+    end
+    tLog.debug('Found the netX path at "%s".', strPathNetx)
+    self.__strPathNetx = strPathNetx
+
+    linenoise.historyload(strHistory) -- load existing history
 --  linenoise.enableutf8()
 
-  print 'Welcome to FlaSH, the flasher shell v0.0.1 .'
-  print 'Written by Christoph Thelen in 2018.'
-  print 'The flasher shell is distributed under the GPL v3 license.'
-  print 'Type "help" to get started. Use tab to complete commands.'
-  print ''
+    print 'Welcome to FlaSH, the flasher shell v0.0.1 .'
+    print 'Written by Christoph Thelen in 2018.'
+    print 'The flasher shell is distributed under the GPL v3 license.'
+    print 'Type "help" to get started. Use tab to complete commands.'
+    print ''
 
-  -- Scan for available devices.
-  self:__run_scan()
+    -- Scan for available devices.
+    self:__run_scan()
 
     -- initialization of setcompletion and sethints of linenoise 
     linenoise.setcompletion(function(tCompletions, strLine)
@@ -1402,82 +1473,90 @@ function Shell:run()
       end
     )
 
-  local fRunning = true
-  while fRunning do
-    -- Set the current prompt. It depends on the connection.
-    local tPlugin = self.tPlugin
-    local strPlugin = 'not connected'
-    if tPlugin~=nil then
-      strPlugin = tPlugin:GetName()
-    end
-    self.strPrompt = colors.bright .. colors.blue .. strPlugin .. '> ' .. colors.white
-
-    local strLine, strError = linenoise.linenoise(self.strPrompt)
-    if strLine==nil then
-      if strError~=nil then
-        tLog.error('Error: %s', tostring(strError))
+    local fRunning = true
+    while fRunning do
+      -- Set the current prompt. It depends on the connection.
+      local tPlugin = self.tPlugin
+      local strPlugin = 'not connected'
+      if tPlugin~=nil then
+        strPlugin = tPlugin:GetName()
       end
-      fRunning = false
-    elseif #strLine > 0 then
-      linenoise.historyadd(strLine)
-      linenoise.historysave(strHistory)
+      self.strPrompt = colors.bright .. colors.blue .. strPlugin .. '> ' .. colors.white
 
-      -- Parse the line.
-      local tCmd = lpeg.match(tGrammar, strLine)
-      if tCmd==nil then
-        print('Failed to parse the line.')
+      local strLine, strError 
+      
+      if self.tCmd_input:len() ~= 0 then
+        strLine = self.tCmd_input:pop(1)
+        strError = ''
       else
-        -- There should be a command at the "cmd" key.
-        -- If there is no command, this is a comment.
-        local strCmd = tCmd.cmd
-        if strCmd~=nil then
-          -- Search the command.
-          local tCmdHit
-          for _, tCmdCnt in ipairs(atCommands) do
-            if tCmdCnt.cmd==strCmd then
-              tCmdHit = tCmdCnt
-              break
+        strLine, strError = linenoise.linenoise(self.strPrompt)
+      end  
+      
+      if strLine==nil then
+        if strError~=nil then
+          tLog.error('Error: %s', tostring(strError))
+        end
+        fRunning = false
+      elseif #strLine > 0 then
+        linenoise.historyadd(strLine)
+        linenoise.historysave(strHistory)
+
+        -- Parse the line.
+        local tCmd = lpeg.match(tGrammar, strLine)
+        if tCmd==nil then
+          print('Failed to parse the line.')
+        else
+          -- There should be a command at the "cmd" key.
+          -- If there is no command, this is a comment.
+          local strCmd = tCmd.cmd
+          if strCmd~=nil then
+            -- Search the command.
+            local tCmdHit
+            for _, tCmdCnt in ipairs(atCommands) do
+              if tCmdCnt.cmd==strCmd then
+                tCmdHit = tCmdCnt
+                break
+              end
             end
-          end
-          if tCmdHit==nil then
-            print('Command not found.')
-          else
-            -- Run the command.
-            fRunning = tCmdHit.run(self, tCmd)
+            if tCmdHit==nil then
+              print('Command not found.')
+            else
+              -- Run the command.
+              fRunning = tCmdHit.run(self, tCmd)
+            end
           end
         end
       end
     end
   end
-end
 
 
 -- Create a dummy logger object for the flasher.
-local tLog = {
-  emerg = function(...) print('[EMERG] ' .. string.format(...)) end,
-  alert = function(...) print('[ALERT] ' .. string.format(...)) end,
-  fatal = function(...) print('[FATAL] ' .. string.format(...)) end,
-  error = function(...) print('[ERROR] ' .. string.format(...)) end,
-  warning = function(...) print('[WARNING] ' .. string.format(...)) end,
-  notice = function(...) print('[NOTICE] ' .. string.format(...)) end,
-  info = function(...) print('[INFO] ' .. string.format(...)) end,
-  debug = function(...) print('[DEBUG] ' .. string.format(...)) end,
-  trace = function(...) print('[TRACE] ' .. string.format(...)) end,
-}
+  local tLog = {
+    emerg = function(...) print('[EMERG] ' .. string.format(...)) end,
+    alert = function(...) print('[ALERT] ' .. string.format(...)) end,
+    fatal = function(...) print('[FATAL] ' .. string.format(...)) end,
+    error = function(...) print('[ERROR] ' .. string.format(...)) end,
+    warning = function(...) print('[WARNING] ' .. string.format(...)) end,
+    notice = function(...) print('[NOTICE] ' .. string.format(...)) end,
+    info = function(...) print('[INFO] ' .. string.format(...)) end,
+    debug = function(...) print('[DEBUG] ' .. string.format(...)) end,
+    trace = function(...) print('[TRACE] ' .. string.format(...)) end,
+  }
 
 
-local astrPlugins = {
-  'romloader_eth',
-  'romloader_usb',
-  'romloader_uart',
-  'romloader_jtag'
-}
-for _, strPlugin in ipairs(astrPlugins) do
-  tLog.debug('Loading plugin "%s"...', strPlugin)
-  require(strPlugin)
-end
+  local astrPlugins = {
+    'romloader_eth',
+    'romloader_usb',
+    'romloader_uart',
+    'romloader_jtag'
+  }
+  for _, strPlugin in ipairs(astrPlugins) do
+    tLog.debug('Loading plugin "%s"...', strPlugin)
+    require(strPlugin)
+  end
 
 -- Run the shell.
-local tShell = Shell(tLog)
-tShell:run()
-os.exit(0)
+  local tShell = Shell(tLog)
+  tShell:run()
+  os.exit(0)
