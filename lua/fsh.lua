@@ -37,7 +37,7 @@ function Shell:_init(tLog)
   -- save typing function names with "lpeg" in front of them:
   local P, V, Cg, Ct, Cc, S, R, C, Cf, Cb, Cs =
   lpeg.P, lpeg.V, lpeg.Cg, lpeg.Ct, lpeg.Cc, lpeg.S, lpeg.R, lpeg.C, lpeg.Cf, lpeg.Cb, lpeg.Cs
-  
+
 
   -- Match at least one character of whitespace.
   local Space = S(" \t")^1
@@ -1041,13 +1041,12 @@ function Shell:__run_iserased(tCmd)
 end
 
 
-
+-- Return the input String as Hex value
 function Shell:__str2hex(strData)
-  local astrHex = {}
-  for uiCnt=1,string.len(strData) do
-    table.insert(astrHex, string.format(string.byte(strData, uiCnt)))
-  end
-  return table.concat(astrHex)
+  -- one of the magic characters: '.' represents any single character
+    return (str:gsub('.', function (c)
+        return string.format('%02X', string.byte(c))
+    end))
 end
 
 
@@ -1076,7 +1075,7 @@ function Shell:__run_hash(tCmd)
           local strMsg
           tResult, strMsg = tFlasher:hashArea(tPlugin, aAttr, ulStart, ulLength)
           if tResult~=nil then
-            print('OK. SHA1SUM = ' .. self:str2hex(tResult))
+            print('OK. SHA1 SUM = ' .. self:__str2hex(tResult))
           else
             print(string.format('Failed to hash the data: %s', strMsg))
           end
