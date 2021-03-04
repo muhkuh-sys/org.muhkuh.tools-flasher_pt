@@ -1392,6 +1392,16 @@ function Shell:run()
   -- Scan for available devices.
   self:__run_scan()
 
+    -- initialization of setcompletion and sethints of linenoise 
+    linenoise.setcompletion(function(tCompletions, strLine)
+        self:__completer(tCompletions, strLine)
+      end
+    )
+    linenoise.sethints(function(strLine)
+        return self:__hints(strLine), { color=35, bold=false }
+      end
+    )
+
   local fRunning = true
   while fRunning do
     -- Set the current prompt. It depends on the connection.
@@ -1401,15 +1411,6 @@ function Shell:run()
       strPlugin = tPlugin:GetName()
     end
     self.strPrompt = colors.bright .. colors.blue .. strPlugin .. '> ' .. colors.white
-
-    linenoise.setcompletion(function(tCompletions, strLine)
-        self:__completer(tCompletions, strLine)
-      end
-    )
-    linenoise.sethints(function(strLine)
-        return self:__hints(strLine), { color=35, bold=false }
-      end
-    )
 
     local strLine, strError = linenoise.linenoise(self.strPrompt)
     if strLine==nil then
