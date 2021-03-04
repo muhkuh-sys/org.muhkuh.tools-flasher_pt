@@ -43,16 +43,16 @@ function Shell:_init(tLog)
   -- The "unfinished" variant accepts also unfinished hexadecimal numbers
   -- like "0x".
   local DecimalInteger = lpeg.R('09')^1
-  local HexInteger = lpeg.P("0x") * (lpeg.R('09') + lpeg.R('af') + lpeg.R('AF'))^1
-  local UnfinishedHexInteger = lpeg.P("0x") * (lpeg.R('09') + lpeg.R('af') + lpeg.R('AF'))^0
+  local HexInteger = lpeg.P("0x") * (lpeg.R('09','af','AF') )^1
+  local UnfinishedHexInteger = lpeg.P("0x") * lpeg.R('09','af','AF')^0
   local Integer = HexInteger + DecimalInteger
   local UnfinishedInteger = UnfinishedHexInteger + DecimalInteger
 
   -- A plugin name consists of alphanumeric characters and the underscore.
-  local PluginName = (lpeg.R('az') + lpeg.R('AZ') + lpeg.R('09') + lpeg.P('_') + lpeg.P('-') + lpeg.P('@') + lpeg.P(',') + lpeg.P(':'))^1
+  local PluginName = (lpeg.R('az','AZ','09') + lpeg.S('_-@,:'))^1
 
   -- A device name consists of alphanumeric characters and the underscore.
-  local DeviceName = (lpeg.R('az') + lpeg.R('AZ') + lpeg.R('09') + lpeg.P('_'))^1
+  local DeviceName = (lpeg.R('az','AZ','09') + lpeg.P('_'))^1
 
   self.tMatchBusUnitCs = lpeg.Ct(
     lpeg.P('B') * lpeg.Cg(Integer / tonumber, 'bus') *
@@ -67,7 +67,7 @@ function Shell:_init(tLog)
   --
 
   -- A filename simply matches the rest of the line. This has one important
-  -- reason: if a path contains spaces, it should be encosed in quotes, but
+  -- reason: if a path contains spaces, it should be enclosed in quotes, but
   -- there is no simple way to insert a quote somewhere before the cursor in
   -- linenoise (if there is a way, please tell me :D ).
   local Filename = (1 - lpeg.S('\n\r'))^1
