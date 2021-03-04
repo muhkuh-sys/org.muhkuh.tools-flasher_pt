@@ -34,30 +34,35 @@ function Shell:_init(tLog)
   -- Define a set of LPEG helpers.
   --
 
+  -- save typing function names with "lpeg" in front of them:
+  local P, V, Cg, Ct, Cc, S, R, C, Cf, Cb, Cs =
+  lpeg.P, lpeg.V, lpeg.Cg, lpeg.Ct, lpeg.Cc, lpeg.S, lpeg.R, lpeg.C, lpeg.Cf, lpeg.Cb, lpeg.Cs
+  
+
   -- Match at least one character of whitespace.
-  local Space = lpeg.S(" \t")^1
+  local Space = S(" \t")^1
   -- Match optional whitespace.
-  local OptionalSpace = lpeg.S(" \t")^0
+  local OptionalSpace = S(" \t")^0
 
   -- Match an integer. This can be decimal or hexadecimal.
   -- The "unfinished" variant accepts also unfinished hexadecimal numbers
   -- like "0x".
-  local DecimalInteger = lpeg.R('09')^1
-  local HexInteger = lpeg.P("0x") * (lpeg.R('09','af','AF') )^1
-  local UnfinishedHexInteger = lpeg.P("0x") * lpeg.R('09','af','AF')^0
+  local DecimalInteger = R('09')^1
+  local HexInteger = P("0x") * (R('09','af','AF') )^1
+  local UnfinishedHexInteger = P("0x") * R('09','af','AF')^0
   local Integer = HexInteger + DecimalInteger
   local UnfinishedInteger = UnfinishedHexInteger + DecimalInteger
 
   -- A plugin name consists of alphanumeric characters and the underscore.
-  local PluginName = (lpeg.R('az','AZ','09') + lpeg.S('_-@,:'))^1
+  local PluginName = (R('az','AZ','09') + S('_-@,:'))^1
 
   -- A device name consists of alphanumeric characters and the underscore.
-  local DeviceName = (lpeg.R('az','AZ','09') + lpeg.P('_'))^1
+  local DeviceName = (R('az','AZ','09') + P('_'))^1
 
-  self.tMatchBusUnitCs = lpeg.Ct(
-    lpeg.P('B') * lpeg.Cg(Integer / tonumber, 'bus') *
-    lpeg.P('_U') * lpeg.Cg(Integer / tonumber, 'unit') *
-    lpeg.P('_C') * lpeg.Cg(Integer / tonumber, 'cs') *
+  self.tMatchBusUnitCs = Ct(
+    P('B') * Cg(Integer / tonumber, 'bus') *
+    P('_U') * Cg(Integer / tonumber, 'unit') *
+    P('_C') * Cg(Integer / tonumber, 'cs') *
     -1
   )
 
@@ -70,78 +75,78 @@ function Shell:_init(tLog)
   -- reason: if a path contains spaces, it should be enclosed in quotes, but
   -- there is no simple way to insert a quote somewhere before the cursor in
   -- linenoise (if there is a way, please tell me :D ).
-  local Filename = (1 - lpeg.S('\n\r'))^1
+  local Filename = (1 - S('\n\r'))^1
 
   -- Range is either...
   --   1) the keyword "all"
   --   2) a start and end address
   --   3) a start and length separated by "+"
-  local Range = lpeg.Cg(lpeg.P('all'), 'all') +
-          (lpeg.Cg(Integer / tonumber, 'startaddress') * Space *
-            (
-              lpeg.Cg(Integer / tonumber, 'endaddress') +
-              (lpeg.P('+') * OptionalSpace * lpeg.Cg(Integer / tonumber, 'length'))
-            )
-          )
+  local Range = Cg(P('all'), 'all') +
+  (Cg(Integer / tonumber, 'startaddress') * Space *
+    (
+      Cg(Integer / tonumber, 'endaddress') +
+      (P('+') * OptionalSpace * Cg(Integer / tonumber, 'length'))
+    )
+  )
 
   -- A comment starts with a hash and covers the rest of the line.
-  local Comment = lpeg.P('#')
+  local Comment = P('#')
 
   -- All available commands and their handlers.
   local atCommands = {
     {
       cmd = 'connect',
-      pattern = OptionalSpace * lpeg.Cg(lpeg.P('connect'), 'cmd') * Space * lpeg.Cg(PluginName, 'plugin') * OptionalSpace * -1,
+      pattern = OptionalSpace * Cg(P('connect'), 'cmd') * Space * Cg(PluginName, 'plugin') * OptionalSpace * -1,
       run = self.__run_connect
     },
     {
       cmd = 'disconnect',
-      pattern = OptionalSpace * lpeg.Cg(lpeg.P('disconnect'), 'cmd') * OptionalSpace * -1,
+      pattern = OptionalSpace * Cg(P('disconnect'), 'cmd') * OptionalSpace * -1,
       run = self.__run_disconnect
     },
     {
       cmd = 'read',
-      pattern = OptionalSpace * lpeg.Cg(lpeg.P('read'), 'cmd') * Space * lpeg.Cg(DeviceName, 'device') * Space * Range * Space * lpeg.Cg(Filename, 'filename') * OptionalSpace * -1,
+      pattern = OptionalSpace * Cg(P('read'), 'cmd') * Space * Cg(DeviceName, 'device') * Space * Range * Space * Cg(Filename, 'filename') * OptionalSpace * -1,
       run = self.__run_read
     },
     {
       cmd = 'write',
-      pattern = OptionalSpace * lpeg.Cg(lpeg.P('write'), 'cmd') * Space * lpeg.Cg(DeviceName, 'device') * Space * lpeg.Cg(Integer, 'startaddress') * Space * lpeg.Cg(Filename, 'filename') * OptionalSpace * -1,
+      pattern = OptionalSpace * Cg(P('write'), 'cmd') * Space * Cg(DeviceName, 'device') * Space * Cg(Integer, 'startaddress') * Space * Cg(Filename, 'filename') * OptionalSpace * -1,
       run = self.__run_write
     },
     {
       cmd = 'erase',
-      pattern = OptionalSpace * lpeg.Cg(lpeg.P('erase'), 'cmd') * Space * lpeg.Cg(DeviceName, 'device') * Space * Range * OptionalSpace * -1,
+      pattern = OptionalSpace * Cg(P('erase'), 'cmd') * Space * Cg(DeviceName, 'device') * Space * Range * OptionalSpace * -1,
       run = self.__run_erase
     },
     {
       cmd = 'iserased',
-      pattern = OptionalSpace * lpeg.Cg(lpeg.P('iserased'), 'cmd') * Space * lpeg.Cg(DeviceName, 'device') * Space * Range * OptionalSpace * -1,
+      pattern = OptionalSpace * Cg(P('iserased'), 'cmd') * Space * Cg(DeviceName, 'device') * Space * Range * OptionalSpace * -1,
       run = self.__run_iserased
     },
     {
       cmd = 'verify',
-      pattern = OptionalSpace * lpeg.Cg(lpeg.P('verify'), 'cmd') * Space * lpeg.Cg(DeviceName, 'device') * Space * lpeg.Cg(Integer, 'startaddress') * Space * lpeg.Cg(Filename, 'filename') * OptionalSpace * -1,
+      pattern = OptionalSpace * Cg(P('verify'), 'cmd') * Space * Cg(DeviceName, 'device') * Space * Cg(Integer, 'startaddress') * Space * Cg(Filename, 'filename') * OptionalSpace * -1,
       run = self.__run_verify
     },
     {
       cmd = 'hash',
-      pattern = OptionalSpace * lpeg.Cg(lpeg.P('hash'), 'cmd') * Space * lpeg.Cg(DeviceName, 'device') * Space * Range * OptionalSpace * -1,
+      pattern = OptionalSpace * Cg(P('hash'), 'cmd') * Space * Cg(DeviceName, 'device') * Space * Range * OptionalSpace * -1,
       run = self.__run_hash
     },
     {
       cmd = 'scan',
-      pattern = OptionalSpace * lpeg.Cg(lpeg.P('scan'), 'cmd') * OptionalSpace * -1,
+      pattern = OptionalSpace * Cg(P('scan'), 'cmd') * OptionalSpace * -1,
       run = self.__run_scan
     },
     {
       cmd = 'help',
-      pattern = OptionalSpace * lpeg.Cg(lpeg.P('help'), 'cmd') * (Space * lpeg.Cg(lpeg.R('az')^1, 'topic'))^-1 * OptionalSpace * -1,
+      pattern = OptionalSpace * Cg(P('help'), 'cmd') * (Space * Cg(R('az')^1, 'topic'))^-1 * OptionalSpace * -1,
       run = self.__run_help
     },
     {
       cmd = 'quit',
-      pattern = OptionalSpace * lpeg.Cg(lpeg.P('quit'), 'cmd') * OptionalSpace * -1,
+      pattern = OptionalSpace * Cg(P('quit'), 'cmd') * OptionalSpace * -1,
       run = self.__run_quit
     }
   }
@@ -158,7 +163,7 @@ function Shell:_init(tLog)
     end
   end
 
-  self.__lineGrammar = lpeg.Ct((AllCommands * (Comment^-1)) + Comment)
+  self.__lineGrammar = Ct((AllCommands * (Comment^-1)) + Comment)
 
   -- Create a table with all commands as a string.
   local astrCommandWords = {}
@@ -211,254 +216,254 @@ function Shell:_init(tLog)
   self.__atInteractivePatterns = {
     -- Typing a command. This also matches an empty line.
     {
-      pattern = OptionalSpace * lpeg.Cg(lpeg.R('az')^0) * -1,
+      pattern = OptionalSpace * Cg(R('az')^0) * -1,
       words = self.__astrCommandWords
     },
 
     -- Connect command.
     {
-      pattern = OptionalSpace * lpeg.P('connect') * Space * -1,
+      pattern = OptionalSpace * P('connect') * Space * -1,
       hint = function() return '[plugin]  possible values: ' .. table.concat(self.__astrPluginNames, ', ') end,
       words = function() return self.__astrPluginNames end
     },
     {
-      pattern = OptionalSpace * lpeg.P('connect') * Space * lpeg.Cg(PluginName) * -1,
+      pattern = OptionalSpace * P('connect') * Space * Cg(PluginName) * -1,
       words = function() return self.__astrPluginNames end
     },
 
     -- Read command.
     {
-      pattern = OptionalSpace * lpeg.P('read') * Space * -1,
+      pattern = OptionalSpace * P('read') * Space * -1,
       hint = function() return '[device]  possible values: ' .. table.concat(self.__aSanitizedBoardNames, ', ') end,
       words = function() return self.__aSanitizedBoardNames end
     },
     {
-      pattern = OptionalSpace * lpeg.P('read') * Space * lpeg.Cg(DeviceName) * -1,
+      pattern = OptionalSpace * P('read') * Space * Cg(DeviceName) * -1,
       words = function() return self.__aSanitizedBoardNames end
     },
     {
-      pattern = OptionalSpace * lpeg.P('read') * Space * DeviceName * Space * -1,
+      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * -1,
       hint = 'all  or  [startaddress] [endaddress]  or  [startaddress] + [length]',
       words = { 'all' }
     },
     {
-      pattern = OptionalSpace * lpeg.P('read') * Space * DeviceName * Space * lpeg.Cg(lpeg.P('al') + lpeg.P('a')) * -1,
+      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * Cg(P('al') + P('a')) * -1,
       words = { 'all' }
     },
     {
-      pattern = OptionalSpace * lpeg.P('read') * Space * DeviceName * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * UnfinishedInteger * -1,
       hint = '    this is the startaddress'
     },
     {
-      pattern = OptionalSpace * lpeg.P('read') * Space * DeviceName * Space * Integer * Space * -1,
+      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * Integer * Space * -1,
       hint = '[endaddress]  or  + [length]'
     },
     {
-      pattern = OptionalSpace * lpeg.P('read') * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
       hint = '    this is the endaddress'
     },
     {
-      pattern = OptionalSpace * lpeg.P('read') * Space * DeviceName * Space * Integer * Space * lpeg.P('+') * OptionalSpace * -1,
+      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * Integer * Space * P('+') * OptionalSpace * -1,
       hint = '[length]'
     },
     {
-      pattern = OptionalSpace * lpeg.P('read') * Space * DeviceName * Space * Integer * Space * lpeg.P('+') * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * Integer * Space * P('+') * Space * UnfinishedInteger * -1,
       hint = '    this is the length'
     },
     {
-      pattern = OptionalSpace * lpeg.P('read') * Space * DeviceName * Space * (lpeg.P('all') + (Integer * Space * (Integer + (lpeg.P('+') * OptionalSpace * Integer)))) * Space * -1,
+      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * (P('all') + (Integer * Space * (Integer + (P('+') * OptionalSpace * Integer)))) * Space * -1,
       hint = '[filename]',
       words = function(strMatch) return self:__getFilenameWords(strMatch) end
     },
     {
-      pattern = OptionalSpace * lpeg.P('read') * Space * DeviceName * Space * (lpeg.P('all') + (Integer * Space * (Integer + (lpeg.P('+') * OptionalSpace * Integer)))) * Space * lpeg.Cg(Filename) * -1,
+      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * (P('all') + (Integer * Space * (Integer + (P('+') * OptionalSpace * Integer)))) * Space * Cg(Filename) * -1,
       words = function(strMatch) return self:__getFilenameWords(strMatch) end
     },
 
     -- Write command.
     {
-      pattern = OptionalSpace * lpeg.P('write') * Space * -1,
+      pattern = OptionalSpace * P('write') * Space * -1,
       hint = function() return '[device]  possible values: ' .. table.concat(self.__aSanitizedBoardNames, ', ') end,
       words = function() return self.__aSanitizedBoardNames end
     },
     {
-      pattern = OptionalSpace * lpeg.P('write') * Space * lpeg.Cg(DeviceName) * -1,
+      pattern = OptionalSpace * P('write') * Space * Cg(DeviceName) * -1,
       words = function() return self.__aSanitizedBoardNames end
     },
     {
-      pattern = OptionalSpace * lpeg.P('write') * Space * DeviceName * Space * -1,
+      pattern = OptionalSpace * P('write') * Space * DeviceName * Space * -1,
       hint = '[startaddress]'
     },
     {
-      pattern = OptionalSpace * lpeg.P('write') * Space * DeviceName * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P('write') * Space * DeviceName * Space * UnfinishedInteger * -1,
       hint = '    this is the startaddress'
     },
     {
-      pattern = OptionalSpace * lpeg.P('write') * Space * DeviceName * Space * Integer * Space * -1,
+      pattern = OptionalSpace * P('write') * Space * DeviceName * Space * Integer * Space * -1,
       hint = '[filename]',
       words = function(strMatch) return self:__getFilenameWords(strMatch) end
     },
     {
-      pattern = OptionalSpace * lpeg.P('write') * Space * DeviceName * Space * Integer * Space * lpeg.Cg(Filename) * -1,
+      pattern = OptionalSpace * P('write') * Space * DeviceName * Space * Integer * Space * Cg(Filename) * -1,
       words = function(strMatch) return self:__getFilenameWords(strMatch) end
     },
 
     -- Erase command.
     {
-      pattern = OptionalSpace * lpeg.P('erase') * Space * -1,
+      pattern = OptionalSpace * P('erase') * Space * -1,
       hint = function() return '[device]  possible values: ' .. table.concat(self.__aSanitizedBoardNames, ', ') end,
       words = function() return self.__aSanitizedBoardNames end
     },
     {
-      pattern = OptionalSpace * lpeg.P('erase') * Space * lpeg.Cg(DeviceName) * -1,
+      pattern = OptionalSpace * P('erase') * Space * Cg(DeviceName) * -1,
       words = function() return self.__aSanitizedBoardNames end
     },
     {
-      pattern = OptionalSpace * lpeg.P('erase') * Space * DeviceName * Space * -1,
+      pattern = OptionalSpace * P('erase') * Space * DeviceName * Space * -1,
       hint = 'all  or  [startaddress] [endaddress]  or  [startaddress] + [length]',
       words = { 'all' }
     },
     {
-      pattern = OptionalSpace * lpeg.P('erase') * Space * DeviceName * Space * lpeg.Cg(lpeg.P('al') + lpeg.P('a')) * -1,
+      pattern = OptionalSpace * P('erase') * Space * DeviceName * Space * Cg(P('al') + P('a')) * -1,
       words = { 'all' }
     },
     {
-      pattern = OptionalSpace * lpeg.P('erase') * Space * DeviceName * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P('erase') * Space * DeviceName * Space * UnfinishedInteger * -1,
       hint = '    this is the startaddress'
     },
     {
-      pattern = OptionalSpace * lpeg.P('erase') * Space * DeviceName * Space * Integer * Space * -1,
+      pattern = OptionalSpace * P('erase') * Space * DeviceName * Space * Integer * Space * -1,
       hint = '[endaddress]  or  + [length]'
     },
     {
-      pattern = OptionalSpace * lpeg.P('erase') * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P('erase') * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
       hint = '    this is the endaddress'
     },
     {
-      pattern = OptionalSpace * lpeg.P('erase') * Space * DeviceName * Space * Integer * Space * lpeg.P('+') * OptionalSpace * -1,
+      pattern = OptionalSpace * P('erase') * Space * DeviceName * Space * Integer * Space * P('+') * OptionalSpace * -1,
       hint = '[length]'
     },
     {
-      pattern = OptionalSpace * lpeg.P('erase') * Space * DeviceName * Space * Integer * Space * lpeg.P('+') * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P('erase') * Space * DeviceName * Space * Integer * Space * P('+') * Space * UnfinishedInteger * -1,
       hint = '    this is the length'
     },
 
     -- IsErased command.
     {
-      pattern = OptionalSpace * lpeg.P('iserased') * Space * -1,
+      pattern = OptionalSpace * P('iserased') * Space * -1,
       hint = function() return '[device]  possible values: ' .. table.concat(self.__aSanitizedBoardNames, ', ') end,
       words = function() return self.__aSanitizedBoardNames end
     },
     {
-      pattern = OptionalSpace * lpeg.P('iserased') * Space * lpeg.Cg(DeviceName) * -1,
+      pattern = OptionalSpace * P('iserased') * Space * Cg(DeviceName) * -1,
       words = function() return self.__aSanitizedBoardNames end
     },
     {
-      pattern = OptionalSpace * lpeg.P('iserased') * Space * DeviceName * Space * -1,
+      pattern = OptionalSpace * P('iserased') * Space * DeviceName * Space * -1,
       hint = 'all  or  [startaddress] [endaddress]  or  [startaddress] + [length]',
       words = { 'all' }
     },
     {
-      pattern = OptionalSpace * lpeg.P('iserased') * Space * DeviceName * Space * lpeg.Cg(lpeg.P('al') + lpeg.P('a')) * -1,
+      pattern = OptionalSpace * P('iserased') * Space * DeviceName * Space * Cg(P('al') + P('a')) * -1,
       words = { 'all' }
     },
     {
-      pattern = OptionalSpace * lpeg.P('iserased') * Space * DeviceName * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P('iserased') * Space * DeviceName * Space * UnfinishedInteger * -1,
       hint = '    this is the startaddress'
     },
     {
-      pattern = OptionalSpace * lpeg.P('iserased') * Space * DeviceName * Space * Integer * Space * -1,
+      pattern = OptionalSpace * P('iserased') * Space * DeviceName * Space * Integer * Space * -1,
       hint = '[endaddress]  or  + [length]'
     },
     {
-      pattern = OptionalSpace * lpeg.P('iserased') * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P('iserased') * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
       hint = '    this is the endaddress'
     },
     {
-      pattern = OptionalSpace * lpeg.P('iserased') * Space * DeviceName * Space * Integer * Space * lpeg.P('+') * OptionalSpace * -1,
+      pattern = OptionalSpace * P('iserased') * Space * DeviceName * Space * Integer * Space * P('+') * OptionalSpace * -1,
       hint = '[length]'
     },
     {
-      pattern = OptionalSpace * lpeg.P('iserased') * Space * DeviceName * Space * Integer * Space * lpeg.P('+') * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P('iserased') * Space * DeviceName * Space * Integer * Space * P('+') * Space * UnfinishedInteger * -1,
       hint = '    this is the length'
     },
 
     -- Verify command.
     {
-      pattern = OptionalSpace * lpeg.P('verify') * Space * -1,
+      pattern = OptionalSpace * P('verify') * Space * -1,
       hint = function() return '[device]  possible values: ' .. table.concat(self.__aSanitizedBoardNames, ', ') end,
       words = function() return self.__aSanitizedBoardNames end
     },
     {
-      pattern = OptionalSpace * lpeg.P('verify') * Space * lpeg.Cg(DeviceName) * -1,
+      pattern = OptionalSpace * P('verify') * Space * Cg(DeviceName) * -1,
       words = function() return self.__aSanitizedBoardNames end
     },
     {
-      pattern = OptionalSpace * lpeg.P('verify') * Space * DeviceName * Space * -1,
+      pattern = OptionalSpace * P('verify') * Space * DeviceName * Space * -1,
       hint = '[startaddress]'
     },
     {
-      pattern = OptionalSpace * lpeg.P('verify') * Space * DeviceName * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P('verify') * Space * DeviceName * Space * UnfinishedInteger * -1,
       hint = '    this is the startaddress'
     },
     {
-      pattern = OptionalSpace * lpeg.P('verify') * Space * DeviceName * Space * Integer * Space * -1,
+      pattern = OptionalSpace * P('verify') * Space * DeviceName * Space * Integer * Space * -1,
       hint = '[filename]',
       words = function(strMatch) return self:__getFilenameWords(strMatch) end
     },
     {
-      pattern = OptionalSpace * lpeg.P('verify') * Space * DeviceName * Space * Integer * Space * lpeg.Cg(Filename) * -1,
+      pattern = OptionalSpace * P('verify') * Space * DeviceName * Space * Integer * Space * Cg(Filename) * -1,
       words = function(strMatch) return self:__getFilenameWords(strMatch) end
     },
 
     -- Hash command.
     {
-      pattern = OptionalSpace * lpeg.P('hash') * Space * -1,
+      pattern = OptionalSpace * P('hash') * Space * -1,
       hint = function() return '[device]  possible values: ' .. table.concat(self.__aSanitizedBoardNames, ', ') end,
       words = function() return self.__aSanitizedBoardNames end
     },
     {
-      pattern = OptionalSpace * lpeg.P('hash') * Space * lpeg.Cg(DeviceName) * -1,
+      pattern = OptionalSpace * P('hash') * Space * Cg(DeviceName) * -1,
       words = function() return self.__aSanitizedBoardNames end
     },
     {
-      pattern = OptionalSpace * lpeg.P('hash') * Space * DeviceName * Space * -1,
+      pattern = OptionalSpace * P('hash') * Space * DeviceName * Space * -1,
       hint = 'all  or  [startaddress] [endaddress]  or  [startaddress] + [length]',
       words = { 'all' }
     },
     {
-      pattern = OptionalSpace * lpeg.P('hash') * Space * DeviceName * Space * lpeg.Cg(lpeg.P('al') + lpeg.P('a')) * -1,
+      pattern = OptionalSpace * P('hash') * Space * DeviceName * Space * Cg(P('al') + P('a')) * -1,
       words = { 'all' }
     },
     {
-      pattern = OptionalSpace * lpeg.P('hash') * Space * DeviceName * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P('hash') * Space * DeviceName * Space * UnfinishedInteger * -1,
       hint = '    this is the startaddress'
     },
     {
-      pattern = OptionalSpace * lpeg.P('hash') * Space * DeviceName * Space * Integer * Space * -1,
+      pattern = OptionalSpace * P('hash') * Space * DeviceName * Space * Integer * Space * -1,
       hint = '[endaddress]  or  + [length]'
     },
     {
-      pattern = OptionalSpace * lpeg.P('hash') * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P('hash') * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
       hint = '    this is the endaddress'
     },
     {
-      pattern = OptionalSpace * lpeg.P('hash') * Space * DeviceName * Space * Integer * Space * lpeg.P('+') * OptionalSpace * -1,
+      pattern = OptionalSpace * P('hash') * Space * DeviceName * Space * Integer * Space * P('+') * OptionalSpace * -1,
       hint = '[length]'
     },
     {
-      pattern = OptionalSpace * lpeg.P('hash') * Space * DeviceName * Space * Integer * Space * lpeg.P('+') * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P('hash') * Space * DeviceName * Space * Integer * Space * P('+') * Space * UnfinishedInteger * -1,
       hint = '    this is the length'
     },
 
     -- Help command.
     {
-      pattern = OptionalSpace * lpeg.P('help') * Space * -1,
+      pattern = OptionalSpace * P('help') * Space * -1,
       hint = function() return '[topic]  possible values: ' .. table.concat(self.__astrHelpTopicWords, ', ') end,
       words = function() return self.__astrHelpTopicWords end
     },
     {
-      pattern = OptionalSpace * lpeg.P('help') * Space * lpeg.Cg(lpeg.R('az')^1) * -1,
+      pattern = OptionalSpace * P('help') * Space * Cg(R('az')^1) * -1,
       words = function() return self.__astrHelpTopicWords end
     }
   }
