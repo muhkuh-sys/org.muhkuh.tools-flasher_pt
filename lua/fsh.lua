@@ -76,8 +76,13 @@ function Shell:_init(tLog)
   -- reason: if a path contains spaces, it should be enclosed in quotes, but
   -- there is no simple way to insert a quote somewhere before the cursor in
   -- linenoise (if there is a way, please tell me :D ).
-  local Filename = (1 - S('\n\r'))^1
-
+   local Filename = P {
+           "start",   --> this tells LPEG which rule to process first
+           start    =  V'filename',
+           filename  = V'allWords' * (Space * V'filename')^0,
+           allWords = (1 - S(' \t\n\r'))^1,
+          }
+          
   -- Range is either...
   --   1) the keyword "all"
   --   2) a start and end address
