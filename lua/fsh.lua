@@ -16,7 +16,7 @@ function Shell:_init(tLog)
   self.tFlasher = require 'flasher'(tLog)
   self.tLog = tLog
   self.tCmd_input = self.pl.List()
-  
+
   -- No connection yet.
   self.tPlugin = nil
   self.aAttr = nil
@@ -76,13 +76,13 @@ function Shell:_init(tLog)
   -- reason: if a path contains spaces, it should be enclosed in quotes, but
   -- there is no simple way to insert a quote somewhere before the cursor in
   -- linenoise (if there is a way, please tell me :D ).
-   local Filename = P {
-           "start",   --> this tells LPEG which rule to process first
-           start    =  V'filename',
-           filename  = V'allWords' * (Space * V'filename')^0,
-           allWords = (1 - S(' \t\n\r'))^1,
-          }
-          
+  local Filename = P {
+    "start",   --> this tells LPEG which rule to process first
+    start    =  V'filename',
+    filename  = V'allWords' * (Space * V'filename')^0,
+    allWords = (1 - S(' \t\n\r'))^1,
+  }
+
   -- Range is either...
   --   1) the keyword "all"
   --   2) a start and end address
@@ -867,11 +867,12 @@ function Shell:__run_read(tCmd)
             print('Failed to read: ' .. tostring(strMsg))
 
           else
-            tResult, strMsg = pl.utils.writefile(pl.path.expanduser(tCmd.filename), strBin, true)
+            local strFilename = pl.path.expanduser(tCmd.filename)
+            tResult, strMsg = pl.utils.writefile(strFilename, strBin, true)
             if tResult==true then
               print('OK')
             else
-              print(string.format('Failed to write the data to the file "%s": %s', pl.path.expanduser(tCmd.filename), strMsg))
+              print(string.format('Failed to write the data to the file "%s": %s', strFilename, strMsg))
             end
           end
         end
@@ -1489,14 +1490,14 @@ function Shell:__run_input(tCmd)
       self.strPrompt = colors.bright .. colors.blue .. strPlugin .. '> ' .. colors.white
 
       local strLine, strError 
-      
+
       if self.tCmd_input:len() ~= 0 then
         strLine = self.tCmd_input:pop(1)
         strError = ''
       else
         strLine, strError = linenoise.linenoise(self.strPrompt)
       end  
-      
+
       if strLine==nil then
         if strError~=nil then
           tLog.error('Error: %s', tostring(strError))
