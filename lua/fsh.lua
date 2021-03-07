@@ -508,7 +508,7 @@ function Shell:__getNetxPath()
       -- Cut off the "?.lua" part.
       -- Expect the "netx" folder one below the module folder.
       local strPath = pl.path.join(pl.path.dirname(pl.path.dirname(pl.path.abspath(strPath))), 'netx')
-      if pl.path.exists(strPath)~=nil and pl.path.isdir(strPath)==true then
+      if pl.path.exists(strPath)~=false and pl.path.isdir(strPath)==true then
         -- Append a directory separator at the end of the path.
         -- Otherwise the flasher will not be happy.
         strPathNetx = strPath .. pl.path.sep
@@ -562,7 +562,7 @@ function Shell:__getFilenameWords(strMatch)
     local strLastElement = pl.path.basename(strDir)
 
     -- Does the folder exist?
-    if strLastElement~='.' and pl.path.exists(strDir)~=nil and pl.path.isdir(strDir)==true then
+    if strLastElement~='.' and pl.path.exists(strDir)~=false and pl.path.isdir(strDir)==true then
       -- Yes -> add all elements of this folder.
       self:__getFolderEntries(strDir, strPrintPrefix, astrWords)
 
@@ -582,7 +582,7 @@ function Shell:__getFilenameWords(strMatch)
           self:__getFolderEntries(strDir, strPrintPrefix, astrWords)
         end
 
-      elseif pl.path.exists(strDirName)~=nil and pl.path.isdir(strDirName)==true then
+      elseif pl.path.exists(strDirName)~=false and pl.path.isdir(strDirName)==true then
         strDir = strDirName
 
         -- Cut off the last Element from the print prefix.
@@ -906,7 +906,7 @@ function Shell:__run_verify(tCmd)
         local ulStart = tCmd.startaddress
 
         local strFilename = pl.path.expanduser(tCmd.filename)
-        if pl.path.exists(strFilename)==nil then
+        if pl.path.exists(strFilename)==false then
           print(string.format('The file "%s" does not exist.', strFilename))
         elseif pl.path.isfile(strFilename)~=true then
           print(string.format('The path "%s" is not a file.', strFilename))
@@ -958,7 +958,7 @@ function Shell:__run_write(tCmd)
         local ulStart = tCmd.startaddress
 
         local strFilename = pl.path.expanduser(tCmd.filename)
-        if pl.path.exists(strFilename)==nil then
+        if pl.path.exists(strFilename)==false then
           print(string.format('The file "%s" does not exist.', strFilename))
         elseif pl.path.isfile(strFilename)~=true then
           print(string.format('The path "%s" is not a file.', strFilename))
