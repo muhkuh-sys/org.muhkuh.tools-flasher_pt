@@ -862,7 +862,7 @@ function Shell:__run_read(tCmd)
           local ulEnd = ulStart+ulLength
           print(string.format('Reading [0x%08x,0x%08x[ .', ulStart, ulEnd))
 
-          local strBin, strMsg = tFlasher:readArea(tPlugin, aAttr, ulStart, ulEnd)
+          local strBin, strMsg = tFlasher:readArea(tPlugin, aAttr, ulStart, ulLength)
           if strBin==nil then
             print('Failed to read: ' .. tostring(strMsg))
 
