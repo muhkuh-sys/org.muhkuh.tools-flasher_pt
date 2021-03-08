@@ -639,17 +639,596 @@ TODO...
   },
 
   {
-    topic = 'input',
-    description = 'The input command.',
+    topic = 'read',
+    name = 'read - The read command. (short description)',
+    synopsis = 'read [device] [all | [startaddress][endaddress] | [startaddress] + [length]] [filename]',
+    description = 'The read command reads the data of the device at the specified address into the stated filename. (long description)',
+    options = {{key = '[device]',description = 'the given device'},
+               {key = '[all]',description = 'the complete flash size'},
+               {key = '[startaddress][endaddress]',description = 'start- and endaddress of the flash'},
+               {key = '[startaddress] + [length]',description = 'Start offset in flash plus data size'},
+               {key = '[filename]', description = 'the given filename'},
+              },
+    examples = [[read IF01 0x00000000 + 0x00001000 ~/Test/TestData.txt
+  read IF1 0x00000000 0x00002000 ~/Test/TestData.txt
+  read B2_U3_C0 all ~/Test/TestData.txt
+    ]],
     text = [[
-Reads a specified input file and verify whether each line is a valid command.
-The input file should be for example in the following format:
+# local text_topic = 'read'
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('name'))
+  $(tTopic.name)
+#   end
+# end
 
-connect romloader_uart_ttyUSB0 
-erase IF01 all 
-iserased IF01 all 
-write IF01 0x00000000 TestData/testDataA.txt 
-verify IF01 0x00000000 testDataA.txt 
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('synopsis'))
+  $(tTopic.synopsis)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('description'))
+  $(tTopic.description)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('options'))
+#     local sizMax = 0
+#     for _,tOption in ipairs(tTopic.options) do
+#       local sizTopic = string.len(tOption.key)
+#       if sizTopic>sizMax then
+#         sizMax = sizTopic
+#       end
+#     end
+#     for _, tOption in ipairs(tTopic.options) do
+  $(tOption.key) $(string.rep(' ', sizMax-string.len(tOption.key))) : $(tOption.description)
+#     end
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('examples'))
+  $(tTopic.examples)
+#   end
+# end
+    ]]
+  },
+
+  {
+    topic = 'verify',
+    name = 'verify - The verify command. (short description)',
+    synopsis = 'verify [device] [startaddress] [filename]',
+    description = 'The verify command checks whether the data of the stated file is written in the device at the startdaddress. (long description)',
+    options = {{key = '[device]',description = 'the given device'},
+               {key = '[startaddress]',description = 'startdaddress of the flash'},
+               {key = '[filename]', description = 'the given filename'},
+              },
+    examples = [[verify IF01 0x00000000 ~/Test/TestData.txt]],
+    text = [[
+# local text_topic = 'verify'
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('name'))
+  $(tTopic.name)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('synopsis'))
+  $(tTopic.synopsis)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('description'))
+  $(tTopic.description)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('options'))
+#     local sizMax = 0
+#     for _,tOption in ipairs(tTopic.options) do
+#       local sizTopic = string.len(tOption.key)
+#       if sizTopic>sizMax then
+#         sizMax = sizTopic
+#       end
+#     end
+#     for _, tOption in ipairs(tTopic.options) do
+  $(tOption.key) $(string.rep(' ', sizMax-string.len(tOption.key))) : $(tOption.description)
+#     end
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('examples'))
+  $(tTopic.examples)
+#   end
+# end
+    ]]
+  },
+
+  {
+    topic = 'write',
+    name = 'write - The write command. (short description)',
+    synopsis = 'write [device] [startaddress] [filename]',
+    description = 'The write command writes the data of the stated file into the device at the specified startaddress. (long description)',
+    options = {{key = '[device]',description = 'the given device'},
+               {key = '[startaddress]',description = 'startaddress of the flash'},
+               {key = '[filename]', description = 'the given filename'},
+              },
+    examples = [[write IF01 0x00002000 ~/Test/TestData.txt
+  write IF1 0x00003000 ~/Test/TestData.txt
+  write B2_U3_C0 0x1000 ~/Test/TestData.txt
+    ]],
+    text = [[
+# local text_topic = 'write'
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('name'))
+  $(tTopic.name)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('synopsis'))
+  $(tTopic.synopsis)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('description'))
+  $(tTopic.description)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('options'))
+#     local sizMax = 0
+#     for _,tOption in ipairs(tTopic.options) do
+#       local sizTopic = string.len(tOption.key)
+#       if sizTopic>sizMax then
+#         sizMax = sizTopic
+#       end
+#     end
+#     for _, tOption in ipairs(tTopic.options) do
+  $(tOption.key) $(string.rep(' ', sizMax-string.len(tOption.key))) : $(tOption.description)
+#     end
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('examples'))
+  $(tTopic.examples)
+#   end
+# end
+    ]]
+  },
+
+  {
+    topic = 'erase',
+    name = 'erase - The erase command. (short description)',
+    synopsis = 'erase [device] [all | [startaddress][endaddress] | [startaddress] + [length]]',
+    description = 'The erase command delete the data of the device at the specified address. (long description)',
+    options = {{key = '[device]',description = 'the given device'},
+               {key = '[all]',description = 'the complete flash size'},
+               {key = '[startaddress][endaddress]',description = 'start- and endaddress of the flash'},
+               {key = '[startaddress] + [length]',description = 'Start offset in flash plus data size'},
+              },
+    examples = [[erase IF01 0x00000000 + 0x00001000
+  erase IF1 0x00000000 0x00002000
+  erase B2_U3_C0 all
+    ]],
+    text = [[
+# local text_topic = 'erase'
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('name'))
+  $(tTopic.name)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('synopsis'))
+  $(tTopic.synopsis)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('description'))
+  $(tTopic.description)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('options'))
+#     local sizMax = 0
+#     for _,tOption in ipairs(tTopic.options) do
+#       local sizTopic = string.len(tOption.key)
+#       if sizTopic>sizMax then
+#         sizMax = sizTopic
+#       end
+#     end
+#     for _, tOption in ipairs(tTopic.options) do
+  $(tOption.key) $(string.rep(' ', sizMax-string.len(tOption.key))) : $(tOption.description)
+#     end
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('examples'))
+  $(tTopic.examples)
+#   end
+# end
+    ]]
+  },
+
+  {
+    topic = 'iserased',
+    name = 'iserased - The iserased command. (short description)',
+    synopsis = 'iserased [device] [all | [startaddress][endaddress] | [startaddress] + [length]]',
+    description = 'The iserased command checks whether the data is deleted of the device at the specified address. (long description)',
+    options = {{key = '[device]',description = 'the given device'},
+               {key = '[all]',description = 'the complete flash size'},
+               {key = '[startaddress][endaddress]',description = 'start- and endaddress of the flash'},
+               {key = '[startaddress] + [length]',description = 'Start offset in flash plus data size'},
+              },
+    examples = [[iserased IF01 0x00000000 + 0x00001000 
+  iserased IF1 0x00000000 0x00002000 
+  iserased B2_U3_C0 all
+    ]],
+    text = [[
+# local text_topic = 'iserased'
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('name'))
+  $(tTopic.name)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('synopsis'))
+  $(tTopic.synopsis)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('description'))
+  $(tTopic.description)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('options'))
+#     local sizMax = 0
+#     for _,tOption in ipairs(tTopic.options) do
+#       local sizTopic = string.len(tOption.key)
+#       if sizTopic>sizMax then
+#         sizMax = sizTopic
+#       end
+#     end
+#     for _, tOption in ipairs(tTopic.options) do
+  $(tOption.key) $(string.rep(' ', sizMax-string.len(tOption.key))) : $(tOption.description)
+#     end
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('examples'))
+  $(tTopic.examples)
+#   end
+# end
+    ]]
+  },
+
+  {
+    topic = 'hash',
+    name = 'hash - The hash command. (short description)',
+    synopsis = 'hash [device] [all | [startaddress][endaddress] | [startaddress] + [length]]',
+    description = 'The hash command returns the SHA1 checksum of the specified address. (long description)',
+    options = {{key = '[device]',description = 'the given device'},
+               {key = '[all]',description = 'the complete flash size'},
+               {key = '[startaddress][endaddress]',description = 'start- and endaddress of the flash'},
+               {key = '[startaddress] + [length]',description = 'Start offset in flash plus data size'},
+              },
+    examples = [[hash IF01 0x00000000 + 0x00001000 
+  hash IF1 0x00000000 0x00002000 
+  hash B2_U3_C0 all
+    ]],
+    text = [[
+# local text_topic = 'hash'
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('name'))
+  $(tTopic.name)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('synopsis'))
+  $(tTopic.synopsis)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('description'))
+  $(tTopic.description)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('options'))
+#     local sizMax = 0
+#     for _,tOption in ipairs(tTopic.options) do
+#       local sizTopic = string.len(tOption.key)
+#       if sizTopic>sizMax then
+#         sizMax = sizTopic
+#       end
+#     end
+#     for _, tOption in ipairs(tTopic.options) do
+  $(tOption.key) $(string.rep(' ', sizMax-string.len(tOption.key))) : $(tOption.description)
+#     end
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('examples'))
+  $(tTopic.examples)
+#   end
+# end
+    ]]
+  },
+
+  {
+    topic = 'scan',
+    name = 'scan - The scan command. (short description)',
+    synopsis = 'scan',
+    description = 'The scan command searches for devices and lists all possibilities of plugins. (long description)',
+    text = [[
+# local text_topic = 'scan'
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('name'))
+  $(tTopic.name)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('synopsis'))
+  $(tTopic.synopsis)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('description'))
+  $(tTopic.description)
+#   end
+# end
+    ]]
+  },
+
+  {
+    topic = 'connect',
+    name = 'connect - The connect command. (short description)',
+    synopsis = 'connect [plugin]',
+    description = 'The connect command establishes a connection with the plugin. (long description)',
+    options = {{key = '[plugin]',description = 'the given plugins'},
+              },
+    examples = [[connect romloader_uart_ttyUSB0
+    ]],
+    text = [[
+# local text_topic = 'connect'
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('name'))
+  $(tTopic.name)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('synopsis'))
+  $(tTopic.synopsis)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('description'))
+  $(tTopic.description)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('options'))
+#     local sizMax = 0
+#     for _,tOption in ipairs(tTopic.options) do
+#       local sizTopic = string.len(tOption.key)
+#       if sizTopic>sizMax then
+#         sizMax = sizTopic
+#       end
+#     end
+#     for _, tOption in ipairs(tTopic.options) do
+  $(tOption.key) $(string.rep(' ', sizMax-string.len(tOption.key))) : $(tOption.description)
+#     end
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('examples'))
+  $(tTopic.examples)
+#   end
+# end
+    ]]
+  },
+
+  {
+    topic = 'disconnect',
+    name = 'disconnect - The disconnect command. (short description)',
+    synopsis = 'disconnect',
+    description = 'The disconnect command disconnects from the plugin. (long description)',
+    text = [[
+# local text_topic = 'disconnect'
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('name'))
+  $(tTopic.name)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('synopsis'))
+  $(tTopic.synopsis)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('description'))
+  $(tTopic.description)
+#   end
+# end
+    ]]
+  },
+
+  {
+    topic = 'input',
+    name = 'input - The input command. (short description)',
+    synopsis = 'input [filename]',
+    description = 'The input command reads a specified input file and verify whether each line is a valid command. (long description)',
+    options = {{key = '[filename]', description = 'the filename with the list of commands'},
+              },
+    examples = [[The input file should be for example in the following format:
+
+  connect romloader_uart_ttyUSB0 
+  erase IF01 all 
+  iserased IF01 all 
+  write IF01 0x00000000 TestData/testDataA.txt 
+  verify IF01 0x00000000 testDataA.txt 
+    ]],
+    text = [[
+# local text_topic = 'input'
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('name'))
+  $(tTopic.name)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('synopsis'))
+  $(tTopic.synopsis)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('description'))
+  $(tTopic.description)
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('options'))
+#     local sizMax = 0
+#     for _,tOption in ipairs(tTopic.options) do
+#       local sizTopic = string.len(tOption.key)
+#       if sizTopic>sizMax then
+#         sizMax = sizTopic
+#       end
+#     end
+#     for _, tOption in ipairs(tTopic.options) do
+  $(tOption.key) $(string.rep(' ', sizMax-string.len(tOption.key))) : $(tOption.description)
+#     end
+#   end
+# end
+
+# for _, tTopic in ipairs(topics) do
+#   local strTopic = tTopic.topic
+#   if strTopic == text_topic then
+$(string.upper('examples'))
+  $(tTopic.examples)
+#   end
+# end
     ]]
   },
 
