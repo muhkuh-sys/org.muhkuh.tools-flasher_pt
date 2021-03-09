@@ -641,14 +641,11 @@ Shell.__atHelpTopics = {
   {
     topic = '',
     text = [[
+    
 Welcome to the help.
 
-The "help" command alone shows this message. It can also combined with a
+The help command alone shows this message. It can also combined with a
 topic.
-
-The following example shows help about the "read" command:
-
-  help read
 
 The help command has several topics:
 
@@ -662,27 +659,55 @@ The help command has several topics:
 # for _, tTopic in ipairs(topics) do
 #   local strTopic = tTopic.topic
 #   if strTopic~='' then
-  $(strTopic) $(string.rep(' ', sizMax-string.len(strTopic))) : $(tTopic.description)
+  $(strTopic) $(string.rep(' ', sizMax-string.len(strTopic))) : $(tTopic.name)
 #   end
 # end
-    ]]
+
+The following example shows help about the read command:
+
+  help read
+  
+# local tTopic = {}
+# for _, tTopicCnt in ipairs(topics) do
+#   local strTopic = tTopicCnt.topic
+#   if strTopic == 'read' then
+#     tTopic = tTopicCnt
+#     break
+#   end
+# end
+]]..Shell.__HelpTopics_templete.text
   },
+
 
   {
     topic = 'start',
-    description = 'Getting started.',
+    name = 'Getting started with the flasher application',
     text = [[
-Getting started.
+    
+This is a short description to getting started with the flasher application. 
+To get started with this application, the command scan is required to get an overview of all possible plugins:
 
-TODO...
-    ]]
+  scan
+
+with a result e.g.:
+
+  Found a total of 2 interfaces with 4 plugins:
+    romloader_uart_ttyS4
+    romloader_uart_ttyUSB0
+
+After the scan command, the connect command with one of the previous displayed plugins is necessary. To utilize the list of commands as shown by using of the help command, like read, write or erase, a connection must be established. After a successful connection with the plugin, like for example:
+
+  connect romloader_uart_ttyUSB0
+  
+a connection with the plugin is available and the previous mentioned list of commands are possible.
+    ]],
   },
 
   {
     topic = 'read',
-    name = 'read - The read command. (short description)',
+    name = 'The read command',
     synopsis = 'read [device] [all | [startaddress][endaddress] | [startaddress] + [length]] [filename]',
-    description = 'The read command reads the data of the device at the specified address into the stated filename. (long description)',
+    description = 'The read command reads the data of the device at the specified address into the stated filename.',
     options = {{key = '[device]',description = 'the given device'},
       {key = '[all]',description = 'the complete flash size'},
       {key = '[startaddress][endaddress]',description = 'start- and endaddress of the flash'},
@@ -698,9 +723,9 @@ TODO...
 
   {
     topic = 'verify',
-    name = 'verify - The verify command. (short description)',
+    name = 'The verify command',
     synopsis = 'verify [device] [startaddress] [filename]',
-    description = 'The verify command checks whether the data of the stated file is written in the device at the startdaddress. (long description)',
+    description = 'The verify command checks whether the data of the stated file is written in the device at the startdaddress.',
     options = {{key = '[device]',description = 'the given device'},
       {key = '[startaddress]',description = 'startdaddress of the flash'},
       {key = '[filename]', description = 'the given filename'},
@@ -711,9 +736,9 @@ TODO...
 
   {
     topic = 'write',
-    name = 'write - The write command. (short description)',
+    name = 'The write command',
     synopsis = 'write [device] [startaddress] [filename]',
-    description = 'The write command writes the data of the stated file into the device at the specified startaddress. (long description)',
+    description = 'The write command writes the data of the stated file into the device at the specified startaddress.',
     options = {{key = '[device]',description = 'the given device'},
       {key = '[startaddress]',description = 'startaddress of the flash'},
       {key = '[filename]', description = 'the given filename'},
@@ -727,9 +752,9 @@ TODO...
 
   {
     topic = 'erase',
-    name = 'erase - The erase command. (short description)',
+    name = 'The erase command',
     synopsis = 'erase [device] [all | [startaddress][endaddress] | [startaddress] + [length]]',
-    description = 'The erase command delete the data of the device at the specified address. (long description)',
+    description = 'The erase command delete the data of the device at the specified address.',
     options = {{key = '[device]',description = 'the given device'},
       {key = '[all]',description = 'the complete flash size'},
       {key = '[startaddress][endaddress]',description = 'start- and endaddress of the flash'},
@@ -744,9 +769,9 @@ TODO...
 
   {
     topic = 'iserased',
-    name = 'iserased - The iserased command. (short description)',
+    name = 'The iserased command',
     synopsis = 'iserased [device] [all | [startaddress][endaddress] | [startaddress] + [length]]',
-    description = 'The iserased command checks whether the data is deleted of the device at the specified address. (long description)',
+    description = 'The iserased command checks whether the data is deleted of the device at the specified address.',
     options = {{key = '[device]',description = 'the given device'},
       {key = '[all]',description = 'the complete flash size'},
       {key = '[startaddress][endaddress]',description = 'start- and endaddress of the flash'},
@@ -761,9 +786,9 @@ TODO...
 
   {
     topic = 'hash',
-    name = 'hash - The hash command. (short description)',
+    name = 'The hash command',
     synopsis = 'hash [device] [all | [startaddress][endaddress] | [startaddress] + [length]]',
-    description = 'The hash command returns the SHA1 checksum of the specified address. (long description)',
+    description = 'The hash command returns the SHA1 checksum of the specified address.',
     options = {{key = '[device]',description = 'the given device'},
       {key = '[all]',description = 'the complete flash size'},
       {key = '[startaddress][endaddress]',description = 'start- and endaddress of the flash'},
@@ -778,17 +803,17 @@ TODO...
 
   {
     topic = 'scan',
-    name = 'scan - The scan command. (short description)',
+    name = 'The scan command',
     synopsis = 'scan',
-    description = 'The scan command searches for devices and lists all possibilities of plugins. (long description)',
+    description = 'The scan command searches for devices and lists all possibilities of plugins.',
     text = Shell.__HelpTopics_templete.text
   },
 
   {
     topic = 'connect',
-    name = 'connect - The connect command. (short description)',
+    name = 'The connect command',
     synopsis = 'connect [plugin]',
-    description = 'The connect command establishes a connection with the plugin. (long description)',
+    description = 'The connect command establishes a connection with the plugin.',
     options = {{key = '[plugin]',description = 'the given plugins'},
     },
     examples = [[connect romloader_uart_ttyUSB0
@@ -798,20 +823,20 @@ TODO...
 
   {
     topic = 'disconnect',
-    name = 'disconnect - The disconnect command. (short description)',
+    name = 'The disconnect command',
     synopsis = 'disconnect',
-    description = 'The disconnect command disconnects from the plugin. (long description)',
+    description = 'The disconnect command disconnects from the plugin.',
     text = Shell.__HelpTopics_templete.text
   },
 
   {
     topic = 'input',
-    name = 'input - The input command. (short description)',
+    name = 'The input command',
     synopsis = 'input [filename]',
-    description = 'The input command reads a specified input file and verify whether each line is a valid command. (long description)',
-    options = {{key = '[filename]', description = 'the filename with the list of commands'},
+    description = 'The input command reads a specified input file and verify whether each line is a valid command. This command makes it easier to enter repetitive command blocks.',
+    options = {{key = '[filename]', description = 'file with list of commands - line by line'},
     },
-    examples = [[The input file should be for example in the following format:
+    examples = [[The input file should be, for example, in the following format:
 
   connect romloader_uart_ttyUSB0 
   erase IF01 all 
@@ -824,13 +849,10 @@ TODO...
 
   {
     topic = 'quit',
-    description = 'The quit command.',
-    text = [[
-The quit command.
-
-It quits the application without a safety question.
-A connection to a netx is closed.
-    ]]
+    name = 'The quit command',
+    description = [[The quit command quits the application without a safety question.
+A connection to a netx is closed.]],
+    text = Shell.__HelpTopics_templete.text 
   }
 }
 
