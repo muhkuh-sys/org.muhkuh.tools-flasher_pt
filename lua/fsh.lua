@@ -1274,8 +1274,8 @@ end
 -- Return the input String as Hex value
 function Shell:__str2hex(strData)
   -- one of the magic characters: '.' represents any single character
-  return (str:gsub('.', function (c)
-        return string.format('%02X', string.byte(c))
+  return (strData:gsub('.', function (c)
+        return string.format('%02x ', string.byte(c))
       end))
 end
 
