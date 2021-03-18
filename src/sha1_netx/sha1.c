@@ -107,6 +107,10 @@ void SHA1_Final(unsigned char *hash, SHA_CTX *c)
 	tBuf.auc[6] = (unsigned char)((ullDataBits >>  8U) & 0xffU);
 	tBuf.auc[7] = (unsigned char)( ullDataBits         & 0xffU);
 	ptHashArea->ulHash_din = tBuf.aul[0];
+
+	/* Clear the IRQ before writing the last data element. */
+	ptHashArea->ulHash_irq_raw = HOSTMSK(hash_irq_raw_hash_ready);
+
 	ptHashArea->ulHash_din = tBuf.aul[1];
 
 	/* Wait for the hash calculation. */

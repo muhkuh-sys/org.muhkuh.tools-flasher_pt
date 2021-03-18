@@ -433,7 +433,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_checksum(tFlasherInputParameter *ptAppPar
 	BUS_T tSourceTyp;
 	CMD_PARAMETER_CHECKSUM_T *ptParameter;
 	SHA_CTX tShaContext;
-	
+
 
 	/* Be pessimistic. */
 	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
@@ -481,7 +481,7 @@ static NETX_CONSOLEAPP_RESULT_T opMode_checksum(tFlasherInputParameter *ptAppPar
 	/* store hash value in parameter */
 	if (tResult == NETX_CONSOLEAPP_RESULT_OK)
 	{
-		SHA1_Final(&ptParameter->aucSha1[0], &tShaContext);
+		SHA1_Final(&(ptParameter->aucSha1[0]), &tShaContext);
 	}
 	
 	return tResult;
