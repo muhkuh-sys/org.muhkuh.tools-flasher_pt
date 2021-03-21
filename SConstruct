@@ -315,6 +315,8 @@ if 'NETIOL' in atPickNetxForBuild:
 # Provide a function to build a flasher binary.
 #
 def flasher_build(strFlasherName, tEnv, strBuildPath, astrSourcesLib, astrSourcesMain):
+	tEnv.CompileDb(os.path.join(strBuildPath, 'compile_commands.json'))
+
 	# Get the platform library.
 	tLibPlatform = tEnv['PLATFORM_LIBRARY']
 
