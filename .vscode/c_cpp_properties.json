@@ -1,0 +1,54 @@
+{
+    "configurations": [
+        {
+            "name": "NETX500",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "compileCommands": "${workspaceFolder}/targets/netx500_nodbg/compile_commands.json"
+        },
+        {
+            "name": "NETX50",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "compileCommands": "${workspaceFolder}/targets/netx50_nodbg/compile_commands.json"
+        },
+        {
+            "name": "NETX10",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "compileCommands": "${workspaceFolder}/targets/netx10_nodbg/compile_commands.json"
+        },
+        {
+            "name": "NETX56",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "compileCommands": "${workspaceFolder}/targets/netx56_nodbg/compile_commands.json"
+        },
+        {
+            "name": "NETX90_MPW",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "compileCommands": "${workspaceFolder}/targets/netx90_mpw_nodbg/compile_commands.json"
+        },
+        {
+            "name": "NETX4000",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "compileCommands": "${workspaceFolder}/targets/netx4000_nodbg/compile_commands.json"
+        },
+        {
+            "name": "NETX90",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "compileCommands": "${workspaceFolder}/targets/netx90_nodbg/compile_commands.json"
+        },
+        {
+            "name": "NETIOL",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "compileCommands": "${workspaceFolder}/targets/netiol_nodbg/compile_commands.json"
+        }
+    ],
+    "version": 4
+  }
+  
