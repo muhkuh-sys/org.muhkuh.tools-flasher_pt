@@ -92,6 +92,7 @@ function Shell:_init()
   self.lpeg = lpeg
   self.pl = require "pl.import_into"()
   self.term = require "term"
+  -- self.termlib = require "libterminalSize"
   self.colors = self.term.colors
   self.tFlasher = require "flasher"(tLog_Flasher)
 
@@ -99,6 +100,7 @@ function Shell:_init()
   self.tLog_ProgressBar = tLog_ProgressBar
 
   self.tCmd_input = self.pl.List()
+  self.list_cmd = false
 
   -- No connection yet.
   self.tPlugin = nil
@@ -185,6 +187,14 @@ function Shell:_init()
     (Cg(Integer / tonumber, "startaddress") * Space *
       (Cg(Integer / tonumber, "endaddress") + (P("+") * OptionalSpace * Cg(Integer / tonumber, "length"))))
 
+  -- possible choices of debug command
+  local Cmds_debug = Cg(P("watch"), "watch") + Cg(P("save"), "save") * Space * Cg(Filename, "filename")
+  self.AllCommands_debug = {"watch", "save"}
+
+  -- possible choices of list command
+  local Cmds_list = Cg(P("run"), "run") + Cg(P("save"), "save") * Space * Cg(Filename, "filename")
+  self.AllCommands_list = {"run", "save"}
+
   -- A comment starts with a hash and covers the rest of the line.
   local Comment = P("#")
 
@@ -266,30 +276,72 @@ function Shell:_init()
       cmd = "input",
       pattern = OptionalSpace * Cg(P("input"), "cmd") * Space * Cg(Filename, "filename") * OptionalSpace * -1,
       run = self.__run_input
+    },
+    {
+      cmd = "debug",
+      pattern = OptionalSpace * Cg(P("debug"), "cmd") * Space * Cmds_debug * OptionalSpace * -1,
+      run = self.__run_debug
+    },
+    {
+      cmd = "list",
+      pattern = OptionalSpace * Cg(P("list"), "cmd") * Space * Cmds_list * OptionalSpace * -1,
+      run = self.__run_list
+    },
+    {
+      -- command for list command only
+      cmd = "end",
+      pattern = OptionalSpace * Cg(P("end"), "cmd") * OptionalSpace * -1,
+      run = function()
+        return true
+      end
+    },
+    {
+      -- command for list command only
+      cmd = "clear",
+      pattern = OptionalSpace * Cg(P("clear"), "cmd") * Space * (Cg(P("all"), "all") + Cg(Integer / tonumber, "number")) *
+        OptionalSpace *
+        -1,
+      run = function()
+        return true
+      end
     }
   }
   self.__atCommands = atCommands
 
   -- Combine all commands.
   local AllCommands
+  local AllCommands_withListCmd
   for _, tCommand in ipairs(atCommands) do
     local pattern = tCommand.pattern
     if AllCommands == nil then
-      AllCommands = pattern
+      if tCommand.cmd ~= "end" and tCommand.cmd ~= "clear" then
+        AllCommands = pattern
+      end
+      AllCommands_withListCmd = pattern
     else
-      AllCommands = AllCommands + pattern
+      if tCommand.cmd ~= "end" and tCommand.cmd ~= "clear" then
+        AllCommands = AllCommands + pattern
+      end
+      AllCommands_withListCmd = AllCommands_withListCmd + pattern
     end
   end
 
   self.__AllCommands = AllCommands
   self.__lineGrammar = Ct((AllCommands * (Comment ^ -1)) + Comment)
+  self.__lineGrammar_withListCmd = Ct((AllCommands_withListCmd * (Comment ^ -1)) + Comment)
 
   -- Create a table with all commands as a string.
   local astrCommandWords = {}
+  local astrCommandWords_withListCmd = {}
   for _, tCommand in ipairs(atCommands) do
-    table.insert(astrCommandWords, tCommand.cmd)
+    if tCommand.cmd ~= "end" and tCommand.cmd ~= "clear" then
+      table.insert(astrCommandWords, tCommand.cmd)
+    end
+    table.insert(astrCommandWords_withListCmd, tCommand.cmd)
   end
+
   self.__astrCommandWords = astrCommandWords
+  self.astrCommandWords_withListCmd = astrCommandWords_withListCmd
 
   -- Create a table with all help topics as a string.
   local astrHelpTopicWords = {}
@@ -336,7 +388,13 @@ function Shell:_init()
     -- Typing a command. This also matches an empty line.
     {
       pattern = OptionalSpace * Cg(R("az") ^ 0) * -1,
-      words = self.__astrCommandWords
+      words = function()
+        if self.list_cmd == true then
+          return self.astrCommandWords_withListCmd
+        else
+          return self.__astrCommandWords
+        end
+      end
     },
     -- Connect command.
     {
@@ -665,6 +723,94 @@ function Shell:_init()
       pattern = OptionalSpace * P("help") * Space * Cg(R("az") ^ 1) * -1,
       words = function()
         return self.__astrHelpTopicWords
+      end
+    },
+    -- debug command.
+    {
+      pattern = OptionalSpace * P("debug") * Space * -1,
+      hint = function()
+        return "[Command]  possible values: " .. table.concat(self.AllCommands_debug, ", ")
+      end,
+      words = function()
+        return self.AllCommands_debug
+      end
+    },
+    {
+      pattern = OptionalSpace * P("debug") * Space * Cg(R("az", "AZ") ^ 1) * -1,
+      words = function()
+        return self.AllCommands_debug
+      end
+    },
+    {
+      pattern = OptionalSpace * P("debug") * Space * P("save") * Space * -1,
+      hint = "[filename]",
+      words = function(strMatch)
+        return self:__getFilenameWords(strMatch)
+      end
+    },
+    {
+      pattern = OptionalSpace * P("debug") * Space * P("save") * Space * Cg(Filename) * -1,
+      words = function(strMatch)
+        return self:__getFilenameWords(strMatch)
+      end
+    },
+    -- list command.
+    {
+      pattern = OptionalSpace * P("list") * Space * -1,
+      hint = function()
+        return "[Command]  possible values: " .. table.concat(self.AllCommands_list, ", ")
+      end,
+      words = function()
+        return self.AllCommands_list
+      end
+    },
+    {
+      pattern = OptionalSpace * P("list") * Space * Cg(R("az", "AZ") ^ 1) * -1,
+      words = function()
+        return self.AllCommands_list
+      end
+    },
+    {
+      pattern = OptionalSpace * P("list") * Space * P("save") * Space * -1,
+      hint = "[filename]",
+      words = function(strMatch)
+        return self:__getFilenameWords(strMatch)
+      end
+    },
+    {
+      pattern = OptionalSpace * P("list") * Space * P("save") * Space * Cg(Filename) * -1,
+      words = function(strMatch)
+        return self:__getFilenameWords(strMatch)
+      end
+    },
+    -- clear command (list command only)
+    {
+      pattern = OptionalSpace * P("clear") * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "all  or  [number to clear]"
+        end
+      end,
+      words = function()
+        if self.list_cmd == true then
+          return {"all"}
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("clear") * Space * Cg(P("al") + P("a")) * -1,
+      words = function()
+        if self.list_cmd == true then
+          return {"all"}
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("clear") * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the number of the list to clear"
+        end
       end
     }
   }
@@ -2255,6 +2401,157 @@ end
 
 ------------------------------------------------------------------------------
 
+--
+function Shell:__run_debug(tCmd)
+  local pl = self.pl
+  local tLog = self.tLog
+  local strFile
+
+  -- display the complete debug information
+  if tCmd.watch ~= nil then
+    -- save the complete debug information to the file
+    strFile = pl.utils.readfile(self.strLogDir .. "/" .. self.strLogFilename, false)
+    print(strFile)
+  elseif tCmd.save ~= nil then
+    local strFilename = pl.path.expanduser(tCmd.filename)
+
+    strFile = pl.utils.readfile(self.strLogDir .. "/" .. self.strLogFilename, false)
+
+    tResult, strMsg = pl.utils.writefile(strFilename, strFile, true)
+    if tResult == true then
+      tLog.info("OK. The debug information was written to the file '%s'", tCmd.filename)
+    else
+      tLog.error('Failed to write the data to the file "%s": %s', strFilename, strMsg)
+    end
+  end
+
+  return true
+end
+
+------------------------------------------------------------------------------
+
+--
+function Shell:__run_list(tCmd)
+  local atCommands = self.__atCommands
+  local tGrammar = self.__lineGrammar_withListCmd
+  local colors = self.colors
+  local linenoise = self.linenoise -- same object as in run - dont matter if require is used
+  local lpeg = self.lpeg
+  local pl = self.pl
+  local tListCmds = pl.List()
+  -- local strHistory = ".fsh_history.txt"
+  local tLog = self.tLog
+
+  self.list_cmd = true
+
+  linenoise.clearscreen()
+
+  -- nicht laden damit beim ausführen des Befehls jedesmal eine neue list geschrieben wird
+  -- linenoise.historyload(strHistory) -- load existing history
+
+  tLog.warning("This is the list command. To adequately close this command and execute the selection, write 'end'.")
+  tLog.warning("To clear the list it is possible to use the clear command.")
+  tLog.warning("Synopsis:  clear [all | [number to clear]] ")
+
+  --initialization of setcompletion and sethints of linenoise
+  -- can be vanishsed, only for test purposes
+  linenoise.setcompletion(
+    function(tCompletions, strLine)
+      self:__completer(tCompletions, strLine)
+    end
+  )
+  linenoise.sethints(
+    function(strLine)
+      return self:__hints(strLine), {color = 31, bold = false}
+    end
+  )
+
+  local fRunning = true
+  while fRunning do
+    if tListCmds:len() > 0 then
+      print(string.format("List of all commands:"))
+      for k, v in ipairs(tListCmds) do
+        print(string.format("[%d] %s", k, v))
+      end
+    end
+
+    self.strPrompt = colors.bright .. colors.blue .. "List " .. "> " .. colors.white
+
+    local strLine, strError = linenoise.linenoise(self.strPrompt)
+
+    if strLine == nil then
+      if strError ~= nil then
+        tLog.error("Error: %s", tostring(strError))
+      end
+      fRunning = false
+    elseif #strLine > 0 then
+      -- linenoise.historyadd(strLine)
+      -- linenoise.historysave(strHistory)
+      -- Parse the line.
+      local tCmd_temp = lpeg.match(tGrammar, strLine)
+      if tCmd_temp == nil then
+        tLog.error("Failed to parse the line.")
+      else
+        -- There should be a command at the "cmd" key.
+        -- If there is no command, this is a comment.
+        local strCmd = tCmd_temp.cmd
+        if strCmd ~= nil then
+          -- Search the command.
+          local tCmdHit
+          for _, tCmdCnt in ipairs(atCommands) do
+            if tCmdCnt.cmd == strCmd then
+              tCmdHit = tCmdCnt
+              break
+            end
+          end
+          if tCmdHit == nil then
+            tLog.error("Command not found.")
+          elseif strCmd == "end" then
+            self.list_cmd = false
+            fRunning = false
+            if tCmd.run ~= nil then
+              self.tCmd_input:extend(tListCmds)
+              tLog.info("process the list of commands:")
+            elseif tCmd.save ~= nil then
+              local strFilename = pl.path.expanduser(tCmd.filename)
+              local strFile = ""
+
+              for _,v in ipairs(tListCmds) do
+                strFile = strFile .. v .. '\n'
+              end
+
+              tResult, strMsg = pl.utils.writefile(strFilename, strFile, true)
+              if tResult == true then
+                tLog.info("OK. The list of commands was written to the file '%s'", tCmd.filename)
+              else
+                tLog.error('Failed to write the data to the file "%s": %s', strFilename, strMsg)
+              end
+            end
+          elseif strCmd == "clear" then
+            if tCmd_temp.all ~= nil then
+              tListCmds:clear()
+            elseif tCmd_temp.number ~= nil then
+              if tCmd_temp.number > tListCmds:len() then
+                tLog.error("The number to clear is greater than the size of the list.")
+              elseif tCmd_temp.number == 0 then
+                tLog.error("The starting index of the list is 1.")
+              else
+                tListCmds:remove(tCmd_temp.number)
+              end
+            end
+          else
+            tListCmds:append(strLine)
+          end
+        end
+      end
+    end
+  end
+
+  return true
+end
+
+------------------------------------------------------------------------------
+
 function Shell:__run_quit()
   -- Disconnect any existing plugin.
   self:__run_disconnect()
@@ -2427,7 +2724,17 @@ function Shell:run()
   -- Scan for available devices.
   self:__run_scan()
 
-  -- initialization of setcompletion and sethints of linenoise
+  local fRunning = true
+  while fRunning do
+    -- Set the current prompt. It depends on the connection.
+    local tPlugin = self.tPlugin
+    local strPlugin = "not connected"
+    if tPlugin ~= nil then
+      strPlugin = tPlugin:GetName()
+    end
+    self.strPrompt = colors.bright .. colors.blue .. strPlugin .. "> " .. colors.white
+
+      -- initialization of setcompletion and sethints of linenoise
   linenoise.setcompletion(
     function(tCompletions, strLine)
       self:__completer(tCompletions, strLine)
@@ -2438,16 +2745,6 @@ function Shell:run()
       return self:__hints(strLine), {color = 35, bold = false}
     end
   )
-
-  local fRunning = true
-  while fRunning do
-    -- Set the current prompt. It depends on the connection.
-    local tPlugin = self.tPlugin
-    local strPlugin = "not connected"
-    if tPlugin ~= nil then
-      strPlugin = tPlugin:GetName()
-    end
-    self.strPrompt = colors.bright .. colors.blue .. strPlugin .. "> " .. colors.white
 
     local strLine, strError
 
