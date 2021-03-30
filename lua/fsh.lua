@@ -1,19 +1,80 @@
 ------------------------------------------------------------------------------
 
-
 -- Create the Shell class.
-local class = require 'pl.class'
+local class = require "pl.class"
 local Shell = class()
 
+local debugMode_ProgressBar = false
+local debugMode = false
 
-function Shell:_init(tLog)
-  self.linenoise = require 'linenoise'
-  local lpeg = require 'lpeg'
+function Shell:_init()
+  local tLogWriter_consoleFilter
+  if debugMode == false then
+    tLogWriter_consoleFilter = require "log.writer.filter".new("info", require "log.writer.console.color".new())
+  else
+    tLogWriter_consoleFilter = require "log.writer.console.color".new()
+  end
+
+  local strLogDir = "./logs"
+  local strLogFilename = ".log_Data.log"
+
+  self.strLogDir = strLogDir
+  self.strLogFilename = strLogFilename
+
+  local tLogWriter =
+    require "log.writer.list".new(
+    tLogWriter_consoleFilter,
+    require "log.writer.file".new {
+      log_dir = strLogDir, --   log dir
+      log_name = strLogFilename, --   current log name
+      max_rows = 100000,
+      max_size = 1000000, --   max file size in bytes
+      roll_count = 10 --   count files
+    }
+  )
+
+  local tLog =
+    require "log".new(
+    -- maximum log level
+    "trace",
+    -- writer
+    require "log.writer.prefix".new("[FSH] ", tLogWriter),
+    -- Formatter
+    require "log.formatter.format".new()
+  )
+
+  local tLog_ProgressBar =
+    require "log".new(
+    -- maximum log level
+    "trace",
+    -- writer
+    require "log.writer.prefix".new("[CALLBACK] ", tLogWriter),
+    -- Formatter
+    require "log.formatter.concat".new()
+  )
+
+  local tLog_Flasher =
+    require "log".new(
+    -- maximum log level
+    "trace",
+    -- writer
+    require "log.writer.prefix".new("[FLASHER] ", tLogWriter),
+    -- Formatter
+    require "log.formatter.format".new()
+  )
+
+  for _, strPlugin in ipairs(self.astrPlugins) do
+    tLog.debug('Loading plugin "%s"...', strPlugin)
+    require(strPlugin)
+  end
+
+  self.linenoise = require "linenoise"
+  local lpeg = require "lpeg"
   self.lpeg = lpeg
-  self.pl = require 'pl.import_into'()
-  self.term = require 'term'
+  self.pl = require "pl.import_into"()
+  self.term = require "term"
   self.colors = self.term.colors
-  self.tFlasher = require 'flasher'(tLog)
+  self.tFlasher = require "flasher"(tLog_Flasher)
   self.tLog = tLog
   self.tCmd_input = self.pl.List()
 
@@ -37,34 +98,43 @@ function Shell:_init(tLog)
 
   -- save typing function names with "lpeg" in front of them:
   local P, V, Cg, Ct, Cc, S, R, C, Cf, Cb, Cs =
-  lpeg.P, lpeg.V, lpeg.Cg, lpeg.Ct, lpeg.Cc, lpeg.S, lpeg.R, lpeg.C, lpeg.Cf, lpeg.Cb, lpeg.Cs
-
+    lpeg.P,
+    lpeg.V,
+    lpeg.Cg,
+    lpeg.Ct,
+    lpeg.Cc,
+    lpeg.S,
+    lpeg.R,
+    lpeg.C,
+    lpeg.Cf,
+    lpeg.Cb,
+    lpeg.Cs
 
   -- Match at least one character of whitespace.
-  local Space = S(" \t")^1
+  local Space = S(" \t") ^ 1
   -- Match optional whitespace.
-  local OptionalSpace = S(" \t")^0
+  local OptionalSpace = S(" \t") ^ 0
 
   -- Match an integer. This can be decimal or hexadecimal.
   -- The "unfinished" variant accepts also unfinished hexadecimal numbers
   -- like "0x".
-  local DecimalInteger = R('09')^1
-  local HexInteger = P("0x") * (R('09','af','AF') )^1
-  local UnfinishedHexInteger = P("0x") * R('09','af','AF')^0
+  local DecimalInteger = R("09") ^ 1
+  local HexInteger = P("0x") * (R("09", "af", "AF")) ^ 1
+  local UnfinishedHexInteger = P("0x") * R("09", "af", "AF") ^ 0
   local Integer = HexInteger + DecimalInteger
   local UnfinishedInteger = UnfinishedHexInteger + DecimalInteger
 
   -- A plugin name consists of alphanumeric characters and the underscore.
-  local PluginName = (R('az','AZ','09') + S('_-@,:'))^1
+  local PluginName = (R("az", "AZ", "09") + S("_-@,:")) ^ 1
 
   -- A device name consists of alphanumeric characters and the underscore.
-  local DeviceName = (R('az','AZ','09') + P('_'))^1
+  local DeviceName = (R("az", "AZ", "09") + P("_")) ^ 1
 
-  self.tMatchBusUnitCs = Ct(
-    P('B') * Cg(Integer / tonumber, 'bus') *
-    P('_U') * Cg(Integer / tonumber, 'unit') *
-    P('_C') * Cg(Integer / tonumber, 'cs') *
-    -1
+  self.tMatchBusUnitCs =
+    Ct(
+    P("B") * Cg(Integer / tonumber, "bus") * P("_U") * Cg(Integer / tonumber, "unit") * P("_C") *
+      Cg(Integer / tonumber, "cs") *
+      -1
   )
 
   ---------------------------------------------------------------------------
@@ -76,90 +146,105 @@ function Shell:_init(tLog)
   -- reason: if a path contains spaces, it should be enclosed in quotes, but
   -- there is no simple way to insert a quote somewhere before the cursor in
   -- linenoise (if there is a way, please tell me :D ).
-  local Filename = P {
-    "start",   --> this tells LPEG which rule to process first
-    start    =  V'filename',
-    filename  = V'allWords' * (Space * V'filename')^0,
-    allWords = (1 - S(' \t\n\r'))^1,
+  local Filename =
+    P {
+    "start", --> this tells LPEG which rule to process first
+    start = V "filename",
+    filename = V "allWords" * (Space * V "filename") ^ 0,
+    allWords = (1 - S(" \t\n\r")) ^ 1
   }
 
   -- Range is either...
   --   1) the keyword "all"
   --   2) a start and end address
   --   3) a start and length separated by "+"
-  local Range = Cg(P('all'), 'all') +
-  (Cg(Integer / tonumber, 'startaddress') * Space *
-    (
-      Cg(Integer / tonumber, 'endaddress') +
-      (P('+') * OptionalSpace * Cg(Integer / tonumber, 'length'))
-    )
-  )
+  local Range =
+    Cg(P("all"), "all") +
+    (Cg(Integer / tonumber, "startaddress") * Space *
+      (Cg(Integer / tonumber, "endaddress") + (P("+") * OptionalSpace * Cg(Integer / tonumber, "length"))))
 
   -- A comment starts with a hash and covers the rest of the line.
-  local Comment = P('#')
+  local Comment = P("#")
 
   -- All available commands and their handlers.
   local atCommands = {
     {
-      cmd = 'connect',
-      pattern = OptionalSpace * Cg(P('connect'), 'cmd') * Space * Cg(PluginName, 'plugin') * OptionalSpace * -1,
+      cmd = "connect",
+      pattern = OptionalSpace * Cg(P("connect"), "cmd") * Space * Cg(PluginName, "plugin") * OptionalSpace * -1,
       run = self.__run_connect
     },
     {
-      cmd = 'disconnect',
-      pattern = OptionalSpace * Cg(P('disconnect'), 'cmd') * OptionalSpace * -1,
+      cmd = "disconnect",
+      pattern = OptionalSpace * Cg(P("disconnect"), "cmd") * OptionalSpace * -1,
       run = self.__run_disconnect
     },
     {
-      cmd = 'read',
-      pattern = OptionalSpace * Cg(P('read'), 'cmd') * Space * Cg(DeviceName, 'device') * Space * Range * Space * Cg(Filename, 'filename') * OptionalSpace * -1,
+      cmd = "read",
+      pattern = OptionalSpace * Cg(P("read"), "cmd") * Space * Cg(DeviceName, "device") * Space * Range * Space *
+        Cg(Filename, "filename") *
+        OptionalSpace *
+        -1,
       run = self.__run_read
     },
     {
-      cmd = 'write',
-      pattern = OptionalSpace * Cg(P('write'), 'cmd') * Space * Cg(DeviceName, 'device') * Space * Cg(Integer, 'startaddress') * Space * Cg(Filename, 'filename') * OptionalSpace * -1,
+      cmd = "write",
+      pattern = OptionalSpace * Cg(P("write"), "cmd") * Space * Cg(DeviceName, "device") * Space *
+        Cg(Integer, "startaddress") *
+        Space *
+        Cg(Filename, "filename") *
+        OptionalSpace *
+        -1,
       run = self.__run_write
     },
     {
-      cmd = 'erase',
-      pattern = OptionalSpace * Cg(P('erase'), 'cmd') * Space * Cg(DeviceName, 'device') * Space * Range * OptionalSpace * -1,
+      cmd = "erase",
+      pattern = OptionalSpace * Cg(P("erase"), "cmd") * Space * Cg(DeviceName, "device") * Space * Range * OptionalSpace *
+        -1,
       run = self.__run_erase
     },
     {
-      cmd = 'iserased',
-      pattern = OptionalSpace * Cg(P('iserased'), 'cmd') * Space * Cg(DeviceName, 'device') * Space * Range * OptionalSpace * -1,
+      cmd = "iserased",
+      pattern = OptionalSpace * Cg(P("iserased"), "cmd") * Space * Cg(DeviceName, "device") * Space * Range *
+        OptionalSpace *
+        -1,
       run = self.__run_iserased
     },
     {
-      cmd = 'verify',
-      pattern = OptionalSpace * Cg(P('verify'), 'cmd') * Space * Cg(DeviceName, 'device') * Space * Cg(Integer, 'startaddress') * Space * Cg(Filename, 'filename') * OptionalSpace * -1,
+      cmd = "verify",
+      pattern = OptionalSpace * Cg(P("verify"), "cmd") * Space * Cg(DeviceName, "device") * Space *
+        Cg(Integer, "startaddress") *
+        Space *
+        Cg(Filename, "filename") *
+        OptionalSpace *
+        -1,
       run = self.__run_verify
     },
     {
-      cmd = 'hash',
-      pattern = OptionalSpace * Cg(P('hash'), 'cmd') * Space * Cg(DeviceName, 'device') * Space * Range * OptionalSpace * -1,
+      cmd = "hash",
+      pattern = OptionalSpace * Cg(P("hash"), "cmd") * Space * Cg(DeviceName, "device") * Space * Range * OptionalSpace *
+        -1,
       run = self.__run_hash
     },
     {
-      cmd = 'scan',
-      pattern = OptionalSpace * Cg(P('scan'), 'cmd') * OptionalSpace * -1,
+      cmd = "scan",
+      pattern = OptionalSpace * Cg(P("scan"), "cmd") * OptionalSpace * -1,
       run = self.__run_scan
     },
     {
-      cmd = 'help',
-      pattern = OptionalSpace * Cg(P('help'), 'cmd') * (Space * Cg(R('az')^1, 'topic'))^-1 * OptionalSpace * -1,
+      cmd = "help",
+      pattern = OptionalSpace * Cg(P("help"), "cmd") * (Space * Cg(R("az") ^ 1, "topic")) ^ -1 * OptionalSpace * -1,
       run = self.__run_help
     },
     {
-      cmd = 'quit',
-      pattern = OptionalSpace * Cg(P('quit'), 'cmd') * OptionalSpace * -1,
+      cmd = "quit",
+      pattern = OptionalSpace * Cg(P("quit"), "cmd") * OptionalSpace * -1,
       run = self.__run_quit
     },
     {
-      cmd = 'input',
-      pattern = OptionalSpace * Cg(P('input'), 'cmd') * Space * Cg(Filename, 'filename') * OptionalSpace * -1,
+      cmd = "input",
+      pattern = OptionalSpace * Cg(P("input"), "cmd") * Space * Cg(Filename, "filename") * OptionalSpace * -1,
       run = self.__run_input
-    },
+    }
   }
   self.__atCommands = atCommands
 
@@ -167,7 +252,7 @@ function Shell:_init(tLog)
   local AllCommands
   for _, tCommand in ipairs(atCommands) do
     local pattern = tCommand.pattern
-    if AllCommands==nil then
+    if AllCommands == nil then
       AllCommands = pattern
     else
       AllCommands = AllCommands + pattern
@@ -175,7 +260,7 @@ function Shell:_init(tLog)
   end
 
   self.__AllCommands = AllCommands
-  self.__lineGrammar = Ct((AllCommands * (Comment^-1)) + Comment)
+  self.__lineGrammar = Ct((AllCommands * (Comment ^ -1)) + Comment)
 
   -- Create a table with all commands as a string.
   local astrCommandWords = {}
@@ -188,7 +273,7 @@ function Shell:_init(tLog)
   local astrHelpTopicWords = {}
   for _, tTopic in ipairs(self.__atHelpTopics) do
     local strTopic = tTopic.topic
-    if strTopic~=nil and strTopic~='' then
+    if strTopic ~= nil and strTopic ~= "" then
       table.insert(astrHelpTopicWords, strTopic)
     end
   end
@@ -228,272 +313,340 @@ function Shell:_init(tLog)
   self.__atInteractivePatterns = {
     -- Typing a command. This also matches an empty line.
     {
-      pattern = OptionalSpace * Cg(R('az')^0) * -1,
+      pattern = OptionalSpace * Cg(R("az") ^ 0) * -1,
       words = self.__astrCommandWords
     },
-
     -- Connect command.
     {
-      pattern = OptionalSpace * P('connect') * Space * -1,
-      hint = function() return '[plugin]  possible values: ' .. table.concat(self.__astrPluginNames, ', ') end,
-      words = function() return self.__astrPluginNames end
+      pattern = OptionalSpace * P("connect") * Space * -1,
+      hint = function()
+        return "[plugin]  possible values: " .. table.concat(self.__astrPluginNames, ", ")
+      end,
+      words = function()
+        return self.__astrPluginNames
+      end
     },
     {
-      pattern = OptionalSpace * P('connect') * Space * Cg(PluginName) * -1,
-      words = function() return self.__astrPluginNames end
+      pattern = OptionalSpace * P("connect") * Space * Cg(PluginName) * -1,
+      words = function()
+        return self.__astrPluginNames
+      end
     },
-
     -- Read command.
     {
-      pattern = OptionalSpace * P('read') * Space * -1,
-      hint = function() return '[device]  possible values: ' .. table.concat(self.__aSanitizedBoardNames, ', ') end,
-      words = function() return self.__aSanitizedBoardNames end
+      pattern = OptionalSpace * P("read") * Space * -1,
+      hint = function()
+        return "[device]  possible values: " .. table.concat(self.__aSanitizedBoardNames, ", ")
+      end,
+      words = function()
+        return self.__aSanitizedBoardNames
+      end
     },
     {
-      pattern = OptionalSpace * P('read') * Space * Cg(DeviceName) * -1,
-      words = function() return self.__aSanitizedBoardNames end
+      pattern = OptionalSpace * P("read") * Space * Cg(DeviceName) * -1,
+      words = function()
+        return self.__aSanitizedBoardNames
+      end
     },
     {
-      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * -1,
-      hint = 'all  or  [startaddress] [endaddress]  or  [startaddress] + [length]',
-      words = { 'all' }
+      pattern = OptionalSpace * P("read") * Space * DeviceName * Space * -1,
+      hint = "all  or  [startaddress] [endaddress]  or  [startaddress] + [length]",
+      words = {"all"}
     },
     {
-      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * Cg(P('al') + P('a')) * -1,
-      words = { 'all' }
+      pattern = OptionalSpace * P("read") * Space * DeviceName * Space * Cg(P("al") + P("a")) * -1,
+      words = {"all"}
     },
     {
-      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * UnfinishedInteger * -1,
-      hint = '    this is the startaddress'
+      pattern = OptionalSpace * P("read") * Space * DeviceName * Space * UnfinishedInteger * -1,
+      hint = "    this is the startaddress"
     },
     {
-      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * Integer * Space * -1,
-      hint = '[endaddress]  or  + [length]'
+      pattern = OptionalSpace * P("read") * Space * DeviceName * Space * Integer * Space * -1,
+      hint = "[endaddress]  or  + [length]"
     },
     {
-      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
-      hint = '    this is the endaddress'
+      pattern = OptionalSpace * P("read") * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
+      hint = "    this is the endaddress"
     },
     {
-      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * Integer * Space * P('+') * OptionalSpace * -1,
-      hint = '[length]'
+      pattern = OptionalSpace * P("read") * Space * DeviceName * Space * Integer * Space * P("+") * OptionalSpace * -1,
+      hint = "[length]"
     },
     {
-      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * Integer * Space * P('+') * Space * UnfinishedInteger * -1,
-      hint = '    this is the length'
+      pattern = OptionalSpace * P("read") * Space * DeviceName * Space * Integer * Space * P("+") * Space *
+        UnfinishedInteger *
+        -1,
+      hint = "    this is the length"
     },
     {
-      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * (P('all') + (Integer * Space * (Integer + (P('+') * OptionalSpace * Integer)))) * Space * -1,
-      hint = '[filename]',
-      words = function(strMatch) return self:__getFilenameWords(strMatch) end
+      pattern = OptionalSpace * P("read") * Space * DeviceName * Space *
+        (P("all") + (Integer * Space * (Integer + (P("+") * OptionalSpace * Integer)))) *
+        Space *
+        -1,
+      hint = "[filename]",
+      words = function(strMatch)
+        return self:__getFilenameWords(strMatch)
+      end
     },
     {
-      pattern = OptionalSpace * P('read') * Space * DeviceName * Space * (P('all') + (Integer * Space * (Integer + (P('+') * OptionalSpace * Integer)))) * Space * Cg(Filename) * -1,
-      words = function(strMatch) return self:__getFilenameWords(strMatch) end
+      pattern = OptionalSpace * P("read") * Space * DeviceName * Space *
+        (P("all") + (Integer * Space * (Integer + (P("+") * OptionalSpace * Integer)))) *
+        Space *
+        Cg(Filename) *
+        -1,
+      words = function(strMatch)
+        return self:__getFilenameWords(strMatch)
+      end
     },
-
     -- Write command.
     {
-      pattern = OptionalSpace * P('write') * Space * -1,
-      hint = function() return '[device]  possible values: ' .. table.concat(self.__aSanitizedBoardNames, ', ') end,
-      words = function() return self.__aSanitizedBoardNames end
+      pattern = OptionalSpace * P("write") * Space * -1,
+      hint = function()
+        return "[device]  possible values: " .. table.concat(self.__aSanitizedBoardNames, ", ")
+      end,
+      words = function()
+        return self.__aSanitizedBoardNames
+      end
     },
     {
-      pattern = OptionalSpace * P('write') * Space * Cg(DeviceName) * -1,
-      words = function() return self.__aSanitizedBoardNames end
+      pattern = OptionalSpace * P("write") * Space * Cg(DeviceName) * -1,
+      words = function()
+        return self.__aSanitizedBoardNames
+      end
     },
     {
-      pattern = OptionalSpace * P('write') * Space * DeviceName * Space * -1,
-      hint = '[startaddress]'
+      pattern = OptionalSpace * P("write") * Space * DeviceName * Space * -1,
+      hint = "[startaddress]"
     },
     {
-      pattern = OptionalSpace * P('write') * Space * DeviceName * Space * UnfinishedInteger * -1,
-      hint = '    this is the startaddress'
+      pattern = OptionalSpace * P("write") * Space * DeviceName * Space * UnfinishedInteger * -1,
+      hint = "    this is the startaddress"
     },
     {
-      pattern = OptionalSpace * P('write') * Space * DeviceName * Space * Integer * Space * -1,
-      hint = '[filename]',
-      words = function(strMatch) return self:__getFilenameWords(strMatch) end
+      pattern = OptionalSpace * P("write") * Space * DeviceName * Space * Integer * Space * -1,
+      hint = "[filename]",
+      words = function(strMatch)
+        return self:__getFilenameWords(strMatch)
+      end
     },
     {
-      pattern = OptionalSpace * P('write') * Space * DeviceName * Space * Integer * Space * Cg(Filename) * -1,
-      words = function(strMatch) return self:__getFilenameWords(strMatch) end
+      pattern = OptionalSpace * P("write") * Space * DeviceName * Space * Integer * Space * Cg(Filename) * -1,
+      words = function(strMatch)
+        return self:__getFilenameWords(strMatch)
+      end
     },
-
     -- Erase command.
     {
-      pattern = OptionalSpace * P('erase') * Space * -1,
-      hint = function() return '[device]  possible values: ' .. table.concat(self.__aSanitizedBoardNames, ', ') end,
-      words = function() return self.__aSanitizedBoardNames end
+      pattern = OptionalSpace * P("erase") * Space * -1,
+      hint = function()
+        return "[device]  possible values: " .. table.concat(self.__aSanitizedBoardNames, ", ")
+      end,
+      words = function()
+        return self.__aSanitizedBoardNames
+      end
     },
     {
-      pattern = OptionalSpace * P('erase') * Space * Cg(DeviceName) * -1,
-      words = function() return self.__aSanitizedBoardNames end
+      pattern = OptionalSpace * P("erase") * Space * Cg(DeviceName) * -1,
+      words = function()
+        return self.__aSanitizedBoardNames
+      end
     },
     {
-      pattern = OptionalSpace * P('erase') * Space * DeviceName * Space * -1,
-      hint = 'all  or  [startaddress] [endaddress]  or  [startaddress] + [length]',
-      words = { 'all' }
+      pattern = OptionalSpace * P("erase") * Space * DeviceName * Space * -1,
+      hint = "all  or  [startaddress] [endaddress]  or  [startaddress] + [length]",
+      words = {"all"}
     },
     {
-      pattern = OptionalSpace * P('erase') * Space * DeviceName * Space * Cg(P('al') + P('a')) * -1,
-      words = { 'all' }
+      pattern = OptionalSpace * P("erase") * Space * DeviceName * Space * Cg(P("al") + P("a")) * -1,
+      words = {"all"}
     },
     {
-      pattern = OptionalSpace * P('erase') * Space * DeviceName * Space * UnfinishedInteger * -1,
-      hint = '    this is the startaddress'
+      pattern = OptionalSpace * P("erase") * Space * DeviceName * Space * UnfinishedInteger * -1,
+      hint = "    this is the startaddress"
     },
     {
-      pattern = OptionalSpace * P('erase') * Space * DeviceName * Space * Integer * Space * -1,
-      hint = '[endaddress]  or  + [length]'
+      pattern = OptionalSpace * P("erase") * Space * DeviceName * Space * Integer * Space * -1,
+      hint = "[endaddress]  or  + [length]"
     },
     {
-      pattern = OptionalSpace * P('erase') * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
-      hint = '    this is the endaddress'
+      pattern = OptionalSpace * P("erase") * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
+      hint = "    this is the endaddress"
     },
     {
-      pattern = OptionalSpace * P('erase') * Space * DeviceName * Space * Integer * Space * P('+') * OptionalSpace * -1,
-      hint = '[length]'
+      pattern = OptionalSpace * P("erase") * Space * DeviceName * Space * Integer * Space * P("+") * OptionalSpace * -1,
+      hint = "[length]"
     },
     {
-      pattern = OptionalSpace * P('erase') * Space * DeviceName * Space * Integer * Space * P('+') * Space * UnfinishedInteger * -1,
-      hint = '    this is the length'
+      pattern = OptionalSpace * P("erase") * Space * DeviceName * Space * Integer * Space * P("+") * Space *
+        UnfinishedInteger *
+        -1,
+      hint = "    this is the length"
     },
-
     -- IsErased command.
     {
-      pattern = OptionalSpace * P('iserased') * Space * -1,
-      hint = function() return '[device]  possible values: ' .. table.concat(self.__aSanitizedBoardNames, ', ') end,
-      words = function() return self.__aSanitizedBoardNames end
+      pattern = OptionalSpace * P("iserased") * Space * -1,
+      hint = function()
+        return "[device]  possible values: " .. table.concat(self.__aSanitizedBoardNames, ", ")
+      end,
+      words = function()
+        return self.__aSanitizedBoardNames
+      end
     },
     {
-      pattern = OptionalSpace * P('iserased') * Space * Cg(DeviceName) * -1,
-      words = function() return self.__aSanitizedBoardNames end
+      pattern = OptionalSpace * P("iserased") * Space * Cg(DeviceName) * -1,
+      words = function()
+        return self.__aSanitizedBoardNames
+      end
     },
     {
-      pattern = OptionalSpace * P('iserased') * Space * DeviceName * Space * -1,
-      hint = 'all  or  [startaddress] [endaddress]  or  [startaddress] + [length]',
-      words = { 'all' }
+      pattern = OptionalSpace * P("iserased") * Space * DeviceName * Space * -1,
+      hint = "all  or  [startaddress] [endaddress]  or  [startaddress] + [length]",
+      words = {"all"}
     },
     {
-      pattern = OptionalSpace * P('iserased') * Space * DeviceName * Space * Cg(P('al') + P('a')) * -1,
-      words = { 'all' }
+      pattern = OptionalSpace * P("iserased") * Space * DeviceName * Space * Cg(P("al") + P("a")) * -1,
+      words = {"all"}
     },
     {
-      pattern = OptionalSpace * P('iserased') * Space * DeviceName * Space * UnfinishedInteger * -1,
-      hint = '    this is the startaddress'
+      pattern = OptionalSpace * P("iserased") * Space * DeviceName * Space * UnfinishedInteger * -1,
+      hint = "    this is the startaddress"
     },
     {
-      pattern = OptionalSpace * P('iserased') * Space * DeviceName * Space * Integer * Space * -1,
-      hint = '[endaddress]  or  + [length]'
+      pattern = OptionalSpace * P("iserased") * Space * DeviceName * Space * Integer * Space * -1,
+      hint = "[endaddress]  or  + [length]"
     },
     {
-      pattern = OptionalSpace * P('iserased') * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
-      hint = '    this is the endaddress'
+      pattern = OptionalSpace * P("iserased") * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
+      hint = "    this is the endaddress"
     },
     {
-      pattern = OptionalSpace * P('iserased') * Space * DeviceName * Space * Integer * Space * P('+') * OptionalSpace * -1,
-      hint = '[length]'
+      pattern = OptionalSpace * P("iserased") * Space * DeviceName * Space * Integer * Space * P("+") * OptionalSpace *
+        -1,
+      hint = "[length]"
     },
     {
-      pattern = OptionalSpace * P('iserased') * Space * DeviceName * Space * Integer * Space * P('+') * Space * UnfinishedInteger * -1,
-      hint = '    this is the length'
+      pattern = OptionalSpace * P("iserased") * Space * DeviceName * Space * Integer * Space * P("+") * Space *
+        UnfinishedInteger *
+        -1,
+      hint = "    this is the length"
     },
-
     -- Verify command.
     {
-      pattern = OptionalSpace * P('verify') * Space * -1,
-      hint = function() return '[device]  possible values: ' .. table.concat(self.__aSanitizedBoardNames, ', ') end,
-      words = function() return self.__aSanitizedBoardNames end
+      pattern = OptionalSpace * P("verify") * Space * -1,
+      hint = function()
+        return "[device]  possible values: " .. table.concat(self.__aSanitizedBoardNames, ", ")
+      end,
+      words = function()
+        return self.__aSanitizedBoardNames
+      end
     },
     {
-      pattern = OptionalSpace * P('verify') * Space * Cg(DeviceName) * -1,
-      words = function() return self.__aSanitizedBoardNames end
+      pattern = OptionalSpace * P("verify") * Space * Cg(DeviceName) * -1,
+      words = function()
+        return self.__aSanitizedBoardNames
+      end
     },
     {
-      pattern = OptionalSpace * P('verify') * Space * DeviceName * Space * -1,
-      hint = '[startaddress]'
+      pattern = OptionalSpace * P("verify") * Space * DeviceName * Space * -1,
+      hint = "[startaddress]"
     },
     {
-      pattern = OptionalSpace * P('verify') * Space * DeviceName * Space * UnfinishedInteger * -1,
-      hint = '    this is the startaddress'
+      pattern = OptionalSpace * P("verify") * Space * DeviceName * Space * UnfinishedInteger * -1,
+      hint = "    this is the startaddress"
     },
     {
-      pattern = OptionalSpace * P('verify') * Space * DeviceName * Space * Integer * Space * -1,
-      hint = '[filename]',
-      words = function(strMatch) return self:__getFilenameWords(strMatch) end
+      pattern = OptionalSpace * P("verify") * Space * DeviceName * Space * Integer * Space * -1,
+      hint = "[filename]",
+      words = function(strMatch)
+        return self:__getFilenameWords(strMatch)
+      end
     },
     {
-      pattern = OptionalSpace * P('verify') * Space * DeviceName * Space * Integer * Space * Cg(Filename) * -1,
-      words = function(strMatch) return self:__getFilenameWords(strMatch) end
+      pattern = OptionalSpace * P("verify") * Space * DeviceName * Space * Integer * Space * Cg(Filename) * -1,
+      words = function(strMatch)
+        return self:__getFilenameWords(strMatch)
+      end
     },
-
     -- Hash command.
     {
-      pattern = OptionalSpace * P('hash') * Space * -1,
-      hint = function() return '[device]  possible values: ' .. table.concat(self.__aSanitizedBoardNames, ', ') end,
-      words = function() return self.__aSanitizedBoardNames end
+      pattern = OptionalSpace * P("hash") * Space * -1,
+      hint = function()
+        return "[device]  possible values: " .. table.concat(self.__aSanitizedBoardNames, ", ")
+      end,
+      words = function()
+        return self.__aSanitizedBoardNames
+      end
     },
     {
-      pattern = OptionalSpace * P('hash') * Space * Cg(DeviceName) * -1,
-      words = function() return self.__aSanitizedBoardNames end
+      pattern = OptionalSpace * P("hash") * Space * Cg(DeviceName) * -1,
+      words = function()
+        return self.__aSanitizedBoardNames
+      end
     },
     {
-      pattern = OptionalSpace * P('hash') * Space * DeviceName * Space * -1,
-      hint = 'all  or  [startaddress] [endaddress]  or  [startaddress] + [length]',
-      words = { 'all' }
+      pattern = OptionalSpace * P("hash") * Space * DeviceName * Space * -1,
+      hint = "all  or  [startaddress] [endaddress]  or  [startaddress] + [length]",
+      words = {"all"}
     },
     {
-      pattern = OptionalSpace * P('hash') * Space * DeviceName * Space * Cg(P('al') + P('a')) * -1,
-      words = { 'all' }
+      pattern = OptionalSpace * P("hash") * Space * DeviceName * Space * Cg(P("al") + P("a")) * -1,
+      words = {"all"}
     },
     {
-      pattern = OptionalSpace * P('hash') * Space * DeviceName * Space * UnfinishedInteger * -1,
-      hint = '    this is the startaddress'
+      pattern = OptionalSpace * P("hash") * Space * DeviceName * Space * UnfinishedInteger * -1,
+      hint = "    this is the startaddress"
     },
     {
-      pattern = OptionalSpace * P('hash') * Space * DeviceName * Space * Integer * Space * -1,
-      hint = '[endaddress]  or  + [length]'
+      pattern = OptionalSpace * P("hash") * Space * DeviceName * Space * Integer * Space * -1,
+      hint = "[endaddress]  or  + [length]"
     },
     {
-      pattern = OptionalSpace * P('hash') * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
-      hint = '    this is the endaddress'
+      pattern = OptionalSpace * P("hash") * Space * DeviceName * Space * Integer * Space * UnfinishedInteger * -1,
+      hint = "    this is the endaddress"
     },
     {
-      pattern = OptionalSpace * P('hash') * Space * DeviceName * Space * Integer * Space * P('+') * OptionalSpace * -1,
-      hint = '[length]'
+      pattern = OptionalSpace * P("hash") * Space * DeviceName * Space * Integer * Space * P("+") * OptionalSpace * -1,
+      hint = "[length]"
     },
     {
-      pattern = OptionalSpace * P('hash') * Space * DeviceName * Space * Integer * Space * P('+') * Space * UnfinishedInteger * -1,
-      hint = '    this is the length'
+      pattern = OptionalSpace * P("hash") * Space * DeviceName * Space * Integer * Space * P("+") * Space *
+        UnfinishedInteger *
+        -1,
+      hint = "    this is the length"
     },
-
     -- input command.
     {
-      pattern = OptionalSpace * P('input') * Space * -1,
-      hint = '[filename]',
-      words = function(strMatch) return self:__getFilenameWords(strMatch) end
+      pattern = OptionalSpace * P("input") * Space * -1,
+      hint = "[filename]",
+      words = function(strMatch)
+        return self:__getFilenameWords(strMatch)
+      end
     },
     {
-      pattern = OptionalSpace * P('input') * Space * Cg(Filename) * -1,
-      words = function(strMatch) return self:__getFilenameWords(strMatch) end
+      pattern = OptionalSpace * P("input") * Space * Cg(Filename) * -1,
+      words = function(strMatch)
+        return self:__getFilenameWords(strMatch)
+      end
     },
-
     -- Help command.
     {
-      pattern = OptionalSpace * P('help') * Space * -1,
-      hint = function() return '[topic]  possible values: ' .. table.concat(self.__astrHelpTopicWords, ', ') end,
-      words = function() return self.__astrHelpTopicWords end
+      pattern = OptionalSpace * P("help") * Space * -1,
+      hint = function()
+        return "[topic]  possible values: " .. table.concat(self.__astrHelpTopicWords, ", ")
+      end,
+      words = function()
+        return self.__astrHelpTopicWords
+      end
     },
     {
-      pattern = OptionalSpace * P('help') * Space * Cg(R('az')^1) * -1,
-      words = function() return self.__astrHelpTopicWords end
+      pattern = OptionalSpace * P("help") * Space * Cg(R("az") ^ 1) * -1,
+      words = function()
+        return self.__astrHelpTopicWords
+      end
     }
   }
-
 end
-
-
 
 function Shell:__getNetxPath()
   local pl = self.pl
@@ -501,14 +654,14 @@ function Shell:__getNetxPath()
   local strPathNetx
 
   -- Split the Lua module path.
-  local astrPaths = pl.stringx.split(package.path, ';')
+  local astrPaths = pl.stringx.split(package.path, ";")
   for _, strPath in ipairs(astrPaths) do
     -- Only process search paths which end in "?.lua".
-    if string.sub(strPath, -5)=='?.lua' then
+    if string.sub(strPath, -5) == "?.lua" then
       -- Cut off the "?.lua" part.
       -- Expect the "netx" folder one below the module folder.
-      local strPath = pl.path.join(pl.path.dirname(pl.path.dirname(pl.path.abspath(strPath))), 'netx')
-      if pl.path.exists(strPath)~=false and pl.path.isdir(strPath)==true then
+      local strPath = pl.path.join(pl.path.dirname(pl.path.dirname(pl.path.abspath(strPath))), "netx")
+      if pl.path.exists(strPath) ~= false and pl.path.isdir(strPath) == true then
         -- Append a directory separator at the end of the path.
         -- Otherwise the flasher will not be happy.
         strPathNetx = strPath .. pl.path.sep
@@ -518,8 +671,6 @@ function Shell:__getNetxPath()
   end
   return strPathNetx
 end
-
-
 
 function Shell:__getFolderEntries(strFolder, strPrintPrefix, astrWords)
   local pl = self.pl
@@ -539,8 +690,6 @@ function Shell:__getFolderEntries(strFolder, strPrintPrefix, astrWords)
   end
 end
 
-
-
 function Shell:__getFilenameWords(strMatch)
   local pl = self.pl
   local strSep = pl.path.sep
@@ -549,12 +698,11 @@ function Shell:__getFilenameWords(strMatch)
   local strDir = strMatch
   local strPrintPrefix = strMatch
 
-  if strDir=='' then
+  if strDir == "" then
     -- An empty match is special. Use the current working folder.
     strDir = pl.path.currentdir()
-    strPrintPrefix = ''
+    strPrintPrefix = ""
     self:__getFolderEntries(strDir, strPrintPrefix, astrWords)
-
   else
     -- Expand a "~".
     strDir = pl.path.expanduser(strDir)
@@ -562,15 +710,14 @@ function Shell:__getFilenameWords(strMatch)
     local strLastElement = pl.path.basename(strDir)
 
     -- Does the folder exist?
-    if strLastElement~='.' and pl.path.exists(strDir)~=false and pl.path.isdir(strDir)==true then
+    if strLastElement ~= "." and pl.path.exists(strDir) ~= false and pl.path.isdir(strDir) == true then
       -- Yes -> add all elements of this folder.
       self:__getFolderEntries(strDir, strPrintPrefix, astrWords)
-
     else
       -- The folder does not exist. Try to cut off the last path element.
       local strDirName = pl.path.dirname(strDir)
 
-      if strDirName=='' then
+      if strDirName == "" then
         if pl.path.isabs(strDir) then
           -- TODO: port this to windows.
           strDir = strSep
@@ -578,15 +725,14 @@ function Shell:__getFilenameWords(strMatch)
           self:__getFolderEntries(strDir, strPrintPrefix, astrWords)
         else
           strDir = pl.path.currentdir()
-          strPrintPrefix = ''
+          strPrintPrefix = ""
           self:__getFolderEntries(strDir, strPrintPrefix, astrWords)
         end
-
-      elseif pl.path.exists(strDirName)~=false and pl.path.isdir(strDirName)==true then
+      elseif pl.path.exists(strDirName) ~= false and pl.path.isdir(strDirName) == true then
         strDir = strDirName
 
         -- Cut off the last Element from the print prefix.
-        strPrintPrefix = string.sub(strPrintPrefix, 1, -1-string.len(strLastElement))
+        strPrintPrefix = string.sub(strPrintPrefix, 1, -1 - string.len(strLastElement))
         self:__getFolderEntries(strDir, strPrintPrefix, astrWords)
       end
     end
@@ -594,8 +740,6 @@ function Shell:__getFilenameWords(strMatch)
 
   return astrWords
 end
-
-
 
 Shell.__HelpTopics_templete = {
   text = [[
@@ -635,11 +779,9 @@ $(string.upper('examples'))
     ]]
 }
 
-
-
 Shell.__atHelpTopics = {
   {
-    topic = '',
+    topic = "",
     text = [[
     
 Welcome to the help.
@@ -675,13 +817,12 @@ The following example shows help about the read command:
 #     break
 #   end
 # end
-]]..Shell.__HelpTopics_templete.text
+]] ..
+      Shell.__HelpTopics_templete.text
   },
-
-
   {
-    topic = 'start',
-    name = 'Getting started with the flasher application',
+    topic = "start",
+    name = "Getting started with the flasher application",
     text = [[
     
 This is a short description to getting started with the flasher application. 
@@ -700,19 +841,19 @@ After the scan command, the connect command with one of the previous displayed p
   connect romloader_uart_ttyUSB0
   
 a connection with the plugin is available and the previous mentioned list of commands are possible.
-    ]],
+    ]]
   },
-
   {
-    topic = 'read',
-    name = 'The read command',
-    synopsis = 'read [device] [all | [startaddress][endaddress] | [startaddress] + [length]] [filename]',
-    description = 'The read command reads the data of the device at the specified address into the stated filename.',
-    options = {{key = '[device]',description = 'the given device'},
-      {key = '[all]',description = 'the complete flash size'},
-      {key = '[startaddress][endaddress]',description = 'start- and endaddress of the flash'},
-      {key = '[startaddress] + [length]',description = 'Start offset in flash plus data size'},
-      {key = '[filename]', description = 'the given filename'},
+    topic = "read",
+    name = "The read command",
+    synopsis = "read [device] [all | [startaddress][endaddress] | [startaddress] + [length]] [filename]",
+    description = "The read command reads the data of the device at the specified address into the stated filename.",
+    options = {
+      {key = "[device]", description = "the given device"},
+      {key = "[all]", description = "the complete flash size"},
+      {key = "[startaddress][endaddress]", description = "start- and endaddress of the flash"},
+      {key = "[startaddress] + [length]", description = "Start offset in flash plus data size"},
+      {key = "[filename]", description = "the given filename"}
     },
     examples = [[read IF01 0x00000000 + 0x00001000 ~/Test/TestData.txt
   read IF1 0x00000000 0x00002000 ~/Test/TestData.txt
@@ -720,28 +861,28 @@ a connection with the plugin is available and the previous mentioned list of com
     ]],
     text = Shell.__HelpTopics_templete.text
   },
-
   {
-    topic = 'verify',
-    name = 'The verify command',
-    synopsis = 'verify [device] [startaddress] [filename]',
-    description = 'The verify command checks whether the data of the stated file is written in the device at the startdaddress.',
-    options = {{key = '[device]',description = 'the given device'},
-      {key = '[startaddress]',description = 'startdaddress of the flash'},
-      {key = '[filename]', description = 'the given filename'},
+    topic = "verify",
+    name = "The verify command",
+    synopsis = "verify [device] [startaddress] [filename]",
+    description = "The verify command checks whether the data of the stated file is written in the device at the startdaddress.",
+    options = {
+      {key = "[device]", description = "the given device"},
+      {key = "[startaddress]", description = "startdaddress of the flash"},
+      {key = "[filename]", description = "the given filename"}
     },
     examples = [[verify IF01 0x00000000 ~/Test/TestData.txt]],
     text = Shell.__HelpTopics_templete.text
   },
-
   {
-    topic = 'write',
-    name = 'The write command',
-    synopsis = 'write [device] [startaddress] [filename]',
-    description = 'The write command writes the data of the stated file into the device at the specified startaddress.',
-    options = {{key = '[device]',description = 'the given device'},
-      {key = '[startaddress]',description = 'startaddress of the flash'},
-      {key = '[filename]', description = 'the given filename'},
+    topic = "write",
+    name = "The write command",
+    synopsis = "write [device] [startaddress] [filename]",
+    description = "The write command writes the data of the stated file into the device at the specified startaddress.",
+    options = {
+      {key = "[device]", description = "the given device"},
+      {key = "[startaddress]", description = "startaddress of the flash"},
+      {key = "[filename]", description = "the given filename"}
     },
     examples = [[write IF01 0x00002000 ~/Test/TestData.txt
   write IF1 0x00003000 ~/Test/TestData.txt
@@ -749,16 +890,16 @@ a connection with the plugin is available and the previous mentioned list of com
     ]],
     text = Shell.__HelpTopics_templete.text
   },
-
   {
-    topic = 'erase',
-    name = 'The erase command',
-    synopsis = 'erase [device] [all | [startaddress][endaddress] | [startaddress] + [length]]',
-    description = 'The erase command delete the data of the device at the specified address.',
-    options = {{key = '[device]',description = 'the given device'},
-      {key = '[all]',description = 'the complete flash size'},
-      {key = '[startaddress][endaddress]',description = 'start- and endaddress of the flash'},
-      {key = '[startaddress] + [length]',description = 'Start offset in flash plus data size'},
+    topic = "erase",
+    name = "The erase command",
+    synopsis = "erase [device] [all | [startaddress][endaddress] | [startaddress] + [length]]",
+    description = "The erase command delete the data of the device at the specified address.",
+    options = {
+      {key = "[device]", description = "the given device"},
+      {key = "[all]", description = "the complete flash size"},
+      {key = "[startaddress][endaddress]", description = "start- and endaddress of the flash"},
+      {key = "[startaddress] + [length]", description = "Start offset in flash plus data size"}
     },
     examples = [[erase IF01 0x00000000 + 0x00001000
   erase IF1 0x00000000 0x00002000
@@ -766,16 +907,16 @@ a connection with the plugin is available and the previous mentioned list of com
     ]],
     text = Shell.__HelpTopics_templete.text
   },
-
   {
-    topic = 'iserased',
-    name = 'The iserased command',
-    synopsis = 'iserased [device] [all | [startaddress][endaddress] | [startaddress] + [length]]',
-    description = 'The iserased command checks whether the data is deleted of the device at the specified address.',
-    options = {{key = '[device]',description = 'the given device'},
-      {key = '[all]',description = 'the complete flash size'},
-      {key = '[startaddress][endaddress]',description = 'start- and endaddress of the flash'},
-      {key = '[startaddress] + [length]',description = 'Start offset in flash plus data size'},
+    topic = "iserased",
+    name = "The iserased command",
+    synopsis = "iserased [device] [all | [startaddress][endaddress] | [startaddress] + [length]]",
+    description = "The iserased command checks whether the data is deleted of the device at the specified address.",
+    options = {
+      {key = "[device]", description = "the given device"},
+      {key = "[all]", description = "the complete flash size"},
+      {key = "[startaddress][endaddress]", description = "start- and endaddress of the flash"},
+      {key = "[startaddress] + [length]", description = "Start offset in flash plus data size"}
     },
     examples = [[iserased IF01 0x00000000 + 0x00001000 
   iserased IF1 0x00000000 0x00002000 
@@ -783,16 +924,16 @@ a connection with the plugin is available and the previous mentioned list of com
     ]],
     text = Shell.__HelpTopics_templete.text
   },
-
   {
-    topic = 'hash',
-    name = 'The hash command',
-    synopsis = 'hash [device] [all | [startaddress][endaddress] | [startaddress] + [length]]',
-    description = 'The hash command returns the SHA1 checksum of the specified address.',
-    options = {{key = '[device]',description = 'the given device'},
-      {key = '[all]',description = 'the complete flash size'},
-      {key = '[startaddress][endaddress]',description = 'start- and endaddress of the flash'},
-      {key = '[startaddress] + [length]',description = 'Start offset in flash plus data size'},
+    topic = "hash",
+    name = "The hash command",
+    synopsis = "hash [device] [all | [startaddress][endaddress] | [startaddress] + [length]]",
+    description = "The hash command returns the SHA1 checksum of the specified address.",
+    options = {
+      {key = "[device]", description = "the given device"},
+      {key = "[all]", description = "the complete flash size"},
+      {key = "[startaddress][endaddress]", description = "start- and endaddress of the flash"},
+      {key = "[startaddress] + [length]", description = "Start offset in flash plus data size"}
     },
     examples = [[hash IF01 0x00000000 + 0x00001000 
   hash IF1 0x00000000 0x00002000 
@@ -800,41 +941,39 @@ a connection with the plugin is available and the previous mentioned list of com
     ]],
     text = Shell.__HelpTopics_templete.text
   },
-
   {
-    topic = 'scan',
-    name = 'The scan command',
-    synopsis = 'scan',
-    description = 'The scan command searches for devices and lists all possibilities of plugins.',
+    topic = "scan",
+    name = "The scan command",
+    synopsis = "scan",
+    description = "The scan command searches for devices and lists all possibilities of plugins.",
     text = Shell.__HelpTopics_templete.text
   },
-
   {
-    topic = 'connect',
-    name = 'The connect command',
-    synopsis = 'connect [plugin]',
-    description = 'The connect command establishes a connection with the plugin.',
-    options = {{key = '[plugin]',description = 'the given plugins'},
+    topic = "connect",
+    name = "The connect command",
+    synopsis = "connect [plugin]",
+    description = "The connect command establishes a connection with the plugin.",
+    options = {
+      {key = "[plugin]", description = "the given plugins"}
     },
     examples = [[connect romloader_uart_ttyUSB0
     ]],
     text = Shell.__HelpTopics_templete.text
   },
-
   {
-    topic = 'disconnect',
-    name = 'The disconnect command',
-    synopsis = 'disconnect',
-    description = 'The disconnect command disconnects from the plugin.',
+    topic = "disconnect",
+    name = "The disconnect command",
+    synopsis = "disconnect",
+    description = "The disconnect command disconnects from the plugin.",
     text = Shell.__HelpTopics_templete.text
   },
-
   {
-    topic = 'input',
-    name = 'The input command',
-    synopsis = 'input [filename]',
-    description = 'The input command reads a specified input file and verify whether each line is a valid command. This command makes it easier to enter repetitive command blocks.',
-    options = {{key = '[filename]', description = 'file with list of commands - line by line'},
+    topic = "input",
+    name = "The input command",
+    synopsis = "input [filename]",
+    description = "The input command reads a specified input file and verify whether each line is a valid command. This command makes it easier to enter repetitive command blocks.",
+    options = {
+      {key = "[filename]", description = "file with list of commands - line by line"}
     },
     examples = [[The input file should be, for example, in the following format:
 
@@ -846,40 +985,38 @@ a connection with the plugin is available and the previous mentioned list of com
     ]],
     text = Shell.__HelpTopics_templete.text
   },
-
   {
-    topic = 'quit',
-    name = 'The quit command',
+    topic = "quit",
+    name = "The quit command",
     description = [[The quit command quits the application without a safety question.
 A connection to a netx is closed.]],
-    text = Shell.__HelpTopics_templete.text 
+    text = Shell.__HelpTopics_templete.text
   }
 }
 
-
-
 ------------------------------------------------------------------------------
-
 
 function Shell:__run_help(tCmd)
   -- Get the topic. If no topic was specified, set the topic to the empty
   -- string - which selects the main page.
-  local strTopic = tCmd.topic or ''
+  local strTopic = tCmd.topic or ""
+  local tLog = self.tLog
 
   -- Search the topic.
   local tTopic
   for _, tTopicCnt in ipairs(self.__atHelpTopics) do
-    if tTopicCnt.topic==strTopic then
+    if tTopicCnt.topic == strTopic then
       tTopic = tTopicCnt
       break
     end
   end
-  if tTopic==nil then
+  if tTopic == nil then
     -- Topic not found. Show an error.
-    print(string.format('Unknown help topic "%s".', strTopic))
+    tLog.error('Unknown help topic "%s".', strTopic)
   else
     -- Process the template.
-    local strText, strError = self.pl.template.substitute(
+    local strText, strError =
+      self.pl.template.substitute(
       tTopic.text,
       {
         ipairs = ipairs,
@@ -889,9 +1026,9 @@ function Shell:__run_help(tCmd)
         topics = self.__atHelpTopics
       }
     )
-    if strText==nil then
+    if strText == nil then
       -- Failed to process the template. Show an error message.
-      print('Failed to render the help text: ' .. tostring(strError))
+      tLog.error("Failed to render the help text: " .. tostring(strError))
     else
       -- Show the generated help text.
       print(strText)
@@ -901,55 +1038,52 @@ function Shell:__run_help(tCmd)
   return true
 end
 
-
 ------------------------------------------------------------------------------
-
 
 function Shell:__getBusUnitCs(strDevice)
   local lpeg = self.lpeg
-  local fOk=true
+  local tLog = self.tLog
+  local fOk = true
   local ucBus
   local ucUnit
   local ucCS
 
   -- Try to parse the device as a general "Bxxx_Uxxx_Cxxx" ID.
   local tMatch = lpeg.match(self.tMatchBusUnitCs, strDevice)
-  if tMatch~=nil then
+  if tMatch ~= nil then
     ucBus = tMatch.bus
     ucUnit = tMatch.unit
     ucCS = tMatch.cs
-    if ucBus<0 or ucBus>255 then
-      print(string.format('The bus exceeds the allowed range of an 8 bit number: %d', ucBus))
+    if ucBus < 0 or ucBus > 255 then
+      tLog.error("The bus exceeds the allowed range of an 8 bit number: %d", ucBus)
       fOk = false
     end
-    if ucUnit<0 or ucUnit>255 then
-      print(string.format('The unit exceeds the allowed range of an 8 bit number: %d', ucUnit))
+    if ucUnit < 0 or ucUnit > 255 then
+      tLog.error("The unit exceeds the allowed range of an 8 bit number: %d", ucUnit)
       fOk = false
     end
-    if ucCS<0 or ucCS>255 then
-      print(string.format('The chip select exceeds the allowed range of an 8 bit number: %d', ucCS))
+    if ucCS < 0 or ucCS > 255 then
+      tLog.error("The chip select exceeds the allowed range of an 8 bit number: %d", ucCS)
       fOk = false
     end
-
   else
-
     -- Search the ID in the list of known devices.
-    for _,tDeviceInfo in ipairs(self.__aBoardInfo) do
-      if strDevice==tDeviceInfo.id then
+    for _, tDeviceInfo in ipairs(self.__aBoardInfo) do
+      if strDevice == tDeviceInfo.id then
         ucBus = tDeviceInfo.bus
         ucUnit = tDeviceInfo.unit
         ucCS = tDeviceInfo.cs
         break
       end
     end
-    if ucBus==nil then
-      print(string.format('Unknown device ID "%s".', strDevice))
+    if ucBus == nil then
+      tLog.error('Unknown device ID "%s".', strDevice)
       fOk = false
     end
   end
 
   -- Invalidate the bus, unit and chip select if something went wrong.
-  if fOk~=true then
+  if fOk ~= true then
     ucBus = nil
     ucUnit = nil
     ucCS = nil
@@ -958,29 +1092,26 @@ function Shell:__getBusUnitCs(strDevice)
   return ucBus, ucUnit, ucCS
 end
 
-
-
 function Shell:__getRange(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
   local aAttr = self.aAttr
   local ulStart
   local ulLength
+  local tLog = self.tLog
 
-  if tPlugin==nil or aAttr==nil then
-    print('Not connected.')
-
-  elseif tCmd.all~=nil then
+  if tPlugin == nil or aAttr == nil then
+    tLog.info("Not connected.")
+  elseif tCmd.all ~= nil then
     ulStart = 0
     ulLength = tFlasher:getFlashSize(tPlugin, aAttr)
-
   else
     ulStart = tCmd.startaddress
     ulLength = tCmd.length
-    if ulLength==nil then
+    if ulLength == nil then
       local ulEnd = tCmd.endaddress
-      if ulEnd<ulStart then
-        print('The end address must not be smaller than the start address.')
+      if ulEnd < ulStart then
+        tLog.error("The startaddress must be smaller than the endaddress.")
         ulStart = nil
       else
         ulLength = ulEnd - ulStart
@@ -991,28 +1122,25 @@ function Shell:__getRange(tCmd)
   return ulStart, ulLength
 end
 
-
-
 function Shell:__switchToDevice(ucBus, ucUnit, ucCS)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
   local aAttr = self.aAttr
+  local tLog = self.tLog
   local tResult
 
-  if tPlugin==nil or aAttr==nil then
-    print('Not connected.')
+  if tPlugin == nil or aAttr == nil then
+    tLog.info("Not connected.")
     tResult = false
-
-  elseif ucBus==self.__ucCurrentBus and ucUnit==self.__ucCurrentUnit and ucCS==self.__ucCurrentCS then
-    print(string.format('Continue to use bus %d, unit %d, CS %d.', ucBus, ucUnit, ucCS))
+  elseif ucBus == self.__ucCurrentBus and ucUnit == self.__ucCurrentUnit and ucCS == self.__ucCurrentCS then
+    tLog.debug("Continue to use bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
     tResult = true
-
   else
-    print(string.format('Switch to bus %d, unit %d, CS %d.', ucBus, ucUnit, ucCS))
+    tLog.debug("Switch to bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
 
     local fOk = tFlasher:detect(tPlugin, aAttr, ucBus, ucUnit, ucCS)
-    if fOk~=true then
-      print('Failed to detect a device')
+    if fOk ~= true then
+      tLog.error("Failed to detect a device")
       tResult = false
     else
       -- Switched to the new device. Remember the bus, unit and CS for next time.
@@ -1027,43 +1155,40 @@ function Shell:__switchToDevice(ucBus, ucUnit, ucCS)
   return tResult
 end
 
-
-
 function Shell:__run_read(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
   local aAttr = self.aAttr
   local pl = self.pl
+  local tLog = self.tLog
 
-
-  if tPlugin==nil or aAttr==nil then
-    print('Not connected.')
-
+  if tPlugin == nil or aAttr == nil then
+    print()
+    tLog.info("Not connected.")
   else
     -- Get the bus, unit and chipselect.
     local strDevice = tCmd.device
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
-    if ucBus~=nil then
-      print(string.format('Using bus %d, unit %d, CS %d.', ucBus, ucUnit, ucCS))
+    if ucBus ~= nil then
+      tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
 
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
-      if tResult==true then
+      if tResult == true then
         local ulStart, ulLength = self:__getRange(tCmd)
-        if ulStart~=nil then
-          local ulEnd = ulStart+ulLength
-          print(string.format('Reading [0x%08x,0x%08x[ .', ulStart, ulEnd))
+        if ulStart ~= nil then
+          local ulEnd = ulStart + ulLength
+          tLog.debug("Reading [0x%08x,0x%08x[ .", ulStart, ulEnd)
 
           local strBin, strMsg = tFlasher:readArea(tPlugin, aAttr, ulStart, ulLength)
-          if strBin==nil then
-            print('Failed to read: ' .. tostring(strMsg))
-
+          if strBin == nil then
+            tLog.error("Failed to read: " .. tostring(strMsg))
           else
             local strFilename = pl.path.expanduser(tCmd.filename)
             tResult, strMsg = pl.utils.writefile(strFilename, strBin, true)
-            if tResult==true then
-              print('OK')
+            if tResult == true then
+              tLog.info("OK. Data [0x%08x,0x%08x[ written to the file '%s'", ulStart, ulEnd, strFilename)
             else
-              print(string.format('Failed to write the data to the file "%s": %s', strFilename, strMsg))
+              tLog.error('Failed to write the data to the file "%s": %s', strFilename, strMsg)
             end
           end
         end
@@ -1073,49 +1198,54 @@ function Shell:__run_read(tCmd)
 
   return true
 end
-
-
 
 function Shell:__run_verify(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
   local aAttr = self.aAttr
   local pl = self.pl
+  local tLog = self.tLog
 
-
-  if tPlugin==nil or aAttr==nil then
-    print('Not connected.')
-
+  if tPlugin == nil or aAttr == nil then
+    print()
+    tLog.info("Not connected.")
   else
     -- Get the bus, unit and chipselect.
     local strDevice = tCmd.device
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
-    if ucBus~=nil then
-      print(string.format('Using bus %d, unit %d, CS %d.', ucBus, ucUnit, ucCS))
+    if ucBus ~= nil then
+      tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
 
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
-      if tResult==true then
+      if tResult == true then
         local ulStart = tCmd.startaddress
 
         local strFilename = pl.path.expanduser(tCmd.filename)
-        if pl.path.exists(strFilename)==false then
-          print(string.format('The file "%s" does not exist.', strFilename))
-        elseif pl.path.isfile(strFilename)~=true then
-          print(string.format('The path "%s" is not a file.', strFilename))
+        if pl.path.exists(strFilename) == false then
+          tLog.error('The file "%s" does not exist.', strFilename)
+        elseif pl.path.isfile(strFilename) ~= true then
+          tLog.error('The path "%s" is not a file.', strFilename)
         else
-          print(string.format('Verify "%s" at offset 0x%08x...', strFilename, ulStart))
+          tLog.debug('Verify "%s" at offset 0x%08x...', strFilename, ulStart)
 
           local strBin, strMsg = pl.utils.readfile(strFilename, true)
-          if strBin==nil then
-            print(string.format('Failed to read "%s" : ', strFilename, tostring(strMsg)))
-
+          if strBin == nil then
+            tLog.error('Failed to read "%s" : ', strFilename, tostring(strMsg))
           else
             -- Erase the area.
             tResult, strMsg = tFlasher:verifyArea(tPlugin, aAttr, ulStart, strBin)
-            if tResult==true then
-              print(string.format('Verify OK. The data in the flash at offset 0x%08x equals the file "%s".', ulStart, strFilename))
+            if tResult == true then
+              tLog.info(
+                  'Verify OK. The data in the flash at offset 0x%08x is equals to the file "%s".',
+                  ulStart,
+                  strFilename
+                )
             else
-              print(string.format('Verify error. The flash contents at offset 0x%08x differ from the file "%s".', ulStart, strFilename))
+              tLog.error(
+                  'Verify error. The flash contents at offset 0x%08x differ from the file "%s".',
+                  ulStart,
+                  strFilename
+                )
             end
           end
         end
@@ -1125,64 +1255,59 @@ function Shell:__run_verify(tCmd)
 
   return true
 end
-
-
 
 function Shell:__run_write(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
   local aAttr = self.aAttr
   local pl = self.pl
+  local tLog = self.tLog
 
-
-  if tPlugin==nil or aAttr==nil then
-    print('Not connected.')
-
+  if tPlugin == nil or aAttr == nil then
+    print()
+    tLog.info("Not connected.")
   else
     -- Get the bus, unit and chipselect.
     local strDevice = tCmd.device
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
-    if ucBus~=nil then
-      print(string.format('Using bus %d, unit %d, CS %d.', ucBus, ucUnit, ucCS))
+    if ucBus ~= nil then
+      tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
 
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
-      if tResult==true then
+      if tResult == true then
         local ulStart = tCmd.startaddress
 
         local strFilename = pl.path.expanduser(tCmd.filename)
-        if pl.path.exists(strFilename)==false then
-          print(string.format('The file "%s" does not exist.', strFilename))
-        elseif pl.path.isfile(strFilename)~=true then
-          print(string.format('The path "%s" is not a file.', strFilename))
+        if pl.path.exists(strFilename) == false then
+          tLog.error('The file "%s" does not exist.', strFilename)
+        elseif pl.path.isfile(strFilename) ~= true then
+          tLog.error('The path "%s" is not a file.', strFilename)
         else
-          print(string.format('Writing "%s" to offset 0x%08x...', strFilename, ulStart))
+          tLog.debug('Writing "%s" to offset 0x%08x...', strFilename, ulStart)
 
           local strBin, strMsg = pl.utils.readfile(strFilename, true)
-          if strBin==nil then
-            print(string.format('Failed to read "%s" : ', strFilename, tostring(strMsg)))
-
+          if strBin == nil then
+            tLog.error('Failed to read "%s" : ', strFilename, tostring(strMsg))
           else
             -- Get the size of the data in bytes.
             local sizBin = string.len(strBin)
 
             -- Erase the area.
             tResult, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulStart, sizBin)
-            if tResult~=true then
-              print('Failed to erase the area: ' .. tostring(strMsg))
-
+            if tResult ~= true then
+              tLog.error("Failed to erase the area: " .. tostring(strMsg))
             else
               -- Flash the data. This includes a verify.
               tResult, strMsg = tFlasher:flashArea(tPlugin, aAttr, ulStart, strBin)
-              if tResult~=true then
-                print('Failed to write the area: ' .. tostring(strMsg))
-
+              if tResult ~= true then
+                tLog.error("Failed to write the area: " .. tostring(strMsg))
               end
             end
 
-            if tResult==true then
-              print('OK')
+            if tResult == true then
+              tLog.info("OK. Data '%s' written to [0x%08x,0x%08x[ ", strFilename, ulStart, ulEndadress)
             else
-              print(string.format('Failed to write the data: %s', strMsg))
+              tLog.error("Failed to write the data: %s", strMsg)
             end
           end
         end
@@ -1192,36 +1317,34 @@ function Shell:__run_write(tCmd)
 
   return true
 end
-
-
 
 function Shell:__run_erase(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
   local aAttr = self.aAttr
+  local tLog = self.tLog
 
-
-  if tPlugin==nil or aAttr==nil then
-    print('Not connected.')
-
+  if tPlugin == nil or aAttr == nil then
+    print()
+    tLog.info("Not connected.")
   else
     -- Get the bus, unit and chipselect.
     local strDevice = tCmd.device
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
-    if ucBus~=nil then
-      print(string.format('Using bus %d, unit %d, CS %d.', ucBus, ucUnit, ucCS))
+    if ucBus ~= nil then
+      tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
 
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
-      if tResult==true then
+      if tResult == true then
         local ulStart, ulLength = self:__getRange(tCmd)
-        if ulStart~=nil then
+        if ulStart ~= nil then
           -- Erase the area.
           local strMsg
           tResult, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulStart, ulLength)
-          if tResult==true then
-            print('OK')
+          if tResult == true then
+            tLog.info("OK. The area [0x%08x,0x%08x[ is erased", ulStart, ulStart + ulLength)
           else
-            print(string.format('Failed to erase the data: %s', strMsg))
+            tLog.error("Failed to erase the data: %s", strMsg)
           end
         end
       end
@@ -1230,37 +1353,35 @@ function Shell:__run_erase(tCmd)
 
   return true
 end
-
-
 
 function Shell:__run_iserased(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
   local aAttr = self.aAttr
+  local tLog = self.tLog
 
-
-  if tPlugin==nil or aAttr==nil then
-    print('Not connected.')
-
+  if tPlugin == nil or aAttr == nil then
+    print()
+    tLog.info("Not connected.")
   else
     -- Get the bus, unit and chipselect.
     local strDevice = tCmd.device
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
-    if ucBus~=nil then
-      print(string.format('Using bus %d, unit %d, CS %d.', ucBus, ucUnit, ucCS))
+    if ucBus ~= nil then
+      tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
 
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
-      if tResult==true then
+      if tResult == true then
         local ulStart, ulLength = self:__getRange(tCmd)
-        if ulStart~=nil then
+        if ulStart ~= nil then
           local ulEnd = ulStart + ulLength
           -- Erase the area.
           local strMsg
           tResult, strMsg = tFlasher:isErased(tPlugin, aAttr, ulStart, ulEnd)
-          if tResult==true then
-            print('Clean. The area is erased.')
+          if tResult == true then
+            tLog.info("Clean. The area is erased.")
           else
-            print('Dirty. The area is not erased.')
+            tLog.info("Dirty. The area is not erased.")
           end
         end
       end
@@ -1270,44 +1391,44 @@ function Shell:__run_iserased(tCmd)
   return true
 end
 
-
 -- Return the input String as Hex value
 function Shell:__str2hex(strData)
   -- one of the magic characters: '.' represents any single character
-  return (strData:gsub('.', function (c)
-        return string.format('%02x ', string.byte(c))
-      end))
+  return (strData:gsub(
+    ".",
+    function(c)
+      return string.format("%02x ", string.byte(c))
+    end
+  ))
 end
-
-
 
 function Shell:__run_hash(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
   local aAttr = self.aAttr
+  local tLog = self.tLog
 
-
-  if tPlugin==nil or aAttr==nil then
-    print('Not connected.')
-
+  if tPlugin == nil or aAttr == nil then
+    print()
+    tLog.info("Not connected.")
   else
     -- Get the bus, unit and chipselect.
     local strDevice = tCmd.device
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
-    if ucBus~=nil then
-      print(string.format('Using bus %d, unit %d, CS %d.', ucBus, ucUnit, ucCS))
+    if ucBus ~= nil then
+      tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
 
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
-      if tResult==true then
+      if tResult == true then
         local ulStart, ulLength = self:__getRange(tCmd)
-        if ulStart~=nil then
+        if ulStart ~= nil then
           -- Hash the area.
           local strMsg
           tResult, strMsg = tFlasher:hashArea(tPlugin, aAttr, ulStart, ulLength)
-          if tResult~=nil then
-            print('OK. SHA1 SUM = ' .. self:__str2hex(tResult))
+          if tResult ~= nil then
+            tLog.info("OK. SHA1 SUM = " .. self:__str2hex(tResult))
           else
-            print(string.format('Failed to hash the data: %s', strMsg))
+            tLog.error("Failed to hash the data: %s", strMsg)
           end
         end
       end
@@ -1319,31 +1440,30 @@ end
 
 ------------------------------------------------------------------------------
 
-
 function Shell:__run_scan()
+  local tLog = self.tLog
+
   -- Clear all previously detected devices.
   self.__atDetectedDevices = {}
   self.__astrPluginNames = {}
 
-
-  print('Scanning for devices...')
+  tLog.debug("Scanning for devices...")
   local aDetectedInterfaces = {}
   local sizNumberOfAvailablePlugins = 0
-  if _G.__MUHKUH_PLUGINS~=nil then
+  if _G.__MUHKUH_PLUGINS ~= nil then
     sizNumberOfAvailablePlugins = #_G.__MUHKUH_PLUGINS
-    for _,v in ipairs(_G.__MUHKUH_PLUGINS) do
-      print(string.format("Detecting interfaces with plugin %s", v:GetID()))
+    for _, v in ipairs(_G.__MUHKUH_PLUGINS) do
+      tLog.debug("Detecting interfaces with plugin %s", v:GetID())
       local iDetected = v:DetectInterfaces(aDetectedInterfaces)
-      print(string.format("Found %d interfaces with plugin %s", iDetected, v:GetID()))
+      tLog.debug("Found %d interfaces with plugin %s", iDetected, v:GetID())
     end
   end
-  print()
-  print(string.format("Found a total of %d interfaces with %d plugins", #aDetectedInterfaces, sizNumberOfAvailablePlugins))
+  tLog.debug("")
+  tLog.debug("Found a total of %d interfaces with %d plugins", #aDetectedInterfaces, sizNumberOfAvailablePlugins)
   for _, tPlugin in ipairs(aDetectedInterfaces) do
-    print(string.format('  %s', tPlugin:GetName()))
+    tLog.debug("  %s", tPlugin:GetName())
   end
-  print()
-
+  tLog.debug("")
   local astrPluginNames = {}
   for _, tPlugin in ipairs(aDetectedInterfaces) do
     table.insert(astrPluginNames, tPlugin:GetName())
@@ -1355,17 +1475,15 @@ function Shell:__run_scan()
   return true
 end
 
-
 ------------------------------------------------------------------------------
-
 
 function Shell:__run_connect(tCmd)
   local tFlasher = self.tFlasher
-
+  local tLog = self.tLog
 
   local atDetectedDevices = self.__atDetectedDevices
-  if #atDetectedDevices==0 then
-    print 'No devices detected to connect to. Run "scan" to search for devices again.'
+  if #atDetectedDevices == 0 then
+    tLog.error('No devices detected to connect to. Run "scan" to search for devices again.')
   else
     self:__run_disconnect()
 
@@ -1373,36 +1491,34 @@ function Shell:__run_connect(tCmd)
 
     -- The argument to the command must be a valid device.
     for _, tDevice in pairs(atDetectedDevices) do
-      if tDevice:GetName()==strPlugin then
+      if tDevice:GetName() == strPlugin then
         local tPlugin = tDevice:Create()
-        if tPlugin==nil then
-          print 'Failed to open to the device.'
+        if tPlugin == nil then
+          tLog.error("Failed to open to the device.")
         else
           -- Connect to the netX.
           local tResult, strMsg = pcall(tPlugin.Connect, tPlugin)
-          if tResult~=true then
-            print('Failed to connect: ' .. tostring(strMsg))
-
+          if tResult ~= true then
+            tLog.error("Failed to connect: " .. tostring(strMsg))
           else
             -- Download the flasher binary to the netX.
             local aAttr
             tResult, aAttr = pcall(tFlasher.download, tFlasher, tPlugin, self.__strPathNetx)
-            if tResult~=true or aAttr==nil then
-              print('Failed to download the flasher to the netX: ' .. tostring(aAttr))
+            if tResult ~= true or aAttr == nil then
+              tLog.error("Failed to download the flasher to the netX: " .. tostring(aAttr))
               tPlugin:Disconnect()
             else
               -- Get the board info.
               local aBoardInfo = tFlasher:getBoardInfo(tPlugin, aAttr)
-              if aBoardInfo==nil then
-                print 'Failed to get the board info.'
+              if aBoardInfo == nil then
+                tLog.error("Failed to get the board info.")
                 tPlugin:Disconnect()
               else
                 -- Get all IDs for the flashes.
                 local aSanitizedBoardNames = {}
-                for _,tDeviceInfo in ipairs(aBoardInfo) do
+                for _, tDeviceInfo in ipairs(aBoardInfo) do
                   table.insert(aSanitizedBoardNames, tDeviceInfo.id)
                 end
-
                 self.tPlugin = tPlugin
                 self.aAttr = aAttr
                 self.__aBoardInfo = aBoardInfo
@@ -1419,16 +1535,15 @@ function Shell:__run_connect(tCmd)
   return true
 end
 
-
 ------------------------------------------------------------------------------
-
 
 function Shell:__run_disconnect()
   local tPlugin = self.tPlugin
-  if tPlugin==nil then
-    print 'Not connected, no need to disconnect...'
+  local tLog = self.tLog
+  if tPlugin == nil then
+    tLog.info("Not connected, no need to disconnect...")
   else
-    print(string.format('Disconnecting from %s.', tPlugin:GetName()))
+    tLog.info("Disconnecting from %s.", tPlugin:GetName())
     tPlugin:Disconnect()
     self.tPlugin = nil
     self.aAttr = nil
@@ -1439,9 +1554,7 @@ function Shell:__run_disconnect()
   return true
 end
 
-
 ------------------------------------------------------------------------------
-
 
 -- reads the specified input file and verify whether each line is a valid command
 function Shell:__run_input(tCmd)
@@ -1450,101 +1563,139 @@ function Shell:__run_input(tCmd)
   local lpeg = self.lpeg
   local AllCommands = self.__AllCommands
 
-  if type (tCmd.filename) ~= 'string' then
-    tLog.error('The file name must be a string')
+  if type(tCmd.filename) ~= "string" then
+    tLog.error("The file name must be a string")
   else
     local strFilename = pl.path.expanduser(tCmd.filename)
 
     if pl.path.exists(strFilename) == false then
-      tLog.error('The specified path does not exist')
+      tLog.error("The specified path does not exist")
     else
-      if pl.path.isfile(strFilename) == false  then
-        tLog.error('The specified path does not contain a file name')
+      if pl.path.isfile(strFilename) == false then
+        tLog.error("The specified path does not contain a file name")
       else
+        -- read every line in the file and extend the list tCmd_input by appending all the items in the given list.
         self.tCmd_input:extend(pl.utils.readlines(strFilename))
 
         -- filters all lines of the input file with the given command patters
-        self.tCmd_input = self.tCmd_input:filter (function(x) 
-            return (lpeg.match(AllCommands, x) ~= nil) end
-            ,AllCommands,lpeg.match)
-          if self.tCmd_input:len() == 0 then
-            tLog.error('Invalid File Format')
-          end
-        end
-      end
-    end
-
-    return true
-  end
-
-
-------------------------------------------------------------------------------
-
-
-  function Shell:__run_quit()
-    -- Disconnect any existing plugin.
-    self:__run_disconnect()
-
-    -- Quit the application.
-    return false
-  end
-
-
-------------------------------------------------------------------------------
-
-
-  function Shell:__getCompletions(tCompletions, strLine, astrWords, strMatch)
-    local sizMatch = string.len(strMatch)
-    if sizMatch==0 then
-      -- Add all available words.
-      for _, strWord in ipairs(astrWords) do
-        tCompletions:add(strLine .. strWord)
-      end
-    else
-      -- Get the prefix of the line without the match.
-      local strPrefix = string.sub(strLine, 1, -1-string.len(strMatch))
-      -- Add the devices matching the input.
-      for _, strWord in pairs(astrWords) do
-        local sizWord = string.len(strWord)
-        if sizWord>=sizMatch and string.sub(strWord, 1, sizMatch)==strMatch then
-          tCompletions:add(strPrefix .. strWord)
+        self.tCmd_input =
+          self.tCmd_input:filter(
+          function(x)
+            return (lpeg.match(AllCommands, x) ~= nil)
+          end,
+          AllCommands,
+          lpeg.match
+        )
+        if self.tCmd_input:len() == 0 then
+          tLog.error("Invalid File Format")
         end
       end
     end
   end
 
+  return true
+end
 
+------------------------------------------------------------------------------
 
-  function Shell:__getMatchingHints(astrWords, strMatch)
-    local sizMatch = string.len(strMatch)
+function Shell:__run_quit()
+  -- Disconnect any existing plugin.
+  self:__run_disconnect()
 
-    local atHints = {}
+  -- Quit the application.
+  return false
+end
+
+------------------------------------------------------------------------------
+
+function Shell:__getCompletions(tCompletions, strLine, astrWords, strMatch)
+  local sizMatch = string.len(strMatch)
+  if sizMatch == 0 then
+    -- Add all available words.
+    for _, strWord in ipairs(astrWords) do
+      tCompletions:add(strLine .. strWord)
+    end
+  else
+    -- Get the prefix of the line without the match.
+    local strPrefix = string.sub(strLine, 1, -1 - string.len(strMatch))
+    -- Add the devices matching the input.
     for _, strWord in pairs(astrWords) do
       local sizWord = string.len(strWord)
-      -- Does the word start with the match?
-      if sizWord>=sizMatch and string.sub(strWord, 1, sizMatch)==strMatch then
-        -- Do not add the complete argument for the first match. It completes the typed letters.
-        if #atHints==0 then
-          table.insert(atHints, string.sub(strWord, sizMatch+1))
-        else
-          table.insert(atHints, strWord)
-        end
+      if sizWord >= sizMatch and string.sub(strWord, 1, sizMatch) == strMatch then
+        tCompletions:add(strPrefix .. strWord)
       end
     end
+  end
+end
 
-    local strHint
-    if #atHints>0 then
-      strHint = table.concat(atHints, ' ')
+function Shell:__getMatchingHints(astrWords, strMatch)
+  local sizMatch = string.len(strMatch)
+
+  local atHints = {}
+  for _, strWord in pairs(astrWords) do
+    local sizWord = string.len(strWord)
+    -- Does the word start with the match?
+    if sizWord >= sizMatch and string.sub(strWord, 1, sizMatch) == strMatch then
+      -- Do not add the complete argument for the first match. It completes the typed letters.
+      if #atHints == 0 then
+        table.insert(atHints, string.sub(strWord, sizMatch + 1))
+      else
+        table.insert(atHints, strWord)
+      end
     end
-
-    return strHint
   end
 
+  local strHint
+  if #atHints > 0 then
+    strHint = table.concat(atHints, " ")
+  end
 
+  return strHint
+end
 
-  function Shell:__completer(tCompletions, strLine)
-    local lpeg = self.lpeg
+function Shell:__completer(tCompletions, strLine)
+  local lpeg = self.lpeg
 
+  -- Loop over all available patterns.
+  for _, tPattern in ipairs(self.__atInteractivePatterns) do
+    -- Does the pattern match?
+    local tMatch = lpeg.match(tPattern.pattern, strLine)
+    -- The match is either the index if there are no captures or a string if
+    -- there is one capture. Pattern can also return a table of captures, but
+    -- this is not supported here.
+    local strMatchType = type(tMatch)
+    -- Replace matches without captures by the empty string.
+    if strMatchType == "number" then
+      tMatch = ""
+      strMatchType = type(tMatch)
+    end
+    if strMatchType == "string" then
+      -- Yes, the pattern matches.
+      if tPattern.words ~= nil then
+        -- Is this a function or a table?
+        local astrWords
+        local strType = type(tPattern.words)
+        if strType == "table" then
+          astrWords = tPattern.words
+        elseif strType == "function" then
+          astrWords = tPattern.words(tMatch)
+        end
+        if astrWords ~= nil then
+          self:__getCompletions(tCompletions, strLine, astrWords, tMatch)
+        end
+      end
+      break
+    end
+  end
+end
+
+function Shell:__hints(strLine)
+  local strHint
+  local sizLine = string.len(strLine)
+  local lpeg = self.lpeg
+
+  -- Do not give a hint for the empty line. This does not work for the initial prompt.
+  if sizLine > 0 then
     -- Loop over all available patterns.
     for _, tPattern in ipairs(self.__atInteractivePatterns) do
       -- Does the pattern match?
@@ -1554,23 +1705,30 @@ function Shell:__run_input(tCmd)
       -- this is not supported here.
       local strMatchType = type(tMatch)
       -- Replace matches without captures by the empty string.
-      if strMatchType=='number' then
-        tMatch = ''
+      if strMatchType == "number" then
+        tMatch = ""
         strMatchType = type(tMatch)
       end
-      if strMatchType=='string' then
+      if strMatchType == "string" then
         -- Yes, the pattern matches.
-        if tPattern.words~=nil then
+        if tPattern.hint ~= nil then
+          local strType = type(tPattern.hint)
+          if strType == "string" then
+            strHint = tPattern.hint
+          elseif strType == "function" then
+            strHint = tPattern.hint(tMatch)
+          end
+        elseif tPattern.words ~= nil then
           -- Is this a function or a table?
           local astrWords
           local strType = type(tPattern.words)
-          if strType=='table' then
+          if strType == "table" then
             astrWords = tPattern.words
-          elseif strType=='function' then
+          elseif strType == "function" then
             astrWords = tPattern.words(tMatch)
           end
-          if astrWords~=nil then
-            self:__getCompletions(tCompletions, strLine, astrWords, tMatch)
+          if astrWords ~= nil then
+            strHint = self:__getMatchingHints(astrWords, tMatch)
           end
         end
         break
@@ -1578,182 +1736,115 @@ function Shell:__run_input(tCmd)
     end
   end
 
+  return strHint
+end
 
+function Shell:run()
+  local atCommands = self.__atCommands
+  local colors = self.colors
+  local linenoise = self.linenoise
+  local lpeg = self.lpeg
+  local tGrammar = self.__lineGrammar
+  local pl = self.pl
+  local strHistory = ".fsh_history.txt"
+  local tLog = self.tLog
 
-  function Shell:__hints(strLine)
-    local strHint
-    local sizLine = string.len(strLine)
-    local lpeg = self.lpeg
-
-    -- Do not give a hint for the empty line. This does not work for the initial prompt.
-    if sizLine>0 then
-      -- Loop over all available patterns.
-      for _, tPattern in ipairs(self.__atInteractivePatterns) do
-        -- Does the pattern match?
-        local tMatch = lpeg.match(tPattern.pattern, strLine)
-        -- The match is either the index if there are no captures or a string if
-        -- there is one capture. Pattern can also return a table of captures, but
-        -- this is not supported here.
-        local strMatchType = type(tMatch)
-        -- Replace matches without captures by the empty string.
-        if strMatchType=='number' then
-          tMatch = ''
-          strMatchType = type(tMatch)
-        end
-        if strMatchType=='string' then
-          -- Yes, the pattern matches.
-          if tPattern.hint~=nil then
-            local strType = type(tPattern.hint)
-            if strType=='string' then
-              strHint = tPattern.hint
-            elseif strType=='function' then
-              strHint = tPattern.hint(tMatch)
-            end
-          elseif tPattern.words~=nil then
-            -- Is this a function or a table?
-            local astrWords
-            local strType = type(tPattern.words)
-            if strType=='table' then
-              astrWords = tPattern.words
-            elseif strType=='function' then
-              astrWords = tPattern.words(tMatch)
-            end
-            if astrWords~=nil then
-              strHint = self:__getMatchingHints(astrWords, tMatch)
-            end
-          end
-          break
-        end
-      end
-    end
-
-    return strHint
+  local strPathNetx = self:__getNetxPath()
+  if strPathNetx == nil then
+    error('Failed to find the "netx" folder.')
   end
+  tLog.debug('Found the netX path at "%s".', strPathNetx)
+  self.__strPathNetx = strPathNetx
 
+  linenoise.historyload(strHistory) -- load existing history
+  --  linenoise.enableutf8()
 
-  function Shell:run()
-    local atCommands = self.__atCommands
-    local colors = self.colors
-    local linenoise = self.linenoise
-    local lpeg = self.lpeg
-    local tGrammar = self.__lineGrammar
-    local pl = self.pl
-    local strHistory = '.fsh_history.txt'
-    local tLog = self.tLog
+  tLog.info("Welcome to FlaSH, the flasher shell v0.0.1 .")
+  tLog.info("Written by Christoph Thelen in 2018.")
+  tLog.info("The flasher shell is distributed under the GPL v3 license.")
+  tLog.info('Type "help" to get started. Use tab to complete commands.')
+  tLog.info("")
 
-    local strPathNetx = self:__getNetxPath()
-    if strPathNetx==nil then
-      error('Failed to find the "netx" folder.')
+  -- Scan for available devices.
+  self:__run_scan()
+
+  -- initialization of setcompletion and sethints of linenoise
+  linenoise.setcompletion(
+    function(tCompletions, strLine)
+      self:__completer(tCompletions, strLine)
     end
-    tLog.debug('Found the netX path at "%s".', strPathNetx)
-    self.__strPathNetx = strPathNetx
+  )
+  linenoise.sethints(
+    function(strLine)
+      return self:__hints(strLine), {color = 35, bold = false}
+    end
+  )
 
-    linenoise.historyload(strHistory) -- load existing history
---  linenoise.enableutf8()
+  local fRunning = true
+  while fRunning do
+    -- Set the current prompt. It depends on the connection.
+    local tPlugin = self.tPlugin
+    local strPlugin = "not connected"
+    if tPlugin ~= nil then
+      strPlugin = tPlugin:GetName()
+    end
+    self.strPrompt = colors.bright .. colors.blue .. strPlugin .. "> " .. colors.white
 
-    print 'Welcome to FlaSH, the flasher shell v0.0.1 .'
-    print 'Written by Christoph Thelen in 2018.'
-    print 'The flasher shell is distributed under the GPL v3 license.'
-    print 'Type "help" to get started. Use tab to complete commands.'
-    print ''
+    local strLine, strError
 
-    -- Scan for available devices.
-    self:__run_scan()
+    if self.tCmd_input:len() ~= 0 then
+      strLine = self.tCmd_input:pop(1)
+      strError = ""
+    else
+      strLine, strError = linenoise.linenoise(self.strPrompt)
+    end
 
-    -- initialization of setcompletion and sethints of linenoise 
-    linenoise.setcompletion(function(tCompletions, strLine)
-        self:__completer(tCompletions, strLine)
+    if strLine == nil then
+      if strError ~= nil then
+        tLog.error("Error: %s", tostring(strError))
       end
-    )
-    linenoise.sethints(function(strLine)
-        return self:__hints(strLine), { color=35, bold=false }
-      end
-    )
+      fRunning = false
+    elseif #strLine > 0 then
+      linenoise.historyadd(strLine)
+      linenoise.historysave(strHistory)
 
-    local fRunning = true
-    while fRunning do
-      -- Set the current prompt. It depends on the connection.
-      local tPlugin = self.tPlugin
-      local strPlugin = 'not connected'
-      if tPlugin~=nil then
-        strPlugin = tPlugin:GetName()
-      end
-      self.strPrompt = colors.bright .. colors.blue .. strPlugin .. '> ' .. colors.white
-
-      local strLine, strError 
-
-      if self.tCmd_input:len() ~= 0 then
-        strLine = self.tCmd_input:pop(1)
-        strError = ''
+      -- Parse the line.
+      local tCmd = lpeg.match(tGrammar, strLine)
+      if tCmd == nil then
+        tLog.error("Failed to parse the line.")
       else
-        strLine, strError = linenoise.linenoise(self.strPrompt)
-      end  
-
-      if strLine==nil then
-        if strError~=nil then
-          tLog.error('Error: %s', tostring(strError))
-        end
-        fRunning = false
-      elseif #strLine > 0 then
-        linenoise.historyadd(strLine)
-        linenoise.historysave(strHistory)
-
-        -- Parse the line.
-        local tCmd = lpeg.match(tGrammar, strLine)
-        if tCmd==nil then
-          print('Failed to parse the line.')
-        else
-          -- There should be a command at the "cmd" key.
-          -- If there is no command, this is a comment.
-          local strCmd = tCmd.cmd
-          if strCmd~=nil then
-            -- Search the command.
-            local tCmdHit
-            for _, tCmdCnt in ipairs(atCommands) do
-              if tCmdCnt.cmd==strCmd then
-                tCmdHit = tCmdCnt
-                break
-              end
+        -- There should be a command at the "cmd" key.
+        -- If there is no command, this is a comment.
+        local strCmd = tCmd.cmd
+        if strCmd ~= nil then
+          -- Search the command.
+          local tCmdHit
+          for _, tCmdCnt in ipairs(atCommands) do
+            if tCmdCnt.cmd == strCmd then
+              tCmdHit = tCmdCnt
+              break
             end
-            if tCmdHit==nil then
-              print('Command not found.')
-            else
-              -- Run the command.
-              fRunning = tCmdHit.run(self, tCmd)
-            end
+          end
+          if tCmdHit == nil then
+            tLog.error("Command not found.")
+          else
+            -- Run the command.
+            fRunning = tCmdHit.run(self, tCmd)
           end
         end
       end
     end
   end
+end
 
-
--- Create a dummy logger object for the flasher.
-  local tLog = {
-    emerg = function(...) print('[EMERG] ' .. string.format(...)) end,
-    alert = function(...) print('[ALERT] ' .. string.format(...)) end,
-    fatal = function(...) print('[FATAL] ' .. string.format(...)) end,
-    error = function(...) print('[ERROR] ' .. string.format(...)) end,
-    warning = function(...) print('[WARNING] ' .. string.format(...)) end,
-    notice = function(...) print('[NOTICE] ' .. string.format(...)) end,
-    info = function(...) print('[INFO] ' .. string.format(...)) end,
-    debug = function(...) print('[DEBUG] ' .. string.format(...)) end,
-    trace = function(...) print('[TRACE] ' .. string.format(...)) end,
-  }
-
-
-  local astrPlugins = {
-    'romloader_eth',
-    'romloader_usb',
-    'romloader_uart',
-    'romloader_jtag'
-  }
-  for _, strPlugin in ipairs(astrPlugins) do
-    tLog.debug('Loading plugin "%s"...', strPlugin)
-    require(strPlugin)
-  end
+Shell.astrPlugins = {
+  "romloader_eth",
+  "romloader_usb",
+  "romloader_uart",
+  "romloader_jtag"
+}
 
 -- Run the shell.
-  local tShell = Shell(tLog)
-  tShell:run()
-  os.exit(0)
+local tShell = Shell()
+tShell:run()
+os.exit(0)
