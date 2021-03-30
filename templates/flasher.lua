@@ -99,7 +99,7 @@ function Flasher:default_callback_progress(ulCnt, ulMax)
     self.fProgressLastPercent = fPercent
     self.ulProgressLastMax = ulMax
     self.ulProgressLastTime = ulTime
-    self.tLog.debug('%d%% (%d/%d)', fPercent, ulCnt, ulMax)
+    self.tLog.debug("%d%% (%d/%d)", fPercent, ulCnt, ulMax)
   end
   return true
 end
@@ -191,6 +191,7 @@ end
 -- information about code/exec/buffer addresses
 function Flasher:get_flasher_binary_attributes(strData)
   local aAttr = {}
+  local tLog = self.tLog
 
   -- Get the load and exec address from the binary.
   aAttr.ulLoadAddress = self:get_dword(strData, ${OFFSETOF_FLASHER_VERSION_STRUCT_pulLoadAddress} + 1)
@@ -202,11 +203,11 @@ function Flasher:get_flasher_binary_attributes(strData)
   aAttr.ulBufferLen   = aAttr.ulBufferEnd - aAttr.ulBufferAdr
 
   -- Show the information:
-  print(string.format("parameter:          0x%08x", aAttr.ulParameter))
-  print(string.format("device description: 0x%08x", aAttr.ulDeviceDesc))
-  print(string.format("buffer start:       0x%08x", aAttr.ulBufferAdr))
-  print(string.format("buffer end:         0x%08x", aAttr.ulBufferEnd))
-  print(string.format("buffer size:        0x%08x", aAttr.ulBufferLen))
+  tLog.debug("parameter:          0x%08x", aAttr.ulParameter)
+  tLog.debug("device description: 0x%08x", aAttr.ulDeviceDesc)
+  tLog.debug("buffer start:       0x%08x", aAttr.ulBufferAdr)
+  tLog.debug("buffer end:         0x%08x", aAttr.ulBufferEnd)
+  tLog.debug("buffer size:        0x%08x", aAttr.ulBufferLen)
 
   return aAttr
 end
@@ -217,7 +218,8 @@ end
 -- Returns the binary's attribute list.
 function Flasher:download_netx_binary(tPlugin, strData, fnCallbackProgress)
   local aAttr = self:get_flasher_binary_attributes(strData)
-  print(string.format("downloading to 0x%08x", aAttr.ulLoadAddress))
+  local tLog = self.tLog
+  tLog.debug("downloading to 0x%08x", aAttr.ulLoadAddress)
   self:write_image(tPlugin, aAttr.ulLoadAddress, strData, fnCallbackProgress)
   -- tPlugin:write_image(aAttr.ulLoadAddress, strData, fnCallbackProgress, string.len(strData))
   
@@ -252,6 +254,7 @@ function Flasher:download(tPlugin, strPrefix, fnCallbackProgress)
   local fDebug = false
   local strPath = self:get_flasher_binary_path(iChiptype, strPrefix, fDebug)
   local tFile, strMsg = io.open(strPath, 'rb')
+  local tLog = self.tLog
   if tFile==nil then
     error(string.format('Failed to open file "%s" for reading: %s', strPath, strMsg))
   end
@@ -261,7 +264,7 @@ function Flasher:download(tPlugin, strPrefix, fnCallbackProgress)
   local aAttr = self:get_flasher_binary_attributes(strFlasherBin)
   aAttr.strBinaryName = strFlasherBin
 
-  print(string.format("downloading to 0x%08x", aAttr.ulLoadAddress))
+  tLog.debug("downloading to 0x%08x", aAttr.ulLoadAddress)
   self:write_image(tPlugin, aAttr.ulLoadAddress, strFlasherBin, fnCallbackProgress)
 
   return aAttr
@@ -299,6 +302,7 @@ function Flasher:callFlasher(tPlugin, aAttr, aulParams, fnCallbackMessage, fnCal
   fnCallbackMessage = fnCallbackMessage or self.fnMessageDefault
   fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
 
+  local tLog = self.tLog
   -- set the parameters
   local aulParameter = {}
   aulParameter[1] = 0xffffffff                 -- placeholder for return vallue, will be 0 if ok
@@ -318,7 +322,7 @@ function Flasher:callFlasher(tPlugin, aAttr, aulParams, fnCallbackMessage, fnCal
   -- get the return value (ok/failed)
   -- any further return values must be read by the calling function
   ulValue = tPlugin:read_data32(aAttr.ulParameter+0x00)
-  print(string.format("call finished with result 0x%08x", ulValue))
+  tLog.debug("call finished with result 0x%08x", ulValue)
   return ulValue
 end
 
@@ -345,7 +349,7 @@ function Flasher:getBoardInfo(tPlugin, aAttr, fnCallbackMessage, fnCallbackProgr
     -- Get the buffer address and size.
     local pucBuffer = tPlugin:read_data32(aAttr.ulParameter+0x14)
     local sizBuffer = tPlugin:read_data32(aAttr.ulParameter+0x18)
-    tLog.debug('Buffer 0x%08x 0x%08x', pucBuffer, sizBuffer)
+    tLog.debug("Buffer 0x%08x 0x%08x", pucBuffer, sizBuffer)
 
     -- The size of the data should be a multiple of 32 bytes.
     if sizBuffer==0 then
@@ -482,22 +486,23 @@ function Flasher:readDeviceDescriptor(tPlugin, aAttr, fnCallbackProgress)
   local strDevDesc
   local ulSize
   local ulVersion
+  local tLog = self.tLog
 
   local ulValue = tPlugin:read_data32(aAttr.ulDeviceDesc)
   if ulValue==0 then
-    print("the device desription is not valid, nothing detected.")
+    tLog.error("the device desription is not valid, nothing detected.")
   else
 
     -- get the size of the returned data
     ulSize = tPlugin:read_data32(aAttr.ulDeviceDesc+0x04)
     if ulSize<16 then
-      print("the device description claims to be valid, but has a strange size.")
+      tLog.error("the device description claims to be valid, but has a strange size.")
     else
       -- read the interface version of the returned data
       ulVersion = tPlugin:read_data32(aAttr.ulDeviceDesc+0x08)
       if ulVersion~=self.FLASHER_INTERFACE_VERSION then
         -- the version does not match the expected value
-        print(string.format("the device description has a strange interface version."))
+        tLog.error("the device description has a strange interface version.")
       else
         -- get the device description
         strDevDesc = self:read_image(tPlugin, aAttr.ulDeviceDesc, ulSize, fnCallbackProgress)
@@ -735,6 +740,7 @@ function Flasher:eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMes
   local fIsErased
   local ulEndOffset
   local ulEraseStart,ulEraseEnd
+  local tLog = self.tLog
 
   -- If length = 0xffffffff we get the erase area now in order to detect the flash size.
   if ulSize == 0xffffffff then
@@ -749,13 +755,13 @@ function Flasher:eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMes
     ulEndOffset = ulDeviceOffset + ulSize
   end
 
-  print(string.format("Area:  [0x%08x, 0x%08x[", ulDeviceOffset, ulEndOffset))
+  tLog.debug("Area:  [0x%08x, 0x%08x[", ulDeviceOffset, ulEndOffset)
 
   -- The total number of bytes to process is 3x the erase area.
   local ulProgressStageOffset = ulEndOffset - ulDeviceOffset
   local ulProgressTotal = 3 * ulProgressStageOffset
 
-  print("Checking if the area is already empty")
+  tLog.debug("Checking if the area is already empty")
   local fnProgressStage1 = function(ulCnt, ulMax) return fnCallbackProgress(ulCnt, ulProgressTotal) end
   fIsErased = self:isErased(tPlugin, aAttr, ulDeviceOffset, ulEndOffset, fnCallbackMessage, fnProgressStage1)
 
@@ -772,15 +778,15 @@ function Flasher:eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMes
       end
     end
 
-    print("Erasing flash")
-    print(string.format("Erase: [0x%08x, 0x%08x[", ulEraseStart, ulEraseEnd))
+    tLog.debug("Erasing flash")
+    tLog.debug("Erase: [0x%08x, 0x%08x[", ulEraseStart, ulEraseEnd)
 
     local fnProgressStage2 = function(ulCnt, ulMax) return fnCallbackProgress(ulCnt+ulProgressStageOffset, ulProgressTotal) end
     fIsErased = self:erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnProgressStage2)
     if fIsErased~=true then
       return false, "Failed to erase the area! (Failure during erase)"
     else
-      print("Checking if the area has been erased")
+      tLog.debug("Checking if the area has been erased")
       local fnProgressStage3 = function(ulCnt, ulMax) return fnCallbackProgress(ulCnt+2*ulProgressStageOffset, ulProgressTotal) end
       fIsErased = self:isErased(tPlugin, aAttr,  ulDeviceOffset, ulEndOffset, fnCallbackMessage, fnProgressStage3)
       if fIsErased~=true then
@@ -813,6 +819,7 @@ function Flasher:flashArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMe
   local ulBufferLen = aAttr.ulBufferLen
   local ulChunkSize
   local strChunk
+  local tLog = self.tLog
 
   -- The total number of bytes to process is 2x the flash area.
   local ulProgressTotal = 2 * ulDataByteSize
@@ -835,7 +842,7 @@ function Flasher:flashArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMe
     ulProgressOffset = ulProgressOffset + ulChunkSize
 
     -- Flash the chunk.
-    print(string.format("flashing offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
+    tLog.debug("flashing offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset + ulChunkSize)
     local fnProgressStage2 = function(ulCnt, ulMax) return fnCallbackProgress(ulCnt+ulProgressOffset, ulProgressTotal) end
     fOk = self:flash(tPlugin, aAttr, ulDeviceOffset, ulChunkSize, ulBufferAdr, fnCallbackMessage, fnProgressStage2)
     if not fOk then
@@ -870,6 +877,7 @@ function Flasher:verifyArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackM
   local ulBufferLen = aAttr.ulBufferLen
   local ulChunkSize
   local strChunk
+  local tLog = self.tLog
 
   while ulDataOffset<ulDataByteSize do
     -- Extract the next chunk.
@@ -880,7 +888,7 @@ function Flasher:verifyArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackM
     self:write_image(tPlugin, ulBufferAdr, strChunk, fnCallbackProgress)
 
     -- Verify the chunk.
-    print(string.format("verifying offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
+    tLog.debug("verifying offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset + ulChunkSize)
     fOk = self:verify(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulChunkSize, ulBufferAdr, fnCallbackMessage, fnCallbackProgress)
     if not fOk then
       return false, "Differences were found."
@@ -919,11 +927,12 @@ function Flasher:readArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCall
   local strChunk
   local ulChunkSize
   local astrChunks = {}
+  local tLog = self.tLog
 
   if ulSize == 0xffffffff then 
     ulSize = self:getFlashSize(tPlugin, aAttr, fnCallbackMessage, fnCallbackProgress)
     if ulSize then
-      print(string.format("Flash size: 0x%08x bytes", ulSize))
+      tLog.debug("Flash size: 0x%08x bytes", ulSize)
       ulSize = ulSize - ulDeviceOffset
     else
       return nil, "Could not determine the flash size!"
@@ -935,7 +944,7 @@ function Flasher:readArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCall
     ulChunkSize = math.min(ulSize, ulBufferLen)
 
     -- Read chunk into buffer
-    print(string.format("reading flash offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset+ulChunkSize))
+    tLog.debug("reading flash offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset + ulChunkSize)
     fOk = self:read(tPlugin, aAttr, ulDeviceOffset, ulDeviceOffset + ulChunkSize, ulBufferAddr, fnCallbackMessage, fnCallbackProgress)
     if not fOk then
       return nil, "Error while reading from flash!"
@@ -978,10 +987,11 @@ end
 
 function Flasher:hashArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMessage, fnCallbackProgress)
   local ulDeviceEndOffset
+  local tLog = self.tLog
   if ulDataByteSize == 0xffffffff then 
     local ulDeviceSize = self:getFlashSize(tPlugin, aAttr, fnCallbackMessage, fnCallbackProgress)
     if ulDeviceSize then
-      print(string.format("Flash size: 0x%08x bytes", ulDeviceSize))
+      tLog.debug("Flash size: 0x%08x bytes", ulDeviceSize)
       ulDeviceEndOffset = ulDeviceSize
     else
       return nil, "Could not determine the flash size!"
@@ -1023,6 +1033,7 @@ function Flasher:simple_flasher_string(tPlugin, strData, tBus, ulUnit, ulChipSel
   local fOk
   local strMsg
   local ulDeviceOffset = 0
+  local tLog = self.tLog
 
   -- Download the binary.
   local aAttr = self:download(tPlugin, strFlasherPrefix, fnCallbackProgress)
@@ -1034,14 +1045,14 @@ function Flasher:simple_flasher_string(tPlugin, strData, tBus, ulUnit, ulChipSel
   end
 
   fOk, strMsg = self:eraseArea(tPlugin, aAttr, ulDeviceOffset, strData:len(), fnCallbackMessage, fnCallbackProgress)
-  print(strMsg)
+  tLog.debug(strMsg)
   assert(fOk, strMsg or "Error while erasing area")
 
   fOk, strMsg = self:flashArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMessage, fnCallbackProgress)
-  print(strMsg)
+  tLog.debug(strMsg)
   assert(fOk, strMsg or "Error while programming area")
 
-  print("*** Flashing ok ***")
+  tLog.debug("*** Flashing ok ***")
 end
 
 
