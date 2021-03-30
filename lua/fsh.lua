@@ -1928,7 +1928,7 @@ function Shell:__str2hex(strData)
   return (strData:gsub(
     ".",
     function(c)
-      return string.format("%02x ", string.byte(c))
+      return string.format("%02x", string.byte(c))
     end
   ))
 end
