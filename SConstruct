@@ -606,7 +606,8 @@ if fBuildIsFull==True:
     tArcList.AddFiles('lua/',
         lua_flasher,
         'lua/lua/Version.lua',
-        'lua/lua/wfp_control.lua')
+        'lua/lua/wfp_control.lua',
+        'lua/lua/progressbar.lua')
 
     tArcList.AddFiles('lib/',
         tArtifacts_netx4000_nodbg['lib_stripped'],
@@ -711,6 +712,7 @@ if fBuildIsFull==True:
         'targets/testbench/lua/Version.lua':                               'lua/lua/Version.lua',
         'targets/testbench/lua/flasher.lua':                               lua_flasher,
         'targets/testbench/lua/wfp_control.lua':                           'lua/lua/wfp_control.lua',
+        'targets/testbench/lua/progressbar.lua':                           'lua/lua/progressbar.lua',
 
         # Copy all LUA scripts.
         'targets/testbench/fsh.lua':                                       'lua/fsh.lua',
