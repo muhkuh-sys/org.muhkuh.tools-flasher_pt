@@ -63,6 +63,25 @@ function Shell:_init()
     require "log.formatter.format".new()
   )
 
+   -- overwrite the tLog.error to overcome the problem of printing error messages at the end of Progress Bars
+   local tLog_ProgressBar_error = tLog_ProgressBar.error
+   tLog_ProgressBar.error = function(...)
+     print()
+     tLog_ProgressBar_error(...)
+   end
+ 
+   local tLog_Flasher_error = tLog_Flasher.error
+   tLog_Flasher.error = function(...)
+     print()
+     tLog_Flasher_error(...)
+   end
+ 
+   local tLog_error = tLog.error
+   tLog.error = function(...)
+     print()
+     tLog_error(...)
+   end
+ 
   for _, strPlugin in ipairs(self.astrPlugins) do
     tLog.debug('Loading plugin "%s"...', strPlugin)
     require(strPlugin)
@@ -75,7 +94,10 @@ function Shell:_init()
   self.term = require "term"
   self.colors = self.term.colors
   self.tFlasher = require "flasher"(tLog_Flasher)
+
   self.tLog = tLog
+  self.tLog_ProgressBar = tLog_ProgressBar
+
   self.tCmd_input = self.pl.List()
 
   -- No connection yet.
@@ -1099,12 +1121,31 @@ function Shell:__getRange(tCmd)
   local ulStart
   local ulLength
   local tLog = self.tLog
+  local pl = self.pl
+  local tLog_ProgressBar = self.tLog_ProgressBar
+  local tProgressBars =
+    pl.Map {
+    netx = require "progressbar"(
+      tLog_ProgressBar,
+      {mode = (not debugMode_ProgressBar) and "debug" or nil, prefix = "[NETX]: ", repeatProgress = true}
+    ),
+    switchToDevice = require "progressbar"(
+      tLog_ProgressBar,
+      {mode = (not debugMode_ProgressBar) and "debug" or nil, prefix = "[getRange] : "}
+    )
+  }
 
   if tPlugin == nil or aAttr == nil then
     tLog.info("Not connected.")
   elseif tCmd.all ~= nil then
     ulStart = 0
-    ulLength = tFlasher:getFlashSize(tPlugin, aAttr)
+    ulLength =
+    tFlasher:getFlashSize(
+    tPlugin,
+    aAttr,
+    tProgressBars:get("netx").fnMessageProgressBar,
+    tProgressBars:get("switchToDevice").fnProgressBar
+  )
   else
     ulStart = tCmd.startaddress
     ulLength = tCmd.length
@@ -1128,6 +1169,19 @@ function Shell:__switchToDevice(ucBus, ucUnit, ucCS)
   local aAttr = self.aAttr
   local tLog = self.tLog
   local tResult
+  local pl = self.pl
+  local tLog_ProgressBar = self.tLog_ProgressBar
+  local tProgressBars =
+    pl.Map {
+    netx = require "progressbar"(
+      tLog_ProgressBar,
+      {mode = (not debugMode_ProgressBar) and "debug" or nil, prefix = "[NETX]: ", repeatProgress = true}
+    ),
+    switchToDevice = require "progressbar"(
+      tLog_ProgressBar,
+      {mode = (not debugMode_ProgressBar) and "debug" or nil, prefix = "[switchToDevice] : "}
+    )
+  }
 
   if tPlugin == nil or aAttr == nil then
     tLog.info("Not connected.")
@@ -1138,7 +1192,16 @@ function Shell:__switchToDevice(ucBus, ucUnit, ucCS)
   else
     tLog.debug("Switch to bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
 
-    local fOk = tFlasher:detect(tPlugin, aAttr, ucBus, ucUnit, ucCS)
+    local fOk =
+    tFlasher:detect(
+    tPlugin,
+    aAttr,
+    ucBus,
+    ucUnit,
+    ucCS,
+    tProgressBars:get("netx").fnMessageProgressBar,
+    tProgressBars:get("switchToDevice").fnProgressBar
+  )
     if fOk ~= true then
       tLog.error("Failed to detect a device")
       tResult = false
@@ -1161,6 +1224,58 @@ function Shell:__run_read(tCmd)
   local aAttr = self.aAttr
   local pl = self.pl
   local tLog = self.tLog
+  local tLog_ProgressBar = self.tLog_ProgressBar
+  local tProgressBars =
+    pl.Map {
+    netx = require "progressbar"(
+      tLog_ProgressBar,
+      {mode = (not debugMode_ProgressBar) and "debug" or nil, prefix = "[NETX]: ", repeatProgress = true}
+    ),
+    TotalProgress = require "progressbar"(
+      tLog_ProgressBar,
+      {
+        {
+          prefix = "Device ",
+          SL_Iteration = 0,
+          SL_Total = 3,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "readArea ",
+          SL_Iteration = 1,
+          SL_Total = 2,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "Result ",
+          suffix = " OK",
+          showTotalProgress = true
+        },
+        {
+          prefix = "WriteData ",
+          SL_Iteration = 0,
+          SL_Total = 1,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "Result ",
+          suffix = " OK",
+          showTotalProgress = true
+        }
+      }
+    )
+  }
+
+  tProgressBars:get("TotalProgress").fnProgressBar()
 
   if tPlugin == nil or aAttr == nil then
     print()
@@ -1171,23 +1286,80 @@ function Shell:__run_read(tCmd)
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
     if ucBus ~= nil then
       tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
-
+      tProgressBars:get("TotalProgress").fnProgressBar()
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
+        tProgressBars:get("TotalProgress").fnProgressBar()
         local ulStart, ulLength = self:__getRange(tCmd)
         if ulStart ~= nil then
+          tProgressBars:get("TotalProgress").fnProgressBar()
           local ulEnd = ulStart + ulLength
           tLog.debug("Reading [0x%08x,0x%08x[ .", ulStart, ulEnd)
 
-          local strBin, strMsg = tFlasher:readArea(tPlugin, aAttr, ulStart, ulLength)
+           -- simulate readArea to calculate total of progress bar
+           local SL_Total = function()
+            local ultotal_offset = 0
+            local ultotal = 0
+            local ulBufferLen = aAttr.ulBufferLen
+            local ulSize = ulLength
+            local ulChunkSize
+
+            if ulSize == 0xffffffff then
+              ultotal_offset = 1
+              ulSize =
+                tFlasher:getFlashSize(
+                tPlugin,
+                aAttr,
+                function()
+                  return true
+                end,
+                function()
+                  return true
+                end
+              )
+              if ulSize then
+                ulSize = ulSize - ulStart
+              end
+            end
+            while ulSize > 0 do
+              ulChunkSize = math.min(ulSize, ulBufferLen)
+              ulSize = ulSize - ulChunkSize
+              ultotal = ultotal + 1
+            end
+            return 2 * ultotal + ultotal_offset
+          end
+
+          tProgressBars:get("TotalProgress").tparam.SL_Total = SL_Total()
+
+          -- tProgressBars:get("readArea").tparam.totalByteSize = ulLength
+
+          local strBin, strMsg =
+            tFlasher:readArea(
+            tPlugin,
+            aAttr,
+            ulStart,
+            ulLength,
+            tProgressBars:get("netx").fnMessageProgressBar,
+            tProgressBars:get("TotalProgress").fnProgressBar
+          )
+
           if strBin == nil then
+            tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
+            tProgressBars:get("TotalProgress").fnProgressBar()
             tLog.error("Failed to read: " .. tostring(strMsg))
           else
+            tProgressBars:get("TotalProgress").fnProgressBar()
+
+            tProgressBars:get("TotalProgress").fnProgressBar()
             local strFilename = pl.path.expanduser(tCmd.filename)
             tResult, strMsg = pl.utils.writefile(strFilename, strBin, true)
+            tProgressBars:get("TotalProgress").fnProgressBar()
             if tResult == true then
+              tProgressBars:get("TotalProgress").fnProgressBar()
               tLog.info("OK. Data [0x%08x,0x%08x[ written to the file '%s'", ulStart, ulEnd, strFilename)
             else
+              tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
+              tProgressBars:get("TotalProgress").fnProgressBar()
               tLog.error('Failed to write the data to the file "%s": %s', strFilename, strMsg)
             end
           end
@@ -1205,6 +1377,53 @@ function Shell:__run_verify(tCmd)
   local aAttr = self.aAttr
   local pl = self.pl
   local tLog = self.tLog
+  local tLog_ProgressBar = self.tLog_ProgressBar
+  local tProgressBars =
+    pl.Map {
+    netx = require "progressbar"(
+      tLog_ProgressBar,
+      {mode = (not debugMode_ProgressBar) and "debug" or nil, prefix = "[NETX]: ", repeatProgress = true}
+    ),
+    TotalProgress = require "progressbar"(
+      tLog_ProgressBar,
+      {
+        {
+          prefix = "Device ",
+          SL_Iteration = 0,
+          SL_Total = 3,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "LoadData ",
+          SL_Iteration = 0,
+          SL_Total = 2,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "verifyArea ",
+          SL_Iteration = 1,
+          SL_Total = 2,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "Result ",
+          suffix = " OK",
+          showTotalProgress = true
+        }
+      }
+    )
+  }
+
+  tProgressBars:get("TotalProgress").fnProgressBar()
 
   if tPlugin == nil or aAttr == nil then
     print()
@@ -1215,32 +1434,70 @@ function Shell:__run_verify(tCmd)
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
     if ucBus ~= nil then
       tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
+      tProgressBars:get("TotalProgress").fnProgressBar()
 
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
+        tProgressBars:get("TotalProgress").fnProgressBar()
         local ulStart = tCmd.startaddress
 
+        tProgressBars:get("TotalProgress").fnProgressBar()
+
+          tProgressBars:get("TotalProgress").fnProgressBar()
         local strFilename = pl.path.expanduser(tCmd.filename)
         if pl.path.exists(strFilename) == false then
           tLog.error('The file "%s" does not exist.', strFilename)
         elseif pl.path.isfile(strFilename) ~= true then
           tLog.error('The path "%s" is not a file.', strFilename)
         else
+          tProgressBars:get("TotalProgress").fnProgressBar()
           tLog.debug('Verify "%s" at offset 0x%08x...', strFilename, ulStart)
 
           local strBin, strMsg = pl.utils.readfile(strFilename, true)
           if strBin == nil then
             tLog.error('Failed to read "%s" : ', strFilename, tostring(strMsg))
           else
+            tProgressBars:get("TotalProgress").fnProgressBar()
+
+              -- simulate verifyArea to calculate total of progress bar
+              local SL_Total = function()
+                local ultotal = 0
+                local ulDataOffset = 0
+                local ulDataByteSize = strBin:len()
+                local ulBufferLen = aAttr.ulBufferLen
+                local ulChunkSize
+                local strChunk
+                while ulDataOffset < ulDataByteSize do
+                  strChunk = strBin:sub(ulDataOffset + 1, ulDataOffset + ulBufferLen)
+                  ulChunkSize = strChunk:len()
+                  ulDataOffset = ulDataOffset + ulChunkSize
+                  ultotal = ultotal + 1
+                end
+                return 2 * ultotal
+              end
+
+              tProgressBars:get("TotalProgress").tparam.SL_Total = SL_Total()
+
             -- Erase the area.
-            tResult, strMsg = tFlasher:verifyArea(tPlugin, aAttr, ulStart, strBin)
+            tResult, strMsg =
+                tFlasher:verifyArea(
+                tPlugin,
+                aAttr,
+                ulStart,
+                strBin,
+                tProgressBars:get("netx").fnMessageProgressBar,
+                tProgressBars:get("TotalProgress").fnProgressBar
+              )
             if tResult == true then
+              tProgressBars:get("TotalProgress").fnProgressBar()
               tLog.info(
                   'Verify OK. The data in the flash at offset 0x%08x is equals to the file "%s".',
                   ulStart,
                   strFilename
                 )
             else
+              tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
+                tProgressBars:get("TotalProgress").fnProgressBar()
               tLog.error(
                   'Verify error. The flash contents at offset 0x%08x differ from the file "%s".',
                   ulStart,
@@ -1262,6 +1519,67 @@ function Shell:__run_write(tCmd)
   local aAttr = self.aAttr
   local pl = self.pl
   local tLog = self.tLog
+  local tLog_ProgressBar = self.tLog_ProgressBar
+  local tProgressBars =
+    pl.Map {
+    netx = require "progressbar"(
+      tLog_ProgressBar,
+      {mode = (not debugMode_ProgressBar) and "debug" or nil, prefix = "[NETX]: ", repeatProgress = true}
+    ),
+    TotalProgress = require "progressbar"(
+      tLog_ProgressBar,
+      {
+        {
+          prefix = "Device ",
+          SL_Iteration = 0,
+          SL_Total = 3,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "LoadData ",
+          SL_Iteration = 0,
+          SL_Total = 2,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "eraseArea ",
+          SL_Iteration = 1,
+          SL_Total = 4,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "Result ",
+          suffix = " OK",
+          showTotalProgress = true
+        },
+        {
+          prefix = "flashArea ",
+          SL_Iteration = 1,
+          SL_Total = 2,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "Result ",
+          suffix = " OK",
+          showTotalProgress = true
+        }
+      }
+    )
+  }
+
+  tProgressBars:get("TotalProgress").fnProgressBar()
 
   if tPlugin == nil or aAttr == nil then
     print()
@@ -1272,41 +1590,106 @@ function Shell:__run_write(tCmd)
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
     if ucBus ~= nil then
       tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
+      tProgressBars:get("TotalProgress").fnProgressBar()
 
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
+        tProgressBars:get("TotalProgress").fnProgressBar()
         local ulStart = tCmd.startaddress
 
+        tProgressBars:get("TotalProgress").fnProgressBar()
+
+        tProgressBars:get("TotalProgress").fnProgressBar()
         local strFilename = pl.path.expanduser(tCmd.filename)
         if pl.path.exists(strFilename) == false then
           tLog.error('The file "%s" does not exist.', strFilename)
         elseif pl.path.isfile(strFilename) ~= true then
           tLog.error('The path "%s" is not a file.', strFilename)
         else
+          tProgressBars:get("TotalProgress").fnProgressBar()
           tLog.debug('Writing "%s" to offset 0x%08x...', strFilename, ulStart)
 
           local strBin, strMsg = pl.utils.readfile(strFilename, true)
           if strBin == nil then
             tLog.error('Failed to read "%s" : ', strFilename, tostring(strMsg))
           else
+            tProgressBars:get("TotalProgress").fnProgressBar()
             -- Get the size of the data in bytes.
             local sizBin = string.len(strBin)
 
             -- Erase the area.
-            tResult, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulStart, sizBin)
+            tResult, strMsg =
+            tFlasher:eraseArea(
+            tPlugin,
+            aAttr,
+            ulStart,
+            sizBin,
+            tProgressBars:get("netx").fnMessageProgressBar,
+            tProgressBars:get("TotalProgress").fnProgressBar
+          )
+
+          tProgressBars:get("TotalProgress").tparam.printLine = ""
+          tProgressBars:get("TotalProgress").tparam.printEnd = "\n"
+          while tProgressBars:get("TotalProgress").tparam.ProgressBarFinished == false and
+            tProgressBars:get("TotalProgress").iteration == 3 do
+            tProgressBars:get("TotalProgress").fnProgressBar()
+          end
+
             if tResult ~= true then
+              tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
+              tProgressBars:get("TotalProgress").fnProgressBar()
               tLog.error("Failed to erase the area: " .. tostring(strMsg))
             else
+              tProgressBars:get("TotalProgress").fnProgressBar()
+
+                -- simulate flashArea to calculate total of the progress bar
+                local SL_Total = function()
+                  local ultotal = 0
+                  local ulDataOffset = 0
+                  local ulDataByteSize = strBin:len()
+                  local ulChunkSize
+                  local strChunk
+                  local ulBufferLen = aAttr.ulBufferLen
+                  while ulDataOffset < ulDataByteSize do
+                    local ulEnd = ulDataOffset + ulBufferLen
+                    if ulEnd < ulDataByteSize then
+                      ulEnd = ulEnd - (ulEnd % 16)
+                    end
+                    strChunk = strBin:sub(ulDataOffset + 1, ulEnd)
+                    ulChunkSize = strChunk:len()
+
+                    ulDataOffset = ulDataOffset + ulChunkSize
+                    ultotal = ultotal + 1
+                  end
+                  return 2 * ultotal
+                end
+
+                tProgressBars:get("TotalProgress").tparam.SL_Total = SL_Total()
+
               -- Flash the data. This includes a verify.
-              tResult, strMsg = tFlasher:flashArea(tPlugin, aAttr, ulStart, strBin)
+              tResult, strMsg =
+              tFlasher:flashArea(
+              tPlugin,
+              aAttr,
+              ulStart,
+              strBin,
+              tProgressBars:get("netx").fnMessageProgressBar,
+              tProgressBars:get("TotalProgress").fnProgressBar
+            )
               if tResult ~= true then
+                tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
+                tProgressBars:get("TotalProgress").fnProgressBar()
                 tLog.error("Failed to write the area: " .. tostring(strMsg))
               end
             end
 
             if tResult == true then
+              tProgressBars:get("TotalProgress").fnProgressBar()
+              local ulEndadress = ulStart + strBin:len()
               tLog.info("OK. Data '%s' written to [0x%08x,0x%08x[ ", strFilename, ulStart, ulEndadress)
             else
+              tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
+                tProgressBars:get("TotalProgress").fnProgressBar()
               tLog.error("Failed to write the data: %s", strMsg)
             end
           end
@@ -1323,6 +1706,45 @@ function Shell:__run_erase(tCmd)
   local tPlugin = self.tPlugin
   local aAttr = self.aAttr
   local tLog = self.tLog
+  local pl = self.pl
+  local tLog_ProgressBar = self.tLog_ProgressBar
+  local tProgressBars =
+    pl.Map {
+    netx = require "progressbar"(
+      tLog_ProgressBar,
+      {mode = (not debugMode_ProgressBar) and "debug" or nil, prefix = "[NETX]: ", repeatProgress = true}
+    ),
+    TotalProgress = require "progressbar"(
+      tLog_ProgressBar,
+      {
+        {
+          prefix = "Device ",
+          SL_Iteration = 0,
+          SL_Total = 3,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "eraseArea ",
+          SL_Iteration = 1,
+          SL_Total = 4,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "Result ",
+          suffix = " OK",
+          showTotalProgress = true
+        }
+      }
+    )
+  }
+
+  tProgressBars:get("TotalProgress").fnProgressBar()
 
   if tPlugin == nil or aAttr == nil then
     print()
@@ -1333,17 +1755,39 @@ function Shell:__run_erase(tCmd)
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
     if ucBus ~= nil then
       tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
+      tProgressBars:get("TotalProgress").fnProgressBar()
 
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
+        tProgressBars:get("TotalProgress").fnProgressBar()
         local ulStart, ulLength = self:__getRange(tCmd)
         if ulStart ~= nil then
+          tProgressBars:get("TotalProgress").fnProgressBar()
           -- Erase the area.
           local strMsg
-          tResult, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulStart, ulLength)
+          tResult, strMsg =
+            tFlasher:eraseArea(
+            tPlugin,
+            aAttr,
+            ulStart,
+            ulLength,
+            tProgressBars:get("netx").fnMessageProgressBar,
+            tProgressBars:get("TotalProgress").fnProgressBar
+          )
+
+          tProgressBars:get("TotalProgress").tparam.printLine = ""
+          tProgressBars:get("TotalProgress").tparam.printEnd = "\n"
+          while tProgressBars:get("TotalProgress").tparam.ProgressBarFinished == false and
+            tProgressBars:get("TotalProgress").iteration == 2 do
+            tProgressBars:get("TotalProgress").fnProgressBar()
+          end
+
           if tResult == true then
+            tProgressBars:get("TotalProgress").fnProgressBar()
             tLog.info("OK. The area [0x%08x,0x%08x[ is erased", ulStart, ulStart + ulLength)
           else
+            tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
+            tProgressBars:get("TotalProgress").fnProgressBar()
             tLog.error("Failed to erase the data: %s", strMsg)
           end
         end
@@ -1359,6 +1803,35 @@ function Shell:__run_iserased(tCmd)
   local tPlugin = self.tPlugin
   local aAttr = self.aAttr
   local tLog = self.tLog
+  local pl = self.pl
+  local tLog_ProgressBar = self.tLog_ProgressBar
+  local tProgressBars =
+    pl.Map {
+    netx = require "progressbar"(
+      tLog_ProgressBar,
+      {mode = (not debugMode_ProgressBar) and "debug" or nil, prefix = "[NETX]: ", repeatProgress = true}
+    ),
+    TotalProgress = require "progressbar"(
+      tLog_ProgressBar,
+      {
+        {
+          prefix = "Device ",
+          SL_Iteration = 0,
+          SL_Total = 3,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "isErased ",
+          showTotalProgress = true
+        }
+      }
+    )
+  }
+
+  tProgressBars:get("TotalProgress").fnProgressBar()
 
   if tPlugin == nil or aAttr == nil then
     print()
@@ -1369,15 +1842,27 @@ function Shell:__run_iserased(tCmd)
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
     if ucBus ~= nil then
       tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
+      tProgressBars:get("TotalProgress").fnProgressBar()
 
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
+        tProgressBars:get("TotalProgress").fnProgressBar()
         local ulStart, ulLength = self:__getRange(tCmd)
         if ulStart ~= nil then
+          tProgressBars:get("TotalProgress").fnProgressBar()
           local ulEnd = ulStart + ulLength
-          -- Erase the area.
-          local strMsg
-          tResult, strMsg = tFlasher:isErased(tPlugin, aAttr, ulStart, ulEnd)
+          -- is area Erased
+          -- strMsg entfernen
+          local strMsg  -- is always nil because isErased only returns tResult true/false
+          tResult, strMsg =
+            tFlasher:isErased(
+            tPlugin,
+            aAttr,
+            ulStart,
+            ulEnd,
+            tProgressBars:get("netx").fnMessageProgressBar,
+            tProgressBars:get("TotalProgress").fnProgressBar
+          )
           if tResult == true then
             tLog.info("Clean. The area is erased.")
           else
@@ -1407,7 +1892,45 @@ function Shell:__run_hash(tCmd)
   local tPlugin = self.tPlugin
   local aAttr = self.aAttr
   local tLog = self.tLog
+  local pl = self.pl
+  local tLog_ProgressBar = self.tLog_ProgressBar
+  local tProgressBars =
+    pl.Map {
+    netx = require "progressbar"(
+      tLog_ProgressBar,
+      {mode = (not debugMode_ProgressBar) and "debug" or nil, prefix = "[NETX]: ", repeatProgress = true}
+    ),
+    TotalProgress = require "progressbar"(
+      tLog_ProgressBar,
+      {
+        {
+          prefix = "Device ",
+          SL_Iteration = 0,
+          SL_Total = 3,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "HashArea ",
+          SL_Iteration = 1,
+          SL_Total = 2,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "Result ",
+          suffix = " OK",
+          showTotalProgress = true
+        }
+      }
+    )
+  }
 
+  tProgressBars:get("TotalProgress").fnProgressBar()
   if tPlugin == nil or aAttr == nil then
     print()
     tLog.info("Not connected.")
@@ -1417,17 +1940,34 @@ function Shell:__run_hash(tCmd)
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
     if ucBus ~= nil then
       tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
-
+      tProgressBars:get("TotalProgress").fnProgressBar()
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
+        tProgressBars:get("TotalProgress").fnProgressBar()
         local ulStart, ulLength = self:__getRange(tCmd)
-        if ulStart ~= nil then
-          -- Hash the area.
-          local strMsg
-          tResult, strMsg = tFlasher:hashArea(tPlugin, aAttr, ulStart, ulLength)
+        if ulStart ~= nil thentProgressBars:get("TotalProgress").fnProgressBar()
+
+        if ulLength == 0xffffffff then
+          tProgressBars:get("TotalProgress").tparam.SL_Total = 3
+        end
+
+        -- Hash the area.
+        local strMsg
+        tResult, strMsg =
+          tFlasher:hashArea(
+          tPlugin,
+          aAttr,
+          ulStart,
+          ulLength,
+          tProgressBars:get("netx").fnMessageProgressBar,
+          tProgressBars:get("TotalProgress").fnProgressBar -- hashArea
+        )
           if tResult ~= nil then
+            tProgressBars:get("TotalProgress").fnProgressBar()
             tLog.info("OK. SHA1 SUM = " .. self:__str2hex(tResult))
           else
+            tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
+            tProgressBars:get("TotalProgress").fnProgressBar()
             tLog.error("Failed to hash the data: %s", strMsg)
           end
         end
@@ -1480,12 +2020,64 @@ end
 function Shell:__run_connect(tCmd)
   local tFlasher = self.tFlasher
   local tLog = self.tLog
+  local pl = self.pl
+  local tLog_ProgressBar = self.tLog_ProgressBar
+  local tProgressBars =
+    pl.Map {
+    netx = require "progressbar"(
+      tLog_ProgressBar,
+      {mode = (not debugMode_ProgressBar) and "debug" or nil, prefix = "[NETX]: ", repeatProgress = true}
+    ),
+    TotalProgress = require "progressbar"(
+      tLog_ProgressBar,
+      {
+        {
+          prefix = "Connect ",
+          SL_Iteration = 0,
+          SL_Total = 3,
+          showTotalProgress = true,
+          printEnd = "",
+          printLine = "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "Download ",
+          showTotalProgress = true
+        },
+        {
+          prefix = "Result ",
+          suffix = " OK",
+          showTotalProgress = true
+        },
+        {
+          prefix = "BoardInfo ",
+          SL_Iteration = 1,
+          SL_Total = 2,
+          showTotalProgress = true,
+          printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
+          printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+          ProcessAlgo = "SingleLine"
+        },
+        {
+          prefix = "Result ",
+          suffix = " OK",
+          showTotalProgress = true
+        }
+      }
+    )
+  }
+
+  -- intial progress bar
+  tProgressBars:get("TotalProgress").fnProgressBar()
 
   local atDetectedDevices = self.__atDetectedDevices
+
   if #atDetectedDevices == 0 then
     tLog.error('No devices detected to connect to. Run "scan" to search for devices again.')
   else
     self:__run_disconnect()
+
+    tProgressBars:get("TotalProgress").fnProgressBar()
 
     local strPlugin = tCmd.plugin
 
@@ -1496,24 +2088,42 @@ function Shell:__run_connect(tCmd)
         if tPlugin == nil then
           tLog.error("Failed to open to the device.")
         else
+          tProgressBars:get("TotalProgress").fnProgressBar()
           -- Connect to the netX.
           local tResult, strMsg = pcall(tPlugin.Connect, tPlugin)
           if tResult ~= true then
             tLog.error("Failed to connect: " .. tostring(strMsg))
           else
             -- Download the flasher binary to the netX.
+            
+            tProgressBars:get("TotalProgress").fnProgressBar()
             local aAttr
-            tResult, aAttr = pcall(tFlasher.download, tFlasher, tPlugin, self.__strPathNetx)
+            tResult, aAttr =
+              pcall(
+              tFlasher.download,
+              tFlasher,
+              tPlugin,
+              self.__strPathNetx,
+              tProgressBars:get("TotalProgress").fnProgressBar -- Download
+            )
             if tResult ~= true or aAttr == nil then
               tLog.error("Failed to download the flasher to the netX: " .. tostring(aAttr))
               tPlugin:Disconnect()
             else
               -- Get the board info.
-              local aBoardInfo = tFlasher:getBoardInfo(tPlugin, aAttr)
+              tProgressBars:get("TotalProgress").fnProgressBar()
+              local aBoardInfo =
+                tFlasher:getBoardInfo(
+                tPlugin,
+                aAttr,
+                tProgressBars:get("netx").fnMessageProgressBar,
+                tProgressBars:get("TotalProgress").fnProgressBar -- BoardInfo
+              )
               if aBoardInfo == nil then
                 tLog.error("Failed to get the board info.")
                 tPlugin:Disconnect()
               else
+                tProgressBars:get("TotalProgress").fnProgressBar()
                 -- Get all IDs for the flashes.
                 local aSanitizedBoardNames = {}
                 for _, tDeviceInfo in ipairs(aBoardInfo) do
@@ -1749,6 +2359,8 @@ function Shell:run()
   local strHistory = ".fsh_history.txt"
   local tLog = self.tLog
 
+  linenoise.historysetmaxlen(100) -- max length of the linenoise history
+  
   local strPathNetx = self:__getNetxPath()
   if strPathNetx == nil then
     error('Failed to find the "netx" folder.')
