@@ -82,8 +82,12 @@ function Flasher:_init(tLog)
   --------------------------------------------------------------------------
 
   local this = self
-  self.fnProgressDefault = function(ulCnt, ulMax) return this:default_callback_progress(ulCnt, ulMax) end
-  self.fnMessageDefault = function(a, b) return this:default_callback_message(a, b) end
+  self.fnProgressDefault = function(ulCnt, ulMax)
+    return this:default_callback_progress(ulCnt, ulMax)
+  end
+  self.fnMessageDefault = function(a, b)
+    return this:default_callback_message(a, b)
+  end
 
   self.ulProgressLastTime    = 0
   self.fProgressLastPercent  = 0
@@ -758,12 +762,9 @@ function Flasher:eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMes
   tLog.debug("Area:  [0x%08x, 0x%08x[", ulDeviceOffset, ulEndOffset)
 
   -- The total number of bytes to process is 3x the erase area.
-  local ulProgressStageOffset = ulEndOffset - ulDeviceOffset
-  local ulProgressTotal = 3 * ulProgressStageOffset
 
   tLog.debug("Checking if the area is already empty")
-  local fnProgressStage1 = function(ulCnt, ulMax) return fnCallbackProgress(ulCnt, ulProgressTotal) end
-  fIsErased = self:isErased(tPlugin, aAttr, ulDeviceOffset, ulEndOffset, fnCallbackMessage, fnProgressStage1)
+  fIsErased = self:isErased(tPlugin, aAttr, ulDeviceOffset, ulEndOffset, fnCallbackMessage, fnCallbackProgress)
 
   if fIsErased==nil then
     return false, "Failed to check if the area is erased!"
@@ -772,7 +773,8 @@ function Flasher:eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMes
   else
     -- Get the erase area unless we have already gotten it.
     if not (ulEraseStart and ulEraseEnd) then
-      ulEraseStart,ulEraseEnd = self:getEraseArea(tPlugin, aAttr, ulDeviceOffset, ulEndOffset, fnCallbackMessage, self.fnProgressDefault)
+      ulEraseStart, ulEraseEnd =
+      self:getEraseArea(tPlugin, aAttr, ulDeviceOffset, ulEndOffset, fnCallbackMessage, fnCallbackProgress)
       if not (ulEraseStart and ulEraseEnd) then
         return false, "getEraseArea failed!"
       end
@@ -781,14 +783,13 @@ function Flasher:eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMes
     tLog.debug("Erasing flash")
     tLog.debug("Erase: [0x%08x, 0x%08x[", ulEraseStart, ulEraseEnd)
 
-    local fnProgressStage2 = function(ulCnt, ulMax) return fnCallbackProgress(ulCnt+ulProgressStageOffset, ulProgressTotal) end
-    fIsErased = self:erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnProgressStage2)
+    fIsErased = self:erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
     if fIsErased~=true then
       return false, "Failed to erase the area! (Failure during erase)"
     else
       tLog.debug("Checking if the area has been erased")
-      local fnProgressStage3 = function(ulCnt, ulMax) return fnCallbackProgress(ulCnt+2*ulProgressStageOffset, ulProgressTotal) end
-      fIsErased = self:isErased(tPlugin, aAttr,  ulDeviceOffset, ulEndOffset, fnCallbackMessage, fnProgressStage3)
+      
+      fIsErased = self:isErased(tPlugin, aAttr, ulDeviceOffset, ulEndOffset, fnCallbackMessage, fnCallbackProgress)
       if fIsErased~=true then
         return false, "Failed to erase the area! (isErased check failed)"
       end
@@ -822,7 +823,6 @@ function Flasher:flashArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMe
   local tLog = self.tLog
 
   -- The total number of bytes to process is 2x the flash area.
-  local ulProgressTotal = 2 * ulDataByteSize
 
   while ulDataOffset<ulDataByteSize do
     -- Extract the next chunk.
@@ -837,18 +837,14 @@ function Flasher:flashArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMe
     ulChunkSize = strChunk:len()
 
     -- Download the chunk to the buffer.
-    local fnProgressStage1 = function(ulCnt, ulMax) return fnCallbackProgress(ulCnt+ulProgressOffset, ulProgressTotal) end
-    self:write_image(tPlugin, ulBufferAdr, strChunk, fnProgressStage1)
-    ulProgressOffset = ulProgressOffset + ulChunkSize
-
+    self:write_image(tPlugin, ulBufferAdr, strChunk, fnCallbackProgress)
+  
     -- Flash the chunk.
     tLog.debug("flashing offset 0x%08x-0x%08x.", ulDeviceOffset, ulDeviceOffset + ulChunkSize)
-    local fnProgressStage2 = function(ulCnt, ulMax) return fnCallbackProgress(ulCnt+ulProgressOffset, ulProgressTotal) end
-    fOk = self:flash(tPlugin, aAttr, ulDeviceOffset, ulChunkSize, ulBufferAdr, fnCallbackMessage, fnProgressStage2)
+    fOk = self:flash(tPlugin, aAttr, ulDeviceOffset, ulChunkSize, ulBufferAdr, fnCallbackMessage, fnCallbackProgress)
     if not fOk then
       return false, "Failed to flash data!"
     end
-    ulProgressOffset = ulProgressOffset + ulChunkSize
 
     -- Increase pointers.
     ulDataOffset = ulDataOffset + ulChunkSize
