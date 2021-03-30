@@ -211,7 +211,7 @@ function Shell:_init()
     {
       cmd = "write",
       pattern = OptionalSpace * Cg(P("write"), "cmd") * Space * Cg(DeviceName, "device") * Space *
-        Cg(Integer, "startaddress") *
+        Cg(Integer / tonumber, "startaddress") *
         Space *
         Cg(Filename, "filename") *
         OptionalSpace *
@@ -234,7 +234,7 @@ function Shell:_init()
     {
       cmd = "verify",
       pattern = OptionalSpace * Cg(P("verify"), "cmd") * Space * Cg(DeviceName, "device") * Space *
-        Cg(Integer, "startaddress") *
+        Cg(Integer / tonumber, "startaddress") *
         Space *
         Cg(Filename, "filename") *
         OptionalSpace *
@@ -1120,6 +1120,7 @@ function Shell:__getRange(tCmd)
   local aAttr = self.aAttr
   local ulStart
   local ulLength
+  local ulDeviceSize
   local tLog = self.tLog
   local pl = self.pl
   local tLog_ProgressBar = self.tLog_ProgressBar
@@ -1139,19 +1140,59 @@ function Shell:__getRange(tCmd)
     tLog.info("Not connected.")
   elseif tCmd.all ~= nil then
     ulStart = 0
-    ulLength =
+    ulDeviceSize =
     tFlasher:getFlashSize(
     tPlugin,
     aAttr,
     tProgressBars:get("netx").fnMessageProgressBar,
     tProgressBars:get("switchToDevice").fnProgressBar
   )
+  if ulDeviceSize then
+    tLog.debug("Flash size: 0x%08x bytes", ulDeviceSize)
+    ulLength = ulDeviceSize
   else
+    tLog.error("Could not determine the flash size!")
+  end
+else -- in the case of: start adress, end adress AND start adress + length AND start adress
+  ulDeviceSize =
+    tFlasher:getFlashSize(
+    tPlugin,
+    aAttr,
+    tProgressBars:get("netx").fnMessageProgressBar,
+    tProgressBars:get("switchToDevice").fnProgressBar
+  )
+  if not ulDeviceSize then
+    tLog.error("Could not determine the flash size!")
+  else
+    tLog.debug("Flash size: 0x%08x bytes", ulDeviceSize)
+
     ulStart = tCmd.startaddress
     ulLength = tCmd.length
+
+    if ulStart > ulDeviceSize then
+      tLog.error("The given startaddress 0x%08x exceeds the size of the device.", ulStart)
+      return nil, nil
+    end
+
+    if ulLength ~= nil and ulStart + ulLength > ulDeviceSize then
+      ulLength = ulDeviceSize - ulStart
+      tLog.debug(
+        "The given length + startaddress is greater than the size of the device. The length is set to: 0x%08x",
+        ulLength
+      )
+    end
+
     if ulLength == nil then
       local ulEnd = tCmd.endaddress
-      if ulEnd < ulStart then
+
+       if ulEnd ~= nil then
+          if ulEnd > ulDeviceSize then
+            ulEnd = ulDeviceSize
+            tLog.debug(
+              "The given endaddress is greater than the size of the device. The endaddress is set to: 0x%08x",
+              ulEnd
+            )
+          elseif ulEnd < ulStart then
         tLog.error("The startaddress must be smaller than the endaddress.")
         ulStart = nil
       else
@@ -1159,6 +1200,8 @@ function Shell:__getRange(tCmd)
       end
     end
   end
+ end
+end
 
   return ulStart, ulLength
 end
@@ -1291,7 +1334,7 @@ function Shell:__run_read(tCmd)
       if tResult == true then
         tProgressBars:get("TotalProgress").fnProgressBar()
         local ulStart, ulLength = self:__getRange(tCmd)
-        if ulStart ~= nil then
+        if ulStart ~= nil and ulLength ~= nil then
           tProgressBars:get("TotalProgress").fnProgressBar()
           local ulEnd = ulStart + ulLength
           tLog.debug("Reading [0x%08x,0x%08x[ .", ulStart, ulEnd)
@@ -1439,8 +1482,9 @@ function Shell:__run_verify(tCmd)
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
         tProgressBars:get("TotalProgress").fnProgressBar()
-        local ulStart = tCmd.startaddress
-
+        
+        local ulStart = self:__getRange(tCmd)
+        if ulStart ~= nil then
         tProgressBars:get("TotalProgress").fnProgressBar()
 
           tProgressBars:get("TotalProgress").fnProgressBar()
@@ -1509,6 +1553,7 @@ function Shell:__run_verify(tCmd)
       end
     end
   end
+end
 
   return true
 end
@@ -1595,8 +1640,9 @@ function Shell:__run_write(tCmd)
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
         tProgressBars:get("TotalProgress").fnProgressBar()
-        local ulStart = tCmd.startaddress
-
+        
+        local ulStart = self:__getRange(tCmd)
+        if ulStart ~= nil then
         tProgressBars:get("TotalProgress").fnProgressBar()
 
         tProgressBars:get("TotalProgress").fnProgressBar()
@@ -1697,6 +1743,7 @@ function Shell:__run_write(tCmd)
       end
     end
   end
+end
 
   return true
 end
@@ -1756,12 +1803,11 @@ function Shell:__run_erase(tCmd)
     if ucBus ~= nil then
       tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
       tProgressBars:get("TotalProgress").fnProgressBar()
-
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
         tProgressBars:get("TotalProgress").fnProgressBar()
         local ulStart, ulLength = self:__getRange(tCmd)
-        if ulStart ~= nil then
+        if ulStart ~= nil and ulLength ~= nil then
           tProgressBars:get("TotalProgress").fnProgressBar()
           -- Erase the area.
           local strMsg
@@ -1848,7 +1894,7 @@ function Shell:__run_iserased(tCmd)
       if tResult == true then
         tProgressBars:get("TotalProgress").fnProgressBar()
         local ulStart, ulLength = self:__getRange(tCmd)
-        if ulStart ~= nil then
+        if ulStart ~= nil and ulLength ~= nil then
           tProgressBars:get("TotalProgress").fnProgressBar()
           local ulEnd = ulStart + ulLength
           -- is area Erased
@@ -1945,7 +1991,8 @@ function Shell:__run_hash(tCmd)
       if tResult == true then
         tProgressBars:get("TotalProgress").fnProgressBar()
         local ulStart, ulLength = self:__getRange(tCmd)
-        if ulStart ~= nil thentProgressBars:get("TotalProgress").fnProgressBar()
+        if ulStart ~= nil and ulLength ~= nil then
+          tProgressBars:get("TotalProgress").fnProgressBar()
 
         if ulLength == 0xffffffff then
           tProgressBars:get("TotalProgress").tparam.SL_Total = 3
@@ -2360,7 +2407,7 @@ function Shell:run()
   local tLog = self.tLog
 
   linenoise.historysetmaxlen(100) -- max length of the linenoise history
-  
+
   local strPathNetx = self:__getNetxPath()
   if strPathNetx == nil then
     error('Failed to find the "netx" folder.')
