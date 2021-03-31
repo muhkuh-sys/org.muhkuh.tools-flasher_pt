@@ -87,6 +87,9 @@ function Shell:_init()
     require(strPlugin)
   end
 
+  local strHistory = ".fsh_history.txt"
+  self.strHistory = strHistory
+
   self.linenoise = require "linenoise"
   local lpeg = require "lpeg"
   self.lpeg = lpeg
@@ -101,6 +104,9 @@ function Shell:_init()
 
   self.tCmd_input = self.pl.List()
   self.list_cmd = false
+  self.tListPreviousCmds = self.pl.List()
+
+  self.tHistLinenoise = self.pl.List()
 
   -- No connection yet.
   self.tPlugin = nil
@@ -188,12 +194,8 @@ function Shell:_init()
       (Cg(Integer / tonumber, "endaddress") + (P("+") * OptionalSpace * Cg(Integer / tonumber, "length"))))
 
   -- possible choices of debug command
-  local Cmds_debug = Cg(P("watch"), "watch") + Cg(P("save"), "save") * Space * Cg(Filename, "filename")
-  self.AllCommands_debug = {"watch", "save"}
-
-  -- possible choices of list command
-  local Cmds_list = Cg(P("run"), "run") + Cg(P("save"), "save") * Space * Cg(Filename, "filename")
-  self.AllCommands_list = {"run", "save"}
+  local Cmds_debug = Cg(P("display"), "display") + Cg(P("save"), "save") * Space * Cg(Filename, "filename")
+  self.AllCommands_debug = {"display", "save"}
 
   -- A comment starts with a hash and covers the rest of the line.
   local Comment = P("#")
@@ -284,44 +286,124 @@ function Shell:_init()
     },
     {
       cmd = "list",
-      pattern = OptionalSpace * Cg(P("list"), "cmd") * Space * Cmds_list * OptionalSpace * -1,
+      pattern = OptionalSpace * Cg(P("list"), "cmd") * OptionalSpace * -1,
       run = self.__run_list
-    },
-    {
-      -- command for list command only
-      cmd = "end",
-      pattern = OptionalSpace * Cg(P("end"), "cmd") * OptionalSpace * -1,
-      run = function()
-        return true
-      end
-    },
-    {
-      -- command for list command only
-      cmd = "clear",
-      pattern = OptionalSpace * Cg(P("clear"), "cmd") * Space * (Cg(P("all"), "all") + Cg(Integer / tonumber, "number")) *
-        OptionalSpace *
-        -1,
-      run = function()
-        return true
-      end
     }
   }
+
   self.__atCommands = atCommands
+
+  -- possible choices of list command
+  -- local Cmds_list = Cg(P("run"), "run") + Cg(P("save"), "save") * Space * Cg(Filename, "filename")
+
+  local interval =
+    Cg(P("all"), "all") + Cg(Integer / tonumber, "position") +
+    (Cg(P("interval"), "interval") * Space * Cg(Integer / tonumber, "start") * Space * Cg(Integer / tonumber, "ending"))
+
+  local atCommands_ListCmd = {
+    {
+      -- command of list command only
+      cmd = "end",
+      pattern = OptionalSpace * Cg(P("end"), "cmd") * OptionalSpace * -1,
+      run = self.__list_end
+    },
+    {
+      -- command of list command only
+      cmd = "run",
+      pattern = OptionalSpace * Cg(P("run"), "cmd") * Space * interval * OptionalSpace * -1,
+      run = self.__list_run
+    },
+    {
+      -- command of list command only
+      cmd = "clear",
+      pattern = OptionalSpace * Cg(P("clear"), "cmd") * Space * interval * OptionalSpace * -1,
+      run = self.__list_clear
+    },
+    -- {
+    --   -- command of list command only
+    --   cmd = "new",
+    --   pattern = OptionalSpace * Cg(P("new"), "cmd") * OptionalSpace * -1,
+    --   run = self.__list_new
+    -- },
+    {
+      -- command of list command only
+      cmd = "load",
+      pattern = OptionalSpace * Cg(P("load"), "cmd") * Space *
+        (Cg(P("hist"), "hist") + Cg(P("previous"), "previous") + Cg(Filename, "filename")) *
+        OptionalSpace *
+        -1,
+      run = self.__list_load
+    },
+    {
+      -- command of list command only
+      cmd = "save",
+      pattern = OptionalSpace * Cg(P("save"), "cmd") * Space * interval * Space * Cg(Filename, "filename") *
+        OptionalSpace *
+        -1,
+      run = self.__list_save
+    },
+    {
+      -- command of list command only
+      cmd = "insert",
+      pattern = OptionalSpace * Cg(P("insert"), "cmd") * Space * Cg(Integer / tonumber, "position") * OptionalSpace * -1,
+      run = self.__list_insert
+    },
+    {
+      -- command of list command only
+      cmd = "change",
+      pattern = OptionalSpace * Cg(P("change"), "cmd") * Space * Cg(Integer / tonumber, "pos_1") * Space *
+        Cg(Integer / tonumber, "pos_2") *
+        OptionalSpace *
+        -1,
+      run = self.__list_change
+    },
+    {
+      -- command of list command only
+      cmd = "replace",
+      pattern = OptionalSpace * Cg(P("replace"), "cmd") * Space * Cg(Integer / tonumber, "position") * OptionalSpace *
+        -1,
+      run = self.__list_replace
+    },
+    {
+      -- command of list command only
+      cmd = "add",
+      pattern = OptionalSpace * Cg(P("add"), "cmd") * Space *
+        (Cg(P("start"), "start") + Cg(P("end"), "ending") + Cg(Integer / tonumber, "position")) *
+        Space *
+        (Cg(P("hist"), "hist") + Cg(P("previous"), "previous") + Cg(Filename, "filename")) *
+        OptionalSpace *
+        -1,
+      run = self.__list_add
+    }
+  }
+
+  self.atCommands_ListCmd = atCommands_ListCmd
+
+  local atCommands_withListCmd = atCommands_ListCmd
+  for _, tCommand in ipairs(atCommands) do
+    table.insert(atCommands_withListCmd, tCommand)
+  end
+
+  -- self.__atCommands_withListCmd = atCommands_withListCmd --{'end','run','clear','new','load','save','insert','change','replace','add'}
 
   -- Combine all commands.
   local AllCommands
-  local AllCommands_withListCmd
   for _, tCommand in ipairs(atCommands) do
     local pattern = tCommand.pattern
     if AllCommands == nil then
-      if tCommand.cmd ~= "end" and tCommand.cmd ~= "clear" then
-        AllCommands = pattern
-      end
+      AllCommands = pattern
+    else
+      AllCommands = AllCommands + pattern
+    end
+  end
+
+  -- Combine all commands with the list command.
+  local AllCommands_withListCmd
+  for _, tCommand in ipairs(atCommands_withListCmd) do
+    local pattern = tCommand.pattern
+    if AllCommands_withListCmd == nil then
       AllCommands_withListCmd = pattern
     else
-      if tCommand.cmd ~= "end" and tCommand.cmd ~= "clear" then
-        AllCommands = AllCommands + pattern
-      end
       AllCommands_withListCmd = AllCommands_withListCmd + pattern
     end
   end
@@ -332,11 +414,13 @@ function Shell:_init()
 
   -- Create a table with all commands as a string.
   local astrCommandWords = {}
-  local astrCommandWords_withListCmd = {}
   for _, tCommand in ipairs(atCommands) do
-    if tCommand.cmd ~= "end" and tCommand.cmd ~= "clear" then
-      table.insert(astrCommandWords, tCommand.cmd)
-    end
+    table.insert(astrCommandWords, tCommand.cmd)
+  end
+
+  -- Create a table with all commands as a string with the list commands.
+  local astrCommandWords_withListCmd = {}
+  for _, tCommand in ipairs(atCommands_withListCmd) do
     table.insert(astrCommandWords_withListCmd, tCommand.cmd)
   end
 
@@ -389,11 +473,7 @@ function Shell:_init()
     {
       pattern = OptionalSpace * Cg(R("az") ^ 0) * -1,
       words = function()
-        if self.list_cmd == true then
-          return self.astrCommandWords_withListCmd
-        else
-          return self.__astrCommandWords
-        end
+        return (self.list_cmd == true) and self.astrCommandWords_withListCmd or self.__astrCommandWords
       end
     },
     -- Connect command.
@@ -754,54 +834,57 @@ function Shell:_init()
         return self:__getFilenameWords(strMatch)
       end
     },
-    -- list command.
-    {
-      pattern = OptionalSpace * P("list") * Space * -1,
-      hint = function()
-        return "[Command]  possible values: " .. table.concat(self.AllCommands_list, ", ")
-      end,
-      words = function()
-        return self.AllCommands_list
-      end
-    },
-    {
-      pattern = OptionalSpace * P("list") * Space * Cg(R("az", "AZ") ^ 1) * -1,
-      words = function()
-        return self.AllCommands_list
-      end
-    },
-    {
-      pattern = OptionalSpace * P("list") * Space * P("save") * Space * -1,
-      hint = "[filename]",
-      words = function(strMatch)
-        return self:__getFilenameWords(strMatch)
-      end
-    },
-    {
-      pattern = OptionalSpace * P("list") * Space * P("save") * Space * Cg(Filename) * -1,
-      words = function(strMatch)
-        return self:__getFilenameWords(strMatch)
-      end
-    },
     -- clear command (list command only)
     {
       pattern = OptionalSpace * P("clear") * Space * -1,
       hint = function()
         if self.list_cmd == true then
-          return "all  or  [number to clear]"
+          return "[interval]  possible values: " .. table.concat({"all", "[position to clear]", "interval"}, ", ")
         end
       end,
       words = function()
         if self.list_cmd == true then
-          return {"all"}
+          return {"all", "interval"}
         end
       end
     },
     {
-      pattern = OptionalSpace * P("clear") * Space * Cg(P("al") + P("a")) * -1,
+      pattern = OptionalSpace * P("clear") * Space * Cg(R("az", "AZ") ^ 1) * -1,
       words = function()
         if self.list_cmd == true then
-          return {"all"}
+          return {"all", "interval"}
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("clear") * Space * P("interval") * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[startposition] [endposition]"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("clear") * Space * P("interval") * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the startposition"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("clear") * Space * P("interval") * Space * Integer * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[endposition]"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("clear") * Space * P("interval") * Space * Integer * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the endposition"
         end
       end
     },
@@ -809,7 +892,315 @@ function Shell:_init()
       pattern = OptionalSpace * P("clear") * Space * UnfinishedInteger * -1,
       hint = function()
         if self.list_cmd == true then
-          return "    this is the number of the list to clear"
+          return "    this is the position to clear"
+        end
+      end
+    },
+    -- run command (list command only)
+    {
+      pattern = OptionalSpace * P("run") * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[interval]  possible values: " .. table.concat({"all", "[position of command]", "interval"}, ", ")
+        end
+      end,
+      words = function()
+        if self.list_cmd == true then
+          return {"all", "interval"}
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("run") * Space * Cg(R("az", "AZ") ^ 1) * -1,
+      words = function()
+        if self.list_cmd == true then
+          return {"all", "interval"}
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("run") * Space * P("interval") * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[startposition] [endposition]"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("run") * Space * P("interval") * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the startposition"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("run") * Space * P("interval") * Space * Integer * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[endposition]"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("run") * Space * P("interval") * Space * Integer * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the endposition"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("run") * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the position of command to run"
+        end
+      end
+    },
+    -- load command (list command only)
+    {
+      pattern = OptionalSpace * P("load") * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[list]  possible values: " .. table.concat({"previous", "hist", "[filename]"}, ", ")
+        end
+      end,
+      words = function(strMatch)
+        if self.list_cmd == true then
+          local tWords = self:__getFilenameWords(strMatch)
+          table.insert(tWords, "previous")
+          table.insert(tWords, "hist")
+          return tWords
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("load") * Space * Cg(Filename) * -1,
+      words = function(strMatch)
+        if self.list_cmd == true then
+          local tWords = self:__getFilenameWords(strMatch)
+          table.insert(tWords, "previous")
+          table.insert(tWords, "hist")
+          return tWords
+        end
+      end
+    },
+    -- save command (list command only)
+    {
+      pattern = OptionalSpace * P("save") * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[interval]  possible values: " .. table.concat({"all", "[position of command]", "interval"}, ", ")
+        end
+      end,
+      words = function()
+        if self.list_cmd == true then
+          return {"all", "interval"}
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("save") * Space * Cg(R("az", "AZ") ^ 1) * -1,
+      words = function()
+        if self.list_cmd == true then
+          return {"all", "interval"}
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("save") * Space * P("interval") * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[startposition] [endposition]"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("save") * Space * P("interval") * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the startposition"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("save") * Space * P("interval") * Space * Integer * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[endposition]"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("save") * Space * P("interval") * Space * Integer * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the endposition"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("save") * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the position of command to save"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("save") * Space * interval * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[filename]"
+        end
+      end,
+      words = function(strMatch)
+        if self.list_cmd == true then
+          return self:__getFilenameWords(strMatch)
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("save") * Space * interval * Space * Cg(Filename) * -1,
+      words = function(strMatch)
+        if self.list_cmd == true then
+          return self:__getFilenameWords(strMatch)
+        end
+      end
+    },
+    -- insert command (list command only)
+    {
+      pattern = OptionalSpace * P("insert") * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[position of command to insert]"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("insert") * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the position of command to insert"
+        end
+      end
+    },
+    -- change command (list command only)
+    {
+      pattern = OptionalSpace * P("change") * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[position 1] [position 2]"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("change") * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the position 1"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("change") * Space * Integer * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[position 2]"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("change") * Space * Integer * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is position 2"
+        end
+      end
+    },
+    -- replace command (list command only)
+    {
+      pattern = OptionalSpace * P("replace") * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[position of command to replace]"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("replace") * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the position of command to replace"
+        end
+      end
+    },
+    -- add command (list command only)
+    {
+      pattern = OptionalSpace * P("add") * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[position of insert list]  possible values: " ..
+            table.concat({"start", "[position list]", "end"}, ", ")
+        end
+      end,
+      words = function()
+        if self.list_cmd == true then
+          return {"start", "end"}
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("add") * Space * (Cg(R("az", "AZ") ^ 1) + UnfinishedInteger) * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the position of insert list"
+        end
+      end,
+      words = function()
+        if self.list_cmd == true then
+          return {"start", "end"}
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("add") * Space * (Cg(R("az", "AZ") ^ 1) + UnfinishedInteger) * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the position of insert list"
+        end
+      end,
+      words = function()
+        if self.list_cmd == true then
+          return {"start", "end"}
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("add") * Space * (P("start") + P("end") + Integer) * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[list]  possible values: " .. table.concat({"previous", "hist", "[filename]"}, ", ")
+        end
+      end,
+      words = function(strMatch)
+        if self.list_cmd == true then
+          local tWords = self:__getFilenameWords(strMatch)
+          table.insert(tWords, "previous")
+          table.insert(tWords, "hist")
+          return tWords
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("add") * Space * (P("start") + P("end") + Integer) * Space * Cg(Filename) * -1,
+      words = function(strMatch)
+        if self.list_cmd == true then
+          local tWords = self:__getFilenameWords(strMatch)
+          table.insert(tWords, "previous")
+          table.insert(tWords, "hist")
+          return tWords
         end
       end
     }
@@ -2406,20 +2797,31 @@ function Shell:__run_input(tCmd)
       if pl.path.isfile(strFilename) == false then
         tLog.error("The specified path does not contain a file name")
       else
-        -- read every line in the file and extend the list tCmd_input by appending all the items in the given list.
-        self.tCmd_input:extend(pl.utils.readlines(strFilename))
+        local tFileCmds = pl.List()
+
+        -- read every line in the file
+        local tTemp = pl.utils.readlines(strFilename)
+
+        if tTemp == nil or type(tTemp) ~= "table" then
+          tLog.error("Failed to read the file.")
+          return true
+        end
+        --  extend the list by appending all the items in the given list of the file.
+        tFileCmds:extend(tTemp)
 
         -- filters all lines of the input file with the given command patters
-        self.tCmd_input =
-          self.tCmd_input:filter(
+        tFileCmds =
+        tFileCmds:filter(
           function(x)
             return (lpeg.match(AllCommands, x) ~= nil)
           end,
           AllCommands,
           lpeg.match
         )
-        if self.tCmd_input:len() == 0 then
+        if tFileCmds == nil or tFileCmds:len() == 0 then
           tLog.error("Invalid File Format")
+        else
+          self.tCmd_input:extend(tFileCmds)
         end
       end
     end
@@ -2437,11 +2839,11 @@ function Shell:__run_debug(tCmd)
   local strFile
 
   -- display the complete debug information
-  if tCmd.watch ~= nil then
-    -- save the complete debug information to the file
+  if tCmd.display ~= nil then
     strFile = pl.utils.readfile(self.strLogDir .. "/" .. self.strLogFilename, false)
     print(strFile)
   elseif tCmd.save ~= nil then
+    -- save the complete debug information to the file
     local strFilename = pl.path.expanduser(tCmd.filename)
 
     strFile = pl.utils.readfile(self.strLogDir .. "/" .. self.strLogFilename, false)
@@ -2460,30 +2862,372 @@ end
 ------------------------------------------------------------------------------
 
 --
-function Shell:__run_list(tCmd)
-  local atCommands = self.__atCommands
-  local tGrammar = self.__lineGrammar_withListCmd
-  local colors = self.colors
-  local linenoise = self.linenoise -- same object as in run - dont matter if require is used
-  local lpeg = self.lpeg
+function Shell:__list_replace(tListCmd, tListCmdsTemp)
+  local tLog = self.tLog
+  local tResult = {}
+  tResult.errMsg = true
+
+  if tListCmd.position == 0 then
+    tLog.error("The position must be greater than zero.")
+    tResult.errMsg = false
+  elseif tListCmd.position > tListCmdsTemp:len() then
+    tLog.error("The position must be smaller than the size of the list.")
+    tResult.errMsg = false
+  else
+    tResult.cmd = "replace"
+    tResult.pos = tListCmd.position
+  end
+
+  return true, tResult
+end
+
+------------------------------------------------------------------------------
+
+--
+function Shell:__list_change(tListCmd, tListCmdsTemp)
+  local tLog = self.tLog
+  local strPos1, strPos2  -- pos_1, pos_2
+
+  if tListCmd.pos_1 > tListCmdsTemp:len() or tListCmd.pos_2 > tListCmdsTemp:len() then
+    tLog.error("The position is greater than the size of the list.")
+    return true
+  elseif tListCmd.pos_1 == 0 or tListCmd.pos_2 == 0 then
+    tLog.error("The position must be greater than zero.")
+    return true
+  else
+    strPos1 = tListCmdsTemp[tListCmd.pos_1]
+    strPos2 = tListCmdsTemp[tListCmd.pos_2]
+    tListCmdsTemp:remove(tListCmd.pos_1)
+    tListCmdsTemp:insert(tListCmd.pos_1, strPos2)
+    tListCmdsTemp:remove(tListCmd.pos_2)
+    tListCmdsTemp:insert(tListCmd.pos_2, strPos1)
+  end
+
+  return true
+end
+
+------------------------------------------------------------------------------
+
+--
+function Shell:__list_insert(tListCmd, tListCmdsTemp)
+  local tResult = {}
+  local tLog = self.tLog
+  tResult.errMsg = true
+
+  if tListCmd.position == 0 then
+    tLog.error("The position must be greater than zero.")
+    tResult.errMsg = false
+  elseif tListCmd.position > tListCmdsTemp:len() + 1 then
+    tLog.error("The position must be in the range of: [1 : size of list + 1].")
+    tResult.errMsg = false
+  else
+    tResult.cmd = "insert"
+    tResult.pos = tListCmd.position
+  end
+
+  return true, tResult
+end
+
+------------------------------------------------------------------------------
+
+--
+function Shell:__list_save(tListCmd, tListCmdsTemp)
+  local tLog = self.tLog
   local pl = self.pl
-  local tListCmds = pl.List()
-  -- local strHistory = ".fsh_history.txt"
+  local strFile = ""
+  local strFilename
+
+  if tListCmdsTemp:len() == 0 then
+    tLog.info("The list is empty no saving necessary. ")
+    return true
+  end
+
+  if tListCmd.all ~= nil then
+    for _, v in ipairs(tListCmdsTemp) do
+      strFile = strFile .. v .. "\n"
+    end
+  elseif tListCmd.position ~= nil then
+    if tListCmd.position > tListCmdsTemp:len() then
+      tLog.error("The position is greater than the size of the list.")
+      return true
+    elseif tListCmd.position == 0 then
+      tLog.error("The position must be greater than zero.")
+      return true
+    else
+      -- local tTemp = tListCmdsTemp:slice(tListCmd.position, tListCmd.position)
+      for _, v in ipairs(tListCmdsTemp:slice(tListCmd.position, tListCmd.position)) do
+        strFile = strFile .. v .. "\n"
+      end
+    end
+  elseif tListCmd.interval ~= nil then
+    if tListCmd.start > tListCmd.ending then
+      tLog.error("The startposition must be smaller than the endposition.")
+      return true
+    elseif tListCmd.start < 1 then
+      tLog.error("The startposition must be greater than zero.")
+      return true
+    elseif tListCmd.ending > tListCmdsTemp:len() then
+      tLog.error("The endposition must be smaller or equal to the size of the list.")
+      return true
+    else
+      -- local tTemp = tListCmdsTemp:slice(tListCmd.start, tListCmd.ending)
+      for _, v in ipairs(tListCmdsTemp:slice(tListCmd.start, tListCmd.ending)) do
+        strFile = strFile .. v .. "\n"
+      end
+    end
+  end
+
+  strFilename = pl.path.expanduser(tListCmd.filename)
+
+  tResult, strMsg = pl.utils.writefile(strFilename, strFile, true)
+  if tResult == true then
+    tLog.info("OK. The list of commands was written to the file '%s'", tListCmd.filename)
+  else
+    tLog.error('Failed to write the data to the file "%s": %s', strFilename, strMsg)
+  end
+
+  return true
+end
+
+------------------------------------------------------------------------------
+
+--
+function Shell:__list_load(tListCmd, tListCmdsTemp)
+  local pl = self.pl
+  local tLog = self.tLog
+  local lpeg = self.lpeg
+  local AllCommands = self.__AllCommands
+  local tResult = {}
+  tResult.errMsg = true
+
+  if tListCmd.filename ~= nil then
+    if type(tListCmd.filename) ~= "string" then
+      tLog.error("The file name must be a string")
+      tResult.errMsg = false
+    else
+      local strFilename = pl.path.expanduser(tListCmd.filename)
+
+      if pl.path.exists(strFilename) == false then
+        tLog.error("The specified path does not exist")
+        tResult.errMsg = false
+      else
+        if pl.path.isfile(strFilename) == false then
+          tLog.error("The specified path does not contain a file name")
+          tResult.errMsg = false
+        else
+          local tFileCmds = pl.List()
+
+          -- read every line in the file
+          local tTemp = pl.utils.readlines(strFilename)
+
+          if tTemp == nil or type(tTemp) ~= "table" then
+            tLog.error("Failed to read the file.")
+            tResult.errMsg = false
+            return true, tResult
+          end
+          -- extend the list by appending all the items in the given list of the file.
+          tFileCmds:extend(tTemp)
+
+          -- filters all lines of the input file with the given command patters
+          tFileCmds =
+            tFileCmds:filter(
+            function(x)
+              return (lpeg.match(AllCommands, x) ~= nil)
+            end,
+            AllCommands,
+            lpeg.match
+          )
+          if tFileCmds == nil or tFileCmds:len() == 0 then
+            tLog.error("Invalid File Format")
+            tResult.errMsg = false
+          else
+            tListCmdsTemp:clear()
+            tListCmdsTemp:extend(tFileCmds)
+          end
+        end
+      end
+    end
+  elseif self.tHistLinenoise ~= nil and tListCmd.hist ~= nil then
+    if self.tHistLinenoise:len() == 0 then
+      tLog.info("The history list of commands is empty.")
+    else
+      tListCmdsTemp:clear()
+      tListCmdsTemp:extend(self.tHistLinenoise)
+    end
+  elseif self.tListPreviousCmds ~= nil and tListCmd.previous ~= nil then
+    if self.tListPreviousCmds:len() == 0 then
+      tLog.info("The previous list of commands is empty.")
+    else
+      tListCmdsTemp:clear()
+      tListCmdsTemp:extend(self.tListPreviousCmds)
+    end
+  end
+
+  return true, tResult
+end
+
+------------------------------------------------------------------------------
+
+--
+function Shell:__list_add(tListCmd, tListCmdsTemp)
+  local pl = self.pl
+  local tLog = self.tLog
+  local lpeg = self.lpeg
+  local AllCommands = self.__AllCommands
+  local tAddTemp = pl.List()
+  local tResult = {}
+  -- load the selected file (filename,hist,previous)
+  _, tResult = self:__list_load(tListCmd, tAddTemp)
+
+  -- add the loaded list to the given position
+  if tListCmd.position ~= nil and tResult.errMsg == true then
+    if tListCmd.position == 0 then
+      tLog.error("The position must be greater than zero.")
+    elseif tListCmd.position > tListCmdsTemp:len() + 1 then
+      tLog.error("The position must be in the range of: [1 : size of list + 1].")
+    else
+      tListCmdsTemp:splice(tListCmd.position, tAddTemp)
+    end
+  elseif tListCmd.start ~= nil and tResult.errMsg == true then
+    tListCmdsTemp = tAddTemp .. tListCmdsTemp
+  elseif tListCmd.ending ~= nil and tResult.errMsg == true then
+    tListCmdsTemp = tListCmdsTemp .. tAddTemp
+  end
+
+  return true
+end
+
+------------------------------------------------------------------------------
+
+--
+-- function Shell:__list_new(tListCmd, tListCmdsTemp)
+
+--   return true
+-- end
+
+------------------------------------------------------------------------------
+
+--
+function Shell:__list_run(tListCmd, tListCmdsTemp)
+  local tLog = self.tLog
+  local pl = self.pl
+
+  if tListCmd.all ~= nil then
+    self.tCmd_input:extend(tListCmdsTemp)
+    tLog.info("Process the command list.")
+    return self:__list_end(tListCmd, tListCmdsTemp)
+  elseif tListCmd.position ~= nil then
+    if tListCmd.position > tListCmdsTemp:len() then
+      tLog.error("The position is greater than the size of the list.")
+    elseif tListCmd.position == 0 then
+      tLog.error("The position must be greater than zero.")
+    else
+      self.tCmd_input:append(tListCmdsTemp[tListCmd.position])
+      tLog.info("Process the command list.")
+      return self:__list_end(tListCmd, tListCmdsTemp)
+    end
+  elseif tListCmd.interval ~= nil then
+    if tListCmd.start > tListCmd.ending then
+      tLog.error("The startposition must be smaller than the endposition.")
+    elseif tListCmd.start < 1 then
+      tLog.error("The startposition must be greater than zero.")
+    elseif tListCmd.ending > tListCmdsTemp:len() then
+      tLog.error("The endposition must be smaller or equal to the size of the list.")
+    else
+      self.tCmd_input:extend(tListCmdsTemp:slice(tListCmd.start, tListCmd.ending))
+      tLog.info("Process the command list.")
+      return self:__list_end(tListCmd, tListCmdsTemp)
+    end
+  end
+
+  return true
+end
+
+------------------------------------------------------------------------------
+
+--
+function Shell:__list_clear(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
 
+  if tListCmd.all ~= nil then
+    tListCmdsTemp:clear()
+  elseif tListCmd.position ~= nil then
+    if tListCmd.position > tListCmdsTemp:len() then
+      tLog.error("The position to clear is greater than the size of the list.")
+    elseif tListCmd.position == 0 then
+      tLog.error("The position must be greater than zero.")
+    else
+      tListCmdsTemp:remove(tListCmd.position)
+    end
+  elseif tListCmd.interval ~= nil then
+    if tListCmd.start > tListCmd.ending then
+      tLog.error("The startposition must be smaller than the endposition.")
+    elseif tListCmd.start < 1 then
+      tLog.error("The startposition must be greater than zero.")
+    elseif tListCmd.ending > tListCmdsTemp:len() then
+      tLog.error("The endposition must be smaller or equal to the size of the list.")
+    else
+      -- for i = 0, tListCmd.ending - tListCmd.start do
+      --   tListCmdsTemp:remove(tListCmd.start)
+      -- end
+      tListCmdsTemp:chop(tListCmd.start, tListCmd.ending)
+    end
+  end
+
+  return true
+end
+
+------------------------------------------------------------------------------
+
+--
+function Shell:__list_end(tListCmd, tListCmdsTemp)
+  local tLog = self.tLog
+  self.list_cmd = false
+  self.tListPreviousCmds:clear()
+  self.tListPreviousCmds:extend(tListCmdsTemp)
+  tLog.info("Closed the list command. The current list is saved (previous).")
+  return false
+end
+
+------------------------------------------------------------------------------
+
+--
+function Shell:__run_list(tCmd)
+  local atCommands_ListCmd = self.atCommands_ListCmd
+  local atCommands = self.__atCommands
+  local tGrammar = self.__lineGrammar_withListCmd --self.__lineGrammar_ListCmd
+  local colors = self.colors
+  local linenoise = self.linenoise
+  local pl = self.pl
+  local tListCmdsTemp = pl.List()
+  local strHistory = self.strHistory
+  local tLog = self.tLog
+
+  --activate hints and words of list commands
   self.list_cmd = true
 
   linenoise.clearscreen()
 
-  -- nicht laden damit beim ausführen des Befehls jedesmal eine neue list geschrieben wird
-  -- linenoise.historyload(strHistory) -- load existing history
+  linenoise.historyload(strHistory) -- load existing history
 
-  tLog.warning("This is the list command. To adequately close this command and execute the selection, write 'end'.")
-  tLog.warning("To clear the list it is possible to use the clear command.")
-  tLog.warning("Synopsis:  clear [all | [number to clear]] ")
+  tLog.warning("\n\n%s\n%s\n%s\n%s\n%s\n", "This is the mode of the list command",
+                                  "To adequately close this command and execute the selection, write 'end'.",
+                                  "There are several auxiliary commands of this mode:",
+                                  "'clear','run','load','save','insert','change','replace' and 'add'",
+                                  "For further information about the auxiliary commands, please use the help command."
+                                )
+
+
+
+  -- tLog.warning(
+  --   [[This is the mode of the list command.
+  --   To adequately close this command and execute the selection, write 'end'.
+  --   There are several auxiliary commands of this mode:
+  --   'clear','run','load','save','insert','change','replace' and 'add'
+  --   For further information about the auxiliary commands, please use the help command.]]
+  -- )
 
   --initialization of setcompletion and sethints of linenoise
-  -- can be vanishsed, only for test purposes
   linenoise.setcompletion(
     function(tCompletions, strLine)
       self:__completer(tCompletions, strLine)
@@ -2495,16 +3239,41 @@ function Shell:__run_list(tCmd)
     end
   )
 
+  local fReplace = false
+  local fInsert = false
+  local ulReplace
+  local ulInsert
   local fRunning = true
   while fRunning do
-    if tListCmds:len() > 0 then
+    -- shows the complete list of commands
+    if tListCmdsTemp:len() > 0 then
       print(string.format("List of all commands:"))
-      for k, v in ipairs(tListCmds) do
+      for k, v in ipairs(tListCmdsTemp) do
         print(string.format("[%d] %s", k, v))
       end
     end
 
-    self.strPrompt = colors.bright .. colors.blue .. "List " .. "> " .. colors.white
+    -- necessary for the auxiliary commands replace and insert
+    if tResult ~= nil then
+      if tResult.errMsg == true and tResult.cmd == "replace" then
+        fReplace = true
+        ulReplace = tResult.pos
+        tResult = nil
+      elseif tResult.errMsg == true and tResult.cmd == "insert" then
+        fInsert = true
+        ulInsert = tResult.pos
+        tResult = nil
+      end
+    end
+
+    -- change the prompt adequately
+    if fInsert == true then
+      self.strPrompt = colors.bright .. colors.blue .. "List - Insert [" .. ulInsert .. "] " .. "> " .. colors.white
+    elseif fReplace == true then
+      self.strPrompt = colors.bright .. colors.blue .. "List - Replace [" .. ulReplace .. "] " .. "> " .. colors.white
+    else
+      self.strPrompt = colors.bright .. colors.blue .. "List " .. "> " .. colors.white
+    end
 
     local strLine, strError = linenoise.linenoise(self.strPrompt)
 
@@ -2514,18 +3283,17 @@ function Shell:__run_list(tCmd)
       end
       fRunning = false
     elseif #strLine > 0 then
-      -- linenoise.historyadd(strLine)
-      -- linenoise.historysave(strHistory)
+      linenoise.historyadd(strLine)
+      linenoise.historysave(strHistory)
       -- Parse the line.
-      local tCmd_temp = lpeg.match(tGrammar, strLine)
-      if tCmd_temp == nil then
+      local tListCmd = lpeg.match(tGrammar, strLine)
+      if tListCmd == nil then
         tLog.error("Failed to parse the line.")
       else
-        -- There should be a command at the "cmd" key.
-        -- If there is no command, this is a comment.
-        local strCmd = tCmd_temp.cmd
+        local strCmd = tListCmd.cmd
+
         if strCmd ~= nil then
-          -- Search the command.
+          -- Search the command. In atCommand
           local tCmdHit
           for _, tCmdCnt in ipairs(atCommands) do
             if tCmdCnt.cmd == strCmd then
@@ -2533,43 +3301,39 @@ function Shell:__run_list(tCmd)
               break
             end
           end
-          if tCmdHit == nil then
-            tLog.error("Command not found.")
-          elseif strCmd == "end" then
-            self.list_cmd = false
-            fRunning = false
-            if tCmd.run ~= nil then
-              self.tCmd_input:extend(tListCmds)
-              tLog.info("process the list of commands:")
-            elseif tCmd.save ~= nil then
-              local strFilename = pl.path.expanduser(tCmd.filename)
-              local strFile = ""
-
-              for _, v in ipairs(tListCmds) do
-                strFile = strFile .. v .. "\n"
-              end
-
-              tResult, strMsg = pl.utils.writefile(strFilename, strFile, true)
-              if tResult == true then
-                tLog.info("OK. The list of commands was written to the file '%s'", tCmd.filename)
-              else
-                tLog.error('Failed to write the data to the file "%s": %s', strFilename, strMsg)
+          if tCmdHit ~= nil then
+            --the command insert or replace is active and is processed first
+            if fInsert == true then
+              tListCmdsTemp:insert(ulInsert, strLine)
+              fInsert = false
+            elseif fReplace == true then
+              tListCmdsTemp:remove(ulReplace)
+              tListCmdsTemp:insert(ulReplace, strLine)
+              fReplace = false
+            else
+              tListCmdsTemp:append(strLine)
+            end
+          elseif fInsert == true or fReplace == true then
+            -- as long as the command insert or replace is active, no further command is possible
+            if fInsert == true then
+              tLog.warning("Insert command still active")
+            elseif fReplace == true then
+              tLog.warning("Replace command still active")
+            end
+          elseif fInsert == false and fReplace == false then
+            -- Search the command. In atCommands_ListCmd - if the command is not found in atCommands
+            for _, tCmdCnt in ipairs(atCommands_ListCmd) do
+              if tCmdCnt.cmd == strCmd then
+                tCmdHit = tCmdCnt
+                break
               end
             end
-          elseif strCmd == "clear" then
-            if tCmd_temp.all ~= nil then
-              tListCmds:clear()
-            elseif tCmd_temp.number ~= nil then
-              if tCmd_temp.number > tListCmds:len() then
-                tLog.error("The number to clear is greater than the size of the list.")
-              elseif tCmd_temp.number == 0 then
-                tLog.error("The starting index of the list is 1.")
-              else
-                tListCmds:remove(tCmd_temp.number)
-              end
+            if tCmdHit == nil then
+              tLog.error("Command not found.")
+            else
+              -- Run the command.
+              fRunning, tResult = tCmdHit.run(self, tListCmd, tListCmdsTemp)
             end
-          else
-            tListCmds:append(strLine)
           end
         end
       end
@@ -2729,7 +3493,7 @@ function Shell:run()
   local lpeg = self.lpeg
   local tGrammar = self.__lineGrammar
   local pl = self.pl
-  local strHistory = ".fsh_history.txt"
+  local strHistory = self.strHistory
   local tLog = self.tLog
 
   linenoise.historysetmaxlen(100) -- max length of the linenoise history
@@ -2744,14 +3508,13 @@ function Shell:run()
   linenoise.historyload(strHistory) -- load existing history
   --  linenoise.enableutf8()
 
-  tLog.info("Welcome to FlaSH, the flasher shell v0.0.1 .")
-  tLog.info("Written by Christoph Thelen in 2018.")
-  tLog.info("The flasher shell is distributed under the GPL v3 license.")
-  tLog.info('Type "help" to get started. Use tab to complete commands.')
-  tLog.info("")
-
   -- Scan for available devices.
   self:__run_scan()
+
+  tLog.info("\n\n%s\n%s\n%s\n%s\n", "Welcome to FlaSH, the flasher shell v1.6.7 .",
+  "Written by Christoph Thelen in 2018.",
+  "The flasher shell is distributed under the GPL v3 license.",
+  'Type "help" to get started. Use tab to complete commands.')
 
   local fRunning = true
   while fRunning do
@@ -2813,6 +3576,8 @@ function Shell:run()
           if tCmdHit == nil then
             tLog.error("Command not found.")
           else
+            -- saves the history of the current run if it is a valid command and no comment
+            self.tHistLinenoise:append(strLine)
             -- Run the command.
             fRunning = tCmdHit.run(self, tCmd)
           end
