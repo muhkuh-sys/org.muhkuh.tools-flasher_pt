@@ -50,7 +50,7 @@ function Shell:_init()
     -- writer
     require "log.writer.prefix".new("[CALLBACK] ", tLogWriter),
     -- Formatter
-    require "log.formatter.concat".new()
+    require "log.formatter.mix".new()
   )
 
   local tLog_Flasher =
