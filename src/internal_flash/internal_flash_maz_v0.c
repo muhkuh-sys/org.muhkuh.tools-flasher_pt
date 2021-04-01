@@ -961,7 +961,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptPa
 	unsigned long ulDataSize;
 	FLASH_BLOCK_ATTRIBUTES_T tFlashBlock;
 	IFLASH_PAGE_BUFFER_T tFlashBuffer; /* This is the buffer for the data to flash. */
-
+	unsigned long ulProgressCnt;
 
 	/* Be pessimistic... */
 	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
@@ -969,13 +969,16 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptPa
 	ulOffsetStart = ptParameter->ulStartAdr;
 	ulOffsetEnd = ulOffsetStart + ptParameter->ulDataByteSize;
 
-	/* Silently ignore erase requests with a size of 0 bytes. */
+	/* Silently ignore flash requests with a size of 0 bytes. */
 	if( ulOffsetStart==ulOffsetEnd )
 	{
 		tResult = NETX_CONSOLEAPP_RESULT_OK;
 	}
 	else
-	{
+	{	
+		ulProgressCnt = 0;
+		progress_bar_init(ulOffsetEnd - ulOffsetStart);
+
 		/* Get a pointer to the flash attributes. */
 		ptAttr = &(ptParameter->ptDeviceDescription->uInfo.tInternalFlashInfo.uAttributes.tMazV0);
 
@@ -1024,6 +1027,10 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptPa
 					{
 						ulOffset += ulChunkSize;
 						pucDataToBeFlashed += ulChunkSize;
+
+						/* inc progress */
+						ulProgressCnt += ulChunkSize;
+						progress_bar_set_position(ulProgressCnt);
 					}
 				}
 			}
@@ -1044,6 +1051,10 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptPa
 					{
 						ulOffset += IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
 						pucDataToBeFlashed += IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
+
+						/* inc progress */
+						ulProgressCnt += IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
+						progress_bar_set_position(ulProgressCnt);
 					}
 				}
 			}
@@ -1076,12 +1087,18 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptPa
 						{
 							ulOffset += ulChunkSize;
 							pucDataToBeFlashed += ulChunkSize;
+
+							/* inc progress */
+							ulProgressCnt += ulChunkSize;
+							progress_bar_set_position(ulProgressCnt);
 						}
 					}
 				}
 			}
 		}
+		progress_bar_finalize();
 	}
+
 
 	return tResult;
 }
@@ -1097,7 +1114,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase(CMD_PARAMETER_ERASE_T *ptPa
 	unsigned long ulEraseBlockSize;
 	unsigned long ulBlockOffset;
 	unsigned long ulOffset;
-
+	unsigned long ulProgressCnt;
 
 	ulOffsetStart = ptParameter->ulStartAdr;
 	ulOffsetEnd = ptParameter->ulEndAdr;
@@ -1139,6 +1156,8 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase(CMD_PARAMETER_ERASE_T *ptPa
 				else
 				{
 					ulOffset = ulOffsetStart;
+					ulProgressCnt = 0;
+					progress_bar_init(ulOffsetEnd - ulOffsetStart);
 					do
 					{
 						tResult = internal_flash_maz_v0_erase_block(ptAttr, ulOffset);
@@ -1147,7 +1166,13 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase(CMD_PARAMETER_ERASE_T *ptPa
 							break;
 						}
 						ulOffset += ulEraseBlockSize;
+
+						/* Increment the progress bar. */
+						ulProgressCnt += ulEraseBlockSize;
+						progress_bar_set_position(ulProgressCnt);
 					} while( ulOffset<ulOffsetEnd );
+
+					progress_bar_finalize();
 				}
 			}
 		}
@@ -1181,7 +1206,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_read(CMD_PARAMETER_READ_T *ptPara
 		tResult = NETX_CONSOLEAPP_RESULT_OK;
 	}
 	else
-	{
+	{	
 		/* Get a pointer to the flash attributes. */
 		ptAttr = &(ptParameter->ptDeviceDescription->uInfo.tInternalFlashInfo.uAttributes.tMazV0);
 
@@ -1206,12 +1231,17 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_read(CMD_PARAMETER_READ_T *ptPara
 				/* Copy the data block to the destination buffer.*/
 				ulOffset = 0;
 				ulLength = ulOffsetEnd - ulOffsetStart;
+				progress_bar_init(ulLength);
 				do
 				{
 					pucBufferStart[ulOffset] = pucFlashStart[ulOffset];
 					++ulOffset;
+					/* Update the progress bar every 64 byte.*/
+					if((ulOffset & 0xffff) == 0)
+						progress_bar_set_position(ulOffset);
 				} while( ulOffset<ulLength );
 
+				progress_bar_finalize();
 				tResult = NETX_CONSOLEAPP_RESULT_OK;
 			}
 		}
@@ -1269,8 +1299,14 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_sha1(CMD_PARAMETER_CHECKSUM_T *pt
 
 				ulLength = ulOffsetEnd - ulOffsetStart;
 
+	
+				// progress_bar_init(ulLength);
+
 				SHA1_Update(ptSha1Context, pucFlashStart, ulLength);
-				
+
+				// progress_bar_set_position(ulLength);
+				// progress_bar_finalize();
+
 				tResult = NETX_CONSOLEAPP_RESULT_OK;
 			}
 		}
@@ -1335,6 +1371,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_verify(CMD_PARAMETER_VERIFY_T *pt
 
 				ulOffset = 0;
 				ulLength = ulOffsetEnd - ulOffsetStart;
+				progress_bar_init(ulLength);
 				do
 				{
 					ucFlashData = pucFlashStart[ulOffset];
@@ -1347,8 +1384,11 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_verify(CMD_PARAMETER_VERIFY_T *pt
 					}
 
 					++ulOffset;
+					/* Update the progress bar every 64 byte.*/
+					if((ulOffset & 0xffff) == 0)
+						progress_bar_set_position(ulOffset);					
 				} while( ulOffset<ulLength );
-
+				progress_bar_finalize();
 				ptConsoleParams->pvReturnMessage = (void*)tResult;
 			}
 		}
@@ -1406,6 +1446,8 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_is_erased(CMD_PARAMETER_ISERASED_
 
 				ulOffset = 0;
 				ulLength = ulOffsetEnd - ulOffsetStart;
+
+				progress_bar_init(ulLength);
 				do
 				{
 					ucFlashData = pucFlashStart[ulOffset];
@@ -1415,8 +1457,12 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_is_erased(CMD_PARAMETER_ISERASED_
 					}
 
 					++ulOffset;
+					/* Update the progress bar every 64 byte.*/
+					if((ulOffset & 0xffff) == 0)
+						progress_bar_set_position(ulOffset);
 				} while( ulOffset<ulLength );
 
+				progress_bar_finalize();
 				if( ucFlashData==0xff )
 				{
 					uprintf(". CLEAN! The area is erased.\n");
