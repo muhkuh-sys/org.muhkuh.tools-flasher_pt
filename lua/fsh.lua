@@ -102,10 +102,16 @@ function Shell:_init()
   self.tLog = tLog
   self.tLog_ProgressBar = tLog_ProgressBar
 
+  -- list of commands to be processed
   self.tCmd_input = self.pl.List()
+
+  -- activate/deactivate hints/words of auxiliary commands of the list command
   self.list_cmd = false
+
+  -- list command - saved list of the last editing
   self.tListPreviousCmds = self.pl.List()
 
+   -- history list of past commands
   self.tHistLinenoise = self.pl.List()
 
   -- No connection yet.
@@ -197,8 +203,6 @@ function Shell:_init()
   local Cmds_debug = Cg(P("display"), "display") + Cg(P("save"), "save") * Space * Cg(Filename, "filename")
   self.AllCommands_debug = {"display", "save"}
 
-  -- A comment starts with a hash and covers the rest of the line.
-  local Comment = P("#")
 
   -- All available commands and their handlers.
   local atCommands = {
@@ -288,13 +292,17 @@ function Shell:_init()
       cmd = "list",
       pattern = OptionalSpace * Cg(P("list"), "cmd") * OptionalSpace * -1,
       run = self.__run_list
+    },
+    {
+      cmd = "#",
+      pattern = OptionalSpace * Cg(P("#"), "cmd") * OptionalSpace * P(1) ^ 0 * -1,
+      run = function()
+        return true
+      end
     }
   }
 
   self.__atCommands = atCommands
-
-  -- possible choices of list command
-  -- local Cmds_list = Cg(P("run"), "run") + Cg(P("save"), "save") * Space * Cg(Filename, "filename")
 
   local interval =
     Cg(P("all"), "all") + Cg(Integer / tonumber, "position") +
@@ -319,12 +327,6 @@ function Shell:_init()
       pattern = OptionalSpace * Cg(P("clear"), "cmd") * Space * interval * OptionalSpace * -1,
       run = self.__list_clear
     },
-    -- {
-    --   -- command of list command only
-    --   cmd = "new",
-    --   pattern = OptionalSpace * Cg(P("new"), "cmd") * OptionalSpace * -1,
-    --   run = self.__list_new
-    -- },
     {
       -- command of list command only
       cmd = "load",
@@ -384,7 +386,6 @@ function Shell:_init()
     table.insert(atCommands_withListCmd, tCommand)
   end
 
-  -- self.__atCommands_withListCmd = atCommands_withListCmd --{'end','run','clear','new','load','save','insert','change','replace','add'}
 
   -- Combine all commands.
   local AllCommands
@@ -408,9 +409,8 @@ function Shell:_init()
     end
   end
 
-  self.__AllCommands = AllCommands
-  self.__lineGrammar = Ct((AllCommands * (Comment ^ -1)) + Comment)
-  self.__lineGrammar_withListCmd = Ct((AllCommands_withListCmd * (Comment ^ -1)) + Comment)
+  self.__lineGrammar = Ct(AllCommands) -- + Comment)
+  self.__lineGrammar_withListCmd = Ct(AllCommands_withListCmd) -- + Comment)
 
   -- Create a table with all commands as a string.
   local astrCommandWords = {}
@@ -2784,7 +2784,7 @@ function Shell:__run_input(tCmd)
   local pl = self.pl
   local tLog = self.tLog
   local lpeg = self.lpeg
-  local AllCommands = self.__AllCommands
+  local AllCommands = self.__lineGrammar
 
   if type(tCmd.filename) ~= "string" then
     tLog.error("The file name must be a string")
@@ -2811,7 +2811,7 @@ function Shell:__run_input(tCmd)
 
         -- filters all lines of the input file with the given command patters
         tFileCmds =
-        tFileCmds:filter(
+          tFileCmds:filter(
           function(x)
             return (lpeg.match(AllCommands, x) ~= nil)
           end,
@@ -2886,7 +2886,7 @@ end
 --
 function Shell:__list_change(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
-  local strPos1, strPos2  -- pos_1, pos_2
+  local strPos1, strPos2  
 
   if tListCmd.pos_1 > tListCmdsTemp:len() or tListCmd.pos_2 > tListCmdsTemp:len() then
     tLog.error("The position is greater than the size of the list.")
@@ -2954,7 +2954,6 @@ function Shell:__list_save(tListCmd, tListCmdsTemp)
       tLog.error("The position must be greater than zero.")
       return true
     else
-      -- local tTemp = tListCmdsTemp:slice(tListCmd.position, tListCmd.position)
       for _, v in ipairs(tListCmdsTemp:slice(tListCmd.position, tListCmd.position)) do
         strFile = strFile .. v .. "\n"
       end
@@ -2970,7 +2969,6 @@ function Shell:__list_save(tListCmd, tListCmdsTemp)
       tLog.error("The endposition must be smaller or equal to the size of the list.")
       return true
     else
-      -- local tTemp = tListCmdsTemp:slice(tListCmd.start, tListCmd.ending)
       for _, v in ipairs(tListCmdsTemp:slice(tListCmd.start, tListCmd.ending)) do
         strFile = strFile .. v .. "\n"
       end
@@ -2996,7 +2994,7 @@ function Shell:__list_load(tListCmd, tListCmdsTemp)
   local pl = self.pl
   local tLog = self.tLog
   local lpeg = self.lpeg
-  local AllCommands = self.__AllCommands
+  local AllCommands = self.__lineGrammar
   local tResult = {}
   tResult.errMsg = true
 
@@ -3072,10 +3070,9 @@ end
 function Shell:__list_add(tListCmd, tListCmdsTemp)
   local pl = self.pl
   local tLog = self.tLog
-  local lpeg = self.lpeg
-  local AllCommands = self.__AllCommands
   local tAddTemp = pl.List()
   local tResult = {}
+
   -- load the selected file (filename,hist,previous)
   _, tResult = self:__list_load(tListCmd, tAddTemp)
 
@@ -3099,15 +3096,7 @@ end
 
 ------------------------------------------------------------------------------
 
---
--- function Shell:__list_new(tListCmd, tListCmdsTemp)
 
---   return true
--- end
-
-------------------------------------------------------------------------------
-
---
 function Shell:__list_run(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local pl = self.pl
@@ -3167,9 +3156,6 @@ function Shell:__list_clear(tListCmd, tListCmdsTemp)
     elseif tListCmd.ending > tListCmdsTemp:len() then
       tLog.error("The endposition must be smaller or equal to the size of the list.")
     else
-      -- for i = 0, tListCmd.ending - tListCmd.start do
-      --   tListCmdsTemp:remove(tListCmd.start)
-      -- end
       tListCmdsTemp:chop(tListCmd.start, tListCmd.ending)
     end
   end
@@ -3208,24 +3194,17 @@ function Shell:__run_list(tCmd)
 
   linenoise.clearscreen()
 
-  linenoise.historyload(strHistory) -- load existing history
+    -- load existing history
+    linenoise.historyload(strHistory)
 
-  tLog.warning("\n\n%s\n%s\n%s\n%s\n%s\n", "This is the mode of the list command",
-                                  "To adequately close this command and execute the selection, write 'end'.",
-                                  "There are several auxiliary commands of this mode:",
-                                  "'clear','run','load','save','insert','change','replace' and 'add'",
-                                  "For further information about the auxiliary commands, please use the help command."
-                                )
-
-
-
-  -- tLog.warning(
-  --   [[This is the mode of the list command.
-  --   To adequately close this command and execute the selection, write 'end'.
-  --   There are several auxiliary commands of this mode:
-  --   'clear','run','load','save','insert','change','replace' and 'add'
-  --   For further information about the auxiliary commands, please use the help command.]]
-  -- )
+  tLog.warning(
+    "\n\n%s\n%s\n%s\n%s\n%s\n",
+    "This is the mode of the list command.",
+    "To adequately close this command write 'end'.",
+    "There are several auxiliary commands of this mode:",
+    "'abort','end','clear','run','add','load','save','insert','switch','exchange' and 'replace'",
+    "For further information about the auxiliary commands, please use the 'help list' command."
+  )
 
   --initialization of setcompletion and sethints of linenoise
   linenoise.setcompletion(
@@ -3253,7 +3232,7 @@ function Shell:__run_list(tCmd)
       end
     end
 
-    -- necessary for the auxiliary commands replace and insert
+    -- necessary for the auxiliary commands replace, insert and abort
     if tResult ~= nil then
       if tResult.errMsg == true and tResult.cmd == "replace" then
         fReplace = true
@@ -3262,6 +3241,10 @@ function Shell:__run_list(tCmd)
       elseif tResult.errMsg == true and tResult.cmd == "insert" then
         fInsert = true
         ulInsert = tResult.pos
+        tResult = nil
+      elseif tResult.errMsg == true and tResult.cmd == "abort" then
+        fReplace = false
+        fInsert = false
         tResult = nil
       end
     end
@@ -3313,14 +3296,16 @@ function Shell:__run_list(tCmd)
             else
               tListCmdsTemp:append(strLine)
             end
-          elseif fInsert == true or fReplace == true then
-            -- as long as the command insert or replace is active, no further command is possible
+          elseif
+          (fInsert == true or fReplace == true) and (not (tListCmd.cmd == "end") and not (tListCmd.cmd == "abort"))
+         then
+          -- as long as the command insert or replace is active, no further command is possible - exception: end and abort command
             if fInsert == true then
               tLog.warning("Insert command still active")
             elseif fReplace == true then
               tLog.warning("Replace command still active")
             end
-          elseif fInsert == false and fReplace == false then
+          elseif (fInsert == false and fReplace == false) or tListCmd.cmd == "end" or tListCmd.cmd == "abort" then
             -- Search the command. In atCommands_ListCmd - if the command is not found in atCommands
             for _, tCmdCnt in ipairs(atCommands_ListCmd) do
               if tCmdCnt.cmd == strCmd then
@@ -3511,10 +3496,13 @@ function Shell:run()
   -- Scan for available devices.
   self:__run_scan()
 
-  tLog.info("\n\n%s\n%s\n%s\n%s\n", "Welcome to FlaSH, the flasher shell v1.6.7 .",
-  "Written by Christoph Thelen in 2018.",
-  "The flasher shell is distributed under the GPL v3 license.",
-  'Type "help" to get started. Use tab to complete commands.')
+  tLog.info(
+    "\n\n%s\n%s\n%s\n%s\n",
+    "Welcome to FlaSH, the flasher shell v1.6.7 .",
+    "Written by Christoph Thelen in 2018.",
+    "The flasher shell is distributed under the GPL v3 license.",
+    'Type "help" to get started. Use tab to complete commands.'
+  )
 
   local fRunning = true
   while fRunning do
