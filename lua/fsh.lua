@@ -111,7 +111,7 @@ function Shell:_init()
   -- list command - saved list of the last editing
   self.tListPreviousCmds = self.pl.List()
 
-   -- history list of past commands
+  -- history list of past commands
   self.tHistLinenoise = self.pl.List()
 
   -- No connection yet.
@@ -202,7 +202,6 @@ function Shell:_init()
   -- possible choices of debug command
   local Cmds_debug = Cg(P("display"), "display") + Cg(P("save"), "save") * Space * Cg(Filename, "filename")
   self.AllCommands_debug = {"display", "save"}
-
 
   -- All available commands and their handlers.
   local atCommands = {
@@ -352,12 +351,21 @@ function Shell:_init()
     },
     {
       -- command of list command only
-      cmd = "change",
-      pattern = OptionalSpace * Cg(P("change"), "cmd") * Space * Cg(Integer / tonumber, "pos_1") * Space *
+      cmd = "exchange",
+      pattern = OptionalSpace * Cg(P("exchange"), "cmd") * Space * Cg(Integer / tonumber, "pos_1") * Space *
         Cg(Integer / tonumber, "pos_2") *
         OptionalSpace *
         -1,
-      run = self.__list_change
+      run = self.__list_exchange
+    },
+    {
+      -- command of list command only
+      cmd = "switch",
+      pattern = OptionalSpace * Cg(P("switch"), "cmd") * Space * Cg(Integer / tonumber, "pos_1") * Space *
+        Cg(Integer / tonumber, "pos_2") *
+        OptionalSpace *
+        -1,
+      run = self.__list_switch
     },
     {
       -- command of list command only
@@ -385,7 +393,6 @@ function Shell:_init()
   for _, tCommand in ipairs(atCommands) do
     table.insert(atCommands_withListCmd, tCommand)
   end
-
 
   -- Combine all commands.
   local AllCommands
@@ -1086,9 +1093,9 @@ function Shell:_init()
         end
       end
     },
-    -- change command (list command only)
+    -- exchange command (list command only)
     {
-      pattern = OptionalSpace * P("change") * Space * -1,
+      pattern = OptionalSpace * P("exchange") * Space * -1,
       hint = function()
         if self.list_cmd == true then
           return "[position 1] [position 2]"
@@ -1096,7 +1103,7 @@ function Shell:_init()
       end
     },
     {
-      pattern = OptionalSpace * P("change") * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P("exchange") * Space * UnfinishedInteger * -1,
       hint = function()
         if self.list_cmd == true then
           return "    this is the position 1"
@@ -1104,7 +1111,7 @@ function Shell:_init()
       end
     },
     {
-      pattern = OptionalSpace * P("change") * Space * Integer * Space * -1,
+      pattern = OptionalSpace * P("exchange") * Space * Integer * Space * -1,
       hint = function()
         if self.list_cmd == true then
           return "[position 2]"
@@ -1112,7 +1119,40 @@ function Shell:_init()
       end
     },
     {
-      pattern = OptionalSpace * P("change") * Space * Integer * Space * UnfinishedInteger * -1,
+      pattern = OptionalSpace * P("exchange") * Space * Integer * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is position 2"
+        end
+      end
+    },
+    -- switch command (list command only)
+    {
+      pattern = OptionalSpace * P("switch") * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[position 1] [position 2]"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("switch") * Space * UnfinishedInteger * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "    this is the position 1"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("switch") * Space * Integer * Space * -1,
+      hint = function()
+        if self.list_cmd == true then
+          return "[position 2]"
+        end
+      end
+    },
+    {
+      pattern = OptionalSpace * P("switch") * Space * Integer * Space * UnfinishedInteger * -1,
       hint = function()
         if self.list_cmd == true then
           return "    this is position 2"
@@ -2832,7 +2872,7 @@ end
 
 ------------------------------------------------------------------------------
 
---
+-- display or save all debug information
 function Shell:__run_debug(tCmd)
   local pl = self.pl
   local tLog = self.tLog
@@ -2861,7 +2901,7 @@ end
 
 ------------------------------------------------------------------------------
 
---
+-- activate the replace command - the subsequent command replaces a command at the specified position
 function Shell:__list_replace(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local tResult = {}
@@ -2883,10 +2923,10 @@ end
 
 ------------------------------------------------------------------------------
 
---
-function Shell:__list_change(tListCmd, tListCmdsTemp)
+-- exchange the position of two commands
+function Shell:__list_exchange(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
-  local strPos1, strPos2  
+  local strPos1, strPos2
 
   if tListCmd.pos_1 > tListCmdsTemp:len() or tListCmd.pos_2 > tListCmdsTemp:len() then
     tLog.error("The position is greater than the size of the list.")
@@ -2908,7 +2948,33 @@ end
 
 ------------------------------------------------------------------------------
 
---
+-- switch the position of one command
+function Shell:__list_switch(tListCmd, tListCmdsTemp)
+  local tLog = self.tLog
+  local strPos1
+
+  if tListCmd.pos_1 > tListCmdsTemp:len() or tListCmd.pos_2 > tListCmdsTemp:len() then
+    tLog.error("The position is greater than the size of the list.")
+    return true
+  elseif tListCmd.pos_1 == 0 or tListCmd.pos_2 == 0 then
+    tLog.error("The position must be greater than zero.")
+    return true
+  else
+    if tListCmd.pos_1 == tListCmd.pos_2 then
+      tLog.info("No change of position necessary.")
+    else
+      strPos1 = tListCmdsTemp[tListCmd.pos_1]
+      tListCmdsTemp:remove(tListCmd.pos_1)
+      tListCmdsTemp:insert(tListCmd.pos_2, strPos1)
+    end
+  end
+
+  return true
+end
+
+------------------------------------------------------------------------------
+
+-- activate the insert command - the subsequent command is insert at the specified position
 function Shell:__list_insert(tListCmd, tListCmdsTemp)
   local tResult = {}
   local tLog = self.tLog
@@ -2930,7 +2996,7 @@ end
 
 ------------------------------------------------------------------------------
 
---
+-- save the current list to the given filename
 function Shell:__list_save(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local pl = self.pl
@@ -2975,6 +3041,7 @@ function Shell:__list_save(tListCmd, tListCmdsTemp)
     end
   end
 
+  -- save the list to the given filename
   strFilename = pl.path.expanduser(tListCmd.filename)
 
   tResult, strMsg = pl.utils.writefile(strFilename, strFile, true)
@@ -2989,7 +3056,7 @@ end
 
 ------------------------------------------------------------------------------
 
---
+-- load a specified list - overwrite the current list
 function Shell:__list_load(tListCmd, tListCmdsTemp)
   local pl = self.pl
   local tLog = self.tLog
@@ -3066,7 +3133,7 @@ end
 
 ------------------------------------------------------------------------------
 
---
+-- add a specified list to the current list
 function Shell:__list_add(tListCmd, tListCmdsTemp)
   local pl = self.pl
   local tLog = self.tLog
@@ -3096,7 +3163,7 @@ end
 
 ------------------------------------------------------------------------------
 
-
+-- process the specified interval of the list and quit the list command
 function Shell:__list_run(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local pl = self.pl
@@ -3134,7 +3201,7 @@ end
 
 ------------------------------------------------------------------------------
 
---
+-- clear the specified interval of the list
 function Shell:__list_clear(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
 
@@ -3165,7 +3232,7 @@ end
 
 ------------------------------------------------------------------------------
 
---
+-- quit the list command - save tListCmdsTemp to tListPreviousCmds - deactivate hints/words of auxiliary commands
 function Shell:__list_end(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   self.list_cmd = false
@@ -3173,6 +3240,19 @@ function Shell:__list_end(tListCmd, tListCmdsTemp)
   self.tListPreviousCmds:extend(tListCmdsTemp)
   tLog.info("Closed the list command. The current list is saved (previous).")
   return false
+end
+
+------------------------------------------------------------------------------
+
+-- quit the list command - save tListCmdsTemp to tListPreviousCmds - deactivate hints/words of auxiliary commands
+function Shell:__list_abort(tListCmd, tListCmdsTemp)
+  local tLog = self.tLog
+  local tResult = {}
+  tResult.errMsg = true
+  tResult.cmd = "abort"
+
+  tLog.warning("Command aborted.")
+  return true, tResult
 end
 
 ------------------------------------------------------------------------------
@@ -3194,8 +3274,8 @@ function Shell:__run_list(tCmd)
 
   linenoise.clearscreen()
 
-    -- load existing history
-    linenoise.historyload(strHistory)
+  -- load existing history
+  linenoise.historyload(strHistory)
 
   tLog.warning(
     "\n\n%s\n%s\n%s\n%s\n%s\n",
@@ -3297,9 +3377,9 @@ function Shell:__run_list(tCmd)
               tListCmdsTemp:append(strLine)
             end
           elseif
-          (fInsert == true or fReplace == true) and (not (tListCmd.cmd == "end") and not (tListCmd.cmd == "abort"))
-         then
-          -- as long as the command insert or replace is active, no further command is possible - exception: end and abort command
+            (fInsert == true or fReplace == true) and (not (tListCmd.cmd == "end") and not (tListCmd.cmd == "abort"))
+           then
+            -- as long as the command insert or replace is active, no further command is possible - exception: end and abort command
             if fInsert == true then
               tLog.warning("Insert command still active")
             elseif fReplace == true then
