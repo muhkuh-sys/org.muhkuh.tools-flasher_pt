@@ -25,7 +25,7 @@ void SHA1_Init(SHA_CTX *c)
 }
 
 
-
+/* p : data to hash -  n : length data */
 void SHA1_Update(SHA_CTX *c, const void *p, unsigned long n)
 {
 	HOSTDEF(ptHashArea);
