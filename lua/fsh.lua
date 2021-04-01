@@ -982,8 +982,8 @@ function Shell:_init()
       words = function(strMatch)
         if self.list_cmd == true then
           local tWords = self:__getFilenameWords(strMatch)
-          table.insert(tWords, "previous")
-          table.insert(tWords, "hist")
+          table.insert(tWords, 1, "previous")
+          table.insert(tWords, 1, "hist")
           return tWords
         end
       end
@@ -993,8 +993,8 @@ function Shell:_init()
       words = function(strMatch)
         if self.list_cmd == true then
           local tWords = self:__getFilenameWords(strMatch)
-          table.insert(tWords, "previous")
-          table.insert(tWords, "hist")
+          table.insert(tWords, 1, "previous")
+          table.insert(tWords, 1, "hist")
           return tWords
         end
       end
@@ -1233,8 +1233,8 @@ function Shell:_init()
       words = function(strMatch)
         if self.list_cmd == true then
           local tWords = self:__getFilenameWords(strMatch)
-          table.insert(tWords, "previous")
-          table.insert(tWords, "hist")
+          table.insert(tWords, 1, "previous")
+          table.insert(tWords, 1, "hist")
           return tWords
         end
       end
@@ -1244,8 +1244,8 @@ function Shell:_init()
       words = function(strMatch)
         if self.list_cmd == true then
           local tWords = self:__getFilenameWords(strMatch)
-          table.insert(tWords, "previous")
-          table.insert(tWords, "hist")
+          table.insert(tWords, 1, "previous")
+          table.insert(tWords, 1, "hist")
           return tWords
         end
       end
@@ -1476,23 +1476,23 @@ The following example shows help about the read command:
       {key = "[block]", description = "with a result e.g.:"},
       {
         description = [[Found a total of 2 interfaces with 4 plugins:
-    romloader_uart_ttyS4
-    romloader_uart_ttyUSB0
-    ]]
+      romloader_uart_ttyS4
+      romloader_uart_ttyUSB0
+      ]]
+      },
+      {
+        key = "[block]",
+        description = [[After the scan command, the connect command with one of the previous displayed plugins is necessary. To utilize the list of commands as shown by using of the help command, like read, write or erase, a connection must be established. After a successful connection with the plugin, like for example:]]
+      },
+      {description = "connect romloader_uart_ttyUSB0"},
+      {
+        key = "[block]",
+        description = "a connection with the plugin is available and the previous mentioned list of commands are possible."
+      }
+    },
+    text = Shell.__HelpTopics_templete.text
   },
   {
-    key = "[block]",
-    description = [[After the scan command, the connect command with one of the previous displayed plugins is necessary. To utilize the list of commands as shown by using of the help command, like read, write or erase, a connection must be established. After a successful connection with the plugin, like for example:]]
-  },
-  {description = "connect romloader_uart_ttyUSB0"},
-  {
-    key = "[block]",
-    description = "a connection with the plugin is available and the previous mentioned list of commands are possible."
-  }
-},
-text = Shell.__HelpTopics_templete.text
-},
-{
     topic = "read",
     name = "The read command",
     synopsis = "read [device] [all | [startaddress][endaddress] | [startaddress] + [length]] [filename]",
