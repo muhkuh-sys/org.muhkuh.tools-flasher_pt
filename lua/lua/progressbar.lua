@@ -44,6 +44,9 @@ function ProgressBar:_init(tLog, tparam)
     end
 end
 
+------------------------------------------------------------------------------
+
+-- update the table of parameters of the progress bar
 function ProgressBar:__UpdateParam(tparam)
     local default_tparam = self.default_tparam
     local pl = self.pl
@@ -67,8 +70,13 @@ function ProgressBar:__UpdateParam(tparam)
     return self
 end
 
+------------------------------------------------------------------------------
+
+-- determine the size of the progress bar depending on the total size of a progress bar
 function ProgressBar:__getSizeProgressBar(ulMax)
     local total
+    local tLog = self.tLog
+
     if self.tparam.ProcessAlgo == "SingleLine" then
         total = self.tparam.SL_Total
     else
@@ -86,19 +94,11 @@ function ProgressBar:__getSizeProgressBar(ulMax)
                         self.total ..
                             "]: " ..
                                 "|" ..
-                                    "|" ..
-                                        "100." ..
-                                            "% " ..
-                                                "(" ..
-                                                    total ..
-                                                        "/" ..
-                                                            total .. ")" .. self.tparam.suffix .. self.tparam.printEnd
+                                    "|" .. "100." .. "% " .. "(" .. total .. "/" .. total .. ")" .. self.tparam.suffix --.. self.tparam.printEnd
     else
         totalProgressBar =
             self.tparam.prefix ..
-            "|" ..
-                "|" ..
-                    "100." .. "% " .. "(" .. total .. "/" .. total .. ")" .. self.tparam.suffix .. self.tparam.printEnd
+            "|" .. "|" .. "100." .. "% " .. "(" .. total .. "/" .. total .. ")" .. self.tparam.suffix --.. self.tparam.printEnd
     end
 
     -- size of progress bar
@@ -108,15 +108,20 @@ function ProgressBar:__getSizeProgressBar(ulMax)
     while sizeProgress > self.defaultTermSize do
         self.tparam.length = self.tparam.length - 1
         sizeProgress = sizeProgress - 1
+        -- tLog.debug("too large - ","Prefix: ",self.tparam.prefix," - size progress bar: ",sizeProgress)
     end
 
     -- too small
     while sizeProgress < self.defaultTermSize do
         self.tparam.length = self.tparam.length + 1
         sizeProgress = sizeProgress + 1
+        -- tLog.debug(" too small - ","Prefix: ",self.tparam.prefix," - size progress bar: ",sizeProgress)
     end
 end
 
+------------------------------------------------------------------------------
+
+-- construct and display the progress bar as callback function
 function ProgressBar:__ProgressBar_callback_progress(ulCnt, ulMax)
     local tLog = self.tLog
     ulCnt = ulCnt or 1
@@ -152,7 +157,7 @@ function ProgressBar:__ProgressBar_callback_progress(ulCnt, ulMax)
         local strBar =
             string.rep(self.tparam.fill, ulFilledLength) .. string.rep("-", self.tparam.length - ulFilledLength)
 
-        -- number of processed iterations / total iterations    
+        -- number of processed iterations / total iterations
         local ulIteration
         local ulTotal
         if self.tparam.ProcessAlgo == "SingleLine" then
@@ -246,7 +251,7 @@ function ProgressBar:__ProgressBar_callback_progress(ulCnt, ulMax)
             end
         end
 
-        -- repeat progress bar 
+        -- repeat progress bar
         if self.tparam.repeatProgress == true and self.iteration > self.total then
             self.iteration = 1
             self.tparam.SL_Iteration = 1
@@ -258,6 +263,9 @@ function ProgressBar:__ProgressBar_callback_progress(ulCnt, ulMax)
     return true
 end
 
+------------------------------------------------------------------------------
+
+-- the callback message function of the netx - either a string or a progress bar
 function ProgressBar:__ProgressBar_callback_message(a, b)
     local tLog = self.tLog
 
@@ -267,7 +275,6 @@ function ProgressBar:__ProgressBar_callback_message(a, b)
             local ulCnt = tonumber(strCnt, 16)
             local ulMax = tonumber(strMax, 16)
             if ulCnt and ulMax then
-                self:__getSizeProgressBar(ulMax)
                 return self:__ProgressBar_callback_progress(ulCnt, ulMax)
             end
         else
