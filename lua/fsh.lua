@@ -316,6 +316,12 @@ function Shell:_init()
     },
     {
       -- command of list command only
+      cmd = "abort",
+      pattern = OptionalSpace * Cg(P("abort"), "cmd") * OptionalSpace * -1,
+      run = self.__list_abort
+    },
+    {
+      -- command of list command only
       cmd = "run",
       pattern = OptionalSpace * Cg(P("run"), "cmd") * Space * interval * OptionalSpace * -1,
       run = self.__list_run
@@ -1340,24 +1346,45 @@ function Shell:__getFilenameWords(strMatch)
   return astrWords
 end
 
+-- the text size is set to 80 chars
 Shell.__HelpTopics_templete = {
   text = [[
+# local TEXT_SIZE = 80
 #if tTopic.name ~= nil then
+
 $(string.upper('name'))
   $(tTopic.name)
 # end
+#if tTopic.blocks ~= nil then
 
+# for _, tblock in ipairs(tTopic.blocks) do 
+#  if tblock.key == "[block]" then
+#   for i=1,#tblock.description,TEXT_SIZE do
+  $(string.format(tblock.description:sub(0 + i,TEXT_SIZE - 1 + i)))
+#   end
+#  else
+
+    $(tblock.description)
+
+#  end
+# end
+#end
 #if tTopic.synopsis ~= nil then
+
 $(string.upper('synopsis'))
   $(tTopic.synopsis)
 # end
+#if tTopic.synopsis_auxiliary ~= nil then
 
-#if tTopic.description ~= nil then
-$(string.upper('description'))
-  $(tTopic.description)
+$(string.upper('synopsis auxiliary'))
+# for _, tSynopsisAuxiliary in ipairs(tTopic.synopsis_auxiliary) do
+  $(string.upper('name: ')) $(tSynopsisAuxiliary.key) 
+    $(tSynopsisAuxiliary.description)
+
 # end
-
+#end
 #if tTopic.options ~= nil then
+
 $(string.upper('options'))
 # local sizMax = 0
 # for _,tOption in ipairs(tTopic.options) do
@@ -1370,8 +1397,26 @@ $(string.upper('options'))
   $(tOption.key) $(string.rep(' ', sizMax-string.len(tOption.key))) : $(tOption.description)
 # end
 #end
+#if tTopic.description ~= nil then
 
+$(string.upper('description'))
+# for i=1,#tTopic.description,TEXT_SIZE do
+  $(string.format(tTopic.description:sub(0 + i,TEXT_SIZE - 1 + i)))
+# end
+#end
+#if tTopic.description_auxiliary ~= nil then
+
+$(string.upper('description auxiliary'))
+# for _, tSynopsisAuxiliary in ipairs(tTopic.description_auxiliary) do 
+  $(string.upper('name: ')) $(tSynopsisAuxiliary.key)
+#  for i=1,#tSynopsisAuxiliary.description,TEXT_SIZE do
+    $(string.format(tSynopsisAuxiliary.description:sub(0 + i,TEXT_SIZE - 1 + i)))
+#  end
+
+# end
+#end
 # if tTopic.examples ~= nil then
+
 $(string.upper('examples'))
   $(tTopic.examples)
 # end
@@ -1422,27 +1467,32 @@ The following example shows help about the read command:
   {
     topic = "start",
     name = "Getting started with the flasher application",
-    text = [[
-    
-This is a short description to getting started with the flasher application. 
-To get started with this application, the command scan is required to get an overview of all possible plugins:
-
-  scan
-
-with a result e.g.:
-
-  Found a total of 2 interfaces with 4 plugins:
+    blocks = {
+      {
+        key = "[block]",
+        description = [[This is a short description to getting started with the flasher application. To get started with this application, the command scan is required to get an overview of all possible plugins:]]
+      },
+      {description = [[scan]]},
+      {key = "[block]", description = "with a result e.g.:"},
+      {
+        description = [[Found a total of 2 interfaces with 4 plugins:
     romloader_uart_ttyS4
     romloader_uart_ttyUSB0
-
-After the scan command, the connect command with one of the previous displayed plugins is necessary. To utilize the list of commands as shown by using of the help command, like read, write or erase, a connection must be established. After a successful connection with the plugin, like for example:
-
-  connect romloader_uart_ttyUSB0
-  
-a connection with the plugin is available and the previous mentioned list of commands are possible.
     ]]
   },
   {
+    key = "[block]",
+    description = [[After the scan command, the connect command with one of the previous displayed plugins is necessary. To utilize the list of commands as shown by using of the help command, like read, write or erase, a connection must be established. After a successful connection with the plugin, like for example:]]
+  },
+  {description = "connect romloader_uart_ttyUSB0"},
+  {
+    key = "[block]",
+    description = "a connection with the plugin is available and the previous mentioned list of commands are possible."
+  }
+},
+text = Shell.__HelpTopics_templete.text
+},
+{
     topic = "read",
     name = "The read command",
     synopsis = "read [device] [all | [startaddress][endaddress] | [startaddress] + [length]] [filename]",
@@ -1587,10 +1637,10 @@ a connection with the plugin is available and the previous mentioned list of com
   {
     topic = "debug",
     name = "The debug command",
-    synopsis = "debug [watch | save [filename]]",
+    synopsis = "debug [display | save [filename]]",
     description = "The debug command displays or saves the complete debug information.",
     options = {
-      {key = "[watch]", description = "display complete debug information"},
+      {key = "[display]", description = "display complete debug information"},
       {key = "[save]", description = "save the complete debug information to the file"},
       {key = "[filename]", description = "the given filename"}
     },
@@ -1601,23 +1651,73 @@ a connection with the plugin is available and the previous mentioned list of com
   {
     topic = "list",
     name = "The list command",
-    synopsis = "list [run | save [filename]]",
-    description = [[The list command generates a list of commands. It can process the list directly or saves the list to a given file (line by line - see 'help input'). 
-  ATTENTION: to get access to the hints of possible plugins, a connection to the device is necessary.]],
-    options = {
-      {key = "[run]", description = "process the generated list of commands"},
-      {key = "[save]", description = "save the generated list of commands to the file"},
-      {key = "[filename]", description = "the given filename"}
+    synopsis = "list",
+    synopsis_auxiliary = {
+      {key = "end command", description = "end"},
+      {key = "abort command", description = "abort"},
+      {key = "clear command", description = "clear [all | [position] | interval [startposition][endposition]]"},
+      {key = "run command", description = "run [all | [position] | interval [startposition][endposition]]"},
+      {key = "add command", description = "add [start | end | [position]] [previous | hist | [filename]]"},
+      {key = "load command", description = "load [previous | hist | [filename]]"},
+      {key = "save command", description = "save [all | [position] | interval [startposition][endposition]] [filename]"},
+      {key = "insert command", description = "insert [position]"},
+      {key = "switch command", description = "switch [position 1] [position 2]"},
+      {key = "exchange command", description = "exchange [position 1] [position 2]"},
+      {key = "replace command", description = "replace [position]"}
     },
-    examples = [[list run
-  list save ~/list_commands.txt]],
+    description = [[The list command activates the list mode and supports the creation and editing of a list of commands. It can process a list of commands directly through the help of the listed auxiliary commands. Particularly noteworthy is the editing of the 'hist' and 'previous' lists. The list 'hist' contains all processed past commands and the list 'previous' is the saved list of the last editing. ATTENTION: to get access to the hints of possible plugins, a connection to the device is necessary.]],
+    description_auxiliary = {
+      {
+        key = "end command",
+        description = "Quit the list command and save the current list to 'previous' list. The end command is also possible during replace and insert are active."
+      },
+      {key = "abort command", description = "Abort the commands replace and insert."},
+      {key = "clear command", description = "Clear the specified interval of the list."},
+      {key = "run command", description = "Process the specified interval of the list and quit the list command."},
+      {key = "add command", description = "Add a specified list to the current list."},
+      {key = "load command", description = "Load a specified list and overwrite the current list."},
+      {key = "save command", description = "Save the current list to the given filename."},
+      {
+        key = "insert command",
+        description = "Activate the insert command and the subsequent command is insert at the specified position."
+      },
+      {key = "switch command", description = "Switch the position of one command."},
+      {key = "exchange command", description = "Exchange the position of two commands."},
+      {
+        key = "replace command",
+        description = "Activate the replace command and the subsequent command replaces a command at the specified position."
+      }
+    },
+    options = {
+      {key = "[position]", description = "specified position of the list"},
+      {key = "[all]", description = "the complete list size"},
+      {key = "[interval]", description = "option to specify an interval"},
+      {key = "[startposition][endposition]", description = "start- and endendposition of the interval"},
+      {key = "[previous]", description = "saved list of the last editing"},
+      {key = "[hist]", description = "history list of past commands"},
+      {key = "[filename]", description = "file with list of commands - line by line"},
+      {key = "[position 1]", description = "command to change position (switch command)"},
+      {key = "", description = "first command to exchange (exchange command)"},
+      {key = "[position 2]", description = "position to insert (switch command)"},
+      {key = "", description = "second command to exchange (exchange command)"}
+    },
+    examples = [[List of all commands:
+  [1] write IF01 0x00000000 TestData/testDataA.txt
+  List > insert 1   
+  List of all commands:
+  [1] write IF01 0x00000000 TestData/testDataA.txt
+  List - Insert [1] > connect romloader_uart_ttyUSB0
+  List of all commands:
+  [1] connect romloader_uart_ttyUSB0
+  [2] write IF01 0x00000000 TestData/testDataA.txt
+  List > 
+    ]],
     text = Shell.__HelpTopics_templete.text
   },
   {
     topic = "quit",
     name = "The quit command",
-    description = [[The quit command quits the application without a safety question.
-A connection to a netx is closed.]],
+    description = [[The quit command quits the application without a safety question. A connection to a netx is closed.]],
     text = Shell.__HelpTopics_templete.text
   }
 }
