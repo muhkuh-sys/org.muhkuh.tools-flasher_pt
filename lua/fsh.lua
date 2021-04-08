@@ -1198,7 +1198,7 @@ function Shell:_init()
       end
     },
     {
-      pattern = OptionalSpace * P("add") * Space * (Cg(R("az", "AZ") ^ 1) + UnfinishedInteger) * -1,
+      pattern = OptionalSpace * P("add") * Space * Cg(R("az", "AZ") ^ 1) * -1,
       hint = function()
         if self.list_cmd == true then
           return "    this is the position of insert list"
@@ -1211,15 +1211,10 @@ function Shell:_init()
       end
     },
     {
-      pattern = OptionalSpace * P("add") * Space * (Cg(R("az", "AZ") ^ 1) + UnfinishedInteger) * -1,
+      pattern = OptionalSpace * P("add") * Space * UnfinishedInteger * -1,
       hint = function()
         if self.list_cmd == true then
           return "    this is the position of insert list"
-        end
-      end,
-      words = function()
-        if self.list_cmd == true then
-          return {"start", "end"}
         end
       end
     },
@@ -3279,7 +3274,7 @@ function Shell:__list_run(tListCmd, tListCmdsTemp)
       tLog.error("The position must be greater than zero.")
     else
       self.tCmd_input:append(tListCmdsTemp[tListCmd.position])
-      tLog.info("Process the command list.")
+      tLog.info("Process the [%d] command of the list.", tListCmd.position)
       return self:__list_end(tListCmd, tListCmdsTemp)
     end
   elseif tListCmd.interval ~= nil then
@@ -3291,7 +3286,11 @@ function Shell:__list_run(tListCmd, tListCmdsTemp)
       tLog.error("The endposition must be smaller or equal to the size of the list.")
     else
       self.tCmd_input:extend(tListCmdsTemp:slice(tListCmd.start, tListCmd.ending))
-      tLog.info("Process the command list.")
+      if tListCmd.start == tListCmd.ending then
+        tLog.info("Process the [%d] command of the list.", tListCmd.start)
+      else
+        tLog.info("Process [%d] to [%d] commands of the list.", tListCmd.start, tListCmd.ending)
+      end
       return self:__list_end(tListCmd, tListCmdsTemp)
     end
   end
@@ -3351,7 +3350,12 @@ function Shell:__list_abort(tListCmd, tListCmdsTemp)
   tResult.errMsg = true
   tResult.cmd = "abort"
 
-  tLog.warning("Command aborted.")
+  if tListCmd.fInsert == true or tListCmd.fReplace == true then
+    tLog.warning("Command aborted.")
+  else
+    tLog.warning("No command active.")
+  end
+
   return true, tResult
 end
 
@@ -3361,7 +3365,7 @@ end
 function Shell:__run_list(tCmd)
   local atCommands_ListCmd = self.atCommands_ListCmd
   local atCommands = self.__atCommands
-  local tGrammar = self.__lineGrammar_withListCmd --self.__lineGrammar_ListCmd
+  local tGrammar = self.__lineGrammar_withListCmd
   local colors = self.colors
   local linenoise = self.linenoise
   local pl = self.pl
@@ -3369,7 +3373,7 @@ function Shell:__run_list(tCmd)
   local strHistory = self.strHistory
   local tLog = self.tLog
 
-  --activate hints and words of list commands
+  -- activate hints and words of list commands
   self.list_cmd = true
 
   linenoise.clearscreen()
@@ -3496,6 +3500,11 @@ function Shell:__run_list(tCmd)
             if tCmdHit == nil then
               tLog.error("Command not found.")
             else
+              if tListCmd.cmd == "abort" then
+                tListCmd.fInsert = fInsert
+                tListCmd.fReplace = fReplace
+              end
+
               -- Run the command.
               fRunning, tResult = tCmdHit.run(self, tListCmd, tListCmdsTemp)
             end
