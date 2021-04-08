@@ -1,12 +1,22 @@
-------------------------------------------------------------------------------
+----------------------
+-- The FlaSHer application. A helpful tool to write, verify, read and erase data in flash.
+-- @author
+-- @copyright
+-- @license
+-- @release
+-- @module fsh
 
 -- Create the Shell class.
 local class = require "pl.class"
+
+---
+-- @type Shell
 local Shell = class()
 
 local debugMode_ProgressBar = false
 local debugMode = false
 
+--- Initialize an instance of Shell upon creation.
 function Shell:_init()
   local tLogWriter_consoleFilter
   if debugMode == false then
@@ -127,7 +137,6 @@ function Shell:_init()
   self.__ucCurrentUnit = nil
   self.__ucCurrentCS = nil
 
-  ---------------------------------------------------------------------------
   --
   -- Define a set of LPEG helpers.
   --
@@ -173,7 +182,6 @@ function Shell:_init()
       -1
   )
 
-  ---------------------------------------------------------------------------
   --
   -- Create a grammar to parse a line.
   --
@@ -203,7 +211,11 @@ function Shell:_init()
   local Cmds_debug = Cg(P("display"), "display") + Cg(P("save"), "save") * Space * Cg(Filename, "filename")
   self.AllCommands_debug = {"display", "save"}
 
+  -- A comment starts with a hash and covers the rest of the line.
+  -- local Comment = Cg(P("#"),'comment')
+
   -- All available commands and their handlers.
+  -- @within Tables of fsh
   local atCommands = {
     {
       cmd = "connect",
@@ -307,6 +319,8 @@ function Shell:_init()
     Cg(P("all"), "all") + Cg(Integer / tonumber, "position") +
     (Cg(P("interval"), "interval") * Space * Cg(Integer / tonumber, "start") * Space * Cg(Integer / tonumber, "ending"))
 
+  -- All available commands and their handlers of the list command
+  -- @within Tables of fsh
   local atCommands_ListCmd = {
     {
       -- command of list command only
@@ -450,7 +464,6 @@ function Shell:_init()
   end
   self.__astrHelpTopicWords = astrHelpTopicWords
 
-  ---------------------------------------------------------------------------
   -- Create a lookup table for completers and hints. It is used when the
   -- command lines are typed in and not read from a file.
   -- See here for more info on completion and hints:
@@ -481,7 +494,12 @@ function Shell:_init()
   -- If the table has no "hint" key but "words", this is used together with
   -- an eventually available match to display all available completions in the
   -- hint text.
-  self.__atInteractivePatterns = {
+
+  -- Interactive pattern of all commands. Necessary for the linenoise functions of __hints and __completer.
+  -- @within Tables of fsh
+  -- @see __hints
+  -- @see __completer
+  local atInteractivePatterns = {
     -- Typing a command. This also matches an empty line.
     {
       pattern = OptionalSpace * Cg(R("az") ^ 0) * -1,
@@ -1246,8 +1264,13 @@ function Shell:_init()
       end
     }
   }
+
+  self.__atInteractivePatterns = atInteractivePatterns
 end
 
+--- Get the path of the Netx.
+-- @within Support Functions
+--@return strPathNetx: the directory of the NetX
 function Shell:__getNetxPath()
   local pl = self.pl
 
@@ -1272,6 +1295,13 @@ function Shell:__getNetxPath()
   return strPathNetx
 end
 
+--- Get the folder entries.
+-- It supports the function __getFilenameWords.
+-- @within Linenoise Functions
+-- @param strFolder directory
+-- @param strPrintPrefix prefix of folder
+-- @param astrWords table of all words in the directory
+-- @see __getFilenameWords
 function Shell:__getFolderEntries(strFolder, strPrintPrefix, astrWords)
   local pl = self.pl
   local strSep = pl.path.sep
@@ -1290,6 +1320,10 @@ function Shell:__getFolderEntries(strFolder, strPrintPrefix, astrWords)
   end
 end
 
+--- Get all filename words of the directory.
+-- @within Linenoise Functions
+--@param strMatch entered directory plus unfinished filename/folder
+-- @return astrWords: table of all filename words in the directory
 function Shell:__getFilenameWords(strMatch)
   local pl = self.pl
   local strSep = pl.path.sep
@@ -1341,7 +1375,9 @@ function Shell:__getFilenameWords(strMatch)
   return astrWords
 end
 
--- the text size is set to 80 chars
+-- Table of a templete function as a string. The size of a line is set to 80 chars.
+-- @within Tables of fsh
+-- @field text templete of the __run_help function
 Shell.__HelpTopics_templete = {
   text = [[
 # local TEXT_SIZE = 80
@@ -1418,6 +1454,9 @@ $(string.upper('examples'))
     ]]
 }
 
+-- Table of all topics of __run_help function.
+-- @field tables with help informations of all topics
+-- @within Tables of fsh
 Shell.__atHelpTopics = {
   {
     topic = "",
@@ -1509,7 +1548,7 @@ The following example shows help about the read command:
     topic = "verify",
     name = "The verify command",
     synopsis = "verify [device] [startaddress] [filename]",
-    description = "The verify command checks whether the data of the stated file is written in the device at the startaddress.",
+    description = "The verify command checks whether the data of the stated file is written in the device at the given startaddress.",
     options = {
       {key = "[device]", description = "the given device"},
       {key = "[startaddress]", description = "startaddress of the flash"},
@@ -1522,7 +1561,7 @@ The following example shows help about the read command:
     topic = "write",
     name = "The write command",
     synopsis = "write [device] [startaddress] [filename]",
-    description = "The write command writes the data of the stated file into the device at the specified startaddress.",
+    description = "The write command writes data of the stated file into the device at the specified startaddress.",
     options = {
       {key = "[device]", description = "the given device"},
       {key = "[startaddress]", description = "startaddress of the flash"},
@@ -1538,7 +1577,7 @@ The following example shows help about the read command:
     topic = "erase",
     name = "The erase command",
     synopsis = "erase [device] [all | [startaddress][endaddress] | [startaddress] + [length]]",
-    description = "The erase command delete the data of the device at the specified address.",
+    description = "The erase command deletes the data of the device at the specified address.",
     options = {
       {key = "[device]", description = "the given device"},
       {key = "[all]", description = "the complete flash size"},
@@ -1572,7 +1611,7 @@ The following example shows help about the read command:
     topic = "hash",
     name = "The hash command",
     synopsis = "hash [device] [all | [startaddress][endaddress] | [startaddress] + [length]]",
-    description = "The hash command returns the SHA1 checksum of the specified address.",
+    description = "The hash command computes the SHA1 checksum of data at the specified address.",
     options = {
       {key = "[device]", description = "the given device"},
       {key = "[all]", description = "the complete flash size"},
@@ -1667,8 +1706,11 @@ The following example shows help about the read command:
         description = "Quit the list command and save the current list to 'previous' list. The end command is also possible during replace and insert are active."
       },
       {key = "abort command", description = "Abort the commands replace and insert."},
-      {key = "clear command", description = "Clear the specified interval of the list."},
-      {key = "run command", description = "Process the specified interval of the list and quit the list command."},
+      {key = "clear command", description = "Clear the specified interval of the current list."},
+      {
+        key = "run command",
+        description = "Process the specified interval of the current list and quit the list command."
+      },
       {key = "add command", description = "Add a specified list to the current list."},
       {key = "load command", description = "Load a specified list and overwrite the current list."},
       {key = "save command", description = "Save the current list to the given filename."},
@@ -1717,8 +1759,9 @@ The following example shows help about the read command:
   }
 }
 
-------------------------------------------------------------------------------
-
+--- Show the help of the given command.
+-- @within Callable-Functions of Run Function
+-- @param tCmd table of commands
 function Shell:__run_help(tCmd)
   -- Get the topic. If no topic was specified, set the topic to the empty
   -- string - which selects the main page.
@@ -1761,8 +1804,12 @@ function Shell:__run_help(tCmd)
   return true
 end
 
-------------------------------------------------------------------------------
-
+--- Get the bus, unit and cs of the device.
+-- @within Support Functions
+-- @param strDevice device ID
+-- @return ucBus: number of bus
+-- @return ucUnit: number of unit
+-- @return ucCS: number of CS
 function Shell:__getBusUnitCs(strDevice)
   local lpeg = self.lpeg
   local tLog = self.tLog
@@ -1815,6 +1862,12 @@ function Shell:__getBusUnitCs(strDevice)
   return ucBus, ucUnit, ucCS
 end
 
+--- Determine the startaddress and length of data.
+-- In addition, it verifies whether the values of startaddress, length and endadress are within the range of the device
+-- @within Support Functions
+-- @param tCmd table of commands
+-- @return ulStart: startaddress
+-- @return ulLength: length of data
 function Shell:__getRange(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -1854,7 +1907,7 @@ function Shell:__getRange(tCmd)
     else
       tLog.error("Could not determine the flash size!")
     end
-  else -- in the case of: start adress, end adress AND start adress + length AND start adress
+  else -- in the case of: startadress, endadress AND startadress + length AND startadress
     ulDeviceSize =
       tFlasher:getFlashSize(
       tPlugin,
@@ -1907,6 +1960,12 @@ function Shell:__getRange(tCmd)
   return ulStart, ulLength
 end
 
+--- Switch to a new device or stay with the current one.
+-- @within Support Functions
+-- @param ucBus number of bus
+-- @param ucUnit number of unit
+-- @param ucCS number of cs
+-- @return tResult: true, or false if not connected or failed to detect a device
 function Shell:__switchToDevice(ucBus, ucUnit, ucCS)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -1962,6 +2021,9 @@ function Shell:__switchToDevice(ucBus, ucUnit, ucCS)
   return tResult
 end
 
+--- Read the data of the device at the specified address into the stated file.
+-- @within Callable-Functions of Run Function
+-- @param tCmd table of commands
 function Shell:__run_read(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -2115,6 +2177,9 @@ function Shell:__run_read(tCmd)
   return true
 end
 
+--- Verify whether the data of the stated file is written in the device at the given startaddress.
+-- @within Callable-Functions of Run Function
+-- @param tCmd table of commands
 function Shell:__run_verify(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -2259,6 +2324,9 @@ function Shell:__run_verify(tCmd)
   return true
 end
 
+--- Write data of the stated file into the device at the specified startaddress.
+-- @within Callable-Functions of Run Function
+-- @param tCmd table of commands
 function Shell:__run_write(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -2449,6 +2517,9 @@ function Shell:__run_write(tCmd)
   return true
 end
 
+--- Delete the data of the device at the specified address.
+-- @within Callable-Functions of Run Function
+-- @param tCmd table of commands
 function Shell:__run_erase(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -2545,6 +2616,9 @@ function Shell:__run_erase(tCmd)
   return true
 end
 
+--- Verify whether the data is deleted of the device at the specified address.
+-- @within Callable-Functions of Run Function
+-- @param tCmd table of commands
 function Shell:__run_iserased(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -2623,7 +2697,11 @@ function Shell:__run_iserased(tCmd)
   return true
 end
 
--- Return the input String as Hex value
+--- Return the input string as hex value.
+-- @within Support Functions
+-- @param strData input string
+-- @return string as hex value
+-- @see __run_hash
 function Shell:__str2hex(strData)
   -- one of the magic characters: '.' represents any single character
   return (strData:gsub(
@@ -2634,6 +2712,9 @@ function Shell:__str2hex(strData)
   ))
 end
 
+--- Compute the SHA1 checksum of data at the specified address.
+-- @within Callable-Functions of Run Function
+-- @param tCmd table of commands
 function Shell:__run_hash(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -2726,8 +2807,8 @@ function Shell:__run_hash(tCmd)
   return true
 end
 
-------------------------------------------------------------------------------
-
+--- Search for devices and list all possibilities of plugins.
+-- @within Callable-Functions of Run Function
 function Shell:__run_scan()
   local tLog = self.tLog
 
@@ -2746,12 +2827,12 @@ function Shell:__run_scan()
       tLog.debug("Found %d interfaces with plugin %s", iDetected, v:GetID())
     end
   end
-  tLog.debug("")
-  tLog.debug("Found a total of %d interfaces with %d plugins", #aDetectedInterfaces, sizNumberOfAvailablePlugins)
+  tLog.info("")
+  tLog.info("Found a total of %d interfaces with %d plugins", #aDetectedInterfaces, sizNumberOfAvailablePlugins)
   for _, tPlugin in ipairs(aDetectedInterfaces) do
-    tLog.debug("  %s", tPlugin:GetName())
+    tLog.info("  %s", tPlugin:GetName())
   end
-  tLog.debug("")
+  tLog.info("")
   local astrPluginNames = {}
   for _, tPlugin in ipairs(aDetectedInterfaces) do
     table.insert(astrPluginNames, tPlugin:GetName())
@@ -2763,8 +2844,9 @@ function Shell:__run_scan()
   return true
 end
 
-------------------------------------------------------------------------------
-
+---Establishe a connection with the plugin.
+-- @within Callable-Functions of Run Function
+-- @param tCmd table of commands
 function Shell:__run_connect(tCmd)
   local tFlasher = self.tFlasher
   local tLog = self.tLog
@@ -2893,8 +2975,8 @@ function Shell:__run_connect(tCmd)
   return true
 end
 
-------------------------------------------------------------------------------
-
+--- Disconnect from the plugin.
+-- @within Callable-Functions of Run Function
 function Shell:__run_disconnect()
   local tPlugin = self.tPlugin
   local tLog = self.tLog
@@ -2912,9 +2994,9 @@ function Shell:__run_disconnect()
   return true
 end
 
-------------------------------------------------------------------------------
-
--- reads the specified input file and verify whether each line is a valid command
+--- Read the specified input file and verify whether each line is a valid command.
+-- @within Callable-Functions of Run Function
+-- @param tCmd table of commands
 function Shell:__run_input(tCmd)
   local pl = self.pl
   local tLog = self.tLog
@@ -2944,7 +3026,7 @@ function Shell:__run_input(tCmd)
         --  extend the list by appending all the items in the given list of the file.
         tFileCmds:extend(tTemp)
 
-        -- filters all lines of the input file with the given command patters
+        -- filter all lines of the input file with the given command patters
         tFileCmds =
           tFileCmds:filter(
           function(x)
@@ -2965,9 +3047,9 @@ function Shell:__run_input(tCmd)
   return true
 end
 
-------------------------------------------------------------------------------
-
--- display or save all debug information
+--- Display or save all debug information.
+-- @within Callable-Functions of Run Function
+-- @param tCmd table of commands
 function Shell:__run_debug(tCmd)
   local pl = self.pl
   local tLog = self.tLog
@@ -2994,9 +3076,11 @@ function Shell:__run_debug(tCmd)
   return true
 end
 
-------------------------------------------------------------------------------
-
--- activate the replace command - the subsequent command replaces a command at the specified position
+--- Activate the replace command. The subsequent command replaces a command at the specified position.
+-- @within Auxiliary Commands of List Command
+-- @param tListCmd table of commands
+-- @param tListCmdsTemp current list of commands
+-- @return tResult: error message and specified position
 function Shell:__list_replace(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local tResult = {}
@@ -3016,9 +3100,10 @@ function Shell:__list_replace(tListCmd, tListCmdsTemp)
   return true, tResult
 end
 
-------------------------------------------------------------------------------
-
--- exchange the position of two commands
+--- Exchange the position of two commands.
+-- @within Auxiliary Commands of List Command
+-- @param tListCmd table of commands
+-- @param tListCmdsTemp current list of commands
 function Shell:__list_exchange(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local strPos1, strPos2
@@ -3041,9 +3126,10 @@ function Shell:__list_exchange(tListCmd, tListCmdsTemp)
   return true
 end
 
-------------------------------------------------------------------------------
-
--- switch the position of one command
+--- Switch the position of one command.
+-- @within Auxiliary Commands of List Command
+-- @param tListCmd table of commands
+-- @param tListCmdsTemp current list of commands
 function Shell:__list_switch(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local strPos1
@@ -3067,9 +3153,11 @@ function Shell:__list_switch(tListCmd, tListCmdsTemp)
   return true
 end
 
-------------------------------------------------------------------------------
-
--- activate the insert command - the subsequent command is insert at the specified position
+--- Activate the insert command. The subsequent command is insert at the specified position.
+-- @within Auxiliary Commands of List Command
+-- @param tListCmd table of commands
+-- @param tListCmdsTemp current list of commands
+-- @return tResult: error message and specified position
 function Shell:__list_insert(tListCmd, tListCmdsTemp)
   local tResult = {}
   local tLog = self.tLog
@@ -3089,9 +3177,10 @@ function Shell:__list_insert(tListCmd, tListCmdsTemp)
   return true, tResult
 end
 
-------------------------------------------------------------------------------
-
--- save the current list to the given filename
+--- Save the current list of commands to the given filename.
+-- @within Auxiliary Commands of List Command
+-- @param tListCmd table of commands
+-- @param tListCmdsTemp current list of commands
 function Shell:__list_save(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local pl = self.pl
@@ -3149,9 +3238,10 @@ function Shell:__list_save(tListCmd, tListCmdsTemp)
   return true
 end
 
-------------------------------------------------------------------------------
-
--- load a specified list - overwrite the current list
+--- Load a specified list and overwrite the current list of commands.
+-- @within Auxiliary Commands of List Command
+-- @param tListCmd table of commands
+-- @param tListCmdsTemp current list of commands
 function Shell:__list_load(tListCmd, tListCmdsTemp)
   local pl = self.pl
   local tLog = self.tLog
@@ -3226,9 +3316,10 @@ function Shell:__list_load(tListCmd, tListCmdsTemp)
   return true, tResult
 end
 
-------------------------------------------------------------------------------
-
--- add a specified list to the current list
+--- Add a specified list to the current list of commands.
+-- @within Auxiliary Commands of List Command
+-- @param tListCmd table of commands
+-- @param tListCmdsTemp current list of commands
 function Shell:__list_add(tListCmd, tListCmdsTemp)
   local pl = self.pl
   local tLog = self.tLog
@@ -3248,17 +3339,18 @@ function Shell:__list_add(tListCmd, tListCmdsTemp)
       tListCmdsTemp:splice(tListCmd.position, tAddTemp)
     end
   elseif tListCmd.start ~= nil and tResult.errMsg == true then
-    tListCmdsTemp = tAddTemp .. tListCmdsTemp
+    tListCmdsTemp:splice(1, tAddTemp)
   elseif tListCmd.ending ~= nil and tResult.errMsg == true then
-    tListCmdsTemp = tListCmdsTemp .. tAddTemp
+    tListCmdsTemp:splice(#tListCmdsTemp + 1, tAddTemp)
   end
 
   return true
 end
 
-------------------------------------------------------------------------------
-
--- process the specified interval of the list and quit the list command
+--- Process the specified interval of the current list of commands and quit the list command.
+-- @within Auxiliary Commands of List Command
+-- @param tListCmd table of commands
+-- @param tListCmdsTemp current list of commands
 function Shell:__list_run(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local pl = self.pl
@@ -3298,9 +3390,10 @@ function Shell:__list_run(tListCmd, tListCmdsTemp)
   return true
 end
 
-------------------------------------------------------------------------------
-
--- clear the specified interval of the list
+--- Clear the specified interval of the current list.
+-- @within Auxiliary Commands of List Command
+-- @param tListCmd table of commands
+-- @param tListCmdsTemp current list of commands
 function Shell:__list_clear(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
 
@@ -3329,9 +3422,10 @@ function Shell:__list_clear(tListCmd, tListCmdsTemp)
   return true
 end
 
-------------------------------------------------------------------------------
-
--- quit the list command - save tListCmdsTemp to tListPreviousCmds - deactivate hints/words of auxiliary commands
+--- Quit the list command and save the current list of commands to 'previous' list. The end command is also possible during replace and insert are active. Additonally, deactivate hints/words of auxiliary commands.
+-- @within Auxiliary Commands of List Command
+-- @param tListCmd table of commands
+-- @param tListCmdsTemp current list of commands
 function Shell:__list_end(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   self.list_cmd = false
@@ -3341,9 +3435,11 @@ function Shell:__list_end(tListCmd, tListCmdsTemp)
   return false
 end
 
-------------------------------------------------------------------------------
-
--- quit the list command - save tListCmdsTemp to tListPreviousCmds - deactivate hints/words of auxiliary commands
+--- Abort the commands replace and insert.
+-- @within Auxiliary Commands of List Command
+-- @param tListCmd table of commands
+-- @param tListCmdsTemp current list of commands
+-- @return tResult: error message and abort command
 function Shell:__list_abort(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local tResult = {}
@@ -3359,9 +3455,9 @@ function Shell:__list_abort(tListCmd, tListCmdsTemp)
   return true, tResult
 end
 
-------------------------------------------------------------------------------
-
---
+--- The list command activates the list mode and supports the creation and editing of a list of commands. It can process a list of commands directly through the help of the listed auxiliary commands. Particularly noteworthy is the editing of the 'hist' and 'previous' lists. The list 'hist' contains all processed past commands and the list 'previous' is the saved list of the last editing. ATTENTION: to get access to the hints of possible plugins, a connection to the device is necessary.
+-- @within Callable-Functions of Run Function
+-- @param tCmd table of commands
 function Shell:__run_list(tCmd)
   local atCommands_ListCmd = self.atCommands_ListCmd
   local atCommands = self.__atCommands
@@ -3517,18 +3613,24 @@ function Shell:__run_list(tCmd)
   return true
 end
 
-------------------------------------------------------------------------------
-
+--- Quit the application without a safety question. A connection to a netx is closed.
+-- @within Callable-Functions of Run Function
 function Shell:__run_quit()
+  local tLog = self.tLog
   -- Disconnect any existing plugin.
   self:__run_disconnect()
-
+  tLog.info("Goodbye!")
   -- Quit the application.
   return false
 end
 
-------------------------------------------------------------------------------
-
+--- Supporting function of __completer.
+-- @within Linenoise Functions
+-- @param tCompletions
+-- @param strLine given string of the line
+-- @param astrWords
+-- @param strMatch
+-- @see __completer 
 function Shell:__getCompletions(tCompletions, strLine, astrWords, strMatch)
   local sizMatch = string.len(strMatch)
   if sizMatch == 0 then
@@ -3549,6 +3651,12 @@ function Shell:__getCompletions(tCompletions, strLine, astrWords, strMatch)
   end
 end
 
+--- Supporting function of __hints.
+-- @within Linenoise Functions
+-- @param astrWords
+-- @param strMatch
+-- @return strHint: string with hint information
+-- @see __hints
 function Shell:__getMatchingHints(astrWords, strMatch)
   local sizMatch = string.len(strMatch)
 
@@ -3574,6 +3682,10 @@ function Shell:__getMatchingHints(astrWords, strMatch)
   return strHint
 end
 
+--- Complete the user input by pressing of <TAB> key.
+-- @within Linenoise Functions
+-- @param tCompletions
+-- @param strLine given string of the line
 function Shell:__completer(tCompletions, strLine)
   local lpeg = self.lpeg
 
@@ -3610,6 +3722,10 @@ function Shell:__completer(tCompletions, strLine)
   end
 end
 
+--- Provide hint information on the right hand side of the prompt.
+-- @within Linenoise Functions
+-- @param strLine given string of the line
+-- @return strHint: string with hint information
 function Shell:__hints(strLine)
   local strHint
   local sizLine = string.len(strLine)
@@ -3660,6 +3776,7 @@ function Shell:__hints(strLine)
   return strHint
 end
 
+--- Run the FlaSHer application.
 function Shell:run()
   local atCommands = self.__atCommands
   local colors = self.colors
@@ -3720,6 +3837,7 @@ function Shell:run()
     if self.tCmd_input:len() ~= 0 then
       strLine = self.tCmd_input:pop(1)
       strError = ""
+      tLog.info("Command input: %s", tostring(strLine))
     else
       strLine, strError = linenoise.linenoise(self.strPrompt)
     end
@@ -3764,6 +3882,12 @@ function Shell:run()
   end
 end
 
+-- Different Plugin names.
+-- @within Tables of fsh
+-- @field romloader_eth plugin of eth
+-- @field romloader_usb plugin of usb
+-- @field romloader_uart plugin of uart
+-- @field romloader_jtag plugin of jtag
 Shell.astrPlugins = {
   "romloader_eth",
   "romloader_usb",
