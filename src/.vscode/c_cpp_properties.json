@@ -1,0 +1,78 @@
+{
+    "configurations": [
+        {
+            "name": "NETX500",
+            "includePath": ["${workspaceFolder}/src", "${workspaceFolder}/src/netx500", "${workspaceFolder}/src/sha1_arm", "${workspaceFolder}/platform/src", "${workspaceFolder}/platform/src/lib", "${workspaceFolder}/targets/version"],
+            "defines": ["ASIC_TYP=1"],
+            "compilerPath": "~/.mbs/depack/org.gnu.gcc/gcc-arm-none-eabi/gcc-arm-none-eabi-4.9.3_4/bin/arm-none-eabi-gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++14"
+        },
+        {
+            "name": "NETX50",
+            "includePath": ["${workspaceFolder}/src", "${workspaceFolder}/src/netx50", "${workspaceFolder}/src/sha1_arm", "${workspaceFolder}/platform/src", "${workspaceFolder}/platform/src/lib", "${workspaceFolder}/targets/version"],
+            "defines": ["ASIC_TYP=2"],
+            "compilerPath": "~/.mbs/depack/org.gnu.gcc/gcc-arm-none-eabi/gcc-arm-none-eabi-4.9.3_4/bin/arm-none-eabi-gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++14"
+        },
+        {
+            "name": "NETX10",
+            "includePath": ["${workspaceFolder}/src", "${workspaceFolder}/src/netx10", "${workspaceFolder}/src/sha1_arm", "${workspaceFolder}/platform/src", "${workspaceFolder}/platform/src/lib", "${workspaceFolder}/targets/version"],
+            "defines": ["ASIC_TYP=3"],
+            "compilerPath": "~/.mbs/depack/org.gnu.gcc/gcc-arm-none-eabi/gcc-arm-none-eabi-4.9.3_4/bin/arm-none-eabi-gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++14"
+        },
+        {
+            "name": "NETX56",
+            "includePath": ["${workspaceFolder}/src", "${workspaceFolder}/src/netx56", "${workspaceFolder}/src/sha1_arm", "${workspaceFolder}/platform/src", "${workspaceFolder}/platform/src/lib", "${workspaceFolder}/targets/version"],
+            "defines": ["ASIC_TYP=4"],
+            "compilerPath": "~/.mbs/depack/org.gnu.gcc/gcc-arm-none-eabi/gcc-arm-none-eabi-4.9.3_4/bin/arm-none-eabi-gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++14"
+        },
+        {
+            "name": "NETX4000_RELAXED",
+            "includePath": ["${workspaceFolder}/src", "${workspaceFolder}/src/netx4000", "${workspaceFolder}/src/sha1_arm", "${workspaceFolder}/platform/src", "${workspaceFolder}/platform/src/lib", "${workspaceFolder}/targets/version"],
+            "defines": ["ASIC_TYP=6"],
+            "compilerPath": "~/.mbs/depack/org.gnu.gcc/gcc-arm-none-eabi/gcc-arm-none-eabi-4.9.3_4/bin/arm-none-eabi-gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++14"
+        },
+        {
+            "name": "NETX90_MPW",
+            "includePath": ["${workspaceFolder}/src", "${workspaceFolder}/src/netx90", "${workspaceFolder}/src/sha1_arm", "${workspaceFolder}/platform/src", "${workspaceFolder}/platform/src/lib", "${workspaceFolder}/targets/version"],
+            "defines": ["ASIC_TYP=7"],
+            "compilerPath": "~/.mbs/depack/org.gnu.gcc/gcc-arm-none-eabi/gcc-arm-none-eabi-4.9.3_4/bin/arm-none-eabi-gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++14"
+        },
+        {
+            "name": "NETX4000",
+            "includePath": ["${workspaceFolder}/src", "${workspaceFolder}/src/netx4000", "${workspaceFolder}/src/sha1_arm", "${workspaceFolder}/platform/src", "${workspaceFolder}/platform/src/lib", "${workspaceFolder}/targets/version"],
+            "defines": ["ASIC_TYP=9"],
+            "compilerPath": "~/.mbs/depack/org.gnu.gcc/gcc-arm-none-eabi/gcc-arm-none-eabi-4.9.3_4/bin/arm-none-eabi-gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++14"
+        },
+        {
+            "name": "NETX90",
+            "includePath": ["${workspaceFolder}/src", "${workspaceFolder}/src/netx90", "${workspaceFolder}/src/sha1_arm", "${workspaceFolder}/platform/src", "${workspaceFolder}/platform/src/lib", "${workspaceFolder}/targets/version"],
+            "defines": ["ASIC_TYP=10", "CFG_INCLUDE_SHA1=1"],
+            "compilerPath": "~/.mbs/depack/org.gnu.gcc/gcc-arm-none-eabi/gcc-arm-none-eabi-4.9.3_4/bin/arm-none-eabi-gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++14"
+        },
+        {
+            "name": "NETIOL",
+            "includePath": ["${workspaceFolder}/src", "${workspaceFolder}/src/netiol", "${workspaceFolder}/src/sha1_arm", "${workspaceFolder}/platform/src", "${workspaceFolder}/platform/src/lib", "${workspaceFolder}/targets/version"],
+            "defines": ["ASIC_TYP=12"],
+            "compilerPath": "~/.mbs/depack/org.gnu.gcc/gcc-arm-none-eabi/gcc-arm-none-eabi-4.9.3_4/bin/arm-none-eabi-gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++14"
+        }
+    ],
+    "version": 4
+  }
+  

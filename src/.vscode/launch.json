@@ -1,0 +1,39 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "GDB with openOCD",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/targets/netx90_nodbg/flasher_netx90.elf",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "targetArchitecture": "arm",
+            "MIMode": "gdb",
+            "miDebuggerPath": "/home/struber/.mbs/depack/org.gnu.gcc/gcc-arm-none-eabi/gcc-arm-none-eabi-4.9.3_4/bin/arm-none-eabi-gdb",            
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "text": "target extended-remote localhost:3333",
+                },
+                {
+                    "text": "file ${workspaceFolder}/targets/netx90_nodbg/flasher_netx90.elf"
+                },
+                {
+                    "text": "load ${workspaceFolder}/targets/netx90_nodbg/flasher_netx90.elf"
+                }
+            ],
+            "preLaunchTask": "openOCD"
+        }
+    ]
+}

@@ -1,0 +1,36 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "flasher",
+            "type": "shell",
+            "command": "python3 mbs/mbs",
+            "problemMatcher": "$gcc",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "flasher_cli",
+            "type": "shell",
+            "command": "./build_artifact.py",
+            "dependsOn": ["flasher"],
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Build",
+            "dependsOn": ["MBS", ""]
+        },
+        {
+            "label": "openOCD",
+            "type": "shell",
+            "command": "/home/cthelen/workspace/vc_openocd/openocd",
+            "args": [ "-f", "/home/cthelen/workspace/vc_openocd/netx90_attach.tcl" ],
+            "problemMatcher": [],
+            "isBackground": true
+        }
+    ]
+}
