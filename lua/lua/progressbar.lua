@@ -1,15 +1,47 @@
+----------------------
+-- Support the display of progress information.
+-- @author Simon Truber
+-- @copyright
+-- @license
+-- @release
+-- @module progressbar
+
 -- Create the ProgressBar class.
 local class = require "pl.class"
+
+---  ProgressBar class.
+-- @type ProgressBar
 local ProgressBar = class()
 
+--- Initialize an instance of ProgressBar upon creation.
+-- @param tLog initial logger object
+-- @param tparam initial parameter table of the progress bar
 function ProgressBar:_init(tLog, tparam)
     self.pl = require "pl.import_into"()
 
     self.tLog = tLog
 
+    -- default value of term size
     self.defaultTermSize = 80 -- termlib.termCol()
 
-    -- attention: nil values are negleted in pl.Map but its not importent due to a call of the value is still nil
+    -- Attention: nil values are negleted in pl.Map but its not importent due to a call of the value is still nil.
+
+    --- Default paramter table of the progress bar.
+    -- @field mode nil or 'debug' (default: nil)
+    -- @field decimals decimal places percent (default: 1)
+    -- @field fill (default: "█")
+    -- @field prefix (default: "Progress:")
+    -- @field suffix (default: "Complete:")
+    -- @field length of progress bar (default: 50)
+    -- @field printEnd final print (default: "\n")
+    -- @field ProgressBarFinished (default: false)
+    -- @field printLine at the end of each process step (default: "")
+    -- @field ProcessAlgo  "Simple" or "SingleLine" or "UnequalByteSingleLine" (default: "Simple")
+    -- @field totalByteSize for UnequalByteSingleLine algorithm (default: 1)
+    -- @field SL_Iteration for SingleLine algorithm (default: 1)
+    -- @field SL_Total for SingleLine algorithm (default: 1)
+    -- @field repeatProgress repeat the progress bar (default: false)
+    -- @field showTotalProgress total progress after prefix symbol (default: false)
     local default_tparam =
         self.pl.Map {
         mode = nil,
@@ -18,22 +50,26 @@ function ProgressBar:_init(tLog, tparam)
         prefix = "Progress:",
         suffix = " Complete",
         length = 50,
-        printEnd = "\n",
+        printEnd = "\n", -- final print
         ProgressBarFinished = false,
-        printLine = "",
-        ProcessAlgo = "MultiLine", --or UnequalByteSingleLine or SingleLine
-        totalByteSize = 1,
-        sumByteIteration = 0,
-        SL_Iteration = 1,
-        SL_Total = 1,
+        printLine = "", -- at the end of each process step
+        ProcessAlgo = "Simple", --or UnequalByteSingleLine or SingleLine
+        totalByteSize = 1, -- for UnequalByteSingleLine algorithm
+        SL_Iteration = 1, -- for SingleLine algorithm
+        SL_Total = 1, -- for SingleLine algorithm
         repeatProgress = false,
-        showTotalProgress = false
+        showTotalProgress = false -- e.g. in the case of SingleLine algorithm and more than one progress should be shown
     }
 
     self.default_tparam = default_tparam
 
+    -- for UnequalByteSingleLine algorithm
+    self.sumByteIteration = 0
+
+    -- initialize the table of paramter
     self:__UpdateParam(tparam)
 
+    -- initialize the callback functions
     local this = self
     self.fnProgressBar = function(ulCnt, ulMax)
         return this:__ProgressBar_callback_progress(ulCnt, ulMax)
@@ -44,9 +80,9 @@ function ProgressBar:_init(tLog, tparam)
     end
 end
 
-------------------------------------------------------------------------------
-
--- update the table of parameters of the progress bar
+--- Update the table of parameters of the progress bar.
+-- @param tparam table of parameter of the progress bar
+-- @return the object of the progress bar with the updated parameters
 function ProgressBar:__UpdateParam(tparam)
     local default_tparam = self.default_tparam
     local pl = self.pl
@@ -67,12 +103,14 @@ function ProgressBar:__UpdateParam(tparam)
     self.iteration = 1
     self.total = #self.tparamAll
 
+    -- for UnequalByteSingleLine algorithm
+    self.sumByteIteration = 0
+
     return self
 end
 
-------------------------------------------------------------------------------
-
--- determine the size of the progress bar depending on the total size of a progress bar
+--- Determine the size of the progress bar depending on default size of the term. The default size of the term is set to 80.
+-- @param ulMax maximum value - total number of bytes
 function ProgressBar:__getSizeProgressBar(ulMax)
     local total
     local tLog = self.tLog
@@ -119,9 +157,16 @@ function ProgressBar:__getSizeProgressBar(ulMax)
     end
 end
 
-------------------------------------------------------------------------------
-
--- construct and display the progress bar as callback function
+--- Construct and display the progress bar as callback function.
+-- Different algorithm can be used: "Simple", "SingleLine" or "UnequalByteSingleLine"
+--
+-- "Simple": a total progress bar for one event.
+--
+-- "SingleLine": multiple events (SL_Total) in one progress bar. The starting iteration is SL_Iteration.
+--
+-- "UnequalByteSingleLine": multiple events with different known byte size (sum = totalByteSize) in one progress bar.
+-- @param ulCnt counter value - number of processed bytes
+-- @param ulMax maximum value - total number of bytes
 function ProgressBar:__ProgressBar_callback_progress(ulCnt, ulMax)
     local tLog = self.tLog
     ulCnt = ulCnt or 1
@@ -142,14 +187,14 @@ function ProgressBar:__ProgressBar_callback_progress(ulCnt, ulMax)
                 (ulCnt / ulMax) * (1 / self.tparam.SL_Total) + ((self.tparam.SL_Iteration - 1) / self.tparam.SL_Total)
             ulPercent = string.format(str_temp, 100 * ulTerm)
             ulFilledLength = math.floor(self.tparam.length * ulTerm)
-        elseif self.tparam.ProcessAlgo == "MultiLine" then
+        elseif self.tparam.ProcessAlgo == "Simple" then
             ulTerm = (ulCnt / ulMax)
             ulPercent = string.format(str_temp, 100 * ulTerm)
             ulFilledLength = math.floor(self.tparam.length * ulTerm)
         elseif self.tparam.ProcessAlgo == "UnequalByteSingleLine" then
             ulTerm =
                 (ulCnt / ulMax) * (ulMax / self.tparam.totalByteSize) +
-                ((self.tparam.sumByteIteration) / self.tparam.totalByteSize)
+                ((self.sumByteIteration) / self.tparam.totalByteSize)
             ulPercent = string.format(str_temp, 100 * ulTerm)
             ulFilledLength = math.floor(self.tparam.length * ulTerm)
         end
@@ -170,6 +215,7 @@ function ProgressBar:__ProgressBar_callback_progress(ulCnt, ulMax)
 
         -- complete string of progress bar
         local strProgressBar
+        -- with active showTotalProgress
         if self.tparam.showTotalProgress == true then
             strProgressBar =
                 "\r" ..
@@ -224,10 +270,10 @@ function ProgressBar:__ProgressBar_callback_progress(ulCnt, ulMax)
         -- count up the iteration state for differ ProcessAlgo
         if ulCnt >= ulMax then
             if self.tparam.ProcessAlgo == "UnequalByteSingleLine" then
-                self.tparam.sumByteIteration = self.tparam.sumByteIteration + ulMax
-                if self.tparam.sumByteIteration >= self.tparam.totalByteSize then
+                self.sumByteIteration = self.sumByteIteration + ulMax
+                if self.sumByteIteration >= self.tparam.totalByteSize then
                     self.iteration = self.iteration + 1
-                    self.tparam.sumByteIteration = 0
+                    self.sumByteIteration = 0
                     if #self.tparamAll >= self.iteration then
                         self.tparam = self.tparamAll[self.iteration]
                     end
@@ -255,7 +301,7 @@ function ProgressBar:__ProgressBar_callback_progress(ulCnt, ulMax)
         if self.tparam.repeatProgress == true and self.iteration > self.total then
             self.iteration = 1
             self.tparam.SL_Iteration = 1
-            self.tparam.sumByteIteration = 0
+            self.sumByteIteration = 0
             self.tparam.ProgressBarFinished = false
         end
     end
@@ -263,9 +309,9 @@ function ProgressBar:__ProgressBar_callback_progress(ulCnt, ulMax)
     return true
 end
 
-------------------------------------------------------------------------------
-
--- the callback message function of the netx - either a string or a progress bar
+--- The callback message function of the netx - either a string or progress bar information
+-- @param a return value/string of NetX
+-- @param b return value/string of NetX
 function ProgressBar:__ProgressBar_callback_message(a, b)
     local tLog = self.tLog
 
