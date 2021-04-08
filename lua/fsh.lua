@@ -1,6 +1,6 @@
 ----------------------
 -- The FlaSHer application. A helpful tool to write, verify, read and erase data in flash.
--- @author
+-- @author Christoph Thelen 
 -- @copyright
 -- @license
 -- @release
@@ -1809,7 +1809,7 @@ end
 -- @param strDevice device ID
 -- @return ucBus: number of bus
 -- @return ucUnit: number of unit
--- @return ucCS: number of CS
+-- @return ucCS: number of CS (ChipSelect)
 function Shell:__getBusUnitCs(strDevice)
   local lpeg = self.lpeg
   local tLog = self.tLog
@@ -1964,7 +1964,7 @@ end
 -- @within Support Functions
 -- @param ucBus number of bus
 -- @param ucUnit number of unit
--- @param ucCS number of cs
+-- @param ucCS number of CS (ChipSelect)
 -- @return tResult: true, or false if not connected or failed to detect a device
 function Shell:__switchToDevice(ucBus, ucUnit, ucCS)
   local tFlasher = self.tFlasher
