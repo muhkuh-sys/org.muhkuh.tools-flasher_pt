@@ -15,7 +15,7 @@ function Shell:_init()
     tLogWriter_consoleFilter = require "log.writer.console.color".new()
   end
 
-  local strLogDir = "./logs"
+  local strLogDir = ".logs"
   local strLogFilename = ".log_Data.log"
 
   self.strLogDir = strLogDir
