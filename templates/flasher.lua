@@ -1,4 +1,13 @@
------------------------------------------------------------------------------
+----------------------
+-- The FlaSHer application. A helpful tool to write, verify, read and erase data in flash.
+-- @author Christoph Thelen 
+-- @copyright
+-- @license
+-- @release
+-- @module flasher
+
+
+
 --   Copyright (C) 2019 by Christoph Thelen                                --
 --   doc_bacardi@users.sourceforge.net                                     --
 --                                                                         --
@@ -16,21 +25,23 @@
 --   along with this program; if not, write to the                         --
 --   Free Software Foundation, Inc.,                                       --
 --   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             --
------------------------------------------------------------------------------
 
-local class = require 'pl.class'
+
+local class = require "pl.class"
+---  Flasher class. 
+-- @type Flasher
 local Flasher = class()
 
-
+--- Initialize an instance of Flasher upon creation.
 function Flasher:_init(tLog)
+
   self.tLog = tLog
 
-  self.bit = require 'bit'
-  self.romloader = require 'romloader'
+  self.bit = require "bit"
+  self.romloader = require "romloader"
 
-  -----------------------------------------------------------------------------
-  --                           Definitions
-  -----------------------------------------------------------------------------
+
+--                           Definitions
 
   self.BUS_Parflash    = ${BUS_ParFlash}             -- parallel flash
   self.BUS_Spi         = ${BUS_SPI}             -- serial flash on spi bus
@@ -76,11 +87,9 @@ function Flasher:_init(tLog)
   self.FLASHER_INTERFACE_VERSION        = ${FLASHER_INTERFACE_VERSION}
 
 
-  --------------------------------------------------------------------------
-  -- callback/progress functions, 
-  -- read/write image, call
-  --------------------------------------------------------------------------
 
+  -- callback/progress functions,  
+  -- read/write image, call
   local this = self
   self.fnProgressDefault = function(ulCnt, ulMax)
     return this:default_callback_progress(ulCnt, ulMax)
@@ -95,7 +104,13 @@ function Flasher:_init(tLog)
   self.PROGRESS_STEP_PERCENT = 10
 end
 
-
+--- Default callback progress function. The default is to print a simple progress message to stdout.
+--   The function must accept 2 parameters:
+--    1) the number of processed bytes
+--    2) the total number of bytes
+-- @param ulCnt number of processed bytes
+-- @param ulMax total number of bytes
+-- @return The function must return one boolean. A value of 'true' continues the download operation, while a value of 'false' cancels the download.
 function Flasher:default_callback_progress(ulCnt, ulMax)
   local fPercent = math.floor(ulCnt * 100 / ulMax)
   local ulTime = os.time()
@@ -109,6 +124,9 @@ function Flasher:default_callback_progress(ulCnt, ulMax)
 end
 
 
+--- Default callback message function.
+-- @param a
+-- @param b 
 function Flasher:default_callback_message(a,b)
   if type(a)=="string" and string.len(a)>0 then
     local strCnt, strMax = string.match(a, '%% ([%x%X]+)/([%x%X]+)')
@@ -128,29 +146,51 @@ function Flasher:default_callback_message(a,b)
   return true
 end
 
+--- Write an image.
+-- @param tPlugin plugin object with an active connection
+-- @param ulAddress 
+-- @param strData 
+-- @param fnCallbackProgress 
+-- @return 
 function Flasher:write_image(tPlugin, ulAddress, strData, fnCallbackProgress)
   local this = self
   fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
   return tPlugin:write_image(ulAddress, strData, fnCallbackProgress, strData:len())
 end
 
+--- Read an image.
+-- @param tPlugin plugin object with an active connection
+-- @param ulAddress 
+-- @param ulSize 
+-- @param fnCallbackProgress 
+-- @return 
 function Flasher:read_image(tPlugin, ulAddress, ulSize, fnCallbackProgress)
   local this = self
   fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
   return tPlugin:read_image(ulAddress, ulSize, fnCallbackProgress, ulSize)
 end
 
+--- Call function.
+-- @param tPlugin plugin object with an active connection
+-- @param ulExecAddress 
+-- @param ulParameterAddress
+-- @param fnCallbackMessage 
+-- @return 
 function Flasher:call(tPlugin, ulExecAddress, ulParameterAddress, fnCallbackMessage)
   local this = self
   fnCallbackMessage = fnCallbackMessage or self.fnMessageDefault
   return tPlugin:call(ulExecAddress, ulParameterAddress, fnCallbackMessage, 2)
 end
 
------------------------------------------------------------------------------
---                    Downloading the flasher
------------------------------------------------------------------------------
 
--- prefix must include a trailing backslash if it's a directory
+--                    Downloading the flasher
+
+--- Description.
+-- Prefix must include a trailing backslash if it's a directory.
+-- @param iChiptype
+-- @param strPathPrefix
+-- @param fDebug
+-- @return 
 function Flasher:get_flasher_binary_path(iChiptype, strPathPrefix, fDebug)
   local strNetxName = nil
   local strDebug = fDebug and "_debug" or ""
@@ -185,14 +225,17 @@ function Flasher:get_flasher_binary_path(iChiptype, strPathPrefix, fDebug)
   return strPath
 end
 
-
+--- Description.
+-- @param strData
+-- @param ulOffset
 function Flasher:get_dword(strData, ulOffset)
   return strData:byte(ulOffset) + strData:byte(ulOffset+1)*0x00000100 + strData:byte(ulOffset+2)*0x00010000 + strData:byte(ulOffset+3)*0x01000000
 end
 
-
--- Extract header information from the flasher binary
--- information about code/exec/buffer addresses
+--- Extract header information from the flasher binary.
+-- Information about code/exec/buffer addresses.
+-- @param strData
+-- @return aAttr: Returns the binary's attribute list.
 function Flasher:get_flasher_binary_attributes(strData)
   local aAttr = {}
   local tLog = self.tLog
@@ -216,43 +259,41 @@ function Flasher:get_flasher_binary_attributes(strData)
   return aAttr
 end
 
-
--- download binary to netX. Extracts and returns the header information.
+--- Download binary to netX. Extracts and returns the header information.
 -- Download a netx binary.
--- Returns the binary's attribute list.
+-- @param tPlugin plugin object with an active connection
+-- @param strData
+-- @param fnCallbackProgress
+-- @return aAttr: Returns the binary's attribute list.
 function Flasher:download_netx_binary(tPlugin, strData, fnCallbackProgress)
   local aAttr = self:get_flasher_binary_attributes(strData)
   local tLog = self.tLog
   tLog.debug("downloading to 0x%08x", aAttr.ulLoadAddress)
   self:write_image(tPlugin, aAttr.ulLoadAddress, strData, fnCallbackProgress)
   -- tPlugin:write_image(aAttr.ulLoadAddress, strData, fnCallbackProgress, string.len(strData))
-  
+
   return aAttr
 end
 
--- Download flasher.
--- - Load the flasher binary according to the chip type the
---    plugin is connected to
--- - Extract header information from the flasher
---   (static information about code/exec/buffer addresses)
--- - Download the flasher to the specified address
-
--- tPlugin plugin object with an active connection
--- strPrefix path to flasher binaries
--- fnCallbackProgress is a function to call while downloading the flasher.
+--- Download flasher.
+--
+-- - Load the flasher binary according to the chip type the plugin is connected to. 
+--
+-- - Extract header information from the flasher (static information about code/exec/buffer addresses)
+--
+-- - Download the flasher to the specified address.
+--
+-- @param tPlugin plugin object with an active connection
+-- @param strPrefix path to flasher binaries
+-- @param fnCallbackProgress is a function to call while downloading the flasher.
 --   This parameter is optional. The default is to print a simple progress
 --   message to stdout.
-
 --   The function must accept 2 parameters:
 --    1) the number of processed bytes
 --    2) the total number of bytes
 --   The function must return one boolean. A value of 'true' continues the
 --   download operation, while a value of 'false' cancels the download.
---
--- Returns flasher attributes (parameter address, buffer address etc.)
-
-
-
+-- @return aAttr: Returns flasher attributes (parameter address, buffer address etc.)
 function Flasher:download(tPlugin, strPrefix, fnCallbackProgress)
   local iChiptype = tPlugin:GetChiptyp()
   local fDebug = false
@@ -274,8 +315,10 @@ function Flasher:download(tPlugin, strPrefix, fnCallbackProgress)
   return aAttr
 end
 
-
--- set the buffer area (when using SDRAM as a buffer, for instance)
+--- Set the buffer area (when using SDRAM as a buffer, for instance).
+-- @param aAttr
+-- @param ulBufferAdr
+-- @param ulBufferLen
 function Flasher:set_buffer_area(aAttr, ulBufferAdr, ulBufferLen)
   aAttr.ulBufferAdr   = ulBufferAdr
   aAttr.ulBufferEnd   = ulBufferAdr + ulBufferLen
@@ -283,14 +326,15 @@ function Flasher:set_buffer_area(aAttr, ulBufferAdr, ulBufferLen)
 end
 
 
-
------------------------------------------------------------------------------
 --                    Calling the flasher
------------------------------------------------------------------------------
 
-
-
--- download parameters to netX
+--- Download parameters to netX.
+-- @param tPlugin plugin object with an active connection
+-- @param ulAddress
+-- @param aulParameters
+-- @param fnCallbackProgress is a function to call while downloading the flasher.
+--   This parameter is optional. The default is to print a simple progress
+--   message to stdout.
 function Flasher:set_parameterblock(tPlugin, ulAddress, aulParameters, fnCallbackProgress)
   local bit = self.bit
   local strBin = ""
@@ -300,8 +344,15 @@ function Flasher:set_parameterblock(tPlugin, ulAddress, aulParameters, fnCallbac
   self:write_image(tPlugin, ulAddress, strBin, fnCallbackProgress) 
 end
 
--- Stores parameters in netX memory, calls the flasher and returns the result value
--- 0 = success, 1 = failure
+--- Stores parameters in netX memory, calls the flasher and returns the result value.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param aulParams
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress is a function to call while downloading the flasher.
+--   This parameter is optional. The default is to print a simple progress
+--   message to stdout.
+-- @return result value: 0 = success, 1 = failure
 function Flasher:callFlasher(tPlugin, aAttr, aulParams, fnCallbackMessage, fnCallbackProgress)
   fnCallbackMessage = fnCallbackMessage or self.fnMessageDefault
   fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
@@ -331,11 +382,16 @@ function Flasher:callFlasher(tPlugin, aAttr, aulParams, fnCallbackMessage, fnCal
 end
 
 
------------------------------------------------------------------------------
 --                  Detecting flash and getting device info
------------------------------------------------------------------------------
 
-
+--- Description.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress is a function to call while downloading the flasher.
+--   This parameter is optional. The default is to print a simple progress
+--   message to stdout.
+-- @return aResult: 
 function Flasher:getBoardInfo(tPlugin, aAttr, fnCallbackMessage, fnCallbackProgress)
   local tLog = self.tLog
   local aResult = nil
@@ -385,9 +441,18 @@ function Flasher:getBoardInfo(tPlugin, aAttr, fnCallbackMessage, fnCallbackProgr
   return aResult
 end
 
-
-
--- check if a device is available on tBus/ulUnit/ulChipSelect
+--- Check if a device is available on tBus/ulUnit/ulChipSelect.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param tBus
+-- @param ulUnit
+-- @param ulChipSelect
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress is a function to call while downloading the flasher.
+--   This parameter is optional. The default is to print a simple progress
+--   message to stdout.
+-- @param atParameter
+-- @return ulValue == 0
 function Flasher:detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, fnCallbackMessage, fnCallbackProgress, atParameter)
   local aulParameter
   atParameter = atParameter or {}
@@ -482,9 +547,11 @@ function Flasher:detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, fnCallbackMe
   return ulValue == 0
 end
 
-
-
--- read device descriptor after detect (debugging)
+--- Read device descriptor after detect (debugging).
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param fnCallbackProgress
+-- @return strDevDesc: device description
 function Flasher:readDeviceDescriptor(tPlugin, aAttr, fnCallbackProgress)
   -- check the device description
   local strDevDesc
@@ -517,7 +584,11 @@ function Flasher:readDeviceDescriptor(tPlugin, aAttr, fnCallbackProgress)
   return strDevDesc
 end
 
-
+--- Description.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param fnCallbackProgress
+-- @return strDeviceId: device ID
 function Flasher:getDeviceId(tPlugin, aAttr, fnCallbackProgress)
   -- Read the flash device descriptor.
   local strDeviceDescriptor = self:readDeviceDescriptor(tPlugin, aAttr, fnCallbackProgress)
@@ -544,17 +615,21 @@ function Flasher:getDeviceId(tPlugin, aAttr, fnCallbackProgress)
   return strDeviceId
 end
 
-
-
----------------------------------------------------------------------------------
 -- The following functions assume that detect has been run and there is a
 -- valid device description in the memory.
 
 -- ulStartAddr, ulEndAddr are offsets in the flash device.
--- ulDataAddress is the absolute address of the  buffer.
----------------------------------------------------------------------------------
+-- ulDataAddress is the absolute address of the buffer.
 
--- Writes data which has been loaded into the buffer at ulDataAddress to ulStartAddr in the flash.
+--- Writes data which has been loaded into the buffer at ulDataAddress to ulStartAddr in the flash.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param ulStartAdr
+-- @param ulDataByteSize
+-- @param ulDataAddress
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress
+-- @return ulValue == 0
 function Flasher:flash(tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress, fnCallbackMessage, fnCallbackProgress)
   local aulParameter =
   {
@@ -568,7 +643,15 @@ function Flasher:flash(tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress
   return ulValue == 0
 end
 
--- Reads data from flash to RAM
+--- Reads data from flash to RAM.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param ulFlashStartOffset
+-- @param ulFlashEndOffset
+-- @param ulBufferAddress
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress
+-- @return ulValue == 0
 function Flasher:read(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress, fnCallbackMessage, fnCallbackProgress)
   local aulParameter =
   {
@@ -582,8 +665,15 @@ function Flasher:read(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBu
   return ulValue == 0
 end
 
-
--- Compares data in flash to RAM
+--- Compares data in flash to RAM.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param ulFlashStartOffset
+-- @param ulFlashEndOffset
+-- @param ulBufferAddress
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress
+-- @return fEqual: if equal, returns true else false.
 function Flasher:verify(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress, fnCallbackMessage, fnCallbackProgress)
   local fEqual = false
   local aulParameter =
@@ -604,8 +694,15 @@ function Flasher:verify(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ul
   return fEqual
 end
 
-
--- Computes the SHA1 hash over data in the flash.
+--- Computes the SHA1 hash over data in the flash.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param ulFlashStartOffset
+-- @param ulFlashEndOffset
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress
+-- @return  ulValue == 0
+-- @return strHashBin: 
 function Flasher:hash(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, fnCallbackMessage, fnCallbackProgress)
   local strHashBin = nil
   local aulParameter =
@@ -624,11 +721,15 @@ function Flasher:hash(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, fnCa
   return ulValue == 0, strHashBin
 end
 
-
-
--- Determines the smallest interval of sectors which has to be
--- erased in order to erase ulStartAdr to ulEndAdr-1.
--- returns nil if the call fails.
+--- Determines the smallest interval of sectors which has to be erased in order to erase ulStartAdr to ulEndAdr-1.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param ulStartAdr
+-- @param ulEndAdr
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress
+-- @return ulEraseStart:             ,otherwise returns nil if the call fails.
+-- @return ulEraseEnd:             ,otherwise returns nil if the call fails.
 function Flasher:getEraseArea(tPlugin, aAttr, ulStartAdr, ulEndAdr, fnCallbackMessage, fnCallbackProgress)
   local ulEraseStart
   local ulEraseEnd
@@ -650,18 +751,25 @@ function Flasher:getEraseArea(tPlugin, aAttr, ulStartAdr, ulEndAdr, fnCallbackMe
   return ulEraseStart, ulEraseEnd
 end
 
-
-
--- get the flash size via getEraseArea
+--- Get the flash size via getEraseArea.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress
+-- @return ulEraseEnd: 
 function Flasher:getFlashSize(tPlugin, aAttr, fnCallbackMessage, fnCallbackProgress)
   local ulEraseStart, ulEraseEnd = self:getEraseArea(tPlugin, aAttr, 0, 0xffffffff, fnCallbackMessage, fnCallbackProgress)
   return ulEraseEnd
 end
 
-
-
-
--- Checks if the area from ulEraseStart to ulEraseEnd is 0xff.
+--- Checks if the area from ulEraseStart to ulEraseEnd is 0xff.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param ulEraseStart
+-- @param ulEraseEnd
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress
+-- @return fIsErased: 
 -- TODO: return nil if the call fails (e.g. because ulEraseEnd is too large)
 function Flasher:isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
   local fIsErased = false
@@ -683,11 +791,14 @@ function Flasher:isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMe
   return fIsErased
 end
 
-
-
--- Erase an area in the flash.
--- The start and end addresses must be aligned to sector boundaries as
--- set by getEraseArea.
+--- Erase an area in the flash. The start and end addresses must be aligned to sector boundaries as set by getEraseArea.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param ulEraseStart
+-- @param ulEraseEnd
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress
+-- @return ulValue == 0
 function Flasher:erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
   local aulParameter =
   {
@@ -700,13 +811,16 @@ function Flasher:erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessa
   return ulValue == 0
 end
 
-
-
--- Easy erase.
--- A combination of GetEraseArea, IsErased and Erase.
--- NOTE: This is an equivalent of the eraseArea function (see below) for
---       environments without scripting capabilities. This function exists
---       just for the sake of a complete API.
+--- Easy erase. A combination of GetEraseArea, IsErased and Erase.
+--
+-- NOTE: This is an equivalent of the eraseArea function (see below) for environments without scripting capabilities. This function exists just for the sake of a complete API.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param ulEraseStart
+-- @param ulEraseEnd
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress
+-- @return ulValue == 0  
 function Flasher:easy_erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
   local aulParameter =
   {
@@ -720,25 +834,28 @@ function Flasher:easy_erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallback
 end
 
 
-
-
------------------------------------------------------------------------------
--- erase an area:
--- check if the area is already erased and erase only if it isn't empty.
--- ulSize = 0xffffffff to erase from ulDeviceOffset to end of chip
+--- erase an area.
 --
--- OK:
--- The area is empty, no erase necessary.
--- Area erased
+-- Check if the area is already erased and erase only if it isn't empty.
+-- ulSize = 0xffffffff to erase from ulDeviceOffset to end of chip.
 --
--- Error messages:
--- getEraseArea failed!
--- Failed to check if the area is erased!
--- getEraseArea failed!
--- Failed to erase the area! (Failure during erase)
--- Failed to erase the area! (isErased check failed)
-
-
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param ulDeviceOffset
+-- @param ulSize
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress
+-- @return
+-- OK:  
+-- returns true, The area is empty, no erase necessary.  
+-- returns true, Area erased  
+--
+-- Error messages:  
+-- returns false, "getEraseArea failed!"  
+-- returns false, "Failed to check if the area is erased!"  
+-- returns false, "getEraseArea failed!"  
+-- returns false, "Failed to erase the area! (Failure during erase)"  
+-- returns false, "Failed to erase the area! (isErased check failed)"  
 function Flasher:eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMessage, fnCallbackProgress)
   fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
   local fIsErased
@@ -798,18 +915,19 @@ function Flasher:eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMes
   return true, "Area erased"
 end
 
-
-
-
------------------------------------------------------------------------------
--- flash data in chunks
-
--- Error messages:
--- Failed to flash data!
-
--- Ok:
--- Image flashed.
-
+--- Flash data in chunks.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param ulDeviceOffset
+-- @param strData
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress
+-- @return 
+-- Error messages:  
+-- returns false, "Failed to flash data!"
+--
+-- Ok:  
+-- returns true, "Image flashed."
 function Flasher:flashArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMessage, fnCallbackProgress)
   fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
   local fOk
@@ -854,17 +972,19 @@ function Flasher:flashArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMe
   return true, "Image flashed."
 end
 
-
-
------------------------------------------------------------------------------
--- verify data in chunks
-
--- Ok:
--- The data in the flash is equal to the input file.
-
--- Error messages:
--- Differences were found.
-
+--- Verify data in chunks.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param ulDeviceOffset
+-- @param strData
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress
+-- @return 
+-- Ok:  
+-- returns true, "The data in the flash is equal to the input file."
+--
+-- Error messages:  
+-- returns false, "Differences were found."
 function Flasher:verifyArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMessage, fnCallbackProgress)
   local fOk
   local ulDataByteSize = strData:len()
@@ -898,23 +1018,23 @@ function Flasher:verifyArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackM
   return true, "The data in the flash is equal to the input file."
 end
 
-
-
-
-
-
------------------------------------------------------------------------------
--- Read data in chunks
--- size = 0xffffffff to read from ulDeviceOffset to end of device
-
--- Ok:
--- Read successful.
-
--- Error messages:
--- Could not determine the flash size!
--- Error while reading from flash!
--- Error while reading from RAM buffer!
-
+--- Read data in chunks.  
+--  size = 0xffffffff to read from ulDeviceOffset to end of device.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param ulDeviceOffset
+-- @param ulDataByteSize
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress
+-- @return 
+-- Ok:  
+-- "Read successful."  
+-- returns strBin, strMsg  
+--
+-- Error messages:  
+-- nil, "Could not determine the flash size!" 
+-- nil, "Error while reading from flash!"
+-- nil, "Error while reading from RAM buffer!"
 function Flasher:readArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMessage, fnCallbackProgress)
   local fOk
   local ulSize = ulDataByteSize
@@ -965,22 +1085,22 @@ end
 
 
 
-
---------------------------------------------------------------------------
--- Calculate the SHA1 hash of an area of an area in the flash.
--- size = 0xffffffff to read from ulDeviceOffset to end of device
+--- Calculate the SHA1 hash of an area of an area in the flash.  
+-- size = 0xffffffff to read from ulDeviceOffset to end of device.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param ulDeviceOffset
+-- @param ulDataByteSize
+-- @param fnCallbackMessage
+-- @param fnCallbackProgress
+-- @return Returns the hash as a binary string or nil and an error message.  
 --
--- Returns the hash as a binary string or nil and an error message.
--- 
--- Ok:
--- "Checksum calculated."
+-- Ok:    
+-- returns strFlashHashBin, "Checksum calculated."  
 --
--- Error messages:
--- Could not determine the flash size!
--- "Error while calculating SHA1 hash"
---
---------------------------------------------------------------------------
-
+-- Error messages:  
+-- returns nil, "Could not determine the flash size!"  
+-- returns nil, "Error while calculating SHA1 hash"  
 function Flasher:hashArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMessage, fnCallbackProgress)
   local ulDeviceEndOffset
   local tLog = self.tLog
@@ -1005,23 +1125,17 @@ function Flasher:hashArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCall
 end
 
 
---------------------------------------------------------------------------
--- simple_flasher_string
--- This is a simple routine to flash the data in a string.
--- Load file from strDataFileName and write it to offset 0
--- Raise an error in case of any errors
---
---   tPlugin
---   strDataFileName
---
---   tBus
---   ulUnit
---   ulChipSelect
---
---   strFlasherPrefix
---   fnCallbackProgress
---   fnCallbackMessage
---------------------------------------------------------------------------
+--- This is a simple routine to flash the data in a string.
+-- Load file from strDataFileName and write it to offset 0.
+-- Raise an error in case of any errors.
+-- @param tPlugin plugin object with an active connection
+-- @param strData
+-- @param tBus
+-- @param ulUnit
+-- @param ulChipSelect
+-- @param strFlasherPrefix
+-- @param fnCallbackProgress
+-- @param fnCallbackMessage
 
 function Flasher:simple_flasher_string(tPlugin, strData, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)
   strFlasherPrefix = strFlasherPrefix or ""
@@ -1052,25 +1166,17 @@ function Flasher:simple_flasher_string(tPlugin, strData, tBus, ulUnit, ulChipSel
 end
 
 
-
---------------------------------------------------------------------------
--- simple_flasher
--- This is a simple routine to flash one file.
--- Load file from strDataFileName and write it to offset 0
--- Raise an error in case of any errors
---
---   tPlugin
---   strDataFileName
---
---   tBus
---   ulUnit
---   ulChipSelect
---
---   strFlasherPrefix
---   fnCallbackProgress
---   fnCallbackMessage
---------------------------------------------------------------------------
-
+--- This is a simple routine to flash one file.
+-- Load file from strDataFileName and write it to offset 0.
+-- Raise an error in case of any errors.
+-- @param tPlugin plugin object with an active connection
+-- @param strDataFileName
+-- @param tBus
+-- @param ulUnit
+-- @param ulChipSelect
+-- @param strFlasherPrefix
+-- @param fnCallbackProgress
+-- @param fnCallbackMessage
 function Flasher:simple_flasher(tPlugin, strDataFileName, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)
   -- Load the data.
   local tFile, strMsg = io.open(strDataFileName, 'rb')
@@ -1084,11 +1190,15 @@ function Flasher:simple_flasher(tPlugin, strDataFileName, tBus, ulUnit, ulChipSe
 end
 
 
-
---------------------------------------------------------------------------
--- SPI debug interface
---------------------------------------------------------------------------
-
+--- SPI debug interface.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param ulUnit
+-- @param ulChipSelect
+-- @param ulSpeed_kHz
+-- @param fnCallbackProgress
+-- @param fnCallbackMessage
+-- @return ulValue == 0
 function Flasher:sdi_init(tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, fnCallbackProgress, fnCallbackMessage)
   local ulIdleCfg = self.MSK_SQI_CFG_IDLE_IO1_OE + self.MSK_SQI_CFG_IDLE_IO1_OUT
                   + self.MSK_SQI_CFG_IDLE_IO2_OE + self.MSK_SQI_CFG_IDLE_IO2_OUT
@@ -1111,8 +1221,13 @@ function Flasher:sdi_init(tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, fnC
   return ulValue == 0
 end
 
-
-
+--- Description.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param uiActive
+-- @param fnCallbackProgress
+-- @param fnCallbackMessage
+-- @return ulValue == 0
 function Flasher:sdi_chip_select(tPlugin, aAttr, uiActive, fnCallbackProgress, fnCallbackMessage)
   local ulValue
   if tonumber(uiActive)==0 then
@@ -1132,8 +1247,13 @@ function Flasher:sdi_chip_select(tPlugin, aAttr, uiActive, fnCallbackProgress, f
   return ulValue == 0
 end
 
-
-
+--- Description.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param strData
+-- @param fnCallbackProgress
+-- @param fnCallbackMessage
+-- @return strRxData: 
 function Flasher:sdi_exchange_data(tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMessage)
   local strRxData
   local sizData = string.len(strData)
@@ -1161,7 +1281,13 @@ function Flasher:sdi_exchange_data(tPlugin, aAttr, strData, fnCallbackProgress, 
   return strRxData
 end
 
-
+--- Description.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param strData
+-- @param fnCallbackProgress
+-- @param fnCallbackMessage
+-- @return ulValue == 0
 function Flasher:sdi_send_data(tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMessage)
   local sizData = string.len(strData)
 
@@ -1184,7 +1310,13 @@ function Flasher:sdi_send_data(tPlugin, aAttr, strData, fnCallbackProgress, fnCa
   return ulValue == 0
 end
 
-
+--- Description.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param sizData
+-- @param fnCallbackProgress
+-- @param fnCallbackMessage
+-- @return strRxData:
 function Flasher:sdi_receive_data(tPlugin, aAttr, sizData, fnCallbackProgress, fnCallbackMessage)
   local strRxData
   local ulRxBuffer = aAttr.ulBufferAdr
@@ -1206,7 +1338,13 @@ function Flasher:sdi_receive_data(tPlugin, aAttr, sizData, fnCallbackProgress, f
   return strRxData
 end
 
-
+--- Description.
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr
+-- @param sizIdleBytes
+-- @param fnCallbackProgress
+-- @param fnCallbackMessage
+-- @return ulValue == 0
 function Flasher:sdi_idle_bytes(tPlugin, aAttr, sizIdleBytes, fnCallbackProgress, fnCallbackMessage)
   local aulParameter =
   {
@@ -1219,6 +1357,5 @@ function Flasher:sdi_idle_bytes(tPlugin, aAttr, sizIdleBytes, fnCallbackProgress
 
   return ulValue == 0
 end
-
 
 return Flasher
