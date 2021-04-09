@@ -6,7 +6,7 @@ description: "Flasher tool"
 baseurl: "/org.muhkuh.tools-flasher_pt" # the subpath of your site, e.g. /blog
 url: "https://muhkuh-sys.github.io/" # the base hostname & protocol for your site, e.g. http://example.com
 
-logo: "/img/muhku.png"
+logo: "/assets/images/muhku.png"
 
 search_enabled: true
 
