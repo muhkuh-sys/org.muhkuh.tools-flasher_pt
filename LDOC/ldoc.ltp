@@ -36,7 +36,7 @@
 <h1>$(ldoc.project)</h1>
 
 <ul>
-  <li><a href="https://yule1988.github.io/Implementation-of-svg/">HOME</a></li>
+  <li><a href="https://muhkuh-sys.github.io/org.muhkuh.tools-flasher_pt/">HOME</a></li>
   <li><a href="https://github.com/muhkuh-sys/org.muhkuh.tools-flasher_pt">GitHub Project</a></li>
 # if not ldoc.single and module then -- reference back to project index
   <li><a href="../$(ldoc.output).html">Documentation</a></li>
