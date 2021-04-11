@@ -1,9 +1,0 @@
-Add this at the top of LDOC_index.html after generating new LDOC file:
-
----
-title: LDOC
-parent: Documentation
-has_children: true
-nav_order: 2
-has_toc: false
----
