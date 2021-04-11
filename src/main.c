@@ -40,6 +40,8 @@
 
 #include "main.h"
 
+// #include "serial_vectors.h"
+
 #ifdef CFG_INCLUDE_SDIO
 #include "flasher_sdio.h"
 #endif
@@ -1094,8 +1096,14 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 	OPERATION_MODE_T tOpMode;
 	
 	ptAppParams = (tFlasherInputParameter*)ptTestParam->pvInitParams;
+
+	// ptAppParams->tOperationMode = OPERATION_MODE_Detect;
+
 	tOpMode = ptAppParams->tOperationMode;
 	
+	// tSerialVectors.fn.fnPut =NULL;
+	// tSerialVectors.fn.fnFlush = NULL;
+
 	/* Initialize the board. */
 	tResult = board_init();
 	if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
