@@ -16,7 +16,7 @@
             "externalConsole": false,
             "targetArchitecture": "arm",
             "MIMode": "gdb",
-            "miDebuggerPath": " /.mbs/depack/org.gnu.gcc/gcc-arm-none-eabi/gcc-arm-none-eabi-4.9.3_4/bin/arm-none-eabi-gdb",            
+            "miDebuggerPath": "/home/struber/.mbs/depack/org.gnu.gcc/gcc-arm-none-eabi/gcc-arm-none-eabi-4.9.3_4/bin/arm-none-eabi-gdb",            
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
