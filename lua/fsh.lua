@@ -3455,7 +3455,9 @@ function Shell:__list_abort(tListCmd, tListCmdsTemp)
   return true, tResult
 end
 
---- The list command activates the list mode and supports the creation and editing of a list of commands. It can process a list of commands directly through the help of the listed auxiliary commands. Particularly noteworthy is the editing of the 'hist' and 'previous' lists. The list 'hist' contains all processed past commands and the list 'previous' is the saved list of the last editing. ATTENTION: to get access to the hints of possible plugins, a connection to the device is necessary.
+--- The list command activates the list mode and supports the creation and editing of a list of commands. It can process a list of commands directly through the help of the listed auxiliary commands. Particularly noteworthy is the editing of the 'hist' and 'previous' lists. The list 'hist' contains all processed past commands and the list 'previous' is the saved list of the last editing. 
+--
+-- ATTENTION: to get access to the hints of possible plugins, a connection to the device is necessary.
 -- @within Callable-Functions of Run Function
 -- @param tCmd table of commands
 function Shell:__run_list(tCmd)
@@ -3624,12 +3626,12 @@ function Shell:__run_quit()
   return false
 end
 
---- Supporting function of __completer.
+--- Supporting function of __completer. Return a list of items that are completions for the current string by using of the completion object.
 -- @within Linenoise Functions
--- @param tCompletions
--- @param strLine given string of the line
--- @param astrWords
--- @param strMatch
+-- @param tCompletions a completions object of linenoise. All matches are added to this object.
+-- @param strLine given string of the current line
+-- @param astrWords table of words with possible matches
+-- @param strMatch matched string of a pattern
 -- @see __completer 
 function Shell:__getCompletions(tCompletions, strLine, astrWords, strMatch)
   local sizMatch = string.len(strMatch)
@@ -3651,12 +3653,13 @@ function Shell:__getCompletions(tCompletions, strLine, astrWords, strMatch)
   end
 end
 
---- Supporting function of __hints.
+--- Supporting function of __hints. Combine all matching words in one table.
 -- @within Linenoise Functions
--- @param astrWords
--- @param strMatch
--- @return strHint: string with hint information
+-- @param astrWords table of words with possible matches
+-- @param strMatch matched string of a pattern
+-- @return strHint: string with the hint information
 -- @see __hints
+-- @see __getFilenameWords
 function Shell:__getMatchingHints(astrWords, strMatch)
   local sizMatch = string.len(strMatch)
 
@@ -3682,10 +3685,10 @@ function Shell:__getMatchingHints(astrWords, strMatch)
   return strHint
 end
 
---- Complete the user input by pressing of <TAB> key.
+--- Complete the user input by pressing of <kbd>tab</kbd> key. A callback function which is called every time the user presses <kbd>tab</kbd>. The callback will return a list of items that are completions for the current string.
 -- @within Linenoise Functions
--- @param tCompletions
--- @param strLine given string of the line
+-- @param tCompletions a completions object of linenoise. All matches are added to this object.
+-- @param strLine given string of the current line
 function Shell:__completer(tCompletions, strLine)
   local lpeg = self.lpeg
 
@@ -3722,10 +3725,10 @@ function Shell:__completer(tCompletions, strLine)
   end
 end
 
---- Provide hint information on the right hand side of the prompt.
+--- Provide hint information on the right hand side of the cursor. A callback function that returns the hint information or '' if no hint is available for the text the user currently typed.
 -- @within Linenoise Functions
--- @param strLine given string of the line
--- @return strHint: string with hint information
+-- @param strLine given string of the current line
+-- @return strHint: string with the hint information
 function Shell:__hints(strLine)
   local strHint
   local sizLine = string.len(strLine)
