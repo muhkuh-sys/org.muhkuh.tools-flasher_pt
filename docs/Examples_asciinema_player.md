@@ -3,7 +3,7 @@ layout: default
 title: Examples Asciinema Player
 parent: Examples
 has_children: true
-nav_order: 6
+nav_order: 7
 has_toc: false
 ---
 # Examples of Flasher Shell
@@ -33,6 +33,10 @@ has_toc: false
 
 <script id="asciicast-406267" src="https://asciinema.org/a/406267.js" async></script>
 
-## List Command
+## List Command Example 1
 
 <script id="asciicast-406268" src="https://asciinema.org/a/406268.js" async></script>
+
+## List Command Example 2
+
+<script id="asciicast-406611" src="https://asciinema.org/a/406611.js" async></script>
