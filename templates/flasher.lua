@@ -1,12 +1,10 @@
 ----------------------
--- The FlaSHer application. A helpful tool to write, verify, read and erase data in flash.
--- @author Christoph Thelen 
+-- The flasher API. A helpful collection of functions to communicate with the netX.
+-- @author Christoph Thelen
 -- @copyright
--- @license
+-- @license GNU General Public License
 -- @release
--- @module flasher
-
-
+-- @classmod flasher
 
 --   Copyright (C) 2019 by Christoph Thelen                                --
 --   doc_bacardi@users.sourceforge.net                                     --
@@ -26,15 +24,13 @@
 --   Free Software Foundation, Inc.,                                       --
 --   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             --
 
-
 local class = require "pl.class"
----  Flasher class. 
--- @type Flasher
+
 local Flasher = class()
 
---- Initialize an instance of Flasher upon creation.
+--- Initialize a Flasher instance upon creation.
+-- @param tLog initial logger object
 function Flasher:_init(tLog)
-
   self.tLog = tLog
 
   self.bit = require "bit"
@@ -104,13 +100,14 @@ function Flasher:_init(tLog)
   self.PROGRESS_STEP_PERCENT = 10
 end
 
---- Default callback progress function. The default is to print a simple progress message to stdout.
+--- Default callback progress function. The default function prints a simple progress message to stdout.
 --   The function must accept 2 parameters:
 --    1) the number of processed bytes
 --    2) the total number of bytes
 -- @param ulCnt number of processed bytes
 -- @param ulMax total number of bytes
--- @return The function must return one boolean. A value of 'true' continues the download operation, while a value of 'false' cancels the download.
+-- @return The function returns true. A value of 'true' continues the process, while a value of 'false' cancels the process.
+-- @within Default Functions
 function Flasher:default_callback_progress(ulCnt, ulMax)
   local fPercent = math.floor(ulCnt * 100 / ulMax)
   local ulTime = os.time()
@@ -123,10 +120,12 @@ function Flasher:default_callback_progress(ulCnt, ulMax)
   return true
 end
 
-
---- Default callback message function.
--- @param a
--- @param b 
+--- Default callback message function. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param a cotains either progress bar information (ulCnt and ulMax) or a string, information of the netX.
+-- @param b dummy variable
+-- @return The function returns true. A value of 'true' continues the process, while a value of 'false' cancels the process.
+-- @within Default Functions
+-- @see default_callback_progress
 function Flasher:default_callback_message(a,b)
   if type(a)=="string" and string.len(a)>0 then
     local strCnt, strMax = string.match(a, '%% ([%x%X]+)/([%x%X]+)')
@@ -146,12 +145,12 @@ function Flasher:default_callback_message(a,b)
   return true
 end
 
---- Write an image.
+--- Write an image to a connected device via the plugin.
+-- The data is written to the address.
 -- @param tPlugin plugin object with an active connection
--- @param ulAddress 
--- @param strData 
--- @param fnCallbackProgress 
--- @return 
+-- @param ulAddress address
+-- @param strData data
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
 function Flasher:write_image(tPlugin, ulAddress, strData, fnCallbackProgress)
   --  local this = self
   fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
@@ -159,24 +158,24 @@ function Flasher:write_image(tPlugin, ulAddress, strData, fnCallbackProgress)
   --return tPlugin:write_image(ulAddress, strData, fnCallbackProgress, strData:len())
 end
 
---- Read an image.
+--- Read an image of the connected device via the plugin.
+-- The data is read at the address with a given data size.
 -- @param tPlugin plugin object with an active connection
--- @param ulAddress 
--- @param ulSize 
--- @param fnCallbackProgress 
--- @return 
+-- @param ulAddress address
+-- @param ulSize size of data block
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return read data
 function Flasher:read_image(tPlugin, ulAddress, ulSize, fnCallbackProgress)
   --  local this = self
   fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
   return tPlugin:read_image(ulAddress, ulSize, fnCallbackProgress, ulSize)
 end
 
---- Call function.
+--- Call the connected device via the plugin to execute a command.
 -- @param tPlugin plugin object with an active connection
--- @param ulExecAddress 
--- @param ulParameterAddress
--- @param fnCallbackMessage 
--- @return 
+-- @param ulExecAddress execute address
+-- @param ulParameterAddress parameter address
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
 function Flasher:call(tPlugin, ulExecAddress, ulParameterAddress, fnCallbackMessage)
   --  local this = self
   fnCallbackMessage = fnCallbackMessage or self.fnMessageDefault
@@ -187,12 +186,12 @@ end
 
 --                    Downloading the flasher
 
---- Description.
+--- Return the path of the flasher binary.
 -- Prefix must include a trailing backslash if it's a directory.
--- @param iChiptype
--- @param strPathPrefix
--- @param fDebug
--- @return 
+-- @param iChiptype chiptype
+-- @param strPathPrefix path prefix to flasher binary
+-- @param fDebug debug mode true/false
+-- @return strPath: path of the binary data
 function Flasher:get_flasher_binary_path(iChiptype, strPathPrefix, fDebug)
   local strNetxName = nil
   local strDebug = fDebug and "_debug" or ""
@@ -227,17 +226,19 @@ function Flasher:get_flasher_binary_path(iChiptype, strPathPrefix, fDebug)
   return strPath
 end
 
---- Description.
--- @param strData
--- @param ulOffset
+--- 32 bit unit - Extract information of 'strData' at offset 'ulOffset'.
+-- @param strData data
+-- @param ulOffset offset
+-- @return 32 bit value
 function Flasher:get_dword(strData, ulOffset)
   return strData:byte(ulOffset) + strData:byte(ulOffset+1)*0x00000100 + strData:byte(ulOffset+2)*0x00010000 + strData:byte(ulOffset+3)*0x01000000
 end
 
 --- Extract header information from the flasher binary.
 -- Information about code/exec/buffer addresses.
--- @param strData
+-- @param strData data
 -- @return aAttr: Returns the binary's attribute list.
+-- @see get_dword
 function Flasher:get_flasher_binary_attributes(strData)
   local aAttr = {}
   local tLog = self.tLog
@@ -264,9 +265,11 @@ end
 --- Download binary to netX. Extracts and returns the header information.
 -- Download a netx binary.
 -- @param tPlugin plugin object with an active connection
--- @param strData
--- @param fnCallbackProgress
+-- @param strData data
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
 -- @return aAttr: Returns the binary's attribute list.
+-- @see get_flasher_binary_attributes
+-- @see write_image
 function Flasher:download_netx_binary(tPlugin, strData, fnCallbackProgress)
   local aAttr = self:get_flasher_binary_attributes(strData)
   local tLog = self.tLog
@@ -279,14 +282,14 @@ end
 
 --- Download flasher.
 --
--- - Load the flasher binary according to the chip type the plugin is connected to. 
+-- - Load the flasher binary according to the chip type the plugin is connected to.
 --
 -- - Extract header information from the flasher (static information about code/exec/buffer addresses)
 --
 -- - Download the flasher to the specified address.
 --
 -- @param tPlugin plugin object with an active connection
--- @param strPrefix path to flasher binaries
+-- @param strPrefix path prefix to flasher binary
 -- @param fnCallbackProgress is a function to call while downloading the flasher.
 --   This parameter is optional. The default is to print a simple progress
 --   message to stdout.
@@ -296,6 +299,9 @@ end
 --   The function must return one boolean. A value of 'true' continues the
 --   download operation, while a value of 'false' cancels the download.
 -- @return aAttr: Returns flasher attributes (parameter address, buffer address etc.)
+-- @see get_flasher_binary_path
+-- @see get_flasher_binary_attributes
+-- @see write_image
 function Flasher:download(tPlugin, strPrefix, fnCallbackProgress)
   local iChiptype = tPlugin:GetChiptyp()
   local fDebug = false
@@ -318,9 +324,9 @@ function Flasher:download(tPlugin, strPrefix, fnCallbackProgress)
 end
 
 --- Set the buffer area (when using SDRAM as a buffer, for instance).
--- @param aAttr
--- @param ulBufferAdr
--- @param ulBufferLen
+-- @param aAttr flasher attributes
+-- @param ulBufferAdr address of buffer
+-- @param ulBufferLen buffer length
 function Flasher:set_buffer_area(aAttr, ulBufferAdr, ulBufferLen)
   aAttr.ulBufferAdr   = ulBufferAdr
   aAttr.ulBufferEnd   = ulBufferAdr + ulBufferLen
@@ -332,11 +338,10 @@ end
 
 --- Download parameters to netX.
 -- @param tPlugin plugin object with an active connection
--- @param ulAddress
--- @param aulParameters
--- @param fnCallbackProgress is a function to call while downloading the flasher.
---   This parameter is optional. The default is to print a simple progress
---   message to stdout.
+-- @param ulAddress address
+-- @param aulParameters table of paramters (e.g. operation mode, device description, startaddress, data byte size, data address)
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @see write_image
 function Flasher:set_parameterblock(tPlugin, ulAddress, aulParameters, fnCallbackProgress)
   local bit = self.bit
   local strBin = ""
@@ -346,15 +351,15 @@ function Flasher:set_parameterblock(tPlugin, ulAddress, aulParameters, fnCallbac
   self:write_image(tPlugin, ulAddress, strBin, fnCallbackProgress) 
 end
 
---- Stores parameters in netX memory, calls the flasher and returns the result value.
+--- Store parameters in netX memory, call the flasher and return the result value.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param aulParams
--- @param fnCallbackMessage
--- @param fnCallbackProgress is a function to call while downloading the flasher.
---   This parameter is optional. The default is to print a simple progress
---   message to stdout.
--- @return result value: 0 = success, 1 = failure
+-- @param aAttr flasher attributes
+-- @param aulParams table of paramters (e.g. operation mode, device description, startaddress, data byte size, data address)
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return result value: 0 = success, otherwise = failure
+-- @see set_parameterblock
+-- @see call
 function Flasher:callFlasher(tPlugin, aAttr, aulParams, fnCallbackMessage, fnCallbackProgress)
   -- fnCallbackMessage = fnCallbackMessage or self.fnMessageDefault
   -- fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
@@ -383,17 +388,16 @@ function Flasher:callFlasher(tPlugin, aAttr, aulParams, fnCallbackMessage, fnCal
   return ulValue
 end
 
-
---                  Detecting flash and getting device info
-
---- Description.
+--- Detecting flash and getting device info of the board.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param fnCallbackMessage
--- @param fnCallbackProgress is a function to call while downloading the flasher.
---   This parameter is optional. The default is to print a simple progress
---   message to stdout.
--- @return aResult: 
+-- @param aAttr flasher attributes
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return
+-- returns aResult: table with device data of the board. Each device data (table) has the following information (keys): bus, unit, cs, id, flags.
+-- returns nil if failed to get the board info, call to flasher failed
+-- @see callFlasher
+-- @see read_image
 function Flasher:getBoardInfo(tPlugin, aAttr, fnCallbackMessage, fnCallbackProgress)
   local tLog = self.tLog
   local aResult = nil
@@ -445,16 +449,21 @@ end
 
 --- Check if a device is available on tBus/ulUnit/ulChipSelect.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param tBus
--- @param ulUnit
--- @param ulChipSelect
--- @param fnCallbackMessage
--- @param fnCallbackProgress is a function to call while downloading the flasher.
---   This parameter is optional. The default is to print a simple progress
---   message to stdout.
--- @param atParameter
--- @return ulValue == 0
+-- @param aAttr flasher attributes
+-- @param tBus the bus
+-- @param ulUnit unit
+-- @param ulChipSelect CS (chip select)
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @param atParameter table of parameters:
+-- - *ulInitialSpeed*:      initial SPI speed. The default is 1000kHz (1MHz).
+-- - *ulMaximumSpeed*:      maximum SPI speed. The default is 25000kHz (25MHz).
+-- - *ulIdleCfg*:           idle configuration. The default is all lines driving 1.
+-- - *ulSpiMode*:           SPI mode. The default is 3.
+-- - *ulMmioConfiguration*: MMIO configuration. The default is 0xffffffff (no MMIO pins).
+-- - *ulAllowedBusWidths*:  bus widths. This parameter is not used yet.
+-- @return true/false depending on result value ulValue: 0 = success, otherwise = failure
+-- @see callFlasher
 function Flasher:detect(tPlugin, aAttr, tBus, ulUnit, ulChipSelect, fnCallbackMessage, fnCallbackProgress, atParameter)
   local aulParameter
   atParameter = atParameter or {}
@@ -551,9 +560,10 @@ end
 
 --- Read device descriptor after detect (debugging).
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param fnCallbackProgress
+-- @param aAttr flasher attributes
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
 -- @return strDevDesc: device description
+-- @see read_image
 function Flasher:readDeviceDescriptor(tPlugin, aAttr, fnCallbackProgress)
   -- check the device description
   local strDevDesc
@@ -586,11 +596,12 @@ function Flasher:readDeviceDescriptor(tPlugin, aAttr, fnCallbackProgress)
   return strDevDesc
 end
 
---- Description.
+--- Determine the device ID.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param fnCallbackProgress
+-- @param aAttr flasher attributes
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
 -- @return strDeviceId: device ID
+-- @see readDeviceDescriptor
 function Flasher:getDeviceId(tPlugin, aAttr, fnCallbackProgress)
   -- Read the flash device descriptor.
   local strDeviceDescriptor = self:readDeviceDescriptor(tPlugin, aAttr, fnCallbackProgress)
@@ -623,15 +634,16 @@ end
 -- ulStartAddr, ulEndAddr are offsets in the flash device.
 -- ulDataAddress is the absolute address of the buffer.
 
---- Writes data which has been loaded into the buffer at ulDataAddress to ulStartAddr in the flash.
+--- Write data which has been loaded into the buffer at ulDataAddress to ulStartAddr in the flash.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param ulStartAdr
--- @param ulDataByteSize
--- @param ulDataAddress
--- @param fnCallbackMessage
--- @param fnCallbackProgress
--- @return ulValue == 0
+-- @param aAttr flasher attributes
+-- @param ulStartAdr startaddress / device offset
+-- @param ulDataByteSize data size / chunk size
+-- @param ulDataAddress  data address / absolute address of the buffer
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return true/false depending on result value ulValue: 0 = success, otherwise = failure
+-- @see callFlasher
 function Flasher:flash(tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress, fnCallbackMessage, fnCallbackProgress)
   local aulParameter =
   {
@@ -645,15 +657,16 @@ function Flasher:flash(tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress
   return ulValue == 0
 end
 
---- Reads data from flash to RAM.
+--- Read data from flash to RAM.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param ulFlashStartOffset
--- @param ulFlashEndOffset
--- @param ulBufferAddress
--- @param fnCallbackMessage
--- @param fnCallbackProgress
--- @return ulValue == 0
+-- @param aAttr flasher attributes
+-- @param ulFlashStartOffset startaddress / device offset
+-- @param ulFlashEndOffset endaddress / device offset + chunk size (data size)
+-- @param ulBufferAddress buffer address
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return true/false depending on result value ulValue: 0 = success, otherwise = failure
+-- @see callFlasher
 function Flasher:read(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress, fnCallbackMessage, fnCallbackProgress)
   local aulParameter =
   {
@@ -667,15 +680,16 @@ function Flasher:read(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBu
   return ulValue == 0
 end
 
---- Compares data in flash to RAM.
+--- Compare data in flash to RAM.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param ulFlashStartOffset
--- @param ulFlashEndOffset
--- @param ulBufferAddress
--- @param fnCallbackMessage
--- @param fnCallbackProgress
+-- @param aAttr flasher attributes
+-- @param ulFlashStartOffset startaddress / device offset
+-- @param ulFlashEndOffset endaddress / device offset + chunk size (data size)
+-- @param ulBufferAddress buffer address
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
 -- @return fEqual: if equal, returns true else false.
+-- @see callFlasher
 function Flasher:verify(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress, fnCallbackMessage, fnCallbackProgress)
   local fEqual = false
   local aulParameter =
@@ -696,15 +710,17 @@ function Flasher:verify(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ul
   return fEqual
 end
 
---- Computes the SHA1 hash over data in the flash.
+--- Compute the SHA1 hash of data in the flash.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param ulFlashStartOffset
--- @param ulFlashEndOffset
--- @param fnCallbackMessage
--- @param fnCallbackProgress
--- @return  ulValue == 0
--- @return strHashBin: 
+-- @param aAttr flasher attributes
+-- @param ulFlashStartOffset startaddress / device offset
+-- @param ulFlashEndOffset endaddress / device offset + chunk size (data size)
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return true/false depending on result value ulValue: 0 = success, otherwise = failure
+-- @return strHashBin: binary SHA1 hash
+-- @see callFlasher
+-- @see read_image
 function Flasher:hash(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, fnCallbackMessage, fnCallbackProgress)
   local strHashBin = nil
   local aulParameter =
@@ -723,15 +739,16 @@ function Flasher:hash(tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, fnCa
   return ulValue == 0, strHashBin
 end
 
---- Determines the smallest interval of sectors which has to be erased in order to erase ulStartAdr to ulEndAdr-1.
+--- Determine the smallest interval [ulEraseStart, ulEraseEnd] of sectors which has to be erased in order to erase ulStartAdr to ulEndAdr-1.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param ulStartAdr
--- @param ulEndAdr
--- @param fnCallbackMessage
--- @param fnCallbackProgress
--- @return ulEraseStart:             ,otherwise returns nil if the call fails.
--- @return ulEraseEnd:             ,otherwise returns nil if the call fails.
+-- @param aAttr flasher attributes
+-- @param ulStartAdr startaddress
+-- @param ulEndAdr endaddress / device offset + data size (block length)
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return ulEraseStart: erase startaddress, otherwise returns nil if the call fails.
+-- @return ulEraseEnd: erase endaddress, otherwise returns nil if the call fails.
+-- @see callFlasher
 function Flasher:getEraseArea(tPlugin, aAttr, ulStartAdr, ulEndAdr, fnCallbackMessage, fnCallbackProgress)
   local ulEraseStart
   local ulEraseEnd
@@ -755,26 +772,33 @@ end
 
 --- Get the flash size via getEraseArea.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param fnCallbackMessage
--- @param fnCallbackProgress
--- @return ulEraseEnd: 
+-- @param aAttr flasher attributes
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return ulEraseEnd: flash size
+-- @see getEraseArea
 function Flasher:getFlashSize(tPlugin, aAttr, fnCallbackMessage, fnCallbackProgress)
   local ulEraseStart, ulEraseEnd = self:getEraseArea(tPlugin, aAttr, 0, 0xffffffff, fnCallbackMessage, fnCallbackProgress)
   return ulEraseEnd
 end
 
---- Checks if the area from ulEraseStart to ulEraseEnd is 0xff.
--- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param ulEraseStart
--- @param ulEraseEnd
--- @param fnCallbackMessage
--- @param fnCallbackProgress
--- @return fIsErased: 
+--- Check if the area from ulEraseStart to ulEraseEnd is 0xff.
 -- TODO: return nil if the call fails (e.g. because ulEraseEnd is too large)
+-- @param tPlugin plugin object with an active connection
+-- @param aAttr flasher attributes
+-- @param ulEraseStart erase startaddress
+-- @param ulEraseEnd erase endaddress
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return fIsErased:
+-- returns true if the area is empty
+-- returns false if the area is not empty
+-- returns nil if call to flasher fails
+-- @see callFlasher
+-- @see getEraseArea
 function Flasher:isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
   local fIsErased = false
+  local tLog = self.tLog
 
   local aulParameter =
   {
@@ -799,12 +823,14 @@ end
 
 --- Erase an area in the flash. The start and end addresses must be aligned to sector boundaries as set by getEraseArea.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param ulEraseStart
--- @param ulEraseEnd
--- @param fnCallbackMessage
--- @param fnCallbackProgress
--- @return ulValue == 0
+-- @param aAttr flasher attributes
+-- @param ulEraseStart erase startaddress
+-- @param ulEraseEnd erase endaddress
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return true/false depending on result value ulValue: 0 = success, otherwise = failure
+-- @see callFlasher
+-- @see getEraseArea
 function Flasher:erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
   local aulParameter =
   {
@@ -821,12 +847,14 @@ end
 --
 -- NOTE: This is an equivalent of the eraseArea function (see below) for environments without scripting capabilities. This function exists just for the sake of a complete API.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param ulEraseStart
--- @param ulEraseEnd
--- @param fnCallbackMessage
--- @param fnCallbackProgress
--- @return ulValue == 0  
+-- @param aAttr flasher attributes
+-- @param ulEraseStart erase startaddress
+-- @param ulEraseEnd erase endaddress
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return true/false depending on result value ulValue: 0 = success, otherwise = failure
+-- @see callFlasher
+-- @see getEraseArea
 function Flasher:easy_erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)
   local aulParameter =
   {
@@ -839,29 +867,31 @@ function Flasher:easy_erase(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallback
   return ulValue == 0
 end
 
-
---- erase an area.
+--- Erase an area.
 --
 -- Check if the area is already erased and erase only if it isn't empty.
 -- ulSize = 0xffffffff to erase from ulDeviceOffset to end of chip.
 --
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param ulDeviceOffset
--- @param ulSize
--- @param fnCallbackMessage
--- @param fnCallbackProgress
+-- @param aAttr flasher attributes
+-- @param ulDeviceOffset startaddress / device offset
+-- @param ulSize data size / length of data block
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
 -- @return
--- OK:  
--- returns true, The area is empty, no erase necessary.  
--- returns true, Area erased  
+-- OK:
+-- returns true, The area is empty, no erase necessary.
+-- returns true, Area erased
 --
--- Error messages:  
--- returns false, "getEraseArea failed!"  
--- returns false, "Failed to check if the area is erased!"  
--- returns false, "getEraseArea failed!"  
--- returns false, "Failed to erase the area! (Failure during erase)"  
--- returns false, "Failed to erase the area! (isErased check failed)"  
+-- Error messages:
+-- returns false, "getEraseArea failed!"
+-- returns false, "Failed to check if the area is erased!"
+-- returns false, "getEraseArea failed!"
+-- returns false, "Failed to erase the area! (Failure during erase)"
+-- returns false, "Failed to erase the area! (isErased check failed)"
+-- @see getEraseArea
+-- @see isErased
+-- @see erase
 function Flasher:eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMessage, fnCallbackProgress)
   -- fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
   local fIsErased
@@ -889,6 +919,7 @@ function Flasher:eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMes
   tLog.debug("Checking if the area is already empty")
   fIsErased = self:isErased(tPlugin, aAttr, ulDeviceOffset, ulEndOffset, fnCallbackMessage, fnCallbackProgress)
 
+  -- isErased: returns nil if call fails
   if fIsErased==nil then
     return false, "Failed to check if the area is erased!"
   elseif fIsErased==true then
@@ -923,17 +954,19 @@ end
 
 --- Flash data in chunks.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param ulDeviceOffset
--- @param strData
--- @param fnCallbackMessage
--- @param fnCallbackProgress
--- @return 
--- Error messages:  
+-- @param aAttr flasher attributes
+-- @param ulDeviceOffset device offset  / startaddress
+-- @param strData data
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return
+-- Error messages:
 -- returns false, "Failed to flash data!"
 --
--- Ok:  
+-- Ok:
 -- returns true, "Image flashed."
+-- @see write_image
+-- @see flash
 function Flasher:flashArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMessage, fnCallbackProgress)
   -- fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
   local fOk
@@ -980,17 +1013,19 @@ end
 
 --- Verify data in chunks.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param ulDeviceOffset
--- @param strData
--- @param fnCallbackMessage
--- @param fnCallbackProgress
--- @return 
--- Ok:  
+-- @param aAttr flasher attributes
+-- @param ulDeviceOffset device offset  / startaddress
+-- @param strData data
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return
+-- Ok:
 -- returns true, "The data in the flash is equal to the input file."
 --
--- Error messages:  
+-- Error messages:
 -- returns false, "Differences were found."
+-- @see write_image
+-- @see verify
 function Flasher:verifyArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMessage, fnCallbackProgress)
   local fOk
   local ulDataByteSize = strData:len()
@@ -1024,23 +1059,29 @@ function Flasher:verifyArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackM
   return true, "The data in the flash is equal to the input file."
 end
 
---- Read data in chunks.  
---  size = 0xffffffff to read from ulDeviceOffset to end of device.
+--- Read data in chunks.
+-- A data size (ulDataByteSize) of 0xffffffff implies to read from ulDeviceOffset to end of device.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param ulDeviceOffset
--- @param ulDataByteSize
--- @param fnCallbackMessage
--- @param fnCallbackProgress
--- @return 
--- Ok:  
--- "Read successful."  
--- returns strBin, strMsg  
+-- @param aAttr flasher attributes
+-- @param ulDeviceOffset device offset  / startaddress
+-- @param ulDataByteSize data size / length of data block
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return
+-- strBin: data
+-- strMsg: message of number of bytes read or error message
 --
--- Error messages:  
--- nil, "Could not determine the flash size!" 
+-- Ok:
+-- "Read successful."
+-- returns strBin, strMsg
+--
+-- Error messages:
+-- nil, "Could not determine the flash size!"
 -- nil, "Error while reading from flash!"
 -- nil, "Error while reading from RAM buffer!"
+-- @see getFlashSize
+-- @see read
+-- @see read_image
 function Flasher:readArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMessage, fnCallbackProgress)
   local fOk
   local ulSize = ulDataByteSize
@@ -1083,30 +1124,30 @@ function Flasher:readArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCall
     ulDeviceOffset = ulDeviceOffset + ulChunkSize
     ulSize = ulSize - ulChunkSize
   end
-
+  tLog.debug("Read successful.")
   local strBin = table.concat(astrChunks)
   local strMsg = string.format("%d bytes read.", ulDataByteSize)
   return strBin, strMsg
 end
 
-
-
---- Calculate the SHA1 hash of an area of an area in the flash.  
--- size = 0xffffffff to read from ulDeviceOffset to end of device.
+--- Determine the SHA1 hash of an area in the flash.
+-- A data size (ulDataByteSize) of 0xffffffff implies to read from ulDeviceOffset to end of device.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param ulDeviceOffset
--- @param ulDataByteSize
--- @param fnCallbackMessage
--- @param fnCallbackProgress
--- @return Returns the hash as a binary string or nil and an error message.  
+-- @param aAttr flasher attributes
+-- @param ulDeviceOffset device offset  / startaddress
+-- @param ulDataByteSize data size / length of data block
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @return Returns the hash as a binary string (strFlashHashBin) or nil and an error message.
 --
--- Ok:    
--- returns strFlashHashBin, "Checksum calculated."  
+-- Ok:
+-- returns strFlashHashBin, "Checksum calculated."
 --
--- Error messages:  
--- returns nil, "Could not determine the flash size!"  
--- returns nil, "Error while calculating SHA1 hash"  
+-- Error messages:
+-- returns nil, "Could not determine the flash size!"
+-- returns nil, "Error while calculating SHA1 hash"
+-- @see getFlashSize
+-- @see hash
 function Flasher:hashArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMessage, fnCallbackProgress)
   local ulDeviceEndOffset
   local tLog = self.tLog
@@ -1130,19 +1171,22 @@ function Flasher:hashArea(tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCall
   end
 end
 
-
 --- This is a simple routine to flash the data in a string.
 -- Load file from strDataFileName and write it to offset 0.
 -- Raise an error in case of any errors.
 -- @param tPlugin plugin object with an active connection
--- @param strData
--- @param tBus
--- @param ulUnit
--- @param ulChipSelect
--- @param strFlasherPrefix
--- @param fnCallbackProgress
--- @param fnCallbackMessage
-
+-- @param strData data
+-- @param tBus the bus
+-- @param ulUnit unit
+-- @param ulChipSelect CS (chip select)
+-- @param strFlasherPrefix path prefix to flasher binary
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @within Simple Flasher Functions
+-- @see download
+-- @see detect
+-- @see eraseArea
+-- @see flashArea
 function Flasher:simple_flasher_string(tPlugin, strData, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)
   strFlasherPrefix = strFlasherPrefix or ""
 
@@ -1171,18 +1215,19 @@ function Flasher:simple_flasher_string(tPlugin, strData, tBus, ulUnit, ulChipSel
   tLog.debug("*** Flashing ok ***")
 end
 
-
 --- This is a simple routine to flash one file.
 -- Load file from strDataFileName and write it to offset 0.
 -- Raise an error in case of any errors.
 -- @param tPlugin plugin object with an active connection
 -- @param strDataFileName
--- @param tBus
--- @param ulUnit
--- @param ulChipSelect
--- @param strFlasherPrefix
--- @param fnCallbackProgress
--- @param fnCallbackMessage
+-- @param tBus the bus
+-- @param ulUnit unit
+-- @param ulChipSelect CS (chip select)
+-- @param strFlasherPrefix path prefix to flasher binary
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @within Simple Flasher Functions
+-- @see simple_flasher_string
 function Flasher:simple_flasher(tPlugin, strDataFileName, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)
   -- Load the data.
   local tFile, strMsg = io.open(strDataFileName, 'rb')
@@ -1195,16 +1240,17 @@ function Flasher:simple_flasher(tPlugin, strDataFileName, tBus, ulUnit, ulChipSe
   self:simple_flasher_string(tPlugin, strData, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)
 end
 
-
 --- SPI debug interface.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param ulUnit
--- @param ulChipSelect
--- @param ulSpeed_kHz
--- @param fnCallbackProgress
--- @param fnCallbackMessage
--- @return ulValue == 0
+-- @param aAttr flasher attributes
+-- @param ulUnit unit
+-- @param ulChipSelect chip select
+-- @param ulSpeed_kHz initial and maximum allowed speed in kHz
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @return true/false depending on result value ulValue: 0 = success, otherwise = failure
+-- @within SDI Functions
+-- @see callFlasher
 function Flasher:sdi_init(tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, fnCallbackProgress, fnCallbackMessage)
   local ulIdleCfg = self.MSK_SQI_CFG_IDLE_IO1_OE + self.MSK_SQI_CFG_IDLE_IO1_OUT
                   + self.MSK_SQI_CFG_IDLE_IO2_OE + self.MSK_SQI_CFG_IDLE_IO2_OUT
@@ -1227,13 +1273,15 @@ function Flasher:sdi_init(tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, fnC
   return ulValue == 0
 end
 
---- Description.
+--- SDI chip selection.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param uiActive
--- @param fnCallbackProgress
--- @param fnCallbackMessage
--- @return ulValue == 0
+-- @param aAttr flasher attributes
+-- @param uiActive active chip select (CS): uiActive = 0 -> CS = 0, else CS = 1
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @return true/false depending on result value ulValue: 0 = success, otherwise = failure
+-- @within SDI Functions
+-- @see callFlasher
 function Flasher:sdi_chip_select(tPlugin, aAttr, uiActive, fnCallbackProgress, fnCallbackMessage)
   local ulValue
   if tonumber(uiActive)==0 then
@@ -1253,13 +1301,17 @@ function Flasher:sdi_chip_select(tPlugin, aAttr, uiActive, fnCallbackProgress, f
   return ulValue == 0
 end
 
---- Description.
+--- Exchange data.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param strData
--- @param fnCallbackProgress
--- @param fnCallbackMessage
--- @return strRxData: 
+-- @param aAttr flasher attributes
+-- @param strData data
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @return strRxData: received data
+-- @within SDI Functions
+-- @see write_image
+-- @see callFlasher
+-- @see read_image
 function Flasher:sdi_exchange_data(tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMessage)
   local strRxData
   local sizData = string.len(strData)
@@ -1287,13 +1339,16 @@ function Flasher:sdi_exchange_data(tPlugin, aAttr, strData, fnCallbackProgress, 
   return strRxData
 end
 
---- Description.
+--- Send data.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param strData
--- @param fnCallbackProgress
--- @param fnCallbackMessage
--- @return ulValue == 0
+-- @param aAttr flasher attributes
+-- @param strData data
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @return true/false depending on result value ulValue: 0 = success, otherwise = failure
+-- @within SDI Functions
+-- @see write_image
+-- @see callFlasher
 function Flasher:sdi_send_data(tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMessage)
   local sizData = string.len(strData)
 
@@ -1316,13 +1371,16 @@ function Flasher:sdi_send_data(tPlugin, aAttr, strData, fnCallbackProgress, fnCa
   return ulValue == 0
 end
 
---- Description.
+--- Receive data.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param sizData
--- @param fnCallbackProgress
--- @param fnCallbackMessage
--- @return strRxData:
+-- @param aAttr flasher attributes
+-- @param sizData size of data
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @return strRxData: received data
+-- @within SDI Functions
+-- @see callFlasher
+-- @see read_image
 function Flasher:sdi_receive_data(tPlugin, aAttr, sizData, fnCallbackProgress, fnCallbackMessage)
   local strRxData
   local ulRxBuffer = aAttr.ulBufferAdr
@@ -1344,13 +1402,15 @@ function Flasher:sdi_receive_data(tPlugin, aAttr, sizData, fnCallbackProgress, f
   return strRxData
 end
 
---- Description.
+--- Send idle bytes.
 -- @param tPlugin plugin object with an active connection
--- @param aAttr
--- @param sizIdleBytes
--- @param fnCallbackProgress
--- @param fnCallbackMessage
--- @return ulValue == 0
+-- @param aAttr flasher attributes
+-- @param sizIdleBytes size of idle bytes
+-- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+-- @param fnCallbackMessage message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+-- @return true/false depending on result value ulValue: 0 = success, otherwise = failure
+-- @within SDI Functions
+-- @see callFlasher
 function Flasher:sdi_idle_bytes(tPlugin, aAttr, sizIdleBytes, fnCallbackProgress, fnCallbackMessage)
   local aulParameter =
   {
