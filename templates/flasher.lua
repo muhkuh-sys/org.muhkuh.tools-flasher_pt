@@ -153,9 +153,10 @@ end
 -- @param fnCallbackProgress 
 -- @return 
 function Flasher:write_image(tPlugin, ulAddress, strData, fnCallbackProgress)
-  local this = self
+  --  local this = self
   fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
-  return tPlugin:write_image(ulAddress, strData, fnCallbackProgress, strData:len())
+  tPlugin:write_image(ulAddress, strData, fnCallbackProgress, strData:len())
+  --return tPlugin:write_image(ulAddress, strData, fnCallbackProgress, strData:len())
 end
 
 --- Read an image.
@@ -165,7 +166,7 @@ end
 -- @param fnCallbackProgress 
 -- @return 
 function Flasher:read_image(tPlugin, ulAddress, ulSize, fnCallbackProgress)
-  local this = self
+  --  local this = self
   fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
   return tPlugin:read_image(ulAddress, ulSize, fnCallbackProgress, ulSize)
 end
@@ -177,9 +178,10 @@ end
 -- @param fnCallbackMessage 
 -- @return 
 function Flasher:call(tPlugin, ulExecAddress, ulParameterAddress, fnCallbackMessage)
-  local this = self
+  --  local this = self
   fnCallbackMessage = fnCallbackMessage or self.fnMessageDefault
-  return tPlugin:call(ulExecAddress, ulParameterAddress, fnCallbackMessage, 2)
+  tPlugin:call(ulExecAddress, ulParameterAddress, fnCallbackMessage, 2)
+  --  return tPlugin:call(ulExecAddress, ulParameterAddress, fnCallbackMessage, 2)
 end
 
 
