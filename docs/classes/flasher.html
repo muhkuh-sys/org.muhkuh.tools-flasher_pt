@@ -1,0 +1,1938 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>FlaSH, the flasher shell docs</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>FlaSH, the flasher shell</h1>
+
+<ul>
+  <li><a href="https://muhkuh-sys.github.io/org.muhkuh.tools-flasher_pt/">HOME</a></li>
+  <li><a href="https://github.com/muhkuh-sys/org.muhkuh.tools-flasher_pt">GitHub Project</a></li>
+  <li><a href="../index_LDOC.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Default_Functions">Default Functions</a></li>
+<li><a href="#Simple_Flasher_Functions">Simple Flasher Functions</a></li>
+<li><a href="#SDI_Functions">SDI Functions</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/progressbar.html">progressbar</a></li>
+  <li><strong>flasher</strong></li>
+</ul>
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/fsh.html">fsh</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>flasher</code></h1>
+<p>The flasher API.</p>
+<p> A helpful collection of functions to communicate with the netX.</p>
+    <h3>Info:</h3>
+    <ul>
+        <li><strong>Copyright</strong>:
+
+</li>
+        <li><strong>Release</strong>:
+
+</li>
+        <li><strong>License</strong>: GNU General Public License</li>
+        <li><strong>Author</strong>: Christoph Thelen</li>
+    </ul>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:_init">Flasher:_init (tLog)</a></td>
+	<td class="summary">Initialize a Flasher instance upon creation.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:write_image">Flasher:write_image (tPlugin, ulAddress, strData, fnCallbackProgress)</a></td>
+	<td class="summary">Write an image to a connected device via the plugin.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:read_image">Flasher:read_image (tPlugin, ulAddress, ulSize, fnCallbackProgress)</a></td>
+	<td class="summary">Read an image of the connected device via the plugin.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:call">Flasher:call (tPlugin, ulExecAddress, ulParameterAddress, fnCallbackMessage)</a></td>
+	<td class="summary">Call the connected device via the plugin to execute a command.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:get_flasher_binary_path">Flasher:get_flasher_binary_path (iChiptype, strPathPrefix, fDebug)</a></td>
+	<td class="summary">Return the path of the flasher binary.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:get_dword">Flasher:get_dword (strData, ulOffset)</a></td>
+	<td class="summary">32 bit unit - Extract information of 'strData' at offset 'ulOffset'.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:get_flasher_binary_attributes">Flasher:get_flasher_binary_attributes (strData)</a></td>
+	<td class="summary">Extract header information from the flasher binary.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:download_netx_binary">Flasher:download_netx_binary (tPlugin, strData, fnCallbackProgress)</a></td>
+	<td class="summary">Download binary to netX.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:download">Flasher:download (tPlugin, strPrefix, fnCallbackProgress)</a></td>
+	<td class="summary">Download flasher.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:set_buffer_area">Flasher:set_buffer_area (aAttr, ulBufferAdr, ulBufferLen)</a></td>
+	<td class="summary">Set the buffer area (when using SDRAM as a buffer, for instance).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:set_parameterblock">Flasher:set_parameterblock (tPlugin, ulAddress, aulParameters, fnCallbackProgress)</a></td>
+	<td class="summary">Download parameters to netX.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:callFlasher">Flasher:callFlasher (tPlugin, aAttr, aulParams, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Store parameters in netX memory, call the flasher and return the result value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:getBoardInfo">Flasher:getBoardInfo (tPlugin, aAttr, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Detecting flash and getting device info of the board.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:detect">Flasher:detect (tPlugin, aAttr, tBus, ulUnit, ulChipSelect, fnCallbackMessage, fnCallbackProgress, atParameter)</a></td>
+	<td class="summary">Check if a device is available on tBus/ulUnit/ulChipSelect.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:readDeviceDescriptor">Flasher:readDeviceDescriptor (tPlugin, aAttr, fnCallbackProgress)</a></td>
+	<td class="summary">Read device descriptor after detect (debugging).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:getDeviceId">Flasher:getDeviceId (tPlugin, aAttr, fnCallbackProgress)</a></td>
+	<td class="summary">Determine the device ID.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:flash">Flasher:flash (tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Write data which has been loaded into the buffer at ulDataAddress to ulStartAddr in the flash.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:read">Flasher:read (tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Read data from flash to RAM.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:verify">Flasher:verify (tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Compare data in flash to RAM.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:hash">Flasher:hash (tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Compute the SHA1 hash of data in the flash.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:getEraseArea">Flasher:getEraseArea (tPlugin, aAttr, ulStartAdr, ulEndAdr, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Determine the smallest interval [ulEraseStart, ulEraseEnd] of sectors which has to be erased in order to erase ulStartAdr to ulEndAdr-1.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:getFlashSize">Flasher:getFlashSize (tPlugin, aAttr, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Get the flash size via getEraseArea.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:isErased">Flasher:isErased (tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Check if the area from ulEraseStart to ulEraseEnd is 0xff.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:erase">Flasher:erase (tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Erase an area in the flash.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:easy_erase">Flasher:easy_erase (tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Easy erase.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:eraseArea">Flasher:eraseArea (tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Erase an area.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:flashArea">Flasher:flashArea (tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Flash data in chunks.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:verifyArea">Flasher:verifyArea (tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Verify data in chunks.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:readArea">Flasher:readArea (tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Read data in chunks.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:hashArea">Flasher:hashArea (tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMessage, fnCallbackProgress)</a></td>
+	<td class="summary">Determine the SHA1 hash of an area in the flash.</td>
+	</tr>
+</table>
+<h2><a href="#Default_Functions">Default Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:default_callback_progress">Flasher:default_callback_progress (ulCnt, ulMax)</a></td>
+	<td class="summary">Default callback progress function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:default_callback_message">Flasher:default_callback_message (a, b)</a></td>
+	<td class="summary">Default callback message function.</td>
+	</tr>
+</table>
+<h2><a href="#Simple_Flasher_Functions">Simple Flasher Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:simple_flasher_string">Flasher:simple_flasher_string (tPlugin, strData, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)</a></td>
+	<td class="summary">This is a simple routine to flash the data in a string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:simple_flasher">Flasher:simple_flasher (tPlugin, strDataFileName, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)</a></td>
+	<td class="summary">This is a simple routine to flash one file.</td>
+	</tr>
+</table>
+<h2><a href="#SDI_Functions">SDI Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:sdi_init">Flasher:sdi_init (tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, fnCallbackProgress, fnCallbackMessage)</a></td>
+	<td class="summary">SPI debug interface.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:sdi_chip_select">Flasher:sdi_chip_select (tPlugin, aAttr, uiActive, fnCallbackProgress, fnCallbackMessage)</a></td>
+	<td class="summary">SDI chip selection.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:sdi_exchange_data">Flasher:sdi_exchange_data (tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMessage)</a></td>
+	<td class="summary">Exchange data.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:sdi_send_data">Flasher:sdi_send_data (tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMessage)</a></td>
+	<td class="summary">Send data.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:sdi_receive_data">Flasher:sdi_receive_data (tPlugin, aAttr, sizData, fnCallbackProgress, fnCallbackMessage)</a></td>
+	<td class="summary">Receive data.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Flasher:sdi_idle_bytes">Flasher:sdi_idle_bytes (tPlugin, aAttr, sizIdleBytes, fnCallbackProgress, fnCallbackMessage)</a></td>
+	<td class="summary">Send idle bytes.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+    Methods
+    <dl class="function">
+    <dt>
+    <a name = "Flasher:_init"></a>
+    <strong>Flasher:_init (tLog)</strong>
+    </dt>
+    <dd>
+    Initialize a Flasher instance upon creation.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tLog</span>
+         initial logger object
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:write_image"></a>
+    <strong>Flasher:write_image (tPlugin, ulAddress, strData, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Write an image to a connected device via the plugin.
+ The data is written to the address.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">ulAddress</span>
+         address
+        </li>
+        <li><span class="parameter">strData</span>
+         data
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:read_image"></a>
+    <strong>Flasher:read_image (tPlugin, ulAddress, ulSize, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Read an image of the connected device via the plugin.
+ The data is read at the address with a given data size.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">ulAddress</span>
+         address
+        </li>
+        <li><span class="parameter">ulSize</span>
+         size of data block
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        read data
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:call"></a>
+    <strong>Flasher:call (tPlugin, ulExecAddress, ulParameterAddress, fnCallbackMessage)</strong>
+    </dt>
+    <dd>
+    Call the connected device via the plugin to execute a command.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">ulExecAddress</span>
+         execute address
+        </li>
+        <li><span class="parameter">ulParameterAddress</span>
+         parameter address
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:get_flasher_binary_path"></a>
+    <strong>Flasher:get_flasher_binary_path (iChiptype, strPathPrefix, fDebug)</strong>
+    </dt>
+    <dd>
+    Return the path of the flasher binary.
+ Prefix must include a trailing backslash if it's a directory.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">iChiptype</span>
+         chiptype
+        </li>
+        <li><span class="parameter">strPathPrefix</span>
+         path prefix to flasher binary
+        </li>
+        <li><span class="parameter">fDebug</span>
+         debug mode true/false
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        strPath: path of the binary data
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:get_dword"></a>
+    <strong>Flasher:get_dword (strData, ulOffset)</strong>
+    </dt>
+    <dd>
+    32 bit unit - Extract information of 'strData' at offset 'ulOffset'.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">strData</span>
+         data
+        </li>
+        <li><span class="parameter">ulOffset</span>
+         offset
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        32 bit value
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:get_flasher_binary_attributes"></a>
+    <strong>Flasher:get_flasher_binary_attributes (strData)</strong>
+    </dt>
+    <dd>
+    Extract header information from the flasher binary.
+ Information about code/exec/buffer addresses.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">strData</span>
+         data
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        aAttr: Returns the binary's attribute list.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:get_dword">get_dword</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:download_netx_binary"></a>
+    <strong>Flasher:download_netx_binary (tPlugin, strData, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Download binary to netX.  Extracts and returns the header information.
+ Download a netx binary.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">strData</span>
+         data
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        aAttr: Returns the binary's attribute list.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:get_flasher_binary_attributes">get_flasher_binary_attributes</a></li>
+         <li><a href="../classes/flasher.html#Flasher:write_image">write_image</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:download"></a>
+    <strong>Flasher:download (tPlugin, strPrefix, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+
+<p>Download flasher. </p>
+
+<ul>
+    <li><p>Load the flasher binary according to the chip type the plugin is connected to.</p></li>
+    <li><p>Extract header information from the flasher (static information about code/exec/buffer addresses)</p></li>
+    <li><p>Download the flasher to the specified address.</p></li>
+</ul>
+
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">strPrefix</span>
+         path prefix to flasher binary
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         is a function to call while downloading the flasher.
+   This parameter is optional. The default is to print a simple progress
+   message to stdout.
+   The function must accept 2 parameters:</p>
+<pre><code>1) the number of processed bytes
+2) the total number of bytes
+</code></pre>
+<p>   The function must return one boolean. A value of 'true' continues the
+   download operation, while a value of 'false' cancels the download.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        aAttr: Returns flasher attributes (parameter address, buffer address etc.)
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:get_flasher_binary_path">get_flasher_binary_path</a></li>
+         <li><a href="../classes/flasher.html#Flasher:get_flasher_binary_attributes">get_flasher_binary_attributes</a></li>
+         <li><a href="../classes/flasher.html#Flasher:write_image">write_image</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:set_buffer_area"></a>
+    <strong>Flasher:set_buffer_area (aAttr, ulBufferAdr, ulBufferLen)</strong>
+    </dt>
+    <dd>
+    Set the buffer area (when using SDRAM as a buffer, for instance).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulBufferAdr</span>
+         address of buffer
+        </li>
+        <li><span class="parameter">ulBufferLen</span>
+         buffer length
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:set_parameterblock"></a>
+    <strong>Flasher:set_parameterblock (tPlugin, ulAddress, aulParameters, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Download parameters to netX.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">ulAddress</span>
+         address
+        </li>
+        <li><span class="parameter">aulParameters</span>
+         table of paramters (e.g. operation mode, device description, startaddress, data byte size, data address)
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:write_image">write_image</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:callFlasher"></a>
+    <strong>Flasher:callFlasher (tPlugin, aAttr, aulParams, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Store parameters in netX memory, call the flasher and return the result value.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">aulParams</span>
+         table of paramters (e.g. operation mode, device description, startaddress, data byte size, data address)
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        result value: 0 = success, otherwise = failure
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:set_parameterblock">set_parameterblock</a></li>
+         <li><a href="../classes/flasher.html#Flasher:call">call</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:getBoardInfo"></a>
+    <strong>Flasher:getBoardInfo (tPlugin, aAttr, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Detecting flash and getting device info of the board.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         returns aResult: table with device data of the board. Each device data (table) has the following information (keys): bus, unit, cs, id, flags.
+ returns nil if failed to get the board info, call to flasher failed
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a></li>
+         <li><a href="../classes/flasher.html#Flasher:read_image">read_image</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:detect"></a>
+    <strong>Flasher:detect (tPlugin, aAttr, tBus, ulUnit, ulChipSelect, fnCallbackMessage, fnCallbackProgress, atParameter)</strong>
+    </dt>
+    <dd>
+    Check if a device is available on tBus/ulUnit/ulChipSelect.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">tBus</span>
+         the bus
+        </li>
+        <li><span class="parameter">ulUnit</span>
+         unit
+        </li>
+        <li><span class="parameter">ulChipSelect</span>
+         CS (chip select)
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+        <li><span class="parameter">atParameter</span>
+         table of parameters:
+ - <em>ulInitialSpeed</em>:      initial SPI speed. The default is 1000kHz (1MHz).
+ - <em>ulMaximumSpeed</em>:      maximum SPI speed. The default is 25000kHz (25MHz).
+ - <em>ulIdleCfg</em>:           idle configuration. The default is all lines driving 1.
+ - <em>ulSpiMode</em>:           SPI mode. The default is 3.
+ - <em>ulMmioConfiguration</em>: MMIO configuration. The default is 0xffffffff (no MMIO pins).
+ - <em>ulAllowedBusWidths</em>:  bus widths. This parameter is not used yet.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true/false depending on result value ulValue: 0 = success, otherwise = failure
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:readDeviceDescriptor"></a>
+    <strong>Flasher:readDeviceDescriptor (tPlugin, aAttr, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Read device descriptor after detect (debugging).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        strDevDesc: device description
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:read_image">read_image</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:getDeviceId"></a>
+    <strong>Flasher:getDeviceId (tPlugin, aAttr, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Determine the device ID.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        strDeviceId: device ID
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:readDeviceDescriptor">readDeviceDescriptor</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:flash"></a>
+    <strong>Flasher:flash (tPlugin, aAttr, ulStartAdr, ulDataByteSize, ulDataAddress, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Write data which has been loaded into the buffer at ulDataAddress to ulStartAddr in the flash.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulStartAdr</span>
+         startaddress / device offset
+        </li>
+        <li><span class="parameter">ulDataByteSize</span>
+         data size / chunk size
+        </li>
+        <li><span class="parameter">ulDataAddress</span>
+          data address / absolute address of the buffer
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true/false depending on result value ulValue: 0 = success, otherwise = failure
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:read"></a>
+    <strong>Flasher:read (tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Read data from flash to RAM.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulFlashStartOffset</span>
+         startaddress / device offset
+        </li>
+        <li><span class="parameter">ulFlashEndOffset</span>
+         endaddress / device offset + chunk size (data size)
+        </li>
+        <li><span class="parameter">ulBufferAddress</span>
+         buffer address
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true/false depending on result value ulValue: 0 = success, otherwise = failure
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:verify"></a>
+    <strong>Flasher:verify (tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, ulBufferAddress, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Compare data in flash to RAM.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulFlashStartOffset</span>
+         startaddress / device offset
+        </li>
+        <li><span class="parameter">ulFlashEndOffset</span>
+         endaddress / device offset + chunk size (data size)
+        </li>
+        <li><span class="parameter">ulBufferAddress</span>
+         buffer address
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        fEqual: if equal, returns true else false.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:hash"></a>
+    <strong>Flasher:hash (tPlugin, aAttr, ulFlashStartOffset, ulFlashEndOffset, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Compute the SHA1 hash of data in the flash.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulFlashStartOffset</span>
+         startaddress / device offset
+        </li>
+        <li><span class="parameter">ulFlashEndOffset</span>
+         endaddress / device offset + chunk size (data size)
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        true/false depending on result value ulValue: 0 = success, otherwise = failure</li>
+        <li>
+        strHashBin: binary SHA1 hash</li>
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a></li>
+         <li><a href="../classes/flasher.html#Flasher:read_image">read_image</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:getEraseArea"></a>
+    <strong>Flasher:getEraseArea (tPlugin, aAttr, ulStartAdr, ulEndAdr, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Determine the smallest interval [ulEraseStart, ulEraseEnd] of sectors which has to be erased in order to erase ulStartAdr to ulEndAdr-1.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulStartAdr</span>
+         startaddress
+        </li>
+        <li><span class="parameter">ulEndAdr</span>
+         endaddress / device offset + data size (block length)
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        ulEraseStart: erase startaddress, otherwise returns nil if the call fails.</li>
+        <li>
+        ulEraseEnd: erase endaddress, otherwise returns nil if the call fails.</li>
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:getFlashSize"></a>
+    <strong>Flasher:getFlashSize (tPlugin, aAttr, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Get the flash size via getEraseArea.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        ulEraseEnd: flash size
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:getEraseArea">getEraseArea</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:isErased"></a>
+    <strong>Flasher:isErased (tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Check if the area from ulEraseStart to ulEraseEnd is 0xff.
+ TODO: return nil if the call fails (e.g. because ulEraseEnd is too large)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulEraseStart</span>
+         erase startaddress
+        </li>
+        <li><span class="parameter">ulEraseEnd</span>
+         erase endaddress
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         fIsErased:
+ returns true if the area is empty
+ returns false if the area is not empty
+ returns nil if call to flasher fails
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a></li>
+         <li><a href="../classes/flasher.html#Flasher:getEraseArea">getEraseArea</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:erase"></a>
+    <strong>Flasher:erase (tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Erase an area in the flash.  The start and end addresses must be aligned to sector boundaries as set by getEraseArea.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulEraseStart</span>
+         erase startaddress
+        </li>
+        <li><span class="parameter">ulEraseEnd</span>
+         erase endaddress
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true/false depending on result value ulValue: 0 = success, otherwise = failure
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a></li>
+         <li><a href="../classes/flasher.html#Flasher:getEraseArea">getEraseArea</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:easy_erase"></a>
+    <strong>Flasher:easy_erase (tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Easy erase.  A combination of GetEraseArea, IsErased and Erase.</p>
+
+<p> NOTE: This is an equivalent of the eraseArea function (see below) for environments without scripting capabilities. This function exists just for the sake of a complete API.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulEraseStart</span>
+         erase startaddress
+        </li>
+        <li><span class="parameter">ulEraseEnd</span>
+         erase endaddress
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true/false depending on result value ulValue: 0 = success, otherwise = failure
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a></li>
+         <li><a href="../classes/flasher.html#Flasher:getEraseArea">getEraseArea</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:eraseArea"></a>
+    <strong>Flasher:eraseArea (tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Erase an area. </p>
+
+<p> Check if the area is already erased and erase only if it isn't empty.
+ ulSize = 0xffffffff to erase from ulDeviceOffset to end of chip.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulDeviceOffset</span>
+         startaddress / device offset
+        </li>
+        <li><span class="parameter">ulSize</span>
+         data size / length of data block
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         OK:
+ returns true, The area is empty, no erase necessary.
+ returns true, Area erased</p>
+
+<p> Error messages:
+ returns false, "getEraseArea failed!"
+ returns false, "Failed to check if the area is erased!"
+ returns false, "getEraseArea failed!"
+ returns false, "Failed to erase the area! (Failure during erase)"
+ returns false, "Failed to erase the area! (isErased check failed)"
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:getEraseArea">getEraseArea</a></li>
+         <li><a href="../classes/flasher.html#Flasher:isErased">isErased</a></li>
+         <li><a href="../classes/flasher.html#Flasher:erase">erase</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:flashArea"></a>
+    <strong>Flasher:flashArea (tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Flash data in chunks.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulDeviceOffset</span>
+         device offset  / startaddress
+        </li>
+        <li><span class="parameter">strData</span>
+         data
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         Error messages:
+ returns false, "Failed to flash data!"</p>
+
+<p> Ok:
+ returns true, "Image flashed."
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:write_image">write_image</a></li>
+         <li><a href="../classes/flasher.html#Flasher:flash">flash</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:verifyArea"></a>
+    <strong>Flasher:verifyArea (tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Verify data in chunks.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulDeviceOffset</span>
+         device offset  / startaddress
+        </li>
+        <li><span class="parameter">strData</span>
+         data
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         Ok:
+ returns true, "The data in the flash is equal to the input file."</p>
+
+<p> Error messages:
+ returns false, "Differences were found."
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:write_image">write_image</a></li>
+         <li><a href="../classes/flasher.html#Flasher:verify">verify</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:readArea"></a>
+    <strong>Flasher:readArea (tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Read data in chunks.
+ A data size (ulDataByteSize) of 0xffffffff implies to read from ulDeviceOffset to end of device.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulDeviceOffset</span>
+         device offset  / startaddress
+        </li>
+        <li><span class="parameter">ulDataByteSize</span>
+         data size / length of data block
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         strBin: data
+ strMsg: message of number of bytes read or error message</p>
+
+<p> Ok:
+ "Read successful."
+ returns strBin, strMsg</p>
+
+<p> Error messages:
+ nil, "Could not determine the flash size!"
+ nil, "Error while reading from flash!"
+ nil, "Error while reading from RAM buffer!"
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:getFlashSize">getFlashSize</a></li>
+         <li><a href="../classes/flasher.html#Flasher:read">read</a></li>
+         <li><a href="../classes/flasher.html#Flasher:read_image">read_image</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:hashArea"></a>
+    <strong>Flasher:hashArea (tPlugin, aAttr, ulDeviceOffset, ulDataByteSize, fnCallbackMessage, fnCallbackProgress)</strong>
+    </dt>
+    <dd>
+    Determine the SHA1 hash of an area in the flash.
+ A data size (ulDataByteSize) of 0xffffffff implies to read from ulDeviceOffset to end of device.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulDeviceOffset</span>
+         device offset  / startaddress
+        </li>
+        <li><span class="parameter">ulDataByteSize</span>
+         data size / length of data block
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+         Returns the hash as a binary string (strFlashHashBin) or nil and an error message.</p>
+
+<p> Ok:
+ returns strFlashHashBin, "Checksum calculated."</p>
+
+<p> Error messages:
+ returns nil, "Could not determine the flash size!"
+ returns nil, "Error while calculating SHA1 hash"
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:getFlashSize">getFlashSize</a></li>
+         <li><a href="../classes/flasher.html#Flasher:hash">hash</a></li>
+    </ul>
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Default_Functions"></a>Default Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Flasher:default_callback_progress"></a>
+    <strong>Flasher:default_callback_progress (ulCnt, ulMax)</strong>
+    </dt>
+    <dd>
+
+<p>Default callback progress function.  The default function prints a simple progress message to stdout.
+   The function must accept 2 parameters:</p>
+<pre><code>1) the number of processed bytes
+2) the total number of bytes
+</code></pre>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ulCnt</span>
+         number of processed bytes
+        </li>
+        <li><span class="parameter">ulMax</span>
+         total number of bytes
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        The function returns true. A value of 'true' continues the process, while a value of 'false' cancels the process.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:default_callback_message"></a>
+    <strong>Flasher:default_callback_message (a, b)</strong>
+    </dt>
+    <dd>
+    Default callback message function.  The default function prints either a simple progress message or information of the netX to stdout.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">a</span>
+         cotains either progress bar information (ulCnt and ulMax) or a string, information of the netX.
+        </li>
+        <li><span class="parameter">b</span>
+         dummy variable
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        The function returns true. A value of 'true' continues the process, while a value of 'false' cancels the process.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:default_callback_progress">default_callback_progress</a>
+    </ul>
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Simple_Flasher_Functions"></a>Simple Flasher Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Flasher:simple_flasher_string"></a>
+    <strong>Flasher:simple_flasher_string (tPlugin, strData, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)</strong>
+    </dt>
+    <dd>
+    This is a simple routine to flash the data in a string.
+ Load file from strDataFileName and write it to offset 0.
+ Raise an error in case of any errors.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">strData</span>
+         data
+        </li>
+        <li><span class="parameter">tBus</span>
+         the bus
+        </li>
+        <li><span class="parameter">ulUnit</span>
+         unit
+        </li>
+        <li><span class="parameter">ulChipSelect</span>
+         CS (chip select)
+        </li>
+        <li><span class="parameter">strFlasherPrefix</span>
+         path prefix to flasher binary
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:download">download</a></li>
+         <li><a href="../classes/flasher.html#Flasher:detect">detect</a></li>
+         <li><a href="../classes/flasher.html#Flasher:eraseArea">eraseArea</a></li>
+         <li><a href="../classes/flasher.html#Flasher:flashArea">flashArea</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:simple_flasher"></a>
+    <strong>Flasher:simple_flasher (tPlugin, strDataFileName, tBus, ulUnit, ulChipSelect, strFlasherPrefix, fnCallbackProgress, fnCallbackMessage)</strong>
+    </dt>
+    <dd>
+    This is a simple routine to flash one file.
+ Load file from strDataFileName and write it to offset 0.
+ Raise an error in case of any errors.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">strDataFileName</span>
+
+
+
+        </li>
+        <li><span class="parameter">tBus</span>
+         the bus
+        </li>
+        <li><span class="parameter">ulUnit</span>
+         unit
+        </li>
+        <li><span class="parameter">ulChipSelect</span>
+         CS (chip select)
+        </li>
+        <li><span class="parameter">strFlasherPrefix</span>
+         path prefix to flasher binary
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:simple_flasher_string">simple_flasher_string</a>
+    </ul>
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="SDI_Functions"></a>SDI Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Flasher:sdi_init"></a>
+    <strong>Flasher:sdi_init (tPlugin, aAttr, ulUnit, ulChipSelect, ulSpeed_kHz, fnCallbackProgress, fnCallbackMessage)</strong>
+    </dt>
+    <dd>
+    SPI debug interface.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">ulUnit</span>
+         unit
+        </li>
+        <li><span class="parameter">ulChipSelect</span>
+         chip select
+        </li>
+        <li><span class="parameter">ulSpeed_kHz</span>
+         initial and maximum allowed speed in kHz
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true/false depending on result value ulValue: 0 = success, otherwise = failure
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:sdi_chip_select"></a>
+    <strong>Flasher:sdi_chip_select (tPlugin, aAttr, uiActive, fnCallbackProgress, fnCallbackMessage)</strong>
+    </dt>
+    <dd>
+    SDI chip selection.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">uiActive</span>
+         active chip select (CS): uiActive = 0 -> CS = 0, else CS = 1
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true/false depending on result value ulValue: 0 = success, otherwise = failure
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:sdi_exchange_data"></a>
+    <strong>Flasher:sdi_exchange_data (tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMessage)</strong>
+    </dt>
+    <dd>
+    Exchange data.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">strData</span>
+         data
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        strRxData: received data
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:write_image">write_image</a></li>
+         <li><a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a></li>
+         <li><a href="../classes/flasher.html#Flasher:read_image">read_image</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:sdi_send_data"></a>
+    <strong>Flasher:sdi_send_data (tPlugin, aAttr, strData, fnCallbackProgress, fnCallbackMessage)</strong>
+    </dt>
+    <dd>
+    Send data.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">strData</span>
+         data
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true/false depending on result value ulValue: 0 = success, otherwise = failure
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:write_image">write_image</a></li>
+         <li><a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:sdi_receive_data"></a>
+    <strong>Flasher:sdi_receive_data (tPlugin, aAttr, sizData, fnCallbackProgress, fnCallbackMessage)</strong>
+    </dt>
+    <dd>
+    Receive data.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">sizData</span>
+         size of data
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        strRxData: received data
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a></li>
+         <li><a href="../classes/flasher.html#Flasher:read_image">read_image</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "Flasher:sdi_idle_bytes"></a>
+    <strong>Flasher:sdi_idle_bytes (tPlugin, aAttr, sizIdleBytes, fnCallbackProgress, fnCallbackMessage)</strong>
+    </dt>
+    <dd>
+    Send idle bytes.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tPlugin</span>
+         plugin object with an active connection
+        </li>
+        <li><span class="parameter">aAttr</span>
+         flasher attributes
+        </li>
+        <li><span class="parameter">sizIdleBytes</span>
+         size of idle bytes
+        </li>
+        <li><span class="parameter">fnCallbackProgress</span>
+         progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
+        </li>
+        <li><span class="parameter">fnCallbackMessage</span>
+         message callback function. This parameter is optional. The default function prints either a simple progress message or information of the netX to stdout.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true/false depending on result value ulValue: 0 = success, otherwise = failure
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/flasher.html#Flasher:callFlasher">callFlasher</a>
+    </ul>
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

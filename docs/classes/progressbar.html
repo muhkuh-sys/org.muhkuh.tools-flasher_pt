@@ -1,0 +1,319 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>FlaSH, the flasher shell docs</title>
+    <link rel="stylesheet" href="../ldoc_fixed.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>FlaSH, the flasher shell</h1>
+
+<ul>
+  <li><a href="https://muhkuh-sys.github.io/org.muhkuh.tools-flasher_pt/">HOME</a></li>
+  <li><a href="https://github.com/muhkuh-sys/org.muhkuh.tools-flasher_pt">GitHub Project</a></li>
+  <li><a href="../index_LDOC.html">Documentation</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><strong>progressbar</strong></li>
+  <li><a href="../classes/flasher.html">flasher</a></li>
+</ul>
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/fsh.html">fsh</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>progressbar</code></h1>
+<p>Support by initializing and displaying of progress bar informationen.</p>
+<p>
+
+</p>
+    <h3>Info:</h3>
+    <ul>
+        <li><strong>Copyright</strong>:
+
+</li>
+        <li><strong>Release</strong>:
+
+</li>
+        <li><strong>License</strong>:
+
+</li>
+        <li><strong>Author</strong>: Simon Truber</li>
+    </ul>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#ProgressBar:_init">ProgressBar:_init (tLog, tparam)</a></td>
+	<td class="summary">Initialize a ProgressBar instance upon creation.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ProgressBar:__UpdateParam">ProgressBar:__UpdateParam (tparam)</a></td>
+	<td class="summary">Update the table of parameters of the progress bar with default and given paramters.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ProgressBar:__getSizeProgressBar">ProgressBar:__getSizeProgressBar (ulMax)</a></td>
+	<td class="summary">Determine the size of the progress bar depending on default size of the term.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ProgressBar:__ProgressBar_callback_progress">ProgressBar:__ProgressBar_callback_progress (ulCnt, ulMax)</a></td>
+	<td class="summary">Construct and display the progress bar as callback function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ProgressBar:__ProgressBar_callback_message">ProgressBar:__ProgressBar_callback_message (a, b)</a></td>
+	<td class="summary">The callback message function of the netx - either a string or progress bar information</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#ProgressBar.default_tparam">ProgressBar.default_tparam</a></td>
+	<td class="summary">Default paramter table of the progress bar.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+    Methods
+    <dl class="function">
+    <dt>
+    <a name = "ProgressBar:_init"></a>
+    <strong>ProgressBar:_init (tLog, tparam)</strong>
+    </dt>
+    <dd>
+    Initialize a ProgressBar instance upon creation.  The default value of term size is 80 chars.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tLog</span>
+         initial logger object
+        </li>
+        <li><span class="parameter">tparam</span>
+         initial parameter table of the progress bar
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/progressbar.html#ProgressBar:__UpdateParam">__UpdateParam</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "ProgressBar:__UpdateParam"></a>
+    <strong>ProgressBar:__UpdateParam (tparam)</strong>
+    </dt>
+    <dd>
+    Update the table of parameters of the progress bar with default and given paramters.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tparam</span>
+         table of parameter of the progress bar
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the object of the progress bar with the updated parameters
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ProgressBar:__getSizeProgressBar"></a>
+    <strong>ProgressBar:__getSizeProgressBar (ulMax)</strong>
+    </dt>
+    <dd>
+    Determine the size of the progress bar depending on default size of the term.  The default size of the term is set to 80.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ulMax</span>
+         maximum value - total number of bytes
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ProgressBar:__ProgressBar_callback_progress"></a>
+    <strong>ProgressBar:__ProgressBar_callback_progress (ulCnt, ulMax)</strong>
+    </dt>
+    <dd>
+    Construct and display the progress bar as callback function.
+ Different algorithm can be used: "Simple", "SingleLine" or "UnequalByteSingleLine"</p>
+
+<p> "Simple": a total progress bar for one event.</p>
+
+<p> "SingleLine": multiple events (SL<em>Total) in one progress bar. The starting iteration is SL</em>Iteration.</p>
+
+<p> "UnequalByteSingleLine": multiple events with different known byte size (sum = totalByteSize) in one progress bar.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ulCnt</span>
+         counter value - number of processed bytes
+        </li>
+        <li><span class="parameter">ulMax</span>
+         maximum value - total number of bytes
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../classes/progressbar.html#ProgressBar:__getSizeProgressBar">__getSizeProgressBar</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "ProgressBar:__ProgressBar_callback_message"></a>
+    <strong>ProgressBar:__ProgressBar_callback_message (a, b)</strong>
+    </dt>
+    <dd>
+    The callback message function of the netx - either a string or progress bar information
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">a</span>
+         return value/string of NetX
+        </li>
+        <li><span class="parameter">b</span>
+         return value/string of NetX (dummy value)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "ProgressBar.default_tparam"></a>
+    <strong>ProgressBar.default_tparam</strong>
+    </dt>
+    <dd>
+    Default paramter table of the progress bar.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">mode</span>
+         nil or 'debug' (default: nil)
+        </li>
+        <li><span class="parameter">decimals</span>
+         decimal places percent (default: 1)
+        </li>
+        <li><span class="parameter">fill</span>
+         (default: "█")
+        </li>
+        <li><span class="parameter">prefix</span>
+         (default: "Progress:")
+        </li>
+        <li><span class="parameter">suffix</span>
+         (default: "Complete:")
+        </li>
+        <li><span class="parameter">length</span>
+         of progress bar (default: 50)
+        </li>
+        <li><span class="parameter">printEnd</span>
+         final print (default: "\n")
+        </li>
+        <li><span class="parameter">ProgressBarFinished</span>
+         (default: false)
+        </li>
+        <li><span class="parameter">printLine</span>
+         at the end of each process step (default: "")
+        </li>
+        <li><span class="parameter">ProcessAlgo</span>
+          "Simple" or "SingleLine" or "UnequalByteSingleLine" (default: "Simple")
+        </li>
+        <li><span class="parameter">totalByteSize</span>
+         for UnequalByteSingleLine algorithm (default: 1)
+        </li>
+        <li><span class="parameter">SL_Iteration</span>
+         for SingleLine algorithm (default: 1)
+        </li>
+        <li><span class="parameter">SL_Total</span>
+         for SingleLine algorithm (default: 1)
+        </li>
+        <li><span class="parameter">repeatProgress</span>
+         repeat the progress bar (default: false)
+        </li>
+        <li><span class="parameter">showTotalProgress</span>
+         total progress after prefix symbol (default: false)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
