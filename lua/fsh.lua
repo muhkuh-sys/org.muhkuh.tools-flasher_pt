@@ -2489,23 +2489,17 @@ function Shell:__run_write(tCmd)
                   ulStart,
                   strBin,
                   tProgressBars:get("netx").fnMessageProgressBar,
-                  tProgressBars:get("TotalProgress").fnProgressBar
+                  tProgressBars:get("TotalProgress").fnProgressBar -- flashArea progress bar
                 )
                 if tResult ~= true then
                   tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
-                  tProgressBars:get("TotalProgress").fnProgressBar()
+                  tProgressBars:get("TotalProgress").fnProgressBar() -- Result progress bar
                   tLog.error("Failed to write the area: " .. tostring(strMsg))
+                else
+                  tProgressBars:get("TotalProgress").fnProgressBar() -- Result progress bar
+                  local ulEndadress = ulStart + strBin:len()
+                  tLog.info("OK. Data '%s' written to [0x%08x,0x%08x[ ", strFilename, ulStart, ulEndadress)
                 end
-              end
-
-              if tResult == true then
-                tProgressBars:get("TotalProgress").fnProgressBar()
-                local ulEndadress = ulStart + strBin:len()
-                tLog.info("OK. Data '%s' written to [0x%08x,0x%08x[ ", strFilename, ulStart, ulEndadress)
-              else
-                tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
-                tProgressBars:get("TotalProgress").fnProgressBar()
-                tLog.error("Failed to write the data: %s", strMsg)
               end
             end
           end
