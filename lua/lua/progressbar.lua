@@ -1,21 +1,20 @@
 ----------------------
--- Support the display of progress information.
+-- Support by initializing and displaying of progress bar informationen.
 -- @author Simon Truber
 -- @copyright
 -- @license
 -- @release
--- @module progressbar
+-- @classmod progressbar
 
 -- Create the ProgressBar class.
 local class = require "pl.class"
 
----  ProgressBar class.
--- @type ProgressBar
 local ProgressBar = class()
 
---- Initialize an instance of ProgressBar upon creation.
+--- Initialize a ProgressBar instance upon creation. The default value of term size is 80 chars.
 -- @param tLog initial logger object
 -- @param tparam initial parameter table of the progress bar
+-- @see __UpdateParam
 function ProgressBar:_init(tLog, tparam)
     self.pl = require "pl.import_into"()
 
@@ -42,6 +41,7 @@ function ProgressBar:_init(tLog, tparam)
     -- @field SL_Total for SingleLine algorithm (default: 1)
     -- @field repeatProgress repeat the progress bar (default: false)
     -- @field showTotalProgress total progress after prefix symbol (default: false)
+    -- @table ProgressBar.default_tparam
     local default_tparam =
         self.pl.Map {
         mode = nil,
@@ -80,7 +80,7 @@ function ProgressBar:_init(tLog, tparam)
     end
 end
 
---- Update the table of parameters of the progress bar.
+--- Update the table of parameters of the progress bar with default and given paramters.
 -- @param tparam table of parameter of the progress bar
 -- @return the object of the progress bar with the updated parameters
 function ProgressBar:__UpdateParam(tparam)
@@ -92,15 +92,22 @@ function ProgressBar:__UpdateParam(tparam)
         tparam = {tparam}
     end
 
+    -- all given progress bars in tparam are saved in tparamAll with updated default paramters. 
     local tparamAll = {}
     for key, value in ipairs(tparam) do
+        -- initialize tparamAll[key] with default parameters
         tparamAll[key] = pl.Map(default_tparam)
+        -- update tparamAll[key] with given progress bars paramters in tparam[key]
         tparamAll[key]:update(value)
     end
 
     self.tparamAll = tparamAll
     self.tparam = self.tparamAll[1]
+    
+    -- starting iteration
     self.iteration = 1
+
+    -- total number of given progress bars
     self.total = #self.tparamAll
 
     -- for UnequalByteSingleLine algorithm
@@ -167,6 +174,7 @@ end
 -- "UnequalByteSingleLine": multiple events with different known byte size (sum = totalByteSize) in one progress bar.
 -- @param ulCnt counter value - number of processed bytes
 -- @param ulMax maximum value - total number of bytes
+-- @see __getSizeProgressBar
 function ProgressBar:__ProgressBar_callback_progress(ulCnt, ulMax)
     local tLog = self.tLog
     ulCnt = ulCnt or 1
@@ -311,7 +319,7 @@ end
 
 --- The callback message function of the netx - either a string or progress bar information
 -- @param a return value/string of NetX
--- @param b return value/string of NetX
+-- @param b return value/string of NetX (dummy value)
 function ProgressBar:__ProgressBar_callback_message(a, b)
     local tLog = self.tLog
 
