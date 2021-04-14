@@ -356,8 +356,8 @@ end
 --   message to stdout.
 -- @return result value: 0 = success, 1 = failure
 function Flasher:callFlasher(tPlugin, aAttr, aulParams, fnCallbackMessage, fnCallbackProgress)
-  fnCallbackMessage = fnCallbackMessage or self.fnMessageDefault
-  fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
+  -- fnCallbackMessage = fnCallbackMessage or self.fnMessageDefault
+  -- fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
 
   local tLog = self.tLog
   -- set the parameters
@@ -863,7 +863,7 @@ end
 -- returns false, "Failed to erase the area! (Failure during erase)"  
 -- returns false, "Failed to erase the area! (isErased check failed)"  
 function Flasher:eraseArea(tPlugin, aAttr, ulDeviceOffset, ulSize, fnCallbackMessage, fnCallbackProgress)
-  fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
+  -- fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
   local fIsErased
   local ulEndOffset
   local ulEraseStart,ulEraseEnd
@@ -935,7 +935,7 @@ end
 -- Ok:  
 -- returns true, "Image flashed."
 function Flasher:flashArea(tPlugin, aAttr, ulDeviceOffset, strData, fnCallbackMessage, fnCallbackProgress)
-  fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
+  -- fnCallbackProgress = fnCallbackProgress or self.fnProgressDefault
   local fOk
   local ulDataByteSize = strData:len()
   local ulDataOffset = 0
