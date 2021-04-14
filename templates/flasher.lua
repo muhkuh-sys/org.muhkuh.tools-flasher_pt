@@ -785,9 +785,13 @@ function Flasher:isErased(tPlugin, aAttr, ulEraseStart, ulEraseEnd, fnCallbackMe
   }
 
   local ulValue = self:callFlasher(tPlugin, aAttr, aulParameter, fnCallbackMessage, fnCallbackProgress)
-  if ulValue==0 then
-    ulValue = tPlugin:read_data32(aAttr.ulParameter+0x08)
-    fIsErased = (ulValue==0xff)
+
+  if ulValue == 0 then
+    ulValue = tPlugin:read_data32(aAttr.ulParameter + 0x08)
+    fIsErased = (ulValue == 0xff)
+  else -- TODO: Solution
+    tLog.debug("Failed to call the flasher")
+    return nil
   end
 
   return fIsErased
