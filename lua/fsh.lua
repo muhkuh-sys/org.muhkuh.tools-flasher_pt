@@ -1,6 +1,8 @@
 ----------------------
 -- The FlaSHer application. A helpful tool to write, verify, read and erase data in flash.
--- @author Christoph Thelen 
+--
+-- Dependencies: `progressbar`, `flasher`
+-- @author Christoph Thelen
 -- @copyright
 -- @license
 -- @release
@@ -16,7 +18,8 @@ local Shell = class()
 local debugMode_ProgressBar = false
 local debugMode = false
 
---- Initialize an instance of Shell upon creation.
+--- Initialize a Shell instance upon creation.
+-- @within Class Shell Functions
 function Shell:_init()
   local tLogWriter_consoleFilter
   if debugMode == false then
@@ -37,7 +40,7 @@ function Shell:_init()
     require "log.writer.file".new {
       log_dir = strLogDir, --   log dir
       log_name = strLogFilename, --   current log name
-      max_rows = 100000,
+      max_rows = 100000, -- max row size
       max_size = 1000000, --   max file size in bytes
       roll_count = 10 --   count files
     }
@@ -49,7 +52,7 @@ function Shell:_init()
     "trace",
     -- writer
     require "log.writer.prefix".new("[FSH] ", tLogWriter),
-    -- Formatter
+    -- formatter
     require "log.formatter.format".new()
   )
 
@@ -59,7 +62,7 @@ function Shell:_init()
     "trace",
     -- writer
     require "log.writer.prefix".new("[CALLBACK] ", tLogWriter),
-    -- Formatter
+    -- formatter
     require "log.formatter.mix".new()
   )
 
@@ -69,11 +72,11 @@ function Shell:_init()
     "trace",
     -- writer
     require "log.writer.prefix".new("[FLASHER] ", tLogWriter),
-    -- Formatter
+    -- formatter
     require "log.formatter.format".new()
   )
 
-  -- overwrite the tLog.error to overcome the problem of printing error messages at the end of Progress Bars
+  -- overwrite the tLog.error to overcome the problem of printing error messages at the end of progress bars
   local tLog_ProgressBar_error = tLog_ProgressBar.error
   tLog_ProgressBar.error = function(...)
     print()
@@ -92,6 +95,7 @@ function Shell:_init()
     tLog_error(...)
   end
 
+  -- load plugins
   for _, strPlugin in ipairs(self.astrPlugins) do
     tLog.debug('Loading plugin "%s"...', strPlugin)
     require(strPlugin)
@@ -1269,8 +1273,8 @@ function Shell:_init()
 end
 
 --- Get the path of the Netx.
--- @within Support Functions
---@return strPathNetx: the directory of the NetX
+-- @within Class Shell Support Functions
+-- @return strPathNetx: the path of the NetX
 function Shell:__getNetxPath()
   local pl = self.pl
 
@@ -1297,7 +1301,7 @@ end
 
 --- Get the folder entries.
 -- It supports the function __getFilenameWords.
--- @within Linenoise Functions
+-- @within Class Shell Linenoise Functions
 -- @param strFolder directory
 -- @param strPrintPrefix prefix of folder
 -- @param astrWords table of all words in the directory
@@ -1321,9 +1325,10 @@ function Shell:__getFolderEntries(strFolder, strPrintPrefix, astrWords)
 end
 
 --- Get all filename words of the directory.
--- @within Linenoise Functions
---@param strMatch entered directory plus unfinished filename/folder
+-- @within Class Shell Linenoise Functions
+-- @param strMatch entered directory plus unfinished filename/folder
 -- @return astrWords: table of all filename words in the directory
+-- @see __getFolderEntries
 function Shell:__getFilenameWords(strMatch)
   local pl = self.pl
   local strSep = pl.path.sep
@@ -1375,9 +1380,10 @@ function Shell:__getFilenameWords(strMatch)
   return astrWords
 end
 
--- Table of a templete function as a string. The size of a line is set to 80 chars.
--- @within Tables of fsh
--- @field text templete of the __run_help function
+--- Table of a templete function as a string. The size of a line is set to 80 chars.
+-- @field text templete function of table Shell.__atHelpTopics
+-- @table Shell.__HelpTopics_templete
+-- @within Class Shell Tables
 Shell.__HelpTopics_templete = {
   text = [[
 # local TEXT_SIZE = 80
@@ -1516,12 +1522,12 @@ The following example shows help about the read command:
       },
       {
         key = "[block]",
-        description = [[After the scan command, the connect command with one of the previous displayed plugins is necessary. To utilize the list of commands as shown by using of the help command, like read, write or erase, a connection must be established. After a successful connection with the plugin, like for example:]]
+        description = [[After the scan command, the connect command with one of the previous displayed plugins is necessary. To utilize the list of commands as shown by using of the help command, like read, write or erase, a connection must be established. After a successful connection with the device via the chosen plugin, like for example:]]
       },
       {description = "connect romloader_uart_ttyUSB0"},
       {
         key = "[block]",
-        description = "a connection with the plugin is available and the previous mentioned list of commands are possible."
+        description = "a connection with the device is available and the previous mentioned list of commands are possible."
       }
     },
     text = Shell.__HelpTopics_templete.text
@@ -1628,14 +1634,14 @@ The following example shows help about the read command:
     topic = "scan",
     name = "The scan command",
     synopsis = "scan",
-    description = "The scan command searches for devices and lists all possibilities of plugins.",
+    description = "The scan command searches for interfaces for all possible plugins.",
     text = Shell.__HelpTopics_templete.text
   },
   {
     topic = "connect",
     name = "The connect command",
     synopsis = "connect [plugin]",
-    description = "The connect command establishes a connection with the plugin.",
+    description = "The connect command establishes a connection with a device by using of a plugin.",
     options = {
       {key = "[plugin]", description = "the given plugins"}
     },
@@ -1647,7 +1653,7 @@ The following example shows help about the read command:
     topic = "disconnect",
     name = "The disconnect command",
     synopsis = "disconnect",
-    description = "The disconnect command disconnects from the plugin.",
+    description = "The disconnect command disconnects from a device.",
     text = Shell.__HelpTopics_templete.text
   },
   {
@@ -1699,7 +1705,7 @@ The following example shows help about the read command:
       {key = "exchange command", description = "exchange [position 1] [position 2]"},
       {key = "replace command", description = "replace [position]"}
     },
-    description = [[The list command activates the list mode and supports the creation and editing of a list of commands. It can process a list of commands directly through the help of the listed auxiliary commands. Particularly noteworthy is the editing of the 'hist' and 'previous' lists. The list 'hist' contains all processed past commands and the list 'previous' is the saved list of the last editing. ATTENTION: to get access to the hints of possible plugins, a connection to the device is necessary.]],
+    description = [[The list command activates the list mode and supports the creation and editing of a list of commands. It can process a list of commands directly through the help of the listed auxiliary commands. Particularly noteworthy is the editing of the 'hist' and 'previous' lists. The list 'hist' contains all processed past commands and the list 'previous' is the saved list of the last editing. ATTENTION: to get access to the hints of possible devices, a connection must be established.]],
     description_auxiliary = {
       {
         key = "end command",
@@ -1760,8 +1766,9 @@ The following example shows help about the read command:
 }
 
 --- Show the help of the given command.
--- @within Callable-Functions of Run Function
+-- @within Class Shell Callable-Functions of Run Function
 -- @param tCmd table of commands
+-- @see run
 function Shell:__run_help(tCmd)
   -- Get the topic. If no topic was specified, set the topic to the empty
   -- string - which selects the main page.
@@ -1804,12 +1811,12 @@ function Shell:__run_help(tCmd)
   return true
 end
 
---- Get the bus, unit and cs of the device.
--- @within Support Functions
+--- Get the bus, unit and CS (chip select) of the device.
+-- @within Class Shell Support Functions
 -- @param strDevice device ID
 -- @return ucBus: number of bus
 -- @return ucUnit: number of unit
--- @return ucCS: number of CS (ChipSelect)
+-- @return ucCS: number of CS (chip select)
 function Shell:__getBusUnitCs(strDevice)
   local lpeg = self.lpeg
   local tLog = self.tLog
@@ -1862,12 +1869,12 @@ function Shell:__getBusUnitCs(strDevice)
   return ucBus, ucUnit, ucCS
 end
 
---- Determine the startaddress and length of data.
--- In addition, it verifies whether the values of startaddress, length and endadress are within the range of the device
--- @within Support Functions
+--- Determine the startaddress and length of data block.
+-- In addition, it verifies whether the values of startaddress, length and endadress are within the range of the device.
+-- @within Class Shell Support Functions
 -- @param tCmd table of commands
 -- @return ulStart: startaddress
--- @return ulLength: length of data
+-- @return ulLength: length of data block
 function Shell:__getRange(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -1878,6 +1885,8 @@ function Shell:__getRange(tCmd)
   local tLog = self.tLog
   local pl = self.pl
   local tLog_ProgressBar = self.tLog_ProgressBar
+
+  -- initialize progress bars of netX and getRange
   local tProgressBars =
     pl.Map {
     netx = require "progressbar"(
@@ -1961,10 +1970,10 @@ function Shell:__getRange(tCmd)
 end
 
 --- Switch to a new device or stay with the current one.
--- @within Support Functions
+-- @within Class Shell Support Functions
 -- @param ucBus number of bus
 -- @param ucUnit number of unit
--- @param ucCS number of CS (ChipSelect)
+-- @param ucCS number of CS (chip select)
 -- @return tResult: true, or false if not connected or failed to detect a device
 function Shell:__switchToDevice(ucBus, ucUnit, ucCS)
   local tFlasher = self.tFlasher
@@ -1974,6 +1983,8 @@ function Shell:__switchToDevice(ucBus, ucUnit, ucCS)
   local tResult
   local pl = self.pl
   local tLog_ProgressBar = self.tLog_ProgressBar
+
+  -- initialize progress bars of netX and switchToDevice
   local tProgressBars =
     pl.Map {
     netx = require "progressbar"(
@@ -2022,8 +2033,12 @@ function Shell:__switchToDevice(ucBus, ucUnit, ucCS)
 end
 
 --- Read the data of the device at the specified address into the stated file.
--- @within Callable-Functions of Run Function
+-- @within Class Shell Callable-Functions of Run Function
 -- @param tCmd table of commands
+-- @see run
+-- @see __getBusUnitCs
+-- @see __switchToDevice
+-- @see __getRange
 function Shell:__run_read(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -2031,6 +2046,8 @@ function Shell:__run_read(tCmd)
   local pl = self.pl
   local tLog = self.tLog
   local tLog_ProgressBar = self.tLog_ProgressBar
+
+  -- initialize progress bars of netX and TotalProgress
   local tProgressBars =
     pl.Map {
     netx = require "progressbar"(
@@ -2081,7 +2098,7 @@ function Shell:__run_read(tCmd)
     )
   }
 
-  tProgressBars:get("TotalProgress").fnProgressBar()
+  tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (0/3)
 
   if tPlugin == nil or aAttr == nil then
     print()
@@ -2092,13 +2109,13 @@ function Shell:__run_read(tCmd)
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
     if ucBus ~= nil then
       tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
-      tProgressBars:get("TotalProgress").fnProgressBar()
+      tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (1/3)
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
-        tProgressBars:get("TotalProgress").fnProgressBar()
+        tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (2/3)
         local ulStart, ulLength = self:__getRange(tCmd)
         if ulStart ~= nil and ulLength ~= nil then
-          tProgressBars:get("TotalProgress").fnProgressBar()
+          tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (3/3)
           local ulEnd = ulStart + ulLength
           tLog.debug("Reading [0x%08x,0x%08x[ .", ulStart, ulEnd)
 
@@ -2135,9 +2152,8 @@ function Shell:__run_read(tCmd)
             return 2 * ultotal + ultotal_offset
           end
 
+          -- set the number of SL_total
           tProgressBars:get("TotalProgress").tparam.SL_Total = SL_Total()
-
-          -- tProgressBars:get("readArea").tparam.totalByteSize = ulLength
 
           local strBin, strMsg =
             tFlasher:readArea(
@@ -2146,26 +2162,26 @@ function Shell:__run_read(tCmd)
             ulStart,
             ulLength,
             tProgressBars:get("netx").fnMessageProgressBar,
-            tProgressBars:get("TotalProgress").fnProgressBar
+            tProgressBars:get("TotalProgress").fnProgressBar -- readArea progress bar
           )
 
           if strBin == nil then
             tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
-            tProgressBars:get("TotalProgress").fnProgressBar()
+            tProgressBars:get("TotalProgress").fnProgressBar() -- result progress bar
             tLog.error("Failed to read: " .. tostring(strMsg))
           else
-            tProgressBars:get("TotalProgress").fnProgressBar()
+            tProgressBars:get("TotalProgress").fnProgressBar() -- result progress bar
 
-            tProgressBars:get("TotalProgress").fnProgressBar()
+            tProgressBars:get("TotalProgress").fnProgressBar() -- WriteData progress bar (0/1)
             local strFilename = pl.path.expanduser(tCmd.filename)
             tResult, strMsg = pl.utils.writefile(strFilename, strBin, true)
-            tProgressBars:get("TotalProgress").fnProgressBar()
+            tProgressBars:get("TotalProgress").fnProgressBar() -- WriteData progress bar (0/1)
             if tResult == true then
-              tProgressBars:get("TotalProgress").fnProgressBar()
+              tProgressBars:get("TotalProgress").fnProgressBar() -- result progress bar
               tLog.info("OK. Data [0x%08x,0x%08x[ written to the file '%s'", ulStart, ulEnd, strFilename)
             else
               tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
-              tProgressBars:get("TotalProgress").fnProgressBar()
+              tProgressBars:get("TotalProgress").fnProgressBar() -- result progress bar
               tLog.error('Failed to write the data to the file "%s": %s', strFilename, strMsg)
             end
           end
@@ -2178,8 +2194,12 @@ function Shell:__run_read(tCmd)
 end
 
 --- Verify whether the data of the stated file is written in the device at the given startaddress.
--- @within Callable-Functions of Run Function
+-- @within Class Shell Callable-Functions of Run Function
 -- @param tCmd table of commands
+-- @see run
+-- @see __getBusUnitCs
+-- @see __switchToDevice
+-- @see __getRange
 function Shell:__run_verify(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -2187,6 +2207,8 @@ function Shell:__run_verify(tCmd)
   local pl = self.pl
   local tLog = self.tLog
   local tLog_ProgressBar = self.tLog_ProgressBar
+
+  -- initialize progress bars of netX and TotalProgress
   local tProgressBars =
     pl.Map {
     netx = require "progressbar"(
@@ -2232,7 +2254,7 @@ function Shell:__run_verify(tCmd)
     )
   }
 
-  tProgressBars:get("TotalProgress").fnProgressBar()
+  tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (0/3)
 
   if tPlugin == nil or aAttr == nil then
     print()
@@ -2243,31 +2265,31 @@ function Shell:__run_verify(tCmd)
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
     if ucBus ~= nil then
       tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
-      tProgressBars:get("TotalProgress").fnProgressBar()
+      tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (1/3)
 
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
-        tProgressBars:get("TotalProgress").fnProgressBar()
+        tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (2/3)
 
         local ulStart = self:__getRange(tCmd)
         if ulStart ~= nil then
-          tProgressBars:get("TotalProgress").fnProgressBar()
+          tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (3/3)
 
-          tProgressBars:get("TotalProgress").fnProgressBar()
+          tProgressBars:get("TotalProgress").fnProgressBar() -- LoadData progress bar (0/2)
           local strFilename = pl.path.expanduser(tCmd.filename)
           if pl.path.exists(strFilename) == false then
             tLog.error('The file "%s" does not exist.', strFilename)
           elseif pl.path.isfile(strFilename) ~= true then
             tLog.error('The path "%s" is not a file.', strFilename)
           else
-            tProgressBars:get("TotalProgress").fnProgressBar()
+            tProgressBars:get("TotalProgress").fnProgressBar() -- LoadData progress bar (1/2)
             tLog.debug('Verify "%s" at offset 0x%08x...', strFilename, ulStart)
 
             local strBin, strMsg = pl.utils.readfile(strFilename, true)
             if strBin == nil then
               tLog.error('Failed to read "%s" : ', strFilename, tostring(strMsg))
             else
-              tProgressBars:get("TotalProgress").fnProgressBar()
+              tProgressBars:get("TotalProgress").fnProgressBar() -- LoadData progress bar (2/2)
 
               -- simulate verifyArea to calculate total of progress bar
               local SL_Total = function()
@@ -2286,6 +2308,7 @@ function Shell:__run_verify(tCmd)
                 return 2 * ultotal
               end
 
+              -- set the number of SL_total
               tProgressBars:get("TotalProgress").tparam.SL_Total = SL_Total()
 
               -- Erase the area.
@@ -2296,10 +2319,10 @@ function Shell:__run_verify(tCmd)
                 ulStart,
                 strBin,
                 tProgressBars:get("netx").fnMessageProgressBar,
-                tProgressBars:get("TotalProgress").fnProgressBar
+                tProgressBars:get("TotalProgress").fnProgressBar -- verifyArea progress bar
               )
               if tResult == true then
-                tProgressBars:get("TotalProgress").fnProgressBar()
+                tProgressBars:get("TotalProgress").fnProgressBar() -- Result progress bar
                 tLog.info(
                   'Verify OK. The data in the flash at offset 0x%08x is equals to the file "%s".',
                   ulStart,
@@ -2307,7 +2330,7 @@ function Shell:__run_verify(tCmd)
                 )
               else
                 tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
-                tProgressBars:get("TotalProgress").fnProgressBar()
+                tProgressBars:get("TotalProgress").fnProgressBar() -- Result progress bar
                 tLog.error(
                   'Verify error. The flash contents at offset 0x%08x differ from the file "%s".',
                   ulStart,
@@ -2325,8 +2348,12 @@ function Shell:__run_verify(tCmd)
 end
 
 --- Write data of the stated file into the device at the specified startaddress.
--- @within Callable-Functions of Run Function
+-- @within Class Shell Callable-Functions of Run Function
 -- @param tCmd table of commands
+-- @see run
+-- @see __getBusUnitCs
+-- @see __switchToDevice
+-- @see __getRange
 function Shell:__run_write(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -2334,6 +2361,8 @@ function Shell:__run_write(tCmd)
   local pl = self.pl
   local tLog = self.tLog
   local tLog_ProgressBar = self.tLog_ProgressBar
+
+  -- initialize progress bars of netX and TotalProgress
   local tProgressBars =
     pl.Map {
     netx = require "progressbar"(
@@ -2393,7 +2422,7 @@ function Shell:__run_write(tCmd)
     )
   }
 
-  tProgressBars:get("TotalProgress").fnProgressBar()
+  tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (0/3)
 
   if tPlugin == nil or aAttr == nil then
     print()
@@ -2404,31 +2433,31 @@ function Shell:__run_write(tCmd)
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
     if ucBus ~= nil then
       tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
-      tProgressBars:get("TotalProgress").fnProgressBar()
+      tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (1/3)
 
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
-        tProgressBars:get("TotalProgress").fnProgressBar()
+        tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (2/3)
 
         local ulStart = self:__getRange(tCmd)
         if ulStart ~= nil then
-          tProgressBars:get("TotalProgress").fnProgressBar()
+          tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (3/3)
 
-          tProgressBars:get("TotalProgress").fnProgressBar()
+          tProgressBars:get("TotalProgress").fnProgressBar() -- LoadData progress bar (0/2)
           local strFilename = pl.path.expanduser(tCmd.filename)
           if pl.path.exists(strFilename) == false then
             tLog.error('The file "%s" does not exist.', strFilename)
           elseif pl.path.isfile(strFilename) ~= true then
             tLog.error('The path "%s" is not a file.', strFilename)
           else
-            tProgressBars:get("TotalProgress").fnProgressBar()
+            tProgressBars:get("TotalProgress").fnProgressBar() -- LoadData progress bar (1/2)
             tLog.debug('Writing "%s" to offset 0x%08x...', strFilename, ulStart)
 
             local strBin, strMsg = pl.utils.readfile(strFilename, true)
             if strBin == nil then
               tLog.error('Failed to read "%s" : ', strFilename, tostring(strMsg))
             else
-              tProgressBars:get("TotalProgress").fnProgressBar()
+              tProgressBars:get("TotalProgress").fnProgressBar() -- LoadData progress bar (2/2)
               -- Get the size of the data in bytes.
               local sizBin = string.len(strBin)
 
@@ -2440,22 +2469,23 @@ function Shell:__run_write(tCmd)
                 ulStart,
                 sizBin,
                 tProgressBars:get("netx").fnMessageProgressBar,
-                tProgressBars:get("TotalProgress").fnProgressBar
+                tProgressBars:get("TotalProgress").fnProgressBar -- eraseArea progress bar
               )
 
+              -- ends the progress bar of eraseArea if not finished yet
               tProgressBars:get("TotalProgress").tparam.printLine = ""
               tProgressBars:get("TotalProgress").tparam.printEnd = "\n"
               while tProgressBars:get("TotalProgress").tparam.ProgressBarFinished == false and
                 tProgressBars:get("TotalProgress").iteration == 3 do
-                tProgressBars:get("TotalProgress").fnProgressBar()
+                tProgressBars:get("TotalProgress").fnProgressBar() -- eraseArea progress bar
               end
 
               if tResult ~= true then
                 tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
-                tProgressBars:get("TotalProgress").fnProgressBar()
+                tProgressBars:get("TotalProgress").fnProgressBar() -- Result progress bar
                 tLog.error("Failed to erase the area: " .. tostring(strMsg))
               else
-                tProgressBars:get("TotalProgress").fnProgressBar()
+                tProgressBars:get("TotalProgress").fnProgressBar() -- Result progress bar
 
                 -- simulate flashArea to calculate total of the progress bar
                 local SL_Total = function()
@@ -2479,6 +2509,7 @@ function Shell:__run_write(tCmd)
                   return 2 * ultotal
                 end
 
+                -- set the number of SL_total
                 tProgressBars:get("TotalProgress").tparam.SL_Total = SL_Total()
 
                 -- Flash the data. This includes a verify.
@@ -2512,8 +2543,12 @@ function Shell:__run_write(tCmd)
 end
 
 --- Delete the data of the device at the specified address.
--- @within Callable-Functions of Run Function
+-- @within Class Shell Callable-Functions of Run Function
 -- @param tCmd table of commands
+-- @see run
+-- @see __getBusUnitCs
+-- @see __switchToDevice
+-- @see __getRange
 function Shell:__run_erase(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -2521,6 +2556,8 @@ function Shell:__run_erase(tCmd)
   local tLog = self.tLog
   local pl = self.pl
   local tLog_ProgressBar = self.tLog_ProgressBar
+
+  -- initialize progress bars of netX and TotalProgress
   local tProgressBars =
     pl.Map {
     netx = require "progressbar"(
@@ -2557,7 +2594,7 @@ function Shell:__run_erase(tCmd)
     )
   }
 
-  tProgressBars:get("TotalProgress").fnProgressBar()
+  tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (0/3)
 
   if tPlugin == nil or aAttr == nil then
     print()
@@ -2568,13 +2605,13 @@ function Shell:__run_erase(tCmd)
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
     if ucBus ~= nil then
       tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
-      tProgressBars:get("TotalProgress").fnProgressBar()
+      tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (1/3)
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
-        tProgressBars:get("TotalProgress").fnProgressBar()
+        tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (2/3)
         local ulStart, ulLength = self:__getRange(tCmd)
         if ulStart ~= nil and ulLength ~= nil then
-          tProgressBars:get("TotalProgress").fnProgressBar()
+          tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (3/3)
           -- Erase the area.
           local strMsg
           tResult, strMsg =
@@ -2584,22 +2621,22 @@ function Shell:__run_erase(tCmd)
             ulStart,
             ulLength,
             tProgressBars:get("netx").fnMessageProgressBar,
-            tProgressBars:get("TotalProgress").fnProgressBar
+            tProgressBars:get("TotalProgress").fnProgressBar -- eraseArea progress bar
           )
 
           tProgressBars:get("TotalProgress").tparam.printLine = ""
           tProgressBars:get("TotalProgress").tparam.printEnd = "\n"
           while tProgressBars:get("TotalProgress").tparam.ProgressBarFinished == false and
             tProgressBars:get("TotalProgress").iteration == 2 do
-            tProgressBars:get("TotalProgress").fnProgressBar()
+            tProgressBars:get("TotalProgress").fnProgressBar() -- eraseArea progress bar
           end
 
           if tResult == true then
-            tProgressBars:get("TotalProgress").fnProgressBar()
+            tProgressBars:get("TotalProgress").fnProgressBar() -- Result progress bar
             tLog.info("OK. The area [0x%08x,0x%08x[ is erased", ulStart, ulStart + ulLength)
           else
             tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
-            tProgressBars:get("TotalProgress").fnProgressBar()
+            tProgressBars:get("TotalProgress").fnProgressBar() -- Result progress bar
             tLog.error("Failed to erase the data: %s", strMsg)
           end
         end
@@ -2611,8 +2648,12 @@ function Shell:__run_erase(tCmd)
 end
 
 --- Verify whether the data is deleted of the device at the specified address.
--- @within Callable-Functions of Run Function
+-- @within Class Shell Callable-Functions of Run Function
 -- @param tCmd table of commands
+-- @see run
+-- @see __getBusUnitCs
+-- @see __switchToDevice
+-- @see __getRange
 function Shell:__run_iserased(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -2620,6 +2661,8 @@ function Shell:__run_iserased(tCmd)
   local tLog = self.tLog
   local pl = self.pl
   local tLog_ProgressBar = self.tLog_ProgressBar
+
+  -- initialize progress bars of netX and TotalProgress
   local tProgressBars =
     pl.Map {
     netx = require "progressbar"(
@@ -2646,7 +2689,7 @@ function Shell:__run_iserased(tCmd)
     )
   }
 
-  tProgressBars:get("TotalProgress").fnProgressBar()
+  tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (0/3)
 
   if tPlugin == nil or aAttr == nil then
     print()
@@ -2657,31 +2700,33 @@ function Shell:__run_iserased(tCmd)
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
     if ucBus ~= nil then
       tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
-      tProgressBars:get("TotalProgress").fnProgressBar()
+      tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (1/3)
 
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
-        tProgressBars:get("TotalProgress").fnProgressBar()
+        tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (2/3)
         local ulStart, ulLength = self:__getRange(tCmd)
         if ulStart ~= nil and ulLength ~= nil then
-          tProgressBars:get("TotalProgress").fnProgressBar()
+          tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (3/3)
           local ulEnd = ulStart + ulLength
           -- is area Erased
           -- strMsg entfernen
-          local strMsg  -- is always nil because isErased only returns tResult true/false
-          tResult, strMsg =
+          -- local strMsg  -- is always nil because isErased only returns tResult true/false
+          tResult =
             tFlasher:isErased(
             tPlugin,
             aAttr,
             ulStart,
             ulEnd,
             tProgressBars:get("netx").fnMessageProgressBar,
-            tProgressBars:get("TotalProgress").fnProgressBar
+            tProgressBars:get("TotalProgress").fnProgressBar -- isErased progress bar
           )
           if tResult == true then
             tLog.info("Clean. The area is erased.")
-          else
+          elseif tResult == false then
             tLog.info("Dirty. The area is not erased.")
+          elseif tResult == nil then
+            tLog.error("Failed to check if the area is erased!")
           end
         end
       end
@@ -2691,8 +2736,8 @@ function Shell:__run_iserased(tCmd)
   return true
 end
 
---- Return the input string as hex value.
--- @within Support Functions
+--- Return the input binary string as hex value.
+-- @within Class Shell Support Functions
 -- @param strData input string
 -- @return string as hex value
 -- @see __run_hash
@@ -2707,8 +2752,13 @@ function Shell:__str2hex(strData)
 end
 
 --- Compute the SHA1 checksum of data at the specified address.
--- @within Callable-Functions of Run Function
+-- @within Class Shell Callable-Functions of Run Function
 -- @param tCmd table of commands
+-- @see run
+-- @see __getBusUnitCs
+-- @see __switchToDevice
+-- @see __getRange
+-- @see __str2hex
 function Shell:__run_hash(tCmd)
   local tFlasher = self.tFlasher
   local tPlugin = self.tPlugin
@@ -2716,6 +2766,8 @@ function Shell:__run_hash(tCmd)
   local tLog = self.tLog
   local pl = self.pl
   local tLog_ProgressBar = self.tLog_ProgressBar
+
+  -- initialize progress bars of netX and TotalProgress
   local tProgressBars =
     pl.Map {
     netx = require "progressbar"(
@@ -2752,7 +2804,7 @@ function Shell:__run_hash(tCmd)
     )
   }
 
-  tProgressBars:get("TotalProgress").fnProgressBar()
+  tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (0/3)
   if tPlugin == nil or aAttr == nil then
     print()
     tLog.info("Not connected.")
@@ -2762,14 +2814,15 @@ function Shell:__run_hash(tCmd)
     local ucBus, ucUnit, ucCS = self:__getBusUnitCs(strDevice)
     if ucBus ~= nil then
       tLog.debug("Using bus %d, unit %d, CS %d.", ucBus, ucUnit, ucCS)
-      tProgressBars:get("TotalProgress").fnProgressBar()
+      tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (1/3)
       local tResult = self:__switchToDevice(ucBus, ucUnit, ucCS)
       if tResult == true then
-        tProgressBars:get("TotalProgress").fnProgressBar()
+        tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (2/3)
         local ulStart, ulLength = self:__getRange(tCmd)
         if ulStart ~= nil and ulLength ~= nil then
-          tProgressBars:get("TotalProgress").fnProgressBar()
+          tProgressBars:get("TotalProgress").fnProgressBar() -- Device progress bar (3/3)
 
+          -- if ulLength == 0xffffffff set SL_Total to 3, additional iteration necessary
           if ulLength == 0xffffffff then
             tProgressBars:get("TotalProgress").tparam.SL_Total = 3
           end
@@ -2783,14 +2836,14 @@ function Shell:__run_hash(tCmd)
             ulStart,
             ulLength,
             tProgressBars:get("netx").fnMessageProgressBar,
-            tProgressBars:get("TotalProgress").fnProgressBar -- hashArea
+            tProgressBars:get("TotalProgress").fnProgressBar -- hashArea progress bar
           )
           if tResult ~= nil then
-            tProgressBars:get("TotalProgress").fnProgressBar()
+            tProgressBars:get("TotalProgress").fnProgressBar() -- Result progress bar
             tLog.info("OK. SHA1 SUM = " .. self:__str2hex(tResult))
           else
             tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
-            tProgressBars:get("TotalProgress").fnProgressBar()
+            tProgressBars:get("TotalProgress").fnProgressBar() -- Result progress bar
             tLog.error("Failed to hash the data: %s", strMsg)
           end
         end
@@ -2801,8 +2854,9 @@ function Shell:__run_hash(tCmd)
   return true
 end
 
---- Search for devices and list all possibilities of plugins.
--- @within Callable-Functions of Run Function
+--- Searching interfaces for all possible plugins.
+-- @within Class Shell Callable-Functions of Run Function
+-- @see run
 function Shell:__run_scan()
   local tLog = self.tLog
 
@@ -2838,14 +2892,17 @@ function Shell:__run_scan()
   return true
 end
 
----Establishe a connection with the plugin.
--- @within Callable-Functions of Run Function
+---Establish a connection with a device by using of a plugin.
+-- @within Class Shell Callable-Functions of Run Function
 -- @param tCmd table of commands
+-- @see run
 function Shell:__run_connect(tCmd)
   local tFlasher = self.tFlasher
   local tLog = self.tLog
   local pl = self.pl
   local tLog_ProgressBar = self.tLog_ProgressBar
+
+  -- initialize progress bars of netX and TotalProgress
   local tProgressBars =
     pl.Map {
     netx = require "progressbar"(
@@ -2891,8 +2948,7 @@ function Shell:__run_connect(tCmd)
     )
   }
 
-  -- intial progress bar
-  tProgressBars:get("TotalProgress").fnProgressBar()
+  tProgressBars:get("TotalProgress").fnProgressBar() -- Connect progress bar (0/3)
 
   local atDetectedDevices = self.__atDetectedDevices
 
@@ -2901,7 +2957,7 @@ function Shell:__run_connect(tCmd)
   else
     self:__run_disconnect()
 
-    tProgressBars:get("TotalProgress").fnProgressBar()
+    tProgressBars:get("TotalProgress").fnProgressBar() -- Connect progress bar (1/3)
 
     local strPlugin = tCmd.plugin
 
@@ -2912,15 +2968,16 @@ function Shell:__run_connect(tCmd)
         if tPlugin == nil then
           tLog.error("Failed to open to the device.")
         else
-          tProgressBars:get("TotalProgress").fnProgressBar()
+          tProgressBars:get("TotalProgress").fnProgressBar() -- Connect progress bar (2/3)
           -- Connect to the netX.
           local tResult, strMsg = pcall(tPlugin.Connect, tPlugin)
           if tResult ~= true then
             tLog.error("Failed to connect: " .. tostring(strMsg))
           else
+            tProgressBars:get("TotalProgress").fnProgressBar() -- Connect progress bar (3/3)
+
             -- Download the flasher binary to the netX.
 
-            tProgressBars:get("TotalProgress").fnProgressBar()
             local aAttr
             tResult, aAttr =
               pcall(
@@ -2928,7 +2985,7 @@ function Shell:__run_connect(tCmd)
               tFlasher,
               tPlugin,
               self.__strPathNetx,
-              tProgressBars:get("TotalProgress").fnProgressBar -- Download
+              tProgressBars:get("TotalProgress").fnProgressBar -- Download progress bar
             )
             if tResult ~= true or aAttr == nil then
               tLog.error("Failed to download the flasher to the netX: " .. tostring(aAttr))
@@ -2941,13 +2998,15 @@ function Shell:__run_connect(tCmd)
                 tPlugin,
                 aAttr,
                 tProgressBars:get("netx").fnMessageProgressBar,
-                tProgressBars:get("TotalProgress").fnProgressBar -- BoardInfo
+                tProgressBars:get("TotalProgress").fnProgressBar -- BoardInfo progress bar
               )
               if aBoardInfo == nil then
+                tProgressBars:get("TotalProgress").tparam.suffix = " Failed"
+                tProgressBars:get("TotalProgress").fnProgressBar() -- Result progress bar
                 tLog.error("Failed to get the board info.")
                 tPlugin:Disconnect()
               else
-                tProgressBars:get("TotalProgress").fnProgressBar()
+                tProgressBars:get("TotalProgress").fnProgressBar() -- Result progress bar
                 -- Get all IDs for the flashes.
                 local aSanitizedBoardNames = {}
                 for _, tDeviceInfo in ipairs(aBoardInfo) do
@@ -2969,8 +3028,9 @@ function Shell:__run_connect(tCmd)
   return true
 end
 
---- Disconnect from the plugin.
--- @within Callable-Functions of Run Function
+--- Disconnect from the device.
+-- @within Class Shell Callable-Functions of Run Function
+-- @see run
 function Shell:__run_disconnect()
   local tPlugin = self.tPlugin
   local tLog = self.tLog
@@ -2989,8 +3049,9 @@ function Shell:__run_disconnect()
 end
 
 --- Read the specified input file and verify whether each line is a valid command.
--- @within Callable-Functions of Run Function
+-- @within Class Shell Callable-Functions of Run Function
 -- @param tCmd table of commands
+-- @see run
 function Shell:__run_input(tCmd)
   local pl = self.pl
   local tLog = self.tLog
@@ -3042,8 +3103,9 @@ function Shell:__run_input(tCmd)
 end
 
 --- Display or save all debug information.
--- @within Callable-Functions of Run Function
+-- @within Class Shell Callable-Functions of Run Function
 -- @param tCmd table of commands
+-- @see run
 function Shell:__run_debug(tCmd)
   local pl = self.pl
   local tLog = self.tLog
@@ -3071,10 +3133,11 @@ function Shell:__run_debug(tCmd)
 end
 
 --- Activate the replace command. The subsequent command replaces a command at the specified position.
--- @within Auxiliary Commands of List Command
+-- @within Class Shell Auxiliary Functions of List Command
 -- @param tListCmd table of commands
 -- @param tListCmdsTemp current list of commands
 -- @return tResult: error message and specified position
+-- @see __run_list
 function Shell:__list_replace(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local tResult = {}
@@ -3095,9 +3158,10 @@ function Shell:__list_replace(tListCmd, tListCmdsTemp)
 end
 
 --- Exchange the position of two commands.
--- @within Auxiliary Commands of List Command
+-- @within Class Shell Auxiliary Functions of List Command
 -- @param tListCmd table of commands
 -- @param tListCmdsTemp current list of commands
+-- @see __run_list
 function Shell:__list_exchange(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local strPos1, strPos2
@@ -3109,6 +3173,7 @@ function Shell:__list_exchange(tListCmd, tListCmdsTemp)
     tLog.error("The position must be greater than zero.")
     return true
   else
+    -- exchange the positions
     strPos1 = tListCmdsTemp[tListCmd.pos_1]
     strPos2 = tListCmdsTemp[tListCmd.pos_2]
     tListCmdsTemp:remove(tListCmd.pos_1)
@@ -3121,9 +3186,10 @@ function Shell:__list_exchange(tListCmd, tListCmdsTemp)
 end
 
 --- Switch the position of one command.
--- @within Auxiliary Commands of List Command
+-- @within Class Shell Auxiliary Functions of List Command
 -- @param tListCmd table of commands
 -- @param tListCmdsTemp current list of commands
+-- @see __run_list
 function Shell:__list_switch(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local strPos1
@@ -3138,6 +3204,7 @@ function Shell:__list_switch(tListCmd, tListCmdsTemp)
     if tListCmd.pos_1 == tListCmd.pos_2 then
       tLog.info("No change of position necessary.")
     else
+      -- switch the position
       strPos1 = tListCmdsTemp[tListCmd.pos_1]
       tListCmdsTemp:remove(tListCmd.pos_1)
       tListCmdsTemp:insert(tListCmd.pos_2, strPos1)
@@ -3148,10 +3215,11 @@ function Shell:__list_switch(tListCmd, tListCmdsTemp)
 end
 
 --- Activate the insert command. The subsequent command is insert at the specified position.
--- @within Auxiliary Commands of List Command
+-- @within Class Shell Auxiliary Functions of List Command
 -- @param tListCmd table of commands
 -- @param tListCmdsTemp current list of commands
 -- @return tResult: error message and specified position
+-- @see __run_list
 function Shell:__list_insert(tListCmd, tListCmdsTemp)
   local tResult = {}
   local tLog = self.tLog
@@ -3164,6 +3232,7 @@ function Shell:__list_insert(tListCmd, tListCmdsTemp)
     tLog.error("The position must be in the range of: [1 : size of list + 1].")
     tResult.errMsg = false
   else
+    -- activate command - insert at given position
     tResult.cmd = "insert"
     tResult.pos = tListCmd.position
   end
@@ -3172,9 +3241,10 @@ function Shell:__list_insert(tListCmd, tListCmdsTemp)
 end
 
 --- Save the current list of commands to the given filename.
--- @within Auxiliary Commands of List Command
+-- @within Class Shell Auxiliary Functions of List Command
 -- @param tListCmd table of commands
 -- @param tListCmdsTemp current list of commands
+-- @see __run_list
 function Shell:__list_save(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local pl = self.pl
@@ -3233,9 +3303,10 @@ function Shell:__list_save(tListCmd, tListCmdsTemp)
 end
 
 --- Load a specified list and overwrite the current list of commands.
--- @within Auxiliary Commands of List Command
+-- @within Class Shell Auxiliary Functions of List Command
 -- @param tListCmd table of commands
 -- @param tListCmdsTemp current list of commands
+-- @see __run_list
 function Shell:__list_load(tListCmd, tListCmdsTemp)
   local pl = self.pl
   local tLog = self.tLog
@@ -3311,9 +3382,10 @@ function Shell:__list_load(tListCmd, tListCmdsTemp)
 end
 
 --- Add a specified list to the current list of commands.
--- @within Auxiliary Commands of List Command
+-- @within Class Shell Auxiliary Functions of List Command
 -- @param tListCmd table of commands
 -- @param tListCmdsTemp current list of commands
+-- @see __run_list
 function Shell:__list_add(tListCmd, tListCmdsTemp)
   local pl = self.pl
   local tLog = self.tLog
@@ -3342,9 +3414,10 @@ function Shell:__list_add(tListCmd, tListCmdsTemp)
 end
 
 --- Process the specified interval of the current list of commands and quit the list command.
--- @within Auxiliary Commands of List Command
+-- @within Class Shell Auxiliary Functions of List Command
 -- @param tListCmd table of commands
 -- @param tListCmdsTemp current list of commands
+-- @see __run_list
 function Shell:__list_run(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local pl = self.pl
@@ -3385,9 +3458,10 @@ function Shell:__list_run(tListCmd, tListCmdsTemp)
 end
 
 --- Clear the specified interval of the current list.
--- @within Auxiliary Commands of List Command
+-- @within Class Shell Auxiliary Functions of List Command
 -- @param tListCmd table of commands
 -- @param tListCmdsTemp current list of commands
+-- @see __run_list
 function Shell:__list_clear(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
 
@@ -3417,9 +3491,10 @@ function Shell:__list_clear(tListCmd, tListCmdsTemp)
 end
 
 --- Quit the list command and save the current list of commands to 'previous' list. The end command is also possible during replace and insert are active. Additonally, deactivate hints/words of auxiliary commands.
--- @within Auxiliary Commands of List Command
+-- @within Class Shell Auxiliary Functions of List Command
 -- @param tListCmd table of commands
 -- @param tListCmdsTemp current list of commands
+-- @see __run_list
 function Shell:__list_end(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   self.list_cmd = false
@@ -3430,10 +3505,11 @@ function Shell:__list_end(tListCmd, tListCmdsTemp)
 end
 
 --- Abort the commands replace and insert.
--- @within Auxiliary Commands of List Command
+-- @within Class Shell Auxiliary Functions of List Command
 -- @param tListCmd table of commands
 -- @param tListCmdsTemp current list of commands
 -- @return tResult: error message and abort command
+-- @see __run_list
 function Shell:__list_abort(tListCmd, tListCmdsTemp)
   local tLog = self.tLog
   local tResult = {}
@@ -3449,11 +3525,16 @@ function Shell:__list_abort(tListCmd, tListCmdsTemp)
   return true, tResult
 end
 
---- The list command activates the list mode and supports the creation and editing of a list of commands. It can process a list of commands directly through the help of the listed auxiliary commands. Particularly noteworthy is the editing of the 'hist' and 'previous' lists. The list 'hist' contains all processed past commands and the list 'previous' is the saved list of the last editing. 
---
--- ATTENTION: to get access to the hints of possible plugins, a connection to the device is necessary.
--- @within Callable-Functions of Run Function
+--- The list command activates the list mode and supports the creation and editing of a list of commands.
+-- It can process a list of commands directly through the help of the listed auxiliary commands.
+-- Particularly noteworthy is the editing of the 'hist' and 'previous' lists.
+-- The list 'hist' contains all processed past commands and the list 'previous' is the saved list of the last editing.
+-- ATTENTION: to get access to the hints of possible devices, a connection must be established.
 -- @param tCmd table of commands
+-- @within Class Shell Callable-Functions of Run Function
+-- @see run
+-- @see __completer
+-- @see __hints
 function Shell:__run_list(tCmd)
   local atCommands_ListCmd = self.atCommands_ListCmd
   local atCommands = self.__atCommands
@@ -3465,7 +3546,7 @@ function Shell:__run_list(tCmd)
   local strHistory = self.strHistory
   local tLog = self.tLog
 
-  -- activate hints and words of list commands
+  -- activate hints and word completions of list commands
   self.list_cmd = true
 
   linenoise.clearscreen()
@@ -3609,8 +3690,9 @@ function Shell:__run_list(tCmd)
   return true
 end
 
---- Quit the application without a safety question. A connection to a netx is closed.
--- @within Callable-Functions of Run Function
+--- Quit the application without a safety question. A connection to a netX is closed.
+-- @within Class Shell Callable-Functions of Run Function
+-- @see run
 function Shell:__run_quit()
   local tLog = self.tLog
   -- Disconnect any existing plugin.
@@ -3620,13 +3702,13 @@ function Shell:__run_quit()
   return false
 end
 
---- Supporting function of __completer. Return a list of items that are completions for the current string by using of the completion object.
--- @within Linenoise Functions
+--- Supporting function of __completer. A list of items that are completions of the current string is returned by using of the completion object.
+-- @within Class Shell Linenoise Functions
 -- @param tCompletions a completions object of linenoise. All matches are added to this object.
 -- @param strLine given string of the current line
 -- @param astrWords table of words with possible matches
 -- @param strMatch matched string of a pattern
--- @see __completer 
+-- @see __completer
 function Shell:__getCompletions(tCompletions, strLine, astrWords, strMatch)
   local sizMatch = string.len(strMatch)
   if sizMatch == 0 then
@@ -3647,11 +3729,11 @@ function Shell:__getCompletions(tCompletions, strLine, astrWords, strMatch)
   end
 end
 
---- Supporting function of __hints. Combine all matching words in one table.
--- @within Linenoise Functions
+--- Supporting function of __hints. Combine all matching words in one string as a hint.
+-- @within Class Shell Linenoise Functions
 -- @param astrWords table of words with possible matches
--- @param strMatch matched string of a pattern
--- @return strHint: string with the hint information
+-- @param strMatch string to match - given by the input line
+-- @return strHint: string with the combined hint information
 -- @see __hints
 -- @see __getFilenameWords
 function Shell:__getMatchingHints(astrWords, strMatch)
@@ -3679,10 +3761,13 @@ function Shell:__getMatchingHints(astrWords, strMatch)
   return strHint
 end
 
---- Complete the user input by pressing of <kbd>tab</kbd> key. A callback function which is called every time the user presses <kbd>tab</kbd>. The callback will return a list of items that are completions for the current string.
--- @within Linenoise Functions
+--- Complete the user input by pressing of <kbd>tab</kbd> key - only for matched strings.
+-- A callback function which is called every time the user presses <kbd>tab</kbd>.
+-- It returns a list of items that are completions of the current string.
+-- @within Class Shell Linenoise Functions
 -- @param tCompletions a completions object of linenoise. All matches are added to this object.
 -- @param strLine given string of the current line
+-- @see __getCompletions
 function Shell:__completer(tCompletions, strLine)
   local lpeg = self.lpeg
 
@@ -3719,10 +3804,12 @@ function Shell:__completer(tCompletions, strLine)
   end
 end
 
---- Provide hint information on the right hand side of the cursor. A callback function that returns the hint information or '' if no hint is available for the text the user currently typed.
--- @within Linenoise Functions
+--- Provide hint information on the right hand side of the cursor.
+-- A callback function that returns the hint information or '' if no hint is available for the text that the user currently typed.
+-- @within Class Shell Linenoise Functions
 -- @param strLine given string of the current line
 -- @return strHint: string with the hint information
+-- @see __getMatchingHints
 function Shell:__hints(strLine)
   local strHint
   local sizLine = string.len(strLine)
@@ -3774,6 +3861,11 @@ function Shell:__hints(strLine)
 end
 
 --- Run the FlaSHer application.
+-- Execute the command entered by the user if this command matches with one of the predefined commands.
+-- @see __getNetxPath
+-- @see __completer
+-- @see __hints
+-- @within Class Shell Functions
 function Shell:run()
   local atCommands = self.__atCommands
   local colors = self.colors
@@ -3801,7 +3893,7 @@ function Shell:run()
 
   tLog.info(
     "\n\n%s\n%s\n%s\n%s\n",
-    "Welcome to FlaSH, the flasher shell v1.6.7 .",
+    "Welcome to FlaSH, the flasher shell v1.6.8 .",
     "Written by Christoph Thelen in 2018.",
     "The flasher shell is distributed under the GPL v3 license.",
     'Type "help" to get started. Use tab to complete commands.'
@@ -3879,12 +3971,13 @@ function Shell:run()
   end
 end
 
--- Different Plugin names.
--- @within Tables of fsh
+--- Different Plugin names.
 -- @field romloader_eth plugin of eth
 -- @field romloader_usb plugin of usb
 -- @field romloader_uart plugin of uart
 -- @field romloader_jtag plugin of jtag
+-- @table Shell.astrPlugins
+-- @within Class Shell Tables
 Shell.astrPlugins = {
   "romloader_eth",
   "romloader_usb",
