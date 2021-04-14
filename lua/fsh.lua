@@ -1884,7 +1884,7 @@ function Shell:__getRange(tCmd)
       tLog_ProgressBar,
       {mode = (not debugMode_ProgressBar) and "debug" or nil, prefix = "[NETX]: ", repeatProgress = true}
     ),
-    switchToDevice = require "progressbar"(
+    getRange = require "progressbar"(
       tLog_ProgressBar,
       {mode = (not debugMode_ProgressBar) and "debug" or nil, prefix = "[getRange] : "}
     )
@@ -1899,7 +1899,7 @@ function Shell:__getRange(tCmd)
       tPlugin,
       aAttr,
       tProgressBars:get("netx").fnMessageProgressBar,
-      tProgressBars:get("switchToDevice").fnProgressBar
+      tProgressBars:get("getRange").fnProgressBar
     )
     if ulDeviceSize then
       tLog.debug("Flash size: 0x%08x bytes", ulDeviceSize)
@@ -1907,13 +1907,13 @@ function Shell:__getRange(tCmd)
     else
       tLog.error("Could not determine the flash size!")
     end
-  else -- in the case of: startadress, endadress AND startadress + length AND startadress
+  else -- in the case of: startadress + endadress OR startadress + length OR startadress
     ulDeviceSize =
       tFlasher:getFlashSize(
       tPlugin,
       aAttr,
       tProgressBars:get("netx").fnMessageProgressBar,
-      tProgressBars:get("switchToDevice").fnProgressBar
+      tProgressBars:get("getRange").fnProgressBar
     )
     if not ulDeviceSize then
       tLog.error("Could not determine the flash size!")
