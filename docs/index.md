@@ -12,23 +12,31 @@ In order to carry out the first steps with the FSH application, a short intro is
 
 The flasher application uses a command line interface (CLI) and support [word completion](https://muhkuh-sys.github.io//org.muhkuh.tools-flasher_pt/Word_Completion.html). To start it write the following in your terminal (same directory as flasher):
 
-> ./lua5.1 fsh.lua
+```bash
+ ./lua5.1 fsh.lua
+```
 
 The application will now run and automatically start a scan command which detects all possible plugins.
 
 After that, a connection to a device can be established, for example, by applying of the command:
 
-> connect romloader_uart_ttyUSB0
+```bash
+ connect romloader_uart_ttyUSB0
+```
 
 A connection with the device is now available with the help of the plugin and commands can be executed.
 
 An overview of all possible commands is given by the help command by entering the following in the CLI:
 
-> help
+```bash
+ help
+```
 
 More information about the individual commands is available through the command:
 
-> help 'name of command'
+```bash
+ help 'name of command'
+```
 
 An animation of this introduction is also shown in the example [getting started](https://muhkuh-sys.github.io//org.muhkuh.tools-flasher_pt/Example_1.html).
 
