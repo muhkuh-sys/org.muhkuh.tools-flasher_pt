@@ -174,7 +174,7 @@ function Shell:_init()
   local UnfinishedInteger = UnfinishedHexInteger + DecimalInteger
 
   -- A plugin name consists of alphanumeric characters and the underscore.
-  local PluginName = (R("az", "AZ", "09") + S("_-@,:")) ^ 1
+  local PluginName = (R("az", "AZ", "09") + S("_-@,:/")) ^ 1
 
   -- A device name consists of alphanumeric characters and the underscore.
   local DeviceName = (R("az", "AZ", "09") + P("_")) ^ 1
