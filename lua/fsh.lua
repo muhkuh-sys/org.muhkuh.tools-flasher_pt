@@ -2,7 +2,7 @@
 -- The FlaSHer application. A helpful tool to write, verify, read and erase data in flash.
 --
 -- Dependencies: `progressbar`, `flasher`
--- @author Christoph Thelen
+-- @author Simon Truber, Christoph Thelen
 -- @copyright
 -- @license
 -- @release
