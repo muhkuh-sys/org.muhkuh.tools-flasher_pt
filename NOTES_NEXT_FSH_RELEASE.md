@@ -17,3 +17,7 @@
 - Remove of 'local this' in functions: write_image (and return), read_image, call (and return) (flasher.lua)
 
 - Additional comments of LDOC
+
+## Possible Changes
+
+- Write one image file to multiple intflash locations when the size of one flash location not fit
