@@ -28,7 +28,7 @@ function ProgressBar:_init(tLog, tparam)
     --- Default paramter table of the progress bar.
     -- @field mode nil or 'debug' (default: nil)
     -- @field decimals decimal places percent (default: 1)
-    -- @field fill (default: "█")
+    -- @field fill (default: "#")
     -- @field prefix (default: "Progress:")
     -- @field suffix (default: "Complete:")
     -- @field length of progress bar (default: 50)
@@ -46,7 +46,7 @@ function ProgressBar:_init(tLog, tparam)
         self.pl.Map {
         mode = nil,
         decimals = 1,
-        fill = "█",
+        fill = "#",
         prefix = "Progress:",
         suffix = " Complete",
         length = 50,
