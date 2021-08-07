@@ -2981,10 +2981,16 @@ function Shell:__run_connect(tCmd)
 		tProgressBars:get("TotalProgress").fnProgressBar() -- Connect progress bar (1/3)
 
 		local strPlugin = tCmd.plugin
+		local fDetectPlugin
+
+		-- be pessimistic: given plugin name strPlugin not detected
+		fDetectPlugin = -1
 
 		-- The argument to the command must be a valid device.
 		for _, tDevice in pairs(atDetectedDevices) do
 			if tDevice:GetName() == strPlugin then
+				fDetectPlugin = 0
+
 				local tPlugin = tDevice:Create()
 				if tPlugin == nil then
 					tLog.error("Failed to open to the device.")
@@ -3043,6 +3049,10 @@ function Shell:__run_connect(tCmd)
 				end
 				break
 			end
+		end
+
+		if fDetectPlugin < 0 then
+			tLog.error("Failed! Unknown plugin name '%s'",strPlugin)
 		end
 	end
 
