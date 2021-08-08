@@ -1267,6 +1267,30 @@ function Shell:_init()
 	self.__atInteractivePatterns = atInteractivePatterns
 end
 
+
+--- Parse command line arguments.
+-- @within Support Functions
+function Shell:__parse_commandline_arguments()
+	local argparse = self.argparse
+
+	local tParser = argparse('fsh', 'The flasher shell.')
+	tParser:option('-i --input')
+    :description('Execute the input command with the associated file.')
+	:argname('<filename>')
+	:convert(function (strArg)
+		  return "input " .. strArg
+	  end)
+	:default(nil)
+    :target('strInputCommand')
+
+	local tArgs = tParser:parse()
+
+	if tArgs.strInputCommand ~= nil then
+		self.tCmd_input:put(tArgs.strInputCommand)
+	end
+end
+
+
 --- Get the Operating System.
 -- @within Support Functions
 --@return strOS: the Operating System name
@@ -3977,6 +4001,8 @@ function Shell:run()
 		"The flasher shell is distributed under the GPL v3 license.",
 		'Type "help" to get started. Use tab to complete commands.'
 	)
+
+	self:__parse_commandline_arguments()
 
 	local fRunning = true
 	while fRunning do
