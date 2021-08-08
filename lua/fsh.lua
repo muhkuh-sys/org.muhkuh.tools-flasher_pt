@@ -107,6 +107,7 @@ function Shell:_init()
 	self.linenoise = require "linenoise"
 	local lpeg = require "lpeg"
 	self.lpeg = lpeg
+	self.argparse = require 'argparse'
 	self.pl = require "pl.import_into"()
 	self.term = require "term"
 	-- self.termlib = require "libterminalSize"
