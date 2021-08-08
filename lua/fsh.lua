@@ -1269,7 +1269,7 @@ end
 
 
 --- Parse command line arguments.
--- @within Support Functions
+-- @within Class Shell Support Functions
 function Shell:__parse_commandline_arguments()
 	local argparse = self.argparse
 
@@ -1292,7 +1292,7 @@ end
 
 
 --- Get the Operating System.
--- @within Support Functions
+-- @within Class Shell Support Functions
 --@return strOS: the Operating System name
 function Shell:__getOperatingSystem()
 	local pl = self.pl
