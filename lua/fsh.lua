@@ -2921,6 +2921,7 @@ function Shell:__run_connect(tCmd)
 	local tFlasher = self.tFlasher
 	local tLog = self.tLog
 	local pl = self.pl
+	local lpeg = self.lpeg
 	local tLog_ProgressBar = self.tLog_ProgressBar
 
 	-- initialize progress bars of netX and TotalProgress
@@ -2956,8 +2957,8 @@ function Shell:__run_connect(tCmd)
 					SL_Iteration = 1,
 					SL_Total = 2,
 					showTotalProgress = true,
-					printEnd = (not debugMode_ProgressBar and not debugMode) and "\n" or "",
-					printLine = (not debugMode_ProgressBar and not debugMode) and "" or "\n",
+					printEnd = "",
+					printLine = "\n",
 					ProcessAlgo = "SingleLine"
 				},
 				{
@@ -2981,6 +2982,33 @@ function Shell:__run_connect(tCmd)
 		tProgressBars:get("TotalProgress").fnProgressBar() -- Connect progress bar (1/3)
 
 		local strPlugin = tCmd.plugin
+
+		-- Auxiliary function: return a grammar which tries to match the given pattern in a string
+		local function Anywhere(pattern)
+			return lpeg.P {pattern + 1 * lpeg.V(1)}
+		end
+
+		local astrPluginNames = self.__astrPluginNames
+		local uiDetectPluginName = 0
+		local strDetectPluginName = ""
+
+		-- detect strPlugin (possibly shortcut) in the table astrPluginNames
+		for _, strPluginName in pairs(astrPluginNames) do
+			if Anywhere(lpeg.P(strPlugin)):match(strPluginName) ~= nil then
+				uiDetectPluginName = uiDetectPluginName + 1
+				strDetectPluginName = strPluginName
+			end
+		end
+
+		if uiDetectPluginName == 0 then
+			tLog.warning("Given plugin name '%s' was not detected.", strPlugin)
+		elseif uiDetectPluginName > 1 then
+			tLog.warning("Multiple plugin names detected from the given plugin name '%s'.", strPlugin)
+		elseif uiDetectPluginName == 1 then
+			tLog.info("Given plugin name '%s' was detected as '%s'.", strPlugin, strDetectPluginName)
+			strPlugin = strDetectPluginName
+		end
+
 		local fDetectPlugin
 
 		-- be pessimistic: given plugin name strPlugin not detected
@@ -3052,7 +3080,7 @@ function Shell:__run_connect(tCmd)
 		end
 
 		if fDetectPlugin < 0 then
-			tLog.error("Failed! Unknown plugin name '%s'",strPlugin)
+			tLog.error("Failed! Unknown plugin name '%s'", strPlugin)
 		end
 	end
 
