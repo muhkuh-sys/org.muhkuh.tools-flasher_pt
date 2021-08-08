@@ -3996,7 +3996,7 @@ function Shell:run()
 
 	tLog.info(
 		"\n\n%s\n%s\n%s\n%s\n",
-		"Welcome to FlaSH, the flasher shell v1.6.8 .",
+		"Welcome to FlaSH, the flasher shell v1.6.9 .",
 		"Written by Christoph Thelen in 2018.",
 		"The flasher shell is distributed under the GPL v3 license.",
 		'Type "help" to get started. Use tab to complete commands.'
