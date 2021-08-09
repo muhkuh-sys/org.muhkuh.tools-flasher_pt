@@ -67,7 +67,7 @@ The documentation of the modules can be found [here](https://muhkuh-sys.github.i
 
 ### Shortcuts of Plugin Names in the Connect Command
 
-This new feature allows to use shortcuts of plugin names in the connect command. However, the abbreviation must be clearly assigned to a plugin name in the list of all possible plugins (see scan command). In the case that more than one plugin name can be assigned to the shortcut, the shortcut will not be recognized as plugin name and an error will arise.
+This new feature allows to use shortcuts of plugin names in the connect command. Upper and lower case must be observed. However, the abbreviation must be clearly assigned to a plugin name in the list of all possible plugins (see scan command). In the case that more than one plugin name can be assigned to the shortcut, the shortcut will not be recognized as plugin name and an error will arise.
 
 ### Input Command directly through Argument
 
