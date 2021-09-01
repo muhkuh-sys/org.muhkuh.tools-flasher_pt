@@ -17,13 +17,14 @@
 		</repository>
 
 		<!-- The bintray repository contains stable artifacts. -->
+<!--
 		<repository id="bintray" type="url" cacheable="true" rescan="3600">
 			<root>https://dl.bintray.com/muhkuh/jonchki</root>
 			<versions>[group]/[module]</versions>
 			<config>[group]/[module]/[version]/[artifact]-[version][platform].[extension]</config>
 			<artifact>[group]/[module]/[version]/[artifact]-[version][platform].[extension]</artifact>
 		</repository>
-
+-->
 		<!-- The github repository contains stable artifacts. -->
 		<repository id="github" type="url" cacheable="true" rescan="3600">
 			<root>https://github.com/muhkuh-sys</root>
@@ -33,11 +34,13 @@
 		</repository>
 
 		<!-- The sourceforge repository contains stable artifacts. -->
+<!--
 		<repository id="sourceforge" type="url" cacheable="true" rescan="3600">
 			<root>https://sourceforge.net/projects/muhkuh/files/jonchki</root>
 			<versions>[group]/[module]/</versions>
 			<config>[group]/[module]/[version]/[artifact]-[version].[extension][platform]/download</config>
 			<artifact>[group]/[module]/[version]/[artifact]-[version].[extension][platform]/download</artifact>
 		</repository>
+-->
 	</repositories>
 </jonchkicfg>
