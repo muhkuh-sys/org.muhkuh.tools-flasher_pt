@@ -84,3 +84,16 @@ This is an additional option to use the input command directly by the argument "
 - Remove of 'local this' in functions: write_image (and return), read_image, call (and return) (flasher.lua)
 - Additional comments of LDOC
 - Change color settings for different operating systems - linux and windows (fsh.lua)
+
+## Release Notes 1.6.10
+- Remove dependencies which are also in muhkuh_base_cli
+- Update openocd to 0.10.0.8 
+- Update muhkuh_base_cli to 2.4.9 - which pulls these updates in:
+  - luafilesystem to 1.8.0.1
+  - Penlight to 1.11.0.1
+- Drop Ubuntu 19.10 builds
+
+## Release Notes 1.7.0
+- Update romloader_pt to v2.5 
+- Update openocd to 0.11 
+- Move to lua5.4 

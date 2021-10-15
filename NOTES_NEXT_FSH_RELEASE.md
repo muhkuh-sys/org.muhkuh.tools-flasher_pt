@@ -1,10 +1,19 @@
 # Next FSH Release Notes
 
-## Add Release Version to Files
+## BEFORE updating to New Version: Add Release Version to Files and update Release Notes: 
 
+- update release notes: docs/release_notes.md
 - _docs/config.yml
 - LDOC/config.ld
 - lua/fsh.lua -> function tlog.info run
+
+## Changes Compared to Last Release (1.7.0)
+
+-
+
+## Changes Compared to Last Release (1.6.10)
+
+-
 
 ## Changes Compared to Last Release (1.6.9)
 
