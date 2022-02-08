@@ -1,13 +1,5 @@
 # [Welcome to the FlaSHer application](https://muhkuh-sys.github.io/org.muhkuh.tools-flasher_pt/)
 
-## Status
-
-<img src="https://ci.appveyor.com/api/projects/status/github/muhkuh-sys/org.muhkuh.tools-flasher?svg=true" alt="Project Badge appveyor" width="100">
-
-<img src="https://circleci.com/gh/muhkuh-sys/org.muhkuh.tools-flasher.svg?style=shield" alt="Project Badge circleci" width="100">
-
-<img src="https://img.shields.io/coverity/scan/9318.svg" alt="Project Badge Coverity" width="100">
-
 ## About
 
 The flasher is an application for systems based on the Hilscher "netX" CPU. It writes data to flash or EEPROM chips.
