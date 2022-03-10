@@ -2,10 +2,15 @@
 
 ## BEFORE updating to New Version: Add Release Version to Files and update Release Notes: 
 
+- /jonchki/org.muhkuh.tools.flasher_cli/flasher_cli.xml
 - update release notes: docs/release_notes.md
-- _docs/config.yml
+- docs/_config.yml -> description
 - LDOC/config.ld
 - lua/fsh.lua -> function tlog.info run
+
+## Changes Compared to Last Release (1.7.1)
+
+-
 
 ## Changes Compared to Last Release (1.7.0)
 

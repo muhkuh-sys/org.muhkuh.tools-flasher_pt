@@ -97,3 +97,5 @@ This is an additional option to use the input command directly by the argument "
 - Update romloader_pt to v2.5 
 - Update openocd to 0.11 
 - Move to lua5.4 
+
+## Release Notes 1.7.1

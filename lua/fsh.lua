@@ -11,6 +11,8 @@
 -- Create the Shell class.
 local class = require "pl.class"
 
+local strVersion = "1.7.1"
+
 ---
 -- @type Shell
 local Shell = class()
@@ -3995,9 +3997,10 @@ function Shell:run()
 	-- Scan for available devices.
 	self:__run_scan()
 
+
 	tLog.info(
 		"\n\n%s\n%s\n%s\n%s\n",
-		"Welcome to FlaSH, the flasher shell v1.6.9 .",
+		string.format("Welcome to FlaSH, the flasher shell v%s .",strVersion),
 		"Written by Christoph Thelen in 2018.",
 		"The flasher shell is distributed under the GPL v3 license.",
 		'Type "help" to get started. Use tab to complete commands.'
