@@ -107,7 +107,7 @@ function Shell:_init()
 	self.strHistory = strHistory
 
 	self.linenoise = require "linenoise"
-	local lpeg = require "lpeg"
+	local lpeg = require "lpeglabel"
 	self.lpeg = lpeg
 	self.argparse = require 'argparse'
 	self.pl = require "pl.import_into"()
