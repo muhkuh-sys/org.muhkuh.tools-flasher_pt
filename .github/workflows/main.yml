@@ -62,7 +62,7 @@ jobs:
           distribution-id: windows
           distribution-version: ""
           cpu-architecture: x86_64
-    container: ghcr.io/muhkuh-sys/mbs_ubuntu_1804_x86_64:latest
+    container: ghcr.io/muhkuh-sys/mbs_ubuntu_2004_x86_64:latest
     steps:
     - name: Checkout repository
       # Use the old checkout v1 here. The newer v2 requires git 2.28 which is not available in the standard distribution.
