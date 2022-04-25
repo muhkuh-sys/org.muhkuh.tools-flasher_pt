@@ -70,7 +70,7 @@ jobs:
       with:
         submodules: recursive
     - name: Build
-      run: python3 build_artifact.py ${{ matrix.platform.distribution-id }} ${{ matrix.platform.distribution-version }} ${{ matrix.platform.cpu-architecture }}
+      run: ./build_artifact.py ${{ matrix.platform.distribution-id }} ${{ matrix.platform.distribution-version }} ${{ matrix.platform.cpu-architecture }}
     - name: Upload flasher artifacts
       uses: actions/upload-artifact@v2
       with:
