@@ -86,6 +86,7 @@ This is an additional option to use the input command directly by the argument "
 - Change color settings for different operating systems - linux and windows (fsh.lua)
 
 ## Release Notes 1.6.10
+
 - Remove dependencies which are also in muhkuh_base_cli
 - Update openocd to 0.10.0.8 
 - Update muhkuh_base_cli to 2.4.9 - which pulls these updates in:
@@ -94,8 +95,14 @@ This is an additional option to use the input command directly by the argument "
 - Drop Ubuntu 19.10 builds
 
 ## Release Notes 1.7.0
+
 - Update romloader_pt to v2.5 
 - Update openocd to 0.11 
 - Move to lua5.4 
 
 ## Release Notes 1.7.1
+
+- Accept dot in fsh connect commands for Ethernet devices.
+- Support eMMC cards with RCA!=0 .
+- Add ARM64, ARMHF and x86_64 builds on Ubuntu 22.04 .
+- Update a lot of packages.
