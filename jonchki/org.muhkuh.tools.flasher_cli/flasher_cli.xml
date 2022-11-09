@@ -11,5 +11,6 @@
 		<dependency group="org.muhkuh.tools" module="flasher_pt" artifact="flasher" version="${PROJECT_VERSION}"/>
 		<dependency group="com.github.hoelzro" module="lua-linenoise" artifact="lua5.4-lua-linenoise" version="0.9"/>
 		<dependency group="com.github.sqmedeiros" module="lpeglabel" artifact="lua5.4-lpeglabel" version="1.6"/>
+    <dependency group="de.dkolf" module="dkjson" artifact="dkjson" version="2.6"/>
 	</dependencies>
 </jonchki-artifact>
