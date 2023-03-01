@@ -4106,4 +4106,4 @@ Shell.astrPlugins = {
 -- Run the shell.
 local tShell = Shell()
 tShell:run()
-os.exit(0)
+os.exit(0, true)

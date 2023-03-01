@@ -550,7 +550,7 @@ if fOk==true then
   tLog.info('##     ## ##   ##  ')
   tLog.info(' #######  ##    ## ')
   tLog.info('')
-  os.exit(0)
+  os.exit(0, true)
 else
-  os.exit(1)
+  os.exit(1, true)
 end
