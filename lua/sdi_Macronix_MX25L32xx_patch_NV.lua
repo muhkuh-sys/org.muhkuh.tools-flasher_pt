@@ -96,7 +96,7 @@ end
 local function sdi_wait_for_not_busy(tFlasher, tPlugin, aAttr)
   repeat
     local ulStatus = sdi_read_status_register(tFlasher, tPlugin, aAttr)
-    ulStatus = bit.band(ulStatus, 1)
+    ulStatus = ulStatus & 1
   until ulStatus==0
 end
 

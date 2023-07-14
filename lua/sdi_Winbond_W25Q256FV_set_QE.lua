@@ -108,7 +108,7 @@ end
 local function sdi_wait_for_not_busy(tPlugin, aAttr)
 	repeat
 		local ulStatus = sdi_read_status_register1(tPlugin, aAttr)
-		ulStatus = bit.band(ulStatus, 1)
+		ulStatus = ulStatus & 1
 	until ulStatus==0
 end
 
@@ -166,15 +166,15 @@ ucStatus01_Current = sdi_read_status_register1(tPlugin, aAttr)
 ucStatus02_Current = sdi_read_status_register2(tPlugin, aAttr)
 print(string.format("Status register: 0x%02x 0x%02x", ucStatus01_Current, ucStatus02_Current))
 
-if bit.band(ucStatus02_Current, 2)~=0 then
+if (ucStatus02_Current & 2)~=0 then
 	print("The chip is already patched!")
 else
-	ucStatus02_Goal = bit.bor(ucStatus02_Current, 2)
+	ucStatus02_Goal = ucStatus02_Current | 2
 	sdi_write_status_register(tPlugin, aAttr, ucStatus01_Current, ucStatus02_Goal)
 	
 	ucData = sdi_read_status_register2(tPlugin, aAttr)
 	print(string.format("Status register2: 0x%02x", ucData))
-	if bit.band(ucData,2)==0 then
+	if (ucData & 2)==0 then
 		error("Status register not written!")
 	end
 end

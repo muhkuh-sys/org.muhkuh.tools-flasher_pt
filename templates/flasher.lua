@@ -33,7 +33,6 @@ local Flasher = class()
 function Flasher:_init(tLog)
   self.tLog = tLog
 
-  self.bit = require "bit"
   self.romloader = require "romloader"
 
 
@@ -231,7 +230,12 @@ end
 -- @param ulOffset offset
 -- @return 32 bit value
 function Flasher:get_dword(strData, ulOffset)
-  return strData:byte(ulOffset) + strData:byte(ulOffset+1)*0x00000100 + strData:byte(ulOffset+2)*0x00010000 + strData:byte(ulOffset+3)*0x01000000
+  return (
+     strData:byte(ulOffset) |
+    (strData:byte(ulOffset+1) <<  8) |
+    (strData:byte(ulOffset+2) << 16) |
+    (strData:byte(ulOffset+3) << 24)
+  )
 end
 
 --- Extract header information from the flasher binary.
@@ -343,10 +347,14 @@ end
 -- @param fnCallbackProgress progress callback function. This parameter is optional. The default callback function prints a simple progress message to stdout.
 -- @see write_image
 function Flasher:set_parameterblock(tPlugin, ulAddress, aulParameters, fnCallbackProgress)
-  local bit = self.bit
   local strBin = ""
     for i,v in ipairs(aulParameters) do
-      strBin = strBin .. string.char( bit.band(v,0xff), bit.band(bit.rshift(v,8),0xff), bit.band(bit.rshift(v,16),0xff), bit.band(bit.rshift(v,24),0xff) )
+      strBin = strBin .. string.char(
+         v & 0x000000ff,
+        (v & 0x0000ff00) >>  8,
+        (v & 0x00ff0000) >> 16,
+        (v & 0xff000000) >> 24
+      )
     end
   self:write_image(tPlugin, ulAddress, strBin, fnCallbackProgress) 
 end
