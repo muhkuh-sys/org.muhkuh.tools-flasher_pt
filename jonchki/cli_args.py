@@ -1,4 +1,4 @@
-import sys
+import argparse
 from platform_detect import PlatformDetect
 
 
@@ -6,8 +6,31 @@ def parse():
     tPlatform = PlatformDetect()
     tPlatform.detect()
 
-    argc = len(sys.argv)
-    if argc == 1:
+    tParser = argparse.ArgumentParser(description='Build the artifact.')
+    tParser.add_argument(
+        'astrJonchkiIDs',
+        metavar='JONCHKI_IDS',
+        type=str,
+        nargs='*',
+        help=(
+            'Either 0, 2 or 3 argument. 0 arguments build for the current ' +
+            'host. 2 arguments are the distribution ID and CPU architecture ' +
+            'for targets without a distribution version (like windows). 3 ' +
+            'arguments are the distribution ID, distribution version and ' +
+            'CPU architecture.'
+        )
+    )
+    tParser.add_argument(
+        '--cmake-define',
+        dest='astrCMakeDefines',
+        metavar='CMAKE_DEFINES',
+        type=str,
+        nargs='*',
+        help='Additional CMake defines.')
+    tArgs = tParser.parse_args()
+
+    sizJonchkiIDs = len(tArgs.astrJonchkiIDs)
+    if sizJonchkiIDs == 0:
         # No platform was specified on the command line.
         strJonchkiDistributionID = tPlatform.strHostDistributionId
         strJonchkiDistributionVersion = tPlatform.strHostDistributionVersion
@@ -25,12 +48,11 @@ def parse():
                 strJonchkiCPUArchitecture
             )
 
-    elif argc == 3:
-        # The command line has 2 arguments.
+    elif sizJonchkiIDs == 2:
         # This looks like a windows build.
-        strJonchkiDistributionID = sys.argv[1]
+        strJonchkiDistributionID = tArgs.astrJonchkiIDs[0]
         strJonchkiDistributionVersion = None
-        strJonchkiCPUArchitecture = sys.argv[2]
+        strJonchkiCPUArchitecture = tArgs.astrJonchkiIDs[1]
         if strJonchkiDistributionID != 'windows':
             raise Exception('No distribution version specified. '
                             'This is only possible for windows.')
@@ -40,13 +62,12 @@ def parse():
             strJonchkiCPUArchitecture
         )
 
-    elif argc == 4:
-        # The command has 3 arguments.
+    elif sizJonchkiIDs == 3:
         # This looks like a distribution ID, a distribution version and a CPU
         # architecture.
-        strJonchkiDistributionID = sys.argv[1]
-        strJonchkiDistributionVersion = sys.argv[2]
-        strJonchkiCPUArchitecture = sys.argv[3]
+        strJonchkiDistributionID = tArgs.astrJonchkiIDs[0]
+        strJonchkiDistributionVersion = tArgs.astrJonchkiIDs[1]
+        strJonchkiCPUArchitecture = tArgs.astrJonchkiIDs[2]
 
         strJonchkiPlatformID = '%s_%s_%s' % (
             strJonchkiDistributionID,
@@ -57,6 +78,12 @@ def parse():
     else:
         raise Exception('Invalid numer of arguments.')
 
+    # Prepare all CMake defines as proper command line options.
+    astrCMakeDefines = []
+    if tArgs.astrCMakeDefines is not None:
+        for strDefine in tArgs.astrCMakeDefines:
+            astrCMakeDefines.append('-D' + strDefine)
+
     tPlatform = dict(
         distribution_id=strJonchkiDistributionID,
         distribution_version=strJonchkiDistributionVersion,
@@ -65,7 +92,8 @@ def parse():
         host_cpu_architecture=tPlatform.strHostCpuArchitecture,
         host_distribution_id=tPlatform.strHostDistributionId,
         host_distribution_version=tPlatform.strHostDistributionVersion,
-        host_standard_archive_format=tPlatform.strStandardArchiveFormat
+        host_standard_archive_format=tPlatform.strStandardArchiveFormat,
+        cmake_defines=astrCMakeDefines
     )
 
     return tPlatform

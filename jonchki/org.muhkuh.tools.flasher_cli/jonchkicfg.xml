@@ -16,31 +16,42 @@
 			<artifact>[group]/[module]/[version]/[artifact]-[version][platform].[extension]</artifact>
 		</repository>
 
-		<!-- The bintray repository contains stable artifacts. -->
-<!--
-		<repository id="bintray" type="url" cacheable="true" rescan="3600">
-			<root>https://dl.bintray.com/muhkuh/jonchki</root>
-			<versions>[group]/[module]</versions>
-			<config>[group]/[module]/[version]/[artifact]-[version][platform].[extension]</config>
-			<artifact>[group]/[module]/[version]/[artifact]-[version][platform].[extension]</artifact>
-		</repository>
--->
 		<!-- The github repository contains stable artifacts. -->
-		<repository id="github" type="url" cacheable="true" rescan="3600">
+		<repository id="muhkuh@github" type="http" cacheable="true" rescan="1800">
 			<root>https://github.com/muhkuh-sys</root>
-			<versions>[dotgroup]-[module]/releases</versions>
+			<versions>[dotgroup]-[module]/releases?page=[page]</versions>
 			<config>[dotgroup]-[module]/releases/download/v[version]/[artifact]-[version][platform].[extension]</config>
 			<artifact>[dotgroup]-[module]/releases/download/v[version]/[artifact]-[version][platform].[extension]</artifact>
-		</repository>
+			<initialpage>1</initialpage>
+			<versionparser>
+  -- Get the current page.
+  local uiPage = tonumber(page) or 1
+  -- Get the index of the next page.
+  local strNextPageMatch = tostring(uiPage + 1)
+  local strNextPage
 
-		<!-- The sourceforge repository contains stable artifacts. -->
-<!--
-		<repository id="sourceforge" type="url" cacheable="true" rescan="3600">
-			<root>https://sourceforge.net/projects/muhkuh/files/jonchki</root>
-			<versions>[group]/[module]/</versions>
-			<config>[group]/[module]/[version]/[artifact]-[version].[extension][platform]/download</config>
-			<artifact>[group]/[module]/[version]/[artifact]-[version].[extension][platform]/download</artifact>
-		</repository>
--->
-	</repositories>
+  local strProjectUrl = string.gsub('/muhkuh-sys/[dotgroup]-[module]/', '%[(%w+)%]', replace)
+  local function escapeRe(a)
+    return string.gsub(a, "[%^%$%(%)%%%.%[%]%*%+%-%?]", function(s) return '%'..s end)
+  end
+  local strVersionRe = '^' .. escapeRe(strProjectUrl..'tree/') .. '(v[0-9.]+)$'
+  local strPagesRe = '^' .. escapeRe(strProjectUrl..'releases?page=') .. '([0-9]+)$'
+
+  -- Extract the links.
+  local astrVersions = {}
+  for _, n0 in ipairs(document:getElementsByTagName('a')) do
+    local strHref = n0:getAttribute('href')
+    local strVersion = string.match(strHref, strVersionRe)
+    if strVersion~=nil then
+      table.insert(astrVersions, strVersion)
+    end
+    local strPage = string.match(strHref, strPagesRe)
+    if strPage==strNextPageMatch then
+      strNextPage = strNextPageMatch
+    end
+  end
+
+  return astrVersions, strNextPage
+			</versionparser>
+		</repository>	</repositories>
 </jonchkicfg>

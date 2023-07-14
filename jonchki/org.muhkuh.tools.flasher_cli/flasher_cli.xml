@@ -13,4 +13,16 @@
 		<dependency group="com.github.sqmedeiros" module="lpeglabel" artifact="lua5.4-lpeglabel" version="1.6"/>
     <dependency group="de.dkolf" module="dkjson" artifact="dkjson" version="2.6"/>
 	</dependencies>
+	<actions>
+		<action name="finalizer" file="${prj_root}/../../../jonchki/org.muhkuh.tools.flasher_cli/finalizer.lua"/>
+		<action name="pack" path="${install_base}">
+			local t = ...
+
+			t:createPackageFile()
+			t:createHashFile()
+			t:createArchive('${prj_root}/../../${default_archive_name}', 'native')
+
+			return true
+		</action>
+	</actions>
 </jonchki-artifact>

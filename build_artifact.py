@@ -35,9 +35,8 @@ strCfg_jonchkiHerePath = os.path.join(
     strCfg_projectFolder,
     'jonchki'
 )
-
 # This is the Jonchki version to use.
-strCfg_jonchkiVersion = '0.0.7.1'
+strCfg_jonchkiVersion = '0.0.11.1'
 
 # Select the verbose level for jonchki.
 # Possible values are "debug", "info", "warning", "error" and "fatal".
@@ -57,40 +56,6 @@ strCfg_jonchkiInstallationFolder = os.path.join(
     'targets'
 )
 
-strCfg_jonchkiLog = os.path.join(
-    strCfg_workingFolder,
-    'jonchki.log'
-)
-strCfg_jonchkiSystemConfiguration = os.path.join(
-    strCfg_projectFolder,
-    'jonchki',
-    'org.muhkuh.tools.flasher_cli',
-    'jonchkisys.cfg'
-)
-strCfg_jonchkiProjectConfiguration = os.path.join(
-    strCfg_projectFolder,
-    'jonchki',
-    'org.muhkuh.tools.flasher_cli',
-    'jonchkicfg.xml'
-)
-strCfg_jonchkiFinalizer = os.path.join(
-    strCfg_projectFolder,
-    'jonchki',
-    'org.muhkuh.tools.flasher_cli',
-    'finalizer.lua'
-)
-strCfg_jonchkiDependencyLog = os.path.join(
-    strCfg_projectFolder,
-    'dependency-log.xml'
-)
-# This is the artifact configuration file.
-strCfg_artifactConfiguration = os.path.join(
-    strCfg_projectFolder,
-    'targets',
-    'jonchki',
-    'flasher_cli',
-    'flasher_cli.xml'
-)
 
 # -
 # --------------------------------------------------------------------------
@@ -115,24 +80,52 @@ if strJonchki is None:
 if os.path.exists(strCfg_workingFolder) is not True:
     os.makedirs(strCfg_workingFolder)
 
-if os.path.exists(strCfg_artifactConfiguration) is not True:
-    raise Exception(
-        'The artifact configuration "%s" does not exist.' % (
-            strCfg_artifactConfiguration
-        )
-    )
-
 # Run jonchki.
 sys.stdout.flush()
 sys.stderr.flush()
 astrArguments = [strJonchki]
 astrArguments.append('install-dependencies')
 astrArguments.extend(['-v', strCfg_jonchkiVerbose])
-astrArguments.extend(['--logfile', strCfg_jonchkiLog])
-astrArguments.extend(['--syscfg', strCfg_jonchkiSystemConfiguration])
-astrArguments.extend(['--prjcfg', strCfg_jonchkiProjectConfiguration])
-astrArguments.extend(['--finalizer', strCfg_jonchkiFinalizer])
-astrArguments.extend(['--dependency-log', strCfg_jonchkiDependencyLog])
+astrArguments.extend([
+    '--logfile',
+    os.path.join(
+        strCfg_workingFolder,
+        'jonchki.log'
+    )
+])
+astrArguments.extend([
+    '--syscfg',
+    os.path.join(
+        strCfg_projectFolder,
+        'jonchki',
+        'org.muhkuh.tools.flasher_cli',
+        'jonchkisys.cfg'
+    )
+])
+astrArguments.extend([
+    '--prjcfg',
+    os.path.join(
+        strCfg_projectFolder,
+        'jonchki',
+        'org.muhkuh.tools.flasher_cli',
+        'jonchkicfg.xml'
+    )
+])
+astrArguments.extend([
+    '--dependency-log',
+    os.path.join(
+        strCfg_projectFolder,
+        'dependency-log.xml'
+    )
+])
 astrArguments.extend(astrJonchkiPlatform)
-astrArguments.append(strCfg_artifactConfiguration)
+astrArguments.append(
+    os.path.join(
+        strCfg_projectFolder,
+        'targets',
+        'jonchki',
+        'flasher_cli',
+        'flasher_cli.xml'
+    )
+)
 sys.exit(subprocess.call(astrArguments, cwd=strCfg_workingFolder))

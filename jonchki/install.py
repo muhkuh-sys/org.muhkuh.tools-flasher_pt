@@ -8,6 +8,9 @@ def install_host_debs(astrDeb):
         strDpkgStatus = subprocess.check_output(
             "dpkg-query -W -f='${Status}' %s || echo 'unknown'" % strDeb,
             shell=True
+        ).decode(
+            "utf-8",
+            "replace"
         )
         print('Check for %s = %s' % (strDeb, strDpkgStatus))
         if strDpkgStatus != 'install ok installed':
