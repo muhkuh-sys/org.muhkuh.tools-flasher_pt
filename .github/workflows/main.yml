@@ -46,15 +46,11 @@ jobs:
           distribution-id: ubuntu
           distribution-version: "22.04"
           cpu-architecture: arm64
-        - # Windows x86
-          distribution-id: windows
-          distribution-version: ""
-          cpu-architecture: x86
-        - # Windows x86_64
-          distribution-id: windows
-          distribution-version: ""
-          cpu-architecture: x86_64
-    container: ghcr.io/muhkuh-sys/mbs_ubuntu_2004_x86_64:latest
+        - # Ubuntu 22.04 riscv64
+          distribution-id: ubuntu
+          distribution-version: "22.04"
+          cpu-architecture: riscv64
+    container: ghcr.io/muhkuh-sys/mbs_ubuntu_2204_x86_64:latest
     steps:
     - name: Checkout repository
       # Use the old checkout v1 here. The newer v2 requires git 2.28 which is not available in the standard distribution.
