@@ -14,14 +14,6 @@ jobs:
     strategy:
       matrix:
         platform:
-        - # Ubuntu 16.04 x86
-          distribution-id: ubuntu
-          distribution-version: "16.04"
-          cpu-architecture: x86
-        - # Ubuntu 16.04 x86_64
-          distribution-id: ubuntu
-          distribution-version: "16.04"
-          cpu-architecture: x86_64
         - # Ubuntu 18.04 x86
           distribution-id: ubuntu
           distribution-version: "18.04"
