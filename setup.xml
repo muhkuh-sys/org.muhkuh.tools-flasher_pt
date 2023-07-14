@@ -17,7 +17,7 @@
 			<group>nz.co.methods</group>
 			<name>asciidoc</name>
 			<package>asciidoc</package>
-			<version>9.0.0_1</version>
+			<version>9.1.1_1</version>
 			<typ>tar.bz2</typ>
 		</tool>
 		<tool>
