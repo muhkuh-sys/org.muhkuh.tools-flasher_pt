@@ -69,6 +69,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: flasher_cli_${{ matrix.platform.distribution-id }}_${{ matrix.platform.distribution-version }}_${{ matrix.platform.cpu-architecture }}
-        path: |
-          targets/jonchki/flasher_cli/*.tar.gz
-          targets/jonchki/flasher_cli/*.zip
+        path: targets/flasher_cli/*.tar.gz
