@@ -12,6 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         platform:
         - # Ubuntu 18.04 x86
