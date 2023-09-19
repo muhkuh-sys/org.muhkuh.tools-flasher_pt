@@ -211,7 +211,7 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 	ptAttr->ulUnitOffsetInBytes = ulUnitOffsetInBytes;
 
 	return tResult;
-} 
+}
 
 
 
@@ -645,7 +645,7 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash_page(const INTERNAL_
 	/* Get the pointer to the controller and the offset in the memory map. */
 	tResult = iflash_get_controller(ptAttr, ulOffsetInBytes, &tFlashBlock);
 	ptIFlashCfgArea = tFlashBlock.ptIFlashCfgArea;
-	
+
 	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 	{
 		/* Is the offset aligned to the page start? */
@@ -659,7 +659,7 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash_page(const INTERNAL_
 		{
 			/* Get a pointer to the data array of the flash. */
 			pucFlashDataArray = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
-			
+
 			/* Select read mode and main array or info page */
 			internal_flash_select_read_mode_and_clear_caches(ptAttr);
 
@@ -894,7 +894,7 @@ static const UNIT_CS_TO_ATTR_T atUnitCsToAttr[] =
 };
 
 
-/* In this case, detect checks if the combination of unit and chip select is contained in the table atUnitCsToAttr. 
+/* In this case, detect checks if the combination of unit and chip select is contained in the table atUnitCsToAttr.
    Unit selects the flash bank (0/1/2), and chip select selects the main area of the bank or its info page. */
 NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 {
@@ -996,7 +996,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptPa
 		tResult = NETX_CONSOLEAPP_RESULT_OK;
 	}
 	else
-	{	
+	{
 		ulProgressCnt = 0;
 		progress_bar_init(ulOffsetEnd - ulOffsetStart);
 
@@ -1227,7 +1227,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_read(CMD_PARAMETER_READ_T *ptPara
 		tResult = NETX_CONSOLEAPP_RESULT_OK;
 	}
 	else
-	{	
+	{
 		/* Get a pointer to the flash attributes. */
 		ptAttr = &(ptParameter->ptDeviceDescription->uInfo.tInternalFlashInfo.uAttributes.tMazV0);
 
@@ -1320,7 +1320,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_sha1(CMD_PARAMETER_CHECKSUM_T *pt
 
 				ulLength = ulOffsetEnd - ulOffsetStart;
 
-	
+
 				// progress_bar_init(ulLength);
 
 				SHA1_Update(ptSha1Context, pucFlashStart, ulLength);
@@ -1407,7 +1407,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_verify(CMD_PARAMETER_VERIFY_T *pt
 					++ulOffset;
 					/* Update the progress bar every 64 byte.*/
 					if((ulOffset & 0xffff) == 0)
-						progress_bar_set_position(ulOffset);					
+						progress_bar_set_position(ulOffset);
 				} while( ulOffset<ulLength );
 				progress_bar_finalize();
 				ptConsoleParams->pvReturnMessage = (void*)tResult;
