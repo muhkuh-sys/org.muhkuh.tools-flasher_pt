@@ -25,12 +25,6 @@
             "compileCommands": "${workspaceFolder}/targets/netx56_nodbg/compile_commands.json"
         },
         {
-            "name": "NETX90_MPW",
-            "cStandard": "c11",
-            "cppStandard": "c++14",
-            "compileCommands": "${workspaceFolder}/targets/netx90_mpw_nodbg/compile_commands.json"
-        },
-        {
             "name": "NETX4000",
             "cStandard": "c11",
             "cppStandard": "c++14",
