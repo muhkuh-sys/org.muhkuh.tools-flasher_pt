@@ -23,6 +23,7 @@
 
 #include "delay.h"
 #include "netx_io_areas.h"
+#include "progress_bar.h"
 #include "uprintf.h"
 
 
