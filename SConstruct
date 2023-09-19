@@ -150,6 +150,7 @@ flasher_sources_main_netx90 = """
 flasher_sources_lib_netx90 = """
 	src/netx90/board.c
 	src/netx90/cortexm_systick.c
+	src/netx90/sha384.c
 	src/drv_spi_hsoc_v2.c
 	src/drv_sqi.c
 	src/mmio.c

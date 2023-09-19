@@ -46,18 +46,20 @@ typedef enum INTERNAL_FLASH_AREA_ENUM
 	INTERNAL_FLASH_AREA_Flash0_InfoK  =  3,
 	INTERNAL_FLASH_AREA_Flash1_Main   =  4,
 	INTERNAL_FLASH_AREA_Flash1_Info   =  5,
-	INTERNAL_FLASH_AREA_Flash1_InfoK  =  6,
-	INTERNAL_FLASH_AREA_Flash2_Main   =  7,
-	INTERNAL_FLASH_AREA_Flash2_Info   =  8,
-	INTERNAL_FLASH_AREA_Flash2_InfoK  =  9,
-	INTERNAL_FLASH_AREA_Flash01_Main  = 10
+	INTERNAL_FLASH_AREA_Flash1_InfoS  =  6,
+	INTERNAL_FLASH_AREA_Flash1_InfoK  =  7,
+	INTERNAL_FLASH_AREA_Flash2_Main   =  8,
+	INTERNAL_FLASH_AREA_Flash2_Info   =  9,
+	INTERNAL_FLASH_AREA_Flash2_InfoS  = 10,
+	INTERNAL_FLASH_AREA_Flash2_InfoK  = 11,
+	INTERNAL_FLASH_AREA_Flash01_Main  = 12
 } INTERNAL_FLASH_AREA_T;
 
 
 
 typedef struct INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_STRUCT
 {
-	int iMain0_Info1_InfoK2;
+	int iMain0_Info1_InfoK2_InfoS3;
 	unsigned long ulSizeInBytes;
 	INTERNAL_FLASH_AREA_T tArea;
 	void *pvIFlashCfgArea0;
