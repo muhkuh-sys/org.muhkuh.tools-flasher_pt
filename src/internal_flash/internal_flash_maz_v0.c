@@ -104,16 +104,13 @@ static NETX_CONSOLEAPP_RESULT_T check_command_area(const INTERNAL_FLASH_ATTRIBUT
 static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptFlashAttributes, unsigned long ulOffset, FLASH_BLOCK_ATTRIBUTES_T *ptAttr)
 {
 	NETX_CONSOLEAPP_RESULT_T tResult;
-	HOSTDEF(ptIflashCfg0ComArea);
-	HOSTDEF(ptIflashCfg1ComArea);
-	HOSTDEF(ptIflashCfg2Area);
-	HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea;
+	void *pvIFlashCfgArea;
 	unsigned long ulUnitOffsetInBytes;
 	INTERNAL_FLASH_AREA_T tArea;
 
 
 	tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-	ptIFlashCfgArea = NULL;
+	pvIFlashCfgArea = ptFlashAttributes->pvIFlashCfgArea0;
 	ulUnitOffsetInBytes = 0;
 
 	tArea = ptFlashAttributes->tArea;
@@ -125,8 +122,6 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 	case INTERNAL_FLASH_AREA_Flash0_Main:
 		if( ulOffset<IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES )
 		{
-			ptIFlashCfgArea = ptIflashCfg0ComArea;
-			ulUnitOffsetInBytes = 0;
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 		}
 		break;
@@ -134,8 +129,6 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 	case INTERNAL_FLASH_AREA_Flash0_Info:
 		if( ulOffset<IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES )
 		{
-			ptIFlashCfgArea = ptIflashCfg0ComArea;
-			ulUnitOffsetInBytes = 0;
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 		}
 		break;
@@ -143,8 +136,6 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 	case INTERNAL_FLASH_AREA_Flash0_InfoK:
 		if( ulOffset<IFLASH_NETX90_INFOK_ARRAY_SIZE_BYTES )
 		{
-			ptIFlashCfgArea = ptIflashCfg0ComArea;
-			ulUnitOffsetInBytes = 0;
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 		}
 		break;
@@ -152,7 +143,6 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 	case INTERNAL_FLASH_AREA_Flash1_Main:
 		if( ulOffset<IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES )
 		{
-			ptIFlashCfgArea = ptIflashCfg1ComArea;
 			ulUnitOffsetInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES;
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 		}
@@ -161,7 +151,6 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 	case INTERNAL_FLASH_AREA_Flash1_Info:
 		if( ulOffset<IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES )
 		{
-			ptIFlashCfgArea = ptIflashCfg1ComArea;
 			ulUnitOffsetInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES;
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 		}
@@ -170,7 +159,6 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 	case INTERNAL_FLASH_AREA_Flash1_InfoK:
 		if( ulOffset<IFLASH_NETX90_INFOK_ARRAY_SIZE_BYTES )
 		{
-			ptIFlashCfgArea = ptIflashCfg1ComArea;
 			ulUnitOffsetInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES;
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 		}
@@ -179,7 +167,6 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 	case INTERNAL_FLASH_AREA_Flash2_Main:
 		if( ulOffset<IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES )
 		{
-			ptIFlashCfgArea = ptIflashCfg2Area;
 			ulUnitOffsetInBytes = 2 * IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES;
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 		}
@@ -188,7 +175,6 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 	case INTERNAL_FLASH_AREA_Flash2_Info:
 		if( ulOffset<IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES )
 		{
-			ptIFlashCfgArea = ptIflashCfg2Area;
 			ulUnitOffsetInBytes = 2 * IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES;
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 		}
@@ -197,7 +183,6 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 	case INTERNAL_FLASH_AREA_Flash2_InfoK:
 		if( ulOffset<IFLASH_NETX90_INFOK_ARRAY_SIZE_BYTES )
 		{
-			ptIFlashCfgArea = ptIflashCfg2Area;
 			ulUnitOffsetInBytes = 2 * IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES;
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 		}
@@ -206,13 +191,12 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 	case INTERNAL_FLASH_AREA_Flash01_Main:
 		if( ulOffset<IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES )
 		{
-			ptIFlashCfgArea = ptIflashCfg0ComArea;
 			ulUnitOffsetInBytes = 0;
 			tResult = NETX_CONSOLEAPP_RESULT_OK;
 		}
 		else if( ulOffset<(2*IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES) )
 		{
-			ptIFlashCfgArea = ptIflashCfg1ComArea;
+			pvIFlashCfgArea = ptFlashAttributes->pvIFlashCfgArea1;
 			/* NOTE: the offset must be 0 here so that the total sum of IFLASH0 start,
 			 *       the unit offset and the program offset is in the IFLASH1 area.
 			 */
@@ -222,7 +206,7 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 		break;
 	}
 
-	ptAttr->ptIFlashCfgArea = ptIFlashCfgArea;
+	ptAttr->ptIFlashCfgArea = (HOSTADEF(IFLASH_CFG)*)pvIFlashCfgArea;
 	ptAttr->ulUnitOffsetInBytes = ulUnitOffsetInBytes;
 
 	return tResult;
@@ -273,9 +257,19 @@ static void internal_flash_select_mode_and_clear_caches(const INTERNAL_FLASH_ATT
 
 
 
-static void internal_flash_select_read_mode_and_clear_caches(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr, HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea)
+static void internal_flash_select_read_mode_and_clear_caches(const INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T *ptAttr)
 {
+	HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea;
+
+
+	ptIFlashCfgArea = ptAttr->pvIFlashCfgArea0;
 	internal_flash_select_mode_and_clear_caches(ptAttr, ptIFlashCfgArea, IFLASH_MODE_READ);
+
+	ptIFlashCfgArea = ptAttr->pvIFlashCfgArea1;
+	if( ptIFlashCfgArea!=NULL )
+	{
+		internal_flash_select_mode_and_clear_caches(ptAttr, ptIFlashCfgArea, IFLASH_MODE_READ);
+	}
 }
 
 
@@ -564,7 +558,7 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase_block(const INTERNAL
 		else
 		{
 			/* Check if the block is already erased. */
-			internal_flash_select_read_mode_and_clear_caches(ptAttr, ptIFlashCfgArea);
+			internal_flash_select_read_mode_and_clear_caches(ptAttr);
 			ulBlockNumber = ulOffsetInBytes / IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
 			ulValue = is_block_erased(&tFlashBlock, ulBlockNumber);
 			if( ulValue==0xffffffffU )
@@ -607,7 +601,7 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase_block(const INTERNAL
 					iflash_start_and_wait(ptIFlashCfgArea);
 
 					/* Go back to the read mode. */
-					internal_flash_select_read_mode_and_clear_caches(ptAttr, ptIFlashCfgArea);
+					internal_flash_select_read_mode_and_clear_caches(ptAttr);
 				}
 
 				/* Check if the block is now erased. */
@@ -666,7 +660,7 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash_page(const INTERNAL_
 			pucFlashDataArray = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
 			
 			/* Select read mode and main array or info page */
-			internal_flash_select_read_mode_and_clear_caches(ptAttr, ptIFlashCfgArea);
+			internal_flash_select_read_mode_and_clear_caches(ptAttr);
 
 			/* Get the old contents of the flash. */
 			memcpy(tExistingDataInFlash.auc, pucFlashDataArray + ulOffsetInBytes, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
@@ -762,7 +756,7 @@ static NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash_page(const INTERNAL_
 						iflash_start_and_wait(ptIFlashCfgArea);
 
 						/* Go back to the read mode. */
-						internal_flash_select_read_mode_and_clear_caches(ptAttr, ptIFlashCfgArea);
+						internal_flash_select_read_mode_and_clear_caches(ptAttr);
 					}
 
 					/* Verify the data. */
@@ -800,6 +794,8 @@ typedef struct UNIT_CS_TO_ATTR_STRUCT
 	int iMain0_Info1_InfoK2;
 	unsigned long ulSizeInBytes;
 	INTERNAL_FLASH_AREA_T tArea;
+	void *pvIFlashCfgArea0;
+	void *pvIFlashCfgArea1;
 } UNIT_CS_TO_ATTR_T;
 
 static const UNIT_CS_TO_ATTR_T atUnitCsToAttr[] =
@@ -809,70 +805,90 @@ static const UNIT_CS_TO_ATTR_T atUnitCsToAttr[] =
 		.uiChipSelect = 0,
 		.iMain0_Info1_InfoK2 = 0,
 		.ulSizeInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES,
-		.tArea = INTERNAL_FLASH_AREA_Flash0_Main
+		.tArea = INTERNAL_FLASH_AREA_Flash0_Main,
+		.pvIFlashCfgArea0 = (void * const)Addr_NX90_iflash_cfg0_com,
+		.pvIFlashCfgArea1 = NULL
 	},
 	{
 		.uiUnit = 1,
 		.uiChipSelect = 0,
 		.iMain0_Info1_InfoK2 = 0,
 		.ulSizeInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES,
-		.tArea = INTERNAL_FLASH_AREA_Flash1_Main
+		.tArea = INTERNAL_FLASH_AREA_Flash1_Main,
+		.pvIFlashCfgArea0 = (void * const)Addr_NX90_iflash_cfg1_com,
+		.pvIFlashCfgArea1 = NULL
 	},
 	{
 		.uiUnit = 2,
 		.uiChipSelect = 0,
 		.iMain0_Info1_InfoK2 = 0,
 		.ulSizeInBytes = IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES,
-		.tArea = INTERNAL_FLASH_AREA_Flash2_Main
+		.tArea = INTERNAL_FLASH_AREA_Flash2_Main,
+		.pvIFlashCfgArea0 = (void * const)Addr_NX90_iflash_cfg2,
+		.pvIFlashCfgArea1 = NULL
 	},
 	{
 		.uiUnit = 3,
 		.uiChipSelect = 0,
 		.iMain0_Info1_InfoK2 = 0,
 		.ulSizeInBytes = 2 * IFLASH_NETX90_MAIN_ARRAY_SIZE_BYTES,
-		.tArea = INTERNAL_FLASH_AREA_Flash01_Main
+		.tArea = INTERNAL_FLASH_AREA_Flash01_Main,
+		.pvIFlashCfgArea0 = (void * const)Addr_NX90_iflash_cfg0_com,
+		.pvIFlashCfgArea1 = (void * const)Addr_NX90_iflash_cfg1_com
 	},
 	{
 		.uiUnit = 0,
 		.uiChipSelect = 1,
 		.iMain0_Info1_InfoK2 = 1,
 		.ulSizeInBytes = IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES,
-		.tArea = INTERNAL_FLASH_AREA_Flash0_Info
+		.tArea = INTERNAL_FLASH_AREA_Flash0_Info,
+		.pvIFlashCfgArea0 = (void * const)Addr_NX90_iflash_cfg0_com,
+		.pvIFlashCfgArea1 = NULL
 	},
 	{
 		.uiUnit = 1,
 		.uiChipSelect = 1,
 		.iMain0_Info1_InfoK2 = 1,
 		.ulSizeInBytes = IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES,
-		.tArea = INTERNAL_FLASH_AREA_Flash1_Info
+		.tArea = INTERNAL_FLASH_AREA_Flash1_Info,
+		.pvIFlashCfgArea0 = (void * const)Addr_NX90_iflash_cfg1_com,
+		.pvIFlashCfgArea1 = NULL
 	},
 	{
 		.uiUnit = 2,
 		.uiChipSelect = 1,
 		.iMain0_Info1_InfoK2 = 1,
 		.ulSizeInBytes = IFLASH_NETX90_INFO_ARRAY_SIZE_BYTES,
-		.tArea = INTERNAL_FLASH_AREA_Flash2_Info
+		.tArea = INTERNAL_FLASH_AREA_Flash2_Info,
+		.pvIFlashCfgArea0 = (void * const)Addr_NX90_iflash_cfg2,
+		.pvIFlashCfgArea1 = NULL
 	},
 	{
 		.uiUnit = 0,
 		.uiChipSelect = 2,
 		.iMain0_Info1_InfoK2 = 2,
 		.ulSizeInBytes = IFLASH_NETX90_INFOK_ARRAY_SIZE_BYTES,
-		.tArea = INTERNAL_FLASH_AREA_Flash0_InfoK
+		.tArea = INTERNAL_FLASH_AREA_Flash0_InfoK,
+		.pvIFlashCfgArea0 = (void * const)Addr_NX90_iflash_cfg0_com,
+		.pvIFlashCfgArea1 = NULL
 	},
 	{
 		.uiUnit = 1,
 		.uiChipSelect = 2,
 		.iMain0_Info1_InfoK2 = 2,
 		.ulSizeInBytes = IFLASH_NETX90_INFOK_ARRAY_SIZE_BYTES,
-		.tArea = INTERNAL_FLASH_AREA_Flash1_InfoK
+		.tArea = INTERNAL_FLASH_AREA_Flash1_InfoK,
+		.pvIFlashCfgArea0 = (void * const)Addr_NX90_iflash_cfg1_com,
+		.pvIFlashCfgArea1 = NULL
 	},
 	{
 		.uiUnit = 2,
 		.uiChipSelect = 2,
 		.iMain0_Info1_InfoK2 = 2,
 		.ulSizeInBytes = IFLASH_NETX90_INFOK_ARRAY_SIZE_BYTES,
-		.tArea = INTERNAL_FLASH_AREA_Flash2_InfoK
+		.tArea = INTERNAL_FLASH_AREA_Flash2_InfoK,
+		.pvIFlashCfgArea0 = (void * const)Addr_NX90_iflash_cfg2,
+		.pvIFlashCfgArea1 = NULL
 	}
 };
 
@@ -904,6 +920,8 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_detect(CMD_PARAMETER_DETECT_T *pt
 	ptAttr->iMain0_Info1_InfoK2 = 0;
 	ptAttr->ulSizeInBytes = 0;
 	ptAttr->tArea = INTERNAL_FLASH_AREA_Unknown;
+	ptAttr->pvIFlashCfgArea0 = NULL;
+	ptAttr->pvIFlashCfgArea1 = NULL;
 
 	/* Get the unit. */
 	uiUnit = ptParameter->uSourceParameter.tInternalFlash.uiUnit;
@@ -933,6 +951,8 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_detect(CMD_PARAMETER_DETECT_T *pt
 		ptAttr->iMain0_Info1_InfoK2 = ptHit->iMain0_Info1_InfoK2;
 		ptAttr->ulSizeInBytes = ptHit->ulSizeInBytes;
 		ptAttr->tArea = ptHit->tArea;
+		ptAttr->pvIFlashCfgArea0 = ptHit->pvIFlashCfgArea0;
+		ptAttr->pvIFlashCfgArea1 = ptHit->pvIFlashCfgArea1;
 
 		tResult = NETX_CONSOLEAPP_RESULT_OK;
 		tFlashType = INTERNAL_FLASH_TYPE_MAZ_V0;
@@ -1223,7 +1243,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_read(CMD_PARAMETER_READ_T *ptPara
 				pucFlashStart = pucFlashArea + ulOffsetStart;
 
 				/* Set the flash to read mode. */
-				internal_flash_select_read_mode_and_clear_caches(ptAttr, tFlashBlock.ptIFlashCfgArea);
+				internal_flash_select_read_mode_and_clear_caches(ptAttr);
 
 				/* Copy the data block to the destination buffer.*/
 				pucBufferStart = ptParameter->pucData;
@@ -1295,7 +1315,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_sha1(CMD_PARAMETER_CHECKSUM_T *pt
 				pucFlashStart = pucFlashArea + ulOffsetStart;
 
 				/* Set the flash to read mode. */
-				internal_flash_select_read_mode_and_clear_caches(ptAttr, tFlashBlock.ptIFlashCfgArea);
+				internal_flash_select_read_mode_and_clear_caches(ptAttr);
 
 				ulLength = ulOffsetEnd - ulOffsetStart;
 
@@ -1361,7 +1381,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_verify(CMD_PARAMETER_VERIFY_T *pt
 				pucFlashStart = pucFlashArea + ulOffsetStart;
 
 				/* Set the flash to read mode. */
-				internal_flash_select_read_mode_and_clear_caches(ptAttr, tFlashBlock.ptIFlashCfgArea);
+				internal_flash_select_read_mode_and_clear_caches(ptAttr);
 
 				/* Be optimistic... */
 				tResult = NETX_CONSOLEAPP_RESULT_OK;
@@ -1439,7 +1459,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_is_erased(CMD_PARAMETER_ISERASED_
 				pucFlashStart = pucFlashArea + ulOffsetStart;
 
 				/* Set the flash to read mode. */
-				internal_flash_select_read_mode_and_clear_caches(ptAttr, tFlashBlock.ptIFlashCfgArea);
+				internal_flash_select_read_mode_and_clear_caches(ptAttr);
 
 				/* Be optimistic... */
 				tResult = NETX_CONSOLEAPP_RESULT_OK;

@@ -60,6 +60,8 @@ typedef struct INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_STRUCT
 	int iMain0_Info1_InfoK2;
 	unsigned long ulSizeInBytes;
 	INTERNAL_FLASH_AREA_T tArea;
+	void *pvIFlashCfgArea0;
+	void *pvIFlashCfgArea1;
 } INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T;
 
 
