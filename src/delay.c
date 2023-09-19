@@ -43,7 +43,7 @@
 #include "netx_io_areas.h"
 #include "delay.h"
 
-//#if ASIC_TYP==ASIC_TYP_NETX90_MPW || ASIC_TYP==ASIC_TYP_NETX90
+//#if ASIC_TYP==ASIC_TYP_NETX90
 //#       include "cortexm_systick.h"
 //#endif
 
@@ -56,7 +56,7 @@
 /*****************************************************************************/
 void delay_us(unsigned int uiDelayUs)
 {
-#if ASIC_TYP==ASIC_TYP_NETX90_MPW || ASIC_TYP==ASIC_TYP_NETX90
+#if ASIC_TYP==ASIC_TYP_NETX90
 	HOSTDEF(ptGpioComArea);
 	unsigned long ulTimerValue;
 	unsigned long ulValue;

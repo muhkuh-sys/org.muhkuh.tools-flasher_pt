@@ -26,7 +26,7 @@ import os.path
 #
 # Select the platforms to build
 #
-atPickNetxForBuild_All = ['NETX4000', 'NETX500', 'NETX90_MPW', 'NETX90', 'NETX56', 'NETX50', 'NETX10', 'NETIOL']
+atPickNetxForBuild_All = ['NETX4000', 'NETX500', 'NETX90', 'NETX56', 'NETX50', 'NETX10', 'NETIOL']
 AddOption('--netx',
           dest='atPickNetxForBuild',
           type='choice',
@@ -84,10 +84,6 @@ if 'NETX4000' in atPickNetxForBuild:
 
 # Create a build environment for the Cortex-M4 based netX chips.
 env_cortexM4 = atEnv.DEFAULT.CreateEnvironment(['gcc-arm-none-eabi-4.9', 'asciidoc', 'exoraw-2.0.7_2'])
-if 'NETX90_MPW' in atPickNetxForBuild:
-    env_cortexM4.CreateCompilerEnv('NETX90_MPW', ['arch=armv7', 'thumb'], ['arch=armv7e-m', 'thumb'])
-    spi_flashes.ApplyToEnv(atEnv.NETX90_MPW)
-    strip.ApplyToEnv(atEnv.NETX90_MPW)
 if 'NETX90' in atPickNetxForBuild:
     env_cortexM4.CreateCompilerEnv('NETX90', ['arch=armv7', 'thumb'], ['arch=armv7e-m', 'thumb'])
     spi_flashes.ApplyToEnv(atEnv.NETX90)
@@ -274,12 +270,6 @@ if 'NETX500' in atPickNetxForBuild:
     env_netx500_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx500','src/sha1_arm'])
     env_netx500_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1'], ['CFG_INCLUDE_PARFLASH', '1']])
 
-if 'NETX90_MPW' in atPickNetxForBuild:
-    env_netx90_mpw_default  = atEnv.NETX90_MPW.Clone()
-    env_netx90_mpw_default.Replace(LDFILE = File('src/netx90/netx90.ld'))
-    env_netx90_mpw_default.Append(CPPPATH = astrCommonIncludePaths + ['src/netx90','src/sha1_netx'])
-    env_netx90_mpw_default.Append(CPPDEFINES = [['CFG_INCLUDE_SHA1', '1'], ['CFG_INCLUDE_PARFLASH', '1'], ['CFG_INCLUDE_INTFLASH', '1']])
-
 if 'NETX90' in atPickNetxForBuild:
     env_netx90_default  = atEnv.NETX90.Clone()
     env_netx90_default.Replace(LDFILE = File('src/netx90/netx90.ld'))
@@ -384,11 +374,6 @@ if 'NETX500' in atPickNetxForBuild:
     env_netx500_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
     tArtifacts_netx500_nodbg = flasher_build('flasher_netx500', env_netx500_nodbg, 'targets/netx500_nodbg', src_lib_netx500, src_main_netx500)
 
-if 'NETX90_MPW' in atPickNetxForBuild:
-    env_netx90_mpw_nodbg = env_netx90_mpw_default.Clone()
-    env_netx90_mpw_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
-    tArtifacts_netx90_mpw_nodbg = flasher_build('flasher_netx90_mpw', env_netx90_mpw_nodbg, 'targets/netx90_mpw_nodbg', src_lib_netx90, src_main_netx90)
-
 if 'NETX90' in atPickNetxForBuild:
     env_netx90_nodbg = env_netx90_default.Clone()
     env_netx90_nodbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '0']])
@@ -429,11 +414,6 @@ if 'NETX500' in atPickNetxForBuild:
     env_netx500_dbg = env_netx500_default.Clone()
     env_netx500_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
     tArtifacts_netx500_dbg = flasher_build('flasher_netx500_debug', env_netx500_dbg, 'targets/netx500_dbg', src_lib_netx500, src_main_netx500)
-
-if 'NETX90_MPW' in atPickNetxForBuild:
-    env_netx90_mpw_dbg = env_netx90_mpw_default.Clone()
-    env_netx90_mpw_dbg.Append(CPPDEFINES = [['CFG_DEBUGMSG', '1']])
-    tArtifacts_netx90_mpw_dbg = flasher_build('flasher_netx90_mpw_debug', env_netx90_mpw_dbg, 'targets/netx90_mpw_dbg', src_lib_netx90, src_main_netx90)
 
 if 'NETX90' in atPickNetxForBuild:
     env_netx90_dbg = env_netx90_default.Clone()
@@ -497,10 +477,6 @@ elif 'NETX500' in atPickNetxForBuild:
     tEnv = env_netx500_nodbg
     tElf = tArtifacts_netx500_nodbg['elf']
     tSpiFlashTypesH = File('targets/netx500_nodbg/spi_flash_types/spi_flash_types.h')
-elif 'NETX90_MPW' in atPickNetxForBuild:
-    tEnv = env_netx90_mpw_nodbg
-    tElf = tArtifacts_netx90_mpw_nodbg['elf']
-    tSpiFlashTypesH = File('targets/netx90_mpw_nodbg/spi_flash_types/spi_flash_types.h')
 elif 'NETX90' in atPickNetxForBuild:
     tEnv = env_netx90_nodbg
     tElf = tArtifacts_netx90_nodbg['elf']
@@ -581,7 +557,6 @@ if fBuildIsFull==True:
     tArcList.AddFiles('netx/',
         tArtifacts_netx4000_nodbg['bin'],
         tArtifacts_netx500_nodbg['bin'],
-        tArtifacts_netx90_mpw_nodbg['bin'],
         tArtifacts_netx90_nodbg['bin'],
         tArtifacts_netx56_nodbg['bin'],
         tArtifacts_netx50_nodbg['bin'],
@@ -591,7 +566,6 @@ if fBuildIsFull==True:
     tArcList.AddFiles('netx/debug/',
         tArtifacts_netx4000_dbg['bin'],
         tArtifacts_netx500_dbg['bin'],
-        tArtifacts_netx90_mpw_dbg['bin'],
         tArtifacts_netx90_dbg['bin'],
         tArtifacts_netx56_dbg['bin'],
         tArtifacts_netx50_dbg['bin'],
@@ -612,7 +586,6 @@ if fBuildIsFull==True:
     tArcList.AddFiles('lib/',
         tArtifacts_netx4000_nodbg['lib_stripped'],
         tArtifacts_netx500_nodbg['lib_stripped'],
-        tArtifacts_netx90_mpw_nodbg['lib_stripped'],
         tArtifacts_netx90_nodbg['lib_stripped'],
         tArtifacts_netx56_nodbg['lib_stripped'],
         tArtifacts_netx50_nodbg['lib_stripped'],
@@ -620,7 +593,6 @@ if fBuildIsFull==True:
         tArtifacts_netiol_nodbg['lib_stripped'],
         tArtifacts_netx4000_dbg['lib_stripped'],
         tArtifacts_netx500_dbg['lib_stripped'],
-        tArtifacts_netx90_mpw_dbg['lib_stripped'],
         tArtifacts_netx90_dbg['lib_stripped'],
         tArtifacts_netx56_dbg['lib_stripped'],
         tArtifacts_netx50_dbg['lib_stripped'],
@@ -691,7 +663,6 @@ if fBuildIsFull==True:
         # Copy all binaries.
         'targets/testbench/netx/flasher_netx4000.bin':                     tArtifacts_netx4000_nodbg['bin'],
         'targets/testbench/netx/flasher_netx500.bin':                      tArtifacts_netx500_nodbg['bin'],
-        'targets/testbench/netx/flasher_netx90_mpw.bin':                   tArtifacts_netx90_mpw_nodbg['bin'],
         'targets/testbench/netx/flasher_netx90.bin':                       tArtifacts_netx90_nodbg['bin'],
         'targets/testbench/netx/flasher_netx56.bin':                       tArtifacts_netx56_nodbg['bin'],
         'targets/testbench/netx/flasher_netx50.bin':                       tArtifacts_netx50_nodbg['bin'],
@@ -701,7 +672,6 @@ if fBuildIsFull==True:
         # Copy all debug binaries.
         'targets/testbench/netx/debug/flasher_netx4000_debug.bin':         tArtifacts_netx4000_dbg['bin'],
         'targets/testbench/netx/debug/flasher_netx500_debug.bin':          tArtifacts_netx500_dbg['bin'],
-        'targets/testbench/netx/debug/flasher_netx90_mpw_debug.bin':       tArtifacts_netx90_mpw_dbg['bin'],
         'targets/testbench/netx/debug/flasher_netx90_debug.bin':           tArtifacts_netx90_dbg['bin'],
         'targets/testbench/netx/debug/flasher_netx56_debug.bin':           tArtifacts_netx56_dbg['bin'],
         'targets/testbench/netx/debug/flasher_netx50_debug.bin':           tArtifacts_netx50_dbg['bin'],
@@ -754,7 +724,6 @@ if fBuildIsFull==True:
 
         'targets/flasher_lib/libflasher_netx4000.a':                       tArtifacts_netx4000_nodbg['lib_stripped'],
         'targets/flasher_lib/libflasher_netx500.a':                        tArtifacts_netx500_nodbg['lib_stripped'],
-        'targets/flasher_lib/libflasher_netx90mpw.a':                      tArtifacts_netx90_mpw_nodbg['lib_stripped'],
         'targets/flasher_lib/libflasher_netx90.a':                         tArtifacts_netx90_nodbg['lib_stripped'],
         'targets/flasher_lib/libflasher_netx56.a':                         tArtifacts_netx56_nodbg['lib_stripped'],
         'targets/flasher_lib/libflasher_netx50.a':                         tArtifacts_netx50_nodbg['lib_stripped'],
@@ -763,7 +732,6 @@ if fBuildIsFull==True:
 
         'targets/flasher_lib/libflasher_netx4000_debug.a':                 tArtifacts_netx4000_dbg['lib_stripped'],
         'targets/flasher_lib/libflasher_netx500_debug.a':                  tArtifacts_netx500_dbg['lib_stripped'],
-        'targets/flasher_lib/libflasher_netx90mpw_debug.a':                tArtifacts_netx90_mpw_dbg['lib_stripped'],
         'targets/flasher_lib/libflasher_netx90_debug.a':                   tArtifacts_netx90_dbg['lib_stripped'],
         'targets/flasher_lib/libflasher_netx56_debug.a':                   tArtifacts_netx56_dbg['lib_stripped'],
         'targets/flasher_lib/libflasher_netx50_debug.a':                   tArtifacts_netx50_dbg['lib_stripped'],

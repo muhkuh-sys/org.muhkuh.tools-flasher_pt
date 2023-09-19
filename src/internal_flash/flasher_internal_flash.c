@@ -45,7 +45,7 @@ static NETX_CONSOLEAPP_RESULT_T check_flash_type(INTERNAL_FLASH_TYPE_T tType)
 
 
 
-#if ASIC_TYP==ASIC_TYP_NETX90_MPW || ASIC_TYP==ASIC_TYP_NETX90
+#if ASIC_TYP==ASIC_TYP_NETX90
 NETX_CONSOLEAPP_RESULT_T internal_flash_detect(CMD_PARAMETER_DETECT_T *ptParameter)
 #else
 NETX_CONSOLEAPP_RESULT_T internal_flash_detect(CMD_PARAMETER_DETECT_T *ptParameter __attribute__((unused)))
@@ -62,7 +62,7 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_detect(CMD_PARAMETER_DETECT_T *ptParamet
 	ptDeviceDescription->ulVersion = 0;
 	ptDeviceDescription->tSourceTyp = BUS_IFlash;
 
-#if ASIC_TYP==ASIC_TYP_NETX90_MPW || ASIC_TYP==ASIC_TYP_NETX90
+#if ASIC_TYP==ASIC_TYP_NETX90
 	/* netX90 MPW has the first version of the MAZ flash. */
 	tResult = internal_flash_maz_v0_detect(ptParameter);
 #else

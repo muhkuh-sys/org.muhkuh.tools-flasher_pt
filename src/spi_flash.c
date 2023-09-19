@@ -29,7 +29,7 @@
 #include "sfdp.h"
 
 
-#if ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 || ASIC_TYP==ASIC_TYP_NETX4000 || ASIC_TYP==ASIC_TYP_NETX90_MPW || ASIC_TYP==ASIC_TYP_NETX90
+#if ASIC_TYP==ASIC_TYP_NETX10 || ASIC_TYP==ASIC_TYP_NETX56 || ASIC_TYP==ASIC_TYP_NETX4000 || ASIC_TYP==ASIC_TYP_NETX90
 /* netX10, netX56, netX4000 and netX90 have a SQI and a SPI unit. */
 #	include "drv_sqi.h"
 #	include "drv_spi_hsoc_v2.h"
@@ -636,7 +636,7 @@ int board_get_spi_driver(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SP
 		break;
 	}
 
-#elif ASIC_TYP==ASIC_TYP_NETX90_MPW || ASIC_TYP==ASIC_TYP_NETX90
+#elif ASIC_TYP==ASIC_TYP_NETX90
 	switch( uiUnit )
 	{
 	case 0:

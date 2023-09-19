@@ -92,7 +92,7 @@ debug_stop:
 /* The Cortex-M4 in the netX90 is a THUMB-only CPU.
  * All others start in 32 bit mode.
  */
-#if ASIC_TYP==ASIC_TYP_NETX90_MPW || ASIC_TYP==ASIC_TYP_NETX90
+#if ASIC_TYP==ASIC_TYP_NETX90
 	.syntax unified
 	.thumb
 #else

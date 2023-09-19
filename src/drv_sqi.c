@@ -143,7 +143,7 @@ static const unsigned short ausPortcontrol_Index_SQI1_CS0[6] =
 };
 #endif
 
-#elif ASIC_TYP==ASIC_TYP_NETX90_MPW || ASIC_TYP==ASIC_TYP_NETX90
+#elif ASIC_TYP==ASIC_TYP_NETX90
 static const HOSTMMIODEF aatMmioValues[1][4] =
 {
 	/* The SQI port on the netX90 is not routed through the MMIO matrix. */
@@ -643,7 +643,7 @@ int flasher_drv_sqi_init(FLASHER_SPI_CFG_T *ptCfg, const FLASHER_SPI_CONFIGURATI
 #endif
 	}
 
-#elif ASIC_TYP==ASIC_TYP_NETX90_MPW || ASIC_TYP==ASIC_TYP_NETX90
+#elif ASIC_TYP==ASIC_TYP_NETX90
 	if( uiSqiUnit==0 )
 	{
 		ptSqiArea = (HOSTADEF(SQI)*)HOSTADDR(sqi);
