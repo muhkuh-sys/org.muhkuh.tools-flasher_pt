@@ -1006,6 +1006,9 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptPa
 		tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
 		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
+			/* Select read mode and main array or info page */
+			internal_flash_select_read_mode_and_clear_caches(ptAttr);
+
 			/* Get a pointer to the data to be flashed. */
 			pucDataToBeFlashed = ptParameter->pucData;
 
