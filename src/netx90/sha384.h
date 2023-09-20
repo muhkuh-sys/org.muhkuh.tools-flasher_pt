@@ -10,8 +10,8 @@ typedef union SHA384_HASH_SUM_UNION
 
 
 void sha384_initialize(void);
-#define sha384_update_ul(ulData) {ptHashArea->ulHash_din = ulData;}
-void sha384_finalize(unsigned long *pulHash, unsigned int sizHash, unsigned long ulDataSizeDw);
+#define sha384_update_uc(ucData) {*((volatile unsigned char*)(&(ptHashArea->ulHash_din))) = ucData;}
+void sha384_finalize(unsigned char *pucHash, unsigned long ulDataSizeByte);
 
 
 #endif  /* __SHA384_H__ */

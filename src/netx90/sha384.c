@@ -35,37 +35,38 @@ void sha384_initialize(void)
 
 
 
-void sha384_finalize(unsigned long *pulHash, unsigned int sizHash, unsigned long ulDataSizeDw)
+void sha384_finalize(unsigned char *pucHash, unsigned long ulDataSizeByte)
 {
 	HOSTDEF(ptHashArea);
 	unsigned long long ullBits;
 	unsigned long ulValue;
 	unsigned long ulValueRev;
-	unsigned long ulPadDw;
+	unsigned long ulPadByte;
+	unsigned int uiCnt;
 
 
 	/* Pad the data. */
-	ulPadDw = ulDataSizeDw & 0x1fU;
-	if( ulPadDw<28 )
+	ulPadByte = ulDataSizeByte & 0x7fU;
+	if( ulPadByte<112 )
 	{
-		ulPadDw = 29U - ulPadDw;
+		ulPadByte = 119U - ulPadByte;
 	}
 	else
 	{
-		ulPadDw = 61U - ulPadDw;
+		ulPadByte = 247U - ulPadByte;
 	}
 
 	/* Start the padding data with a '1' bit. */
-	ptHashArea->ulHash_din = 0x00000080U;
+	*((volatile unsigned char*)(&(ptHashArea->ulHash_din))) = 0x80U;
 	/* Continue with a lot of '0' bits. */
-	while( ulPadDw!=0 )
+	while( ulPadByte!=0 )
 	{
-		ptHashArea->ulHash_din = 0x00000000U;
-		--ulPadDw;
+		*((volatile unsigned char*)(&(ptHashArea->ulHash_din))) = 0x00U;
+		--ulPadByte;
 	}
 
 	/* Convert the number of DWORDs to bits. */
-	ullBits = ((unsigned long long)ulDataSizeDw) * 32U;
+	ullBits = ((unsigned long long)ulDataSizeByte) * 8U;
 	ulValue = ((unsigned long)((ullBits >> 32U) & 0xffffffffU));
 	ulValueRev = ((ulValue & 0x000000ffU) << 24U) |
 	             ((ulValue & 0x0000ff00U) <<  8U) |
@@ -91,12 +92,12 @@ void sha384_finalize(unsigned long *pulHash, unsigned int sizHash, unsigned long
 	} while( ulValue==0 );
 
 	/* Copy the hash to the buffer. */
-	if( pulHash!=NULL )
+	for(uiCnt=0; uiCnt<(sizeof(SHA384_HASH_SUM_T)/sizeof(unsigned long)); uiCnt++)
 	{
-		while(sizHash!=0)
-		{
-			--sizHash;
-			pulHash[sizHash] = ptHashArea->aulHash_dout[sizHash];
-		}
+		ulValue = ptHashArea->aulHash_dout[uiCnt];
+		*(pucHash++) = (unsigned char)( ulValue         & 0x000000ffU);
+		*(pucHash++) = (unsigned char)((ulValue >>  8U) & 0x000000ffU);
+		*(pucHash++) = (unsigned char)((ulValue >> 16U) & 0x000000ffU);
+		*(pucHash++) = (unsigned char)((ulValue >> 24U) & 0x000000ffU);
 	}
 }
