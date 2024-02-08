@@ -254,8 +254,8 @@ extern const char _binary_spi_flash_types_exo_end[];
 *   Convert the linear input address to the device's addressing mode
 *
 *   \param   ptFls              pointer to the instance of the spi flash
-*   \param   ulLinearAddress    linear address                  
-*                                                                              
+*   \param   ulLinearAddress    linear address
+*
 *   \return  RX_OK              status successfully returned
 */
 static int detect_flash(FLASHER_SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_T **pptFlashAttr, char *pcBufferEnd)
@@ -426,11 +426,11 @@ static int detect_flash(FLASHER_SPI_FLASH_T *ptFlash, const SPIFLASH_ATTRIBUTES_
 *               send the command,
 *               deselect the slave,
 *               send one idle byte
-*               
+*
 *   \param   ptFls             pointer to the instance of the spi flash
 *   \param   pbCmd             pointer to the byte array holding the command
 *   \param   uiCmdLen          command length in bytes
-*                                                                              
+*
 *   \return  RX_OK             status successfully returned                  */
 static int send_simple_cmd(const FLASHER_SPI_FLASH_T *ptFlash, const unsigned char *pucCmd, size_t sizCmdLen)
 {
@@ -488,7 +488,7 @@ static int send_simple_cmd(const FLASHER_SPI_FLASH_T *ptFlash, const unsigned ch
 
 /*! write_enable
 *   unlock the flash's write protection
-*               
+*
 *   \param   ptFlash           Pointer to flash Control Block
 *   \return  iResult           =0 success, <>0 error                         */
 
@@ -498,10 +498,10 @@ static int write_enable(const FLASHER_SPI_FLASH_T *ptFlash)
 	unsigned char ucOpcode;
 
 	DEBUGMSG(ZONE_FUNCTION, ("+write_enable(): ptFlash=0x%08x\n", ptFlash));
-	
+
 	/*  does the device support write protection? */
 	ucOpcode = ptFlash->tAttributes.ucWriteEnableOpcode;
-	
+
 	if( ucOpcode!=0 )
 	{
 		/* send the 'write enable' command */
@@ -511,8 +511,8 @@ static int write_enable(const FLASHER_SPI_FLASH_T *ptFlash)
 			//uprintf("ERROR: write_enable: send_simple_command failed with %d.\n", iResult);
 			DBG_CALL_FAILED_VAL("send_simple_cmd", iResult)
 		}
-	} 
-	else 
+	}
+	else
 	{
 		iResult = 0;
 	}
@@ -550,7 +550,7 @@ static int wait_for_ready(const FLASHER_SPI_FLASH_T *ptFlash)
 		ucStatus &= ptFlash->tAttributes.ucStatusReadyMask;
 
 		progress_bar_check_timer();
-		
+
 		/* wait until the remaining status bits match the expected value */
 	} while( ucStatus!=ptFlash->tAttributes.ucStatusReadyValue );
 
@@ -670,12 +670,12 @@ int board_get_spi_driver(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SP
 		ptSpiDev->pvUnit = (HOSTADEF(SPI)*)HOSTADDR(spi);
 		iResult = flasher_drv_spi_init(ptSpiDev, ptSpiCfg);
 		break;
-		
+
 	default:
 		iResult = -1;
 		break;
 	}
-	
+
 #else
 	DBG_ERROR_VAL("Unknown ASIC type %d. Forgot to extend this function for a new ASIC?", ASIC_TYP)
 	iResult = -1;
@@ -687,9 +687,9 @@ int board_get_spi_driver(const FLASHER_SPI_CONFIGURATION_T *ptSpiCfg, FLASHER_SP
 
 /*! Drv_SpiInitializeFlash
 *   Initializes the FLASH
-*               
+*
 *   \param  ptFls   Pointer to FLASH Control Block
-*                                                                              
+*
 *   \return  RX_OK                   FLASH successfully initialized
 *            Drv_SpiS_INVALID        Specified Flash Control Block invalid
 *            Drv_SpiS_UNKNOWN_FLASH  failed to detect the serial FLASH
