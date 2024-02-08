@@ -1665,7 +1665,7 @@ static const ADR_MODE_NAME_T atAdrModeName[2] =
 
 const char *spi_flash_get_adr_mode_name(SPIFLASH_ADR_T tAdrMode)
 {
-	const char *pcResult = "";
+	const char *pcResult = "???";
 	const ADR_MODE_NAME_T *ptCnt;
 	const ADR_MODE_NAME_T *ptEnd;
 
@@ -1679,6 +1679,7 @@ const char *spi_flash_get_adr_mode_name(SPIFLASH_ADR_T tAdrMode)
 			pcResult = ptCnt->pcAdrMode;
 			break;
 		}
+		++ptCnt;
 	}
 
 	return pcResult;
