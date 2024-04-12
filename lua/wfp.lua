@@ -203,7 +203,7 @@ if tArgs.fCommandFlashSelected==true then
 
     if fOk==true then
       -- Select a plugin and connect to the netX.
-      local tPlugin = _G.tester:getCommonPlugin()
+      local tPlugin = _G.tester:getCommonPlugin('INTERACTIVE')
       if not tPlugin then
         tLog.error('No plugin selected, nothing to do!')
         fOk = false
