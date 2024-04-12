@@ -1840,9 +1840,11 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_verify(CMD_PARAMETER_VERIFY_T *pt
 				}
 			} while( ulOffset<ulLength );
 			progress_bar_finalize();
-			ptConsoleParams->pvReturnMessage = (void*)tResult;
 		}
 	}
+
+	/* Store the result of the verify operation in the return message. */
+	ptConsoleParams->pvReturnMessage = (void*)tResult;
 
 	return tResult;
 }
