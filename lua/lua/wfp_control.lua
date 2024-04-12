@@ -154,6 +154,30 @@ end
 
 
 
+--- Map a string value to a boolean value.
+-- Accepts a variety of inputs:
+-- true/false, t/f, yes/no, y/n, 1/0 independent of case.
+-- see hboot_image.py __string_to_bool
+-- @param strBool the string to be mapped to a boolean value.
+-- @return boolean value true, false or nil.
+local function __stringToBool(strBool)
+  local atStringToBool = {
+    ["TRUE"]  = true,
+    ["FALSE"] = false,
+    ["T"]     = true,
+    ["F"]     = false,
+    ["YES"]   = true,
+    ["NO"]    = false,
+    ["Y"]     = true,
+    ["N"]     = false,
+    ["1"]     = true,
+    ["0"]     = false
+  }
+  return atStringToBool[string.upper(strBool)]
+end
+
+
+
 --- Expat callback function for starting an element.
 -- This function is part of the callbacks for the expat parser.
 -- It is called when a new element is opened.
@@ -395,6 +419,104 @@ function WfpControl.__parseCfg_StartElement(tParser, strElementName, atAttribute
             tErase.strCondition = strCondition
 
             table.insert(aLxpAttr.tCurrentFlash.atData, tErase)
+          end
+        end
+      end
+    end
+
+  elseif strCurrentPath=='/FlasherPackage/Target/Sip' then
+    -- Get the "page" attribute. It is mandatory and can have the values "APP" and "COM" in any upper/lower case
+    -- combination.
+    local strPage = atAttributes['page']
+    if strPage==nil or strPage=='' then
+      aLxpAttr.tResult = nil
+      aLxpAttr.tLog.error('Error in line %d, col %d: missing attribute "page".', iPosLine, iPosColumn)
+    else
+      strPage = string.upper(strPage)
+      if strPage~="APP" and strPage~="COM" then
+        aLxpAttr.tResult = nil
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: invalid value for attribute "page": "%s"',
+          iPosLine,
+          iPosColumn,
+          strPage
+        )
+      else
+        -- Get the attribute "file". It is mandatory.
+        local strFile = atAttributes['file']
+        if strFile==nil or strFile=='' then
+          -- No file name specified.
+          aLxpAttr.tResult = nil
+          aLxpAttr.tLog.error('Error in line %d, col %d: attribute "file" is not set.', iPosLine, iPosColumn)
+        else
+          -- Get the attribute "setKEK". It is optional and the default value is "false".
+          -- It can have one of the many values for a boolean, see __stringToBool for details.
+          local fSetKek = false
+          local strSetKek = atAttributes['setKEK']
+          if strSetKek~=nil and strSetKek~='' then
+            fSetKek = __stringToBool(strSetKek)
+          end
+          if fSetKek==nil then
+            -- Invalid parameter.
+            aLxpAttr.tResult = nil
+            aLxpAttr.tLog.error('Error in line %d, col %d: attribute "setKEK" is invalid.', iPosLine, iPosColumn)
+          else
+            -- Get the optional attribute "condition". The default value is the empty string.
+            local strCondition = atAttributes['condition']
+            if strCondition==nil then
+              strCondition = ''
+            end
+
+            -- Translate the "page" and "setKEK" attributes to unit and chipselect.
+            local ulUnit
+            local ulChipSelect
+            local fDouble = false
+            if strPage=='COM' then
+              -- Write the COM page. This is unit 1.
+              ulUnit = 1
+              -- If the KEK should be set, the page must be patched. This is achieved with CS 3.
+              -- If the KEK should not be set, the unmodified page should be written. This is achieved with CS 1.
+              --
+              -- The following expression results to 3 if "fSetKek" is true, and 1 if it is false.
+              ulChipSelect = fSetKek and 3 or 1
+
+              -- CS 3 handles the duplication of the SIP internally.
+              -- CS 1 needs 2 separate entries.
+              if ulChipSelect~=3 then
+                fDouble = true
+              end
+            else
+              -- Write the APP page. This is unit 2.
+              ulUnit = 2
+              -- The calibration is always set. This is achieved with CS 3.
+              ulChipSelect = 3
+            end
+
+            -- Create a new data entry.
+            local atData = {
+              {
+                strType = "Data",
+                strFile = strFile,
+                ulOffset = 0,
+                strCondition = strCondition
+              }
+            }
+            if fDouble then
+              table.insert(atData, {
+                strType = "Data",
+                strFile = strFile,
+                ulOffset = 4096,
+                strCondition = strCondition
+              })
+            end
+
+            -- Create a new flash entry in the current target.
+            table.insert(aLxpAttr.tCurrentTarget.atFlashes, {
+              strBus = 'IFlash',
+              ulUnit = ulUnit,
+              ulChipSelect = ulChipSelect,
+              atData = atData
+            })
           end
         end
       end
