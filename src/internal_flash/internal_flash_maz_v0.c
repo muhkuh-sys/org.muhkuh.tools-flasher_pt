@@ -1114,23 +1114,29 @@ static void infoS_clear_IF1(unsigned char *pucBuffer)
 
 
 
-static void infoS_patch_IF2(unsigned char *pucBuffer)
+static NETX_CONSOLEAPP_RESULT_T infoS_patch_IF2(unsigned char *pucBuffer)
 {
+	NETX_CONSOLEAPP_RESULT_T tResult;
 	INTERNAL_FLASH_ATTRIBUTES_MAZ_V0_T tAttr;
 	const unsigned char *pucCalArea;
 
 
 	/* Read the calibration data from the info page of flash 0. */
-	getFlashAttributesByArea(INTERNAL_FLASH_AREA_Flash0_Info, &tAttr);
-	internal_flash_select_read_mode_and_clear_caches(&tAttr);
+	tResult = getFlashAttributesByArea(INTERNAL_FLASH_AREA_Flash0_Info, &tAttr);
+	if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+	{
+		internal_flash_select_read_mode_and_clear_caches(&tAttr);
 
-	/* The calibration data are 48 bytes at offset 2192 (0x890).
-	 * Copy it to offset 2048 (0x800)
-	 */
-	pucCalArea = (const unsigned char*)(HOSTADDR(intflash0) + 0x0890U);
-	memcpy(pucBuffer+0x0800U, pucCalArea, 48U);
+		/* The calibration data are 48 bytes at offset 2192 (0x890).
+		* Copy it to offset 2048 (0x800)
+		*/
+		pucCalArea = (const unsigned char*)(HOSTADDR(intflash0) + 0x0890U);
+		memcpy(pucBuffer+0x0800U, pucCalArea, 48U);
 
-	infoS_update_hash(pucBuffer);
+		infoS_update_hash(pucBuffer);
+	}
+
+	return tResult;
 }
 
 
@@ -1318,30 +1324,32 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptPa
 				else
 				{
 					/* Flash the secure APP page. */
-					infoS_patch_IF2(pucInternalWorkingBuffer);
+					tResult = infoS_patch_IF2(pucInternalWorkingBuffer);
 				}
-
-				progress_bar_init(2 * IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES);
-
-				/* Select read mode and main array or info page */
-				internal_flash_select_read_mode_and_clear_caches(ptAttr);
-
-				/* Flash the page to offset 0 and offset 4096. */
-				tResult = infoS_flash(ptAttr, 0, pucInternalWorkingBuffer);
 				if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 				{
-					/* Erase the 2nd block in the info page. */
-					tResult = internal_flash_maz_v0_erase_block(ptAttr, IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES);
+					progress_bar_init(2 * IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES);
+
+					/* Select read mode and main array or info page */
+					internal_flash_select_read_mode_and_clear_caches(ptAttr);
+
+					/* Flash the page to offset 0 and offset 4096. */
+					tResult = infoS_flash(ptAttr, 0, pucInternalWorkingBuffer);
 					if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 					{
-						tResult = infoS_flash(ptAttr, IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES, pucInternalWorkingBuffer);
+						/* Erase the 2nd block in the info page. */
+						tResult = internal_flash_maz_v0_erase_block(ptAttr, IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES);
+						if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+						{
+							tResult = infoS_flash(ptAttr, IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES, pucInternalWorkingBuffer);
+						}
 					}
+
+					progress_bar_finalize();
+
+					/* Clear the internal working buffer. */
+					memset(pucInternalWorkingBuffer, 0x00U, IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES);
 				}
-
-				progress_bar_finalize();
-
-				/* Clear the internal working buffer. */
-				memset(pucInternalWorkingBuffer, 0x00U, IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES);
 			}
 		}
 		else
