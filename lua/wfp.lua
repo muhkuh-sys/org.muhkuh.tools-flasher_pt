@@ -322,7 +322,7 @@ elseif tArgs.fCommandListSelected==true then
   else
     tLog.info('WFP conditions:')
     local atConditions = tWfpControl:getConditions()
-    for uiConditionIdx, tCondition in ipairs(atConditions) do
+    for _, tCondition in ipairs(atConditions) do
       local strTest = tCondition.test
       local tConstraints = tCondition.constraints
       local strCheck = ''
@@ -410,7 +410,7 @@ elseif tArgs.fCommandPackSelected==true then
       -- Collect all file references from the control file.
       local atFiles = {}
       local atSortedFiles = {}
-      for strTarget, tTarget in pairs(tWfpControl.atConfigurationTargets) do
+      for _, tTarget in pairs(tWfpControl.atConfigurationTargets) do
         for _, tTargetFlash in ipairs(tTarget.atFlashes) do
           local strBusName = tTargetFlash.strBus
           local tBus = atName2Bus[strBusName]
