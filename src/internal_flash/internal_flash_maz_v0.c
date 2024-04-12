@@ -1252,6 +1252,86 @@ static NETX_CONSOLEAPP_RESULT_T infoS_prepareReadData(const INTERNAL_FLASH_ATTRI
 }
 
 
+static NETX_CONSOLEAPP_RESULT_T check_info_write_protection(INTERNAL_FLASH_AREA_T tFlashArea, int iCheckWriteAccess)
+{
+	HOSTDEF(ptIflashCfg0ComArea);
+	HOSTDEF(ptIflashCfg1ComArea);
+	HOSTDEF(ptIflashCfg2Area);
+	NETX_CONSOLEAPP_RESULT_T tResult;
+	NX90_IFLASH_CFG_AREA_T *ptIflashCfgArea;
+	unsigned long ulProtectionMask;
+	unsigned long ulValue;
+
+
+	tResult = NETX_CONSOLEAPP_RESULT_OK;
+
+	/* Is the selected area one of the info pages? In this case the pointer "ptIflashCfgArea" is not NULL. */
+	ptIflashCfgArea = NULL;
+
+	/* Use a switch-case here as it warns when some values of the ENUM
+	 * "INTERNAL_FLASH_AREA_ENUM" are missing as long as there is no "default".
+	 */
+	switch( tFlashArea )
+	{
+	case INTERNAL_FLASH_AREA_Unknown:
+	case INTERNAL_FLASH_AREA_Flash0_Main:
+	case INTERNAL_FLASH_AREA_Flash1_Main:
+	case INTERNAL_FLASH_AREA_Flash2_Main:
+	case INTERNAL_FLASH_AREA_Flash01_Main:
+		/* This is no info page. */
+		break;
+
+	case INTERNAL_FLASH_AREA_Flash0_Info:
+	case INTERNAL_FLASH_AREA_Flash0_InfoK:
+		/* This is one of the info pages of flash block 0. */
+		ptIflashCfgArea = ptIflashCfg0ComArea;
+		break;
+
+	case INTERNAL_FLASH_AREA_Flash1_Info:
+	case INTERNAL_FLASH_AREA_Flash1_InfoS:
+	case INTERNAL_FLASH_AREA_Flash1_InfoK:
+		/* This is one of the info pages of flash block 1. */
+		ptIflashCfgArea = ptIflashCfg1ComArea;
+		break;
+
+	case INTERNAL_FLASH_AREA_Flash2_Info:
+	case INTERNAL_FLASH_AREA_Flash2_InfoS:
+	case INTERNAL_FLASH_AREA_Flash2_InfoK:
+		/* This is one of the info pages of flash block 2. */
+		ptIflashCfgArea = ptIflashCfg2Area;
+		break;
+	}
+
+	if( ptIflashCfgArea!=NULL )
+	{
+		/* Get the protection mask. Check for a read protection, and if
+		 * iCheckWriteAccess is not 0 also for write protection.
+		 */
+		ulProtectionMask  = MSK_NX90_iflash_protection_info_read_0_dw;
+		ulProtectionMask |= MSK_NX90_iflash_protection_info_read_0_up;
+		ulProtectionMask |= MSK_NX90_iflash_protection_info_read_1_dw;
+		ulProtectionMask |= MSK_NX90_iflash_protection_info_read_1_up;
+		if( iCheckWriteAccess!=0 )
+		{
+			ulProtectionMask |= MSK_NX90_iflash_protection_info_write_0;
+			ulProtectionMask |= MSK_NX90_iflash_protection_info_write_1;
+		}
+
+		/* Is the info page protected? */
+		ulValue  = ptIflashCfgArea->ulIflash_protection_info;
+		ulValue &= ulProtectionMask;
+		if( ulValue!=0U )
+		{
+			/* At least one of the protection bits are set. */
+			tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+			uprintf("! The selected info page is protected.\n");
+		}
+	}
+
+	return tResult;
+}
+
+
 
 NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptParameter)
 {
@@ -1289,177 +1369,120 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptPa
 		ptAttr = &(ptParameter->ptDeviceDescription->uInfo.tInternalFlashInfo.uAttributes.tMazV0);
 
 		tFlashArea = ptAttr->tArea;
-		if( tFlashArea==INTERNAL_FLASH_AREA_Flash1_InfoS || tFlashArea==INTERNAL_FLASH_AREA_Flash2_InfoS )
+		tResult = check_info_write_protection(tFlashArea, 1);
+		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
-			/* This command needs an internal working buffer. Place it at the end of the data buffer. */
-			pucInternalWorkingBuffer = flasher_version.pucBuffer_End - IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
+			if( tFlashArea==INTERNAL_FLASH_AREA_Flash1_InfoS || tFlashArea==INTERNAL_FLASH_AREA_Flash2_InfoS )
+			{
+				/* This command needs an internal working buffer. Place it at the end of the data buffer. */
+				pucInternalWorkingBuffer = flasher_version.pucBuffer_End - IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
 
-			/* The special "S" secure info pages can only be flashed as a complete page. */
-			if( ulOffsetStart!=0 )
-			{
-				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-				uprintf("! The info S pages can only be flashed at offset 0.\n");
-			}
-			else if( ptParameter->ulDataByteSize!=IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES )
-			{
-				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-				uprintf("! The info S pages can only be flashed with 4096 bytes.\n");
-			}
-			/* Does the command buffer overlap with the internal working buffer? */
-			else if( (ptParameter->pucData+IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES)>=pucInternalWorkingBuffer )
-			{
-				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-				uprintf("! The selected buffer overlaps with the internal working buffer.\n");
-			}
-			else
-			{
-				/* Create a copy of the data in the internal working buffer. */
-				memcpy(pucInternalWorkingBuffer, ptParameter->pucData, IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES);
-
-				if( tFlashArea==INTERNAL_FLASH_AREA_Flash1_InfoS )
+				/* The special "S" secure info pages can only be flashed as a complete page. */
+				if( ulOffsetStart!=0 )
 				{
-					/* Flash the secure COM info page. */
-					infoS_patch_IF1(pucInternalWorkingBuffer);
+					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					uprintf("! The info S pages can only be flashed at offset 0.\n");
+				}
+				else if( ptParameter->ulDataByteSize!=IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES )
+				{
+					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					uprintf("! The info S pages can only be flashed with 4096 bytes.\n");
+				}
+				/* Does the command buffer overlap with the internal working buffer? */
+				else if( (ptParameter->pucData+IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES)>=pucInternalWorkingBuffer )
+				{
+					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					uprintf("! The selected buffer overlaps with the internal working buffer.\n");
 				}
 				else
 				{
-					/* Flash the secure APP page. */
-					tResult = infoS_patch_IF2(pucInternalWorkingBuffer);
+					/* Create a copy of the data in the internal working buffer. */
+					memcpy(pucInternalWorkingBuffer, ptParameter->pucData, IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES);
+
+					if( tFlashArea==INTERNAL_FLASH_AREA_Flash1_InfoS )
+					{
+						/* Flash the secure COM info page. */
+						infoS_patch_IF1(pucInternalWorkingBuffer);
+					}
+					else
+					{
+						/* Flash the secure APP page. */
+						tResult = infoS_patch_IF2(pucInternalWorkingBuffer);
+					}
+					if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+					{
+						progress_bar_init(2 * IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES);
+
+						/* Select read mode and main array or info page */
+						internal_flash_select_read_mode_and_clear_caches(ptAttr);
+
+						/* Flash the page to offset 0 and offset 4096. */
+						tResult = infoS_flash(ptAttr, 0, pucInternalWorkingBuffer);
+						if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+						{
+							/* Erase the 2nd block in the info page. */
+							tResult = internal_flash_maz_v0_erase_block(ptAttr, IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES);
+							if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+							{
+								tResult = infoS_flash(ptAttr, IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES, pucInternalWorkingBuffer);
+							}
+						}
+
+						progress_bar_finalize();
+
+						/* Clear the internal working buffer. */
+						memset(pucInternalWorkingBuffer, 0x00U, IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES);
+					}
 				}
+			}
+			else
+			{
+				ulProgressCnt = 0;
+				progress_bar_init(ulOffsetEnd - ulOffsetStart);
+
+				tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
 				if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 				{
-					progress_bar_init(2 * IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES);
-
 					/* Select read mode and main array or info page */
 					internal_flash_select_read_mode_and_clear_caches(ptAttr);
 
-					/* Flash the page to offset 0 and offset 4096. */
-					tResult = infoS_flash(ptAttr, 0, pucInternalWorkingBuffer);
-					if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+					/* Get a pointer to the data to be flashed. */
+					pucDataToBeFlashed = ptParameter->pucData;
+
+					ulOffset = ulOffsetStart;
+
+					/* Does the area start in the middle of a page? */
+					ulChunkOffset = ulOffset % IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
+					if( ulChunkOffset!=0 )
 					{
-						/* Erase the 2nd block in the info page. */
-						tResult = internal_flash_maz_v0_erase_block(ptAttr, IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES);
-						if( tResult==NETX_CONSOLEAPP_RESULT_OK )
-						{
-							tResult = infoS_flash(ptAttr, IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES, pucInternalWorkingBuffer);
-						}
-					}
+						/* Yes -> modify the last part of a page. */
 
-					progress_bar_finalize();
-
-					/* Clear the internal working buffer. */
-					memset(pucInternalWorkingBuffer, 0x00U, IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES);
-				}
-			}
-		}
-		else
-		{
-			ulProgressCnt = 0;
-			progress_bar_init(ulOffsetEnd - ulOffsetStart);
-
-			tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
-			if( tResult==NETX_CONSOLEAPP_RESULT_OK )
-			{
-				/* Select read mode and main array or info page */
-				internal_flash_select_read_mode_and_clear_caches(ptAttr);
-
-				/* Get a pointer to the data to be flashed. */
-				pucDataToBeFlashed = ptParameter->pucData;
-
-				ulOffset = ulOffsetStart;
-
-				/* Does the area start in the middle of a page? */
-				ulChunkOffset = ulOffset % IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
-				if( ulChunkOffset!=0 )
-				{
-					/* Yes -> modify the last part of a page. */
-
-					/* Get the pointer to the controller and the offset in the memory map. */
-					tResult = iflash_get_controller(ptAttr, ulOffset, &tFlashBlock);
-					if( tResult==NETX_CONSOLEAPP_RESULT_OK )
-					{
-						pucFlashDataArea = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
-
-						/* Get the start offset of the page. */
-						ulPageStartOffset = ulOffset - ulChunkOffset;
-
-						/* Get the old contents of the page. */
-						memcpy(tFlashBuffer.auc, pucFlashDataArea + ulPageStartOffset, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
-
-						/* Add the new part to the buffer. */
-						ulChunkSize = IFLASH_MAZ_V0_PAGE_SIZE_BYTES - ulChunkOffset;
-						ulDataSize = ulOffsetEnd - ulOffset;
-						if( ulChunkSize>ulDataSize )
-						{
-							ulChunkSize = ulDataSize;
-						}
-						memcpy(tFlashBuffer.auc + ulChunkOffset, pucDataToBeFlashed, ulChunkSize);
-
-						/* Flash the chunk. */
-						tResult = internal_flash_maz_v0_flash_page(ptAttr, ulPageStartOffset, &tFlashBuffer);
-						if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
-						{
-							uprintf("! Failed to flash the page at offset 0x%08x.\n", ulPageStartOffset);
-						}
-						else
-						{
-							ulOffset += ulChunkSize;
-							pucDataToBeFlashed += ulChunkSize;
-
-							/* inc progress */
-							ulProgressCnt += ulChunkSize;
-							progress_bar_set_position(ulProgressCnt);
-						}
-					}
-				}
-
-				if( tResult==NETX_CONSOLEAPP_RESULT_OK )
-				{
-					/* Write all complete pages. */
-					while( (ulOffset+IFLASH_MAZ_V0_PAGE_SIZE_BYTES)<=ulOffsetEnd )
-					{
-						memcpy(tFlashBuffer.auc, pucDataToBeFlashed, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
-						tResult = internal_flash_maz_v0_flash_page(ptAttr, ulOffset, &tFlashBuffer);
-						if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
-						{
-							uprintf("! Failed to flash the page at offset 0x%08x.\n", ulOffset);
-							break;
-						}
-						else
-						{
-							ulOffset += IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
-							pucDataToBeFlashed += IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
-
-							/* inc progress */
-							ulProgressCnt += IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
-							progress_bar_set_position(ulProgressCnt);
-						}
-					}
-				}
-
-				if( tResult==NETX_CONSOLEAPP_RESULT_OK )
-				{
-					/* Is a part of the last page left? */
-					ulChunkSize = ulOffsetEnd - ulOffset;
-					if( ulChunkSize!=0 )
-					{
 						/* Get the pointer to the controller and the offset in the memory map. */
 						tResult = iflash_get_controller(ptAttr, ulOffset, &tFlashBlock);
 						if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 						{
 							pucFlashDataArea = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
 
+							/* Get the start offset of the page. */
+							ulPageStartOffset = ulOffset - ulChunkOffset;
+
 							/* Get the old contents of the page. */
-							memcpy(tFlashBuffer.auc, pucFlashDataArea + ulOffset, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
+							memcpy(tFlashBuffer.auc, pucFlashDataArea + ulPageStartOffset, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
 
 							/* Add the new part to the buffer. */
-							memcpy(tFlashBuffer.auc, pucDataToBeFlashed, ulChunkSize);
+							ulChunkSize = IFLASH_MAZ_V0_PAGE_SIZE_BYTES - ulChunkOffset;
+							ulDataSize = ulOffsetEnd - ulOffset;
+							if( ulChunkSize>ulDataSize )
+							{
+								ulChunkSize = ulDataSize;
+							}
+							memcpy(tFlashBuffer.auc + ulChunkOffset, pucDataToBeFlashed, ulChunkSize);
 
 							/* Flash the chunk. */
-							tResult = internal_flash_maz_v0_flash_page(ptAttr, ulOffset, &tFlashBuffer);
+							tResult = internal_flash_maz_v0_flash_page(ptAttr, ulPageStartOffset, &tFlashBuffer);
 							if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
 							{
-								uprintf("! Failed to flash the page at offset 0x%08x.\n", ulOffset);
+								uprintf("! Failed to flash the page at offset 0x%08x.\n", ulPageStartOffset);
 							}
 							else
 							{
@@ -1472,10 +1495,71 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_flash(CMD_PARAMETER_FLASH_T *ptPa
 							}
 						}
 					}
-				}
-			}
 
-			progress_bar_finalize();
+					if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+					{
+						/* Write all complete pages. */
+						while( (ulOffset+IFLASH_MAZ_V0_PAGE_SIZE_BYTES)<=ulOffsetEnd )
+						{
+							memcpy(tFlashBuffer.auc, pucDataToBeFlashed, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
+							tResult = internal_flash_maz_v0_flash_page(ptAttr, ulOffset, &tFlashBuffer);
+							if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
+							{
+								uprintf("! Failed to flash the page at offset 0x%08x.\n", ulOffset);
+								break;
+							}
+							else
+							{
+								ulOffset += IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
+								pucDataToBeFlashed += IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
+
+								/* inc progress */
+								ulProgressCnt += IFLASH_MAZ_V0_PAGE_SIZE_BYTES;
+								progress_bar_set_position(ulProgressCnt);
+							}
+						}
+					}
+
+					if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+					{
+						/* Is a part of the last page left? */
+						ulChunkSize = ulOffsetEnd - ulOffset;
+						if( ulChunkSize!=0 )
+						{
+							/* Get the pointer to the controller and the offset in the memory map. */
+							tResult = iflash_get_controller(ptAttr, ulOffset, &tFlashBlock);
+							if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+							{
+								pucFlashDataArea = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
+
+								/* Get the old contents of the page. */
+								memcpy(tFlashBuffer.auc, pucFlashDataArea + ulOffset, IFLASH_MAZ_V0_PAGE_SIZE_BYTES);
+
+								/* Add the new part to the buffer. */
+								memcpy(tFlashBuffer.auc, pucDataToBeFlashed, ulChunkSize);
+
+								/* Flash the chunk. */
+								tResult = internal_flash_maz_v0_flash_page(ptAttr, ulOffset, &tFlashBuffer);
+								if( tResult!=NETX_CONSOLEAPP_RESULT_OK )
+								{
+									uprintf("! Failed to flash the page at offset 0x%08x.\n", ulOffset);
+								}
+								else
+								{
+									ulOffset += ulChunkSize;
+									pucDataToBeFlashed += ulChunkSize;
+
+									/* inc progress */
+									ulProgressCnt += ulChunkSize;
+									progress_bar_set_position(ulProgressCnt);
+								}
+							}
+						}
+					}
+				}
+
+				progress_bar_finalize();
+			}
 		}
 	}
 
@@ -1511,29 +1595,33 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_erase(CMD_PARAMETER_ERASE_T *ptPa
 		ptAttr = &(ptParameter->ptDeviceDescription->uInfo.tInternalFlashInfo.uAttributes.tMazV0);
 
 		tFlashArea = ptAttr->tArea;
-		if( tFlashArea==INTERNAL_FLASH_AREA_Flash1_InfoS || tFlashArea==INTERNAL_FLASH_AREA_Flash2_InfoS )
+		tResult = check_info_write_protection(tFlashArea, 1);
+		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
-			/* The special "S" secure info pages can only be flashed as a complete page. */
-			if( ulOffsetStart!=0 )
+			if( tFlashArea==INTERNAL_FLASH_AREA_Flash1_InfoS || tFlashArea==INTERNAL_FLASH_AREA_Flash2_InfoS )
 			{
-				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-				uprintf("! The info S pages can only be erased at offset 0.\n");
-			}
-			else if( (ulOffsetEnd-ulOffsetStart)!=IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES )
-			{
-				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-				uprintf("! The info S pages can only be erased with 4096 bytes.\n");
+				/* The special "S" secure info pages can only be flashed as a complete page. */
+				if( ulOffsetStart!=0 )
+				{
+					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					uprintf("! The info S pages can only be erased at offset 0.\n");
+				}
+				else if( (ulOffsetEnd-ulOffsetStart)!=IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES )
+				{
+					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					uprintf("! The info S pages can only be erased with 4096 bytes.\n");
+				}
+				else
+				{
+					/* Erase both SIP pages. */
+					ulOffsetEnd = 2U * IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
+					tResult = NETX_CONSOLEAPP_RESULT_OK;
+				}
 			}
 			else
 			{
-				/* Erase both SIP pages. */
-				ulOffsetEnd = 2U * IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
-				tResult = NETX_CONSOLEAPP_RESULT_OK;
+				tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
 			}
-		}
-		else
-		{
-			tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
 		}
 		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
@@ -1618,44 +1706,48 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_read(CMD_PARAMETER_READ_T *ptPara
 		ptAttr = &(ptParameter->ptDeviceDescription->uInfo.tInternalFlashInfo.uAttributes.tMazV0);
 
 		tFlashArea = ptAttr->tArea;
-		if( tFlashArea==INTERNAL_FLASH_AREA_Flash1_InfoS || tFlashArea==INTERNAL_FLASH_AREA_Flash2_InfoS )
+		tResult = check_info_write_protection(tFlashArea, 0);
+		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
-			tResult = infoS_prepareReadData(ptAttr, ulOffsetStart, ulLength, ptParameter->pucData);
-		}
-		else
-		{
-			tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
-			if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+			if( tFlashArea==INTERNAL_FLASH_AREA_Flash1_InfoS || tFlashArea==INTERNAL_FLASH_AREA_Flash2_InfoS )
 			{
-				/* Get the pointer to the controller and the offset in the memory map. */
-				tResult = iflash_get_controller(ptAttr, ulOffsetStart, &tFlashBlock);
+				tResult = infoS_prepareReadData(ptAttr, ulOffsetStart, ulLength, ptParameter->pucData);
+			}
+			else
+			{
+				tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
 				if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 				{
-					pucFlashArea = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
-
-					/* Get the start and size of the data area. */
-					pucFlashStart = pucFlashArea + ulOffsetStart;
-
-					/* Set the flash to read mode. */
-					internal_flash_select_read_mode_and_clear_caches(ptAttr);
-
-					/* Copy the data block to the destination buffer.*/
-					pucBufferStart = ptParameter->pucData;
-
-					/* Copy the data block to the destination buffer.*/
-					ulOffset = 0;
-					progress_bar_init(ulLength);
-					do
+					/* Get the pointer to the controller and the offset in the memory map. */
+					tResult = iflash_get_controller(ptAttr, ulOffsetStart, &tFlashBlock);
+					if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 					{
-						pucBufferStart[ulOffset] = pucFlashStart[ulOffset];
-						++ulOffset;
-						/* Update the progress bar every 64 byte.*/
-						if((ulOffset & 0xffff) == 0)
-							progress_bar_set_position(ulOffset);
-					} while( ulOffset<ulLength );
+						pucFlashArea = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
 
-					progress_bar_finalize();
-					tResult = NETX_CONSOLEAPP_RESULT_OK;
+						/* Get the start and size of the data area. */
+						pucFlashStart = pucFlashArea + ulOffsetStart;
+
+						/* Set the flash to read mode. */
+						internal_flash_select_read_mode_and_clear_caches(ptAttr);
+
+						/* Copy the data block to the destination buffer.*/
+						pucBufferStart = ptParameter->pucData;
+
+						/* Copy the data block to the destination buffer.*/
+						ulOffset = 0;
+						progress_bar_init(ulLength);
+						do
+						{
+							pucBufferStart[ulOffset] = pucFlashStart[ulOffset];
+							++ulOffset;
+							/* Update the progress bar every 64 byte.*/
+							if((ulOffset & 0xffff) == 0)
+								progress_bar_set_position(ulOffset);
+						} while( ulOffset<ulLength );
+
+						progress_bar_finalize();
+						tResult = NETX_CONSOLEAPP_RESULT_OK;
+					}
 				}
 			}
 		}
@@ -1700,48 +1792,52 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_sha1(CMD_PARAMETER_CHECKSUM_T *pt
 		ptAttr = &(ptParameter->ptDeviceDescription->uInfo.tInternalFlashInfo.uAttributes.tMazV0);
 
 		tFlashArea = ptAttr->tArea;
-		if( tFlashArea==INTERNAL_FLASH_AREA_Flash1_InfoS || tFlashArea==INTERNAL_FLASH_AREA_Flash2_InfoS )
+		tResult = check_info_write_protection(tFlashArea, 0);
+		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
-			/* This command needs an internal working buffer. Place it at the end of the data buffer. */
-			pucInternalWorkingBuffer = flasher_version.pucBuffer_End - IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
-
-			tResult = infoS_prepareReadData(ptAttr, ulOffsetStart, ulLength, pucInternalWorkingBuffer);
-			if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+			if( tFlashArea==INTERNAL_FLASH_AREA_Flash1_InfoS || tFlashArea==INTERNAL_FLASH_AREA_Flash2_InfoS )
 			{
-				/* NOTE: The "hash" command initializes the netX90 hash unit for a SHA1 sum.
-				*       The function "infoS_prepareReadData" resets the hash unit and configures it for a
-				*       SHA384 sum to update the hashes of the secure info pages.
-				*       Fortunetely there was no data added to tha SHA1 sum, so it is enough to reset the
-				*       unit and start a new SHA1 sum.
-				*/
-				SHA1_Init(ptSha1Context);
+				/* This command needs an internal working buffer. Place it at the end of the data buffer. */
+				pucInternalWorkingBuffer = flasher_version.pucBuffer_End - IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
 
-				SHA1_Update(ptSha1Context, pucInternalWorkingBuffer, ulLength);
-			}
-		}
-		else
-		{
-			tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
-			if( tResult==NETX_CONSOLEAPP_RESULT_OK )
-			{
-				/* Get the pointer to the controller and the offset in the memory map. */
-				tResult = iflash_get_controller(ptAttr, ulOffsetStart, &tFlashBlock);
+				tResult = infoS_prepareReadData(ptAttr, ulOffsetStart, ulLength, pucInternalWorkingBuffer);
 				if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 				{
-					pucFlashArea = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
+					/* NOTE: The "hash" command initializes the netX90 hash unit for a SHA1 sum.
+					 *       The function "infoS_prepareReadData" resets the hash unit and configures it for a
+					 *       SHA384 sum to update the hashes of the secure info pages.
+					 *       Fortunetely there was no data added to tha SHA1 sum, so it is enough to reset the
+					 *       unit and start a new SHA1 sum.
+					 */
+					SHA1_Init(ptSha1Context);
 
-					/* Get the start and size of the data area. */
-					pucFlashStart = pucFlashArea + ulOffsetStart;
+					SHA1_Update(ptSha1Context, pucInternalWorkingBuffer, ulLength);
+				}
+			}
+			else
+			{
+				tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
+				if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+				{
+					/* Get the pointer to the controller and the offset in the memory map. */
+					tResult = iflash_get_controller(ptAttr, ulOffsetStart, &tFlashBlock);
+					if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+					{
+						pucFlashArea = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
 
-					/* Set the flash to read mode. */
-					internal_flash_select_read_mode_and_clear_caches(ptAttr);
+						/* Get the start and size of the data area. */
+						pucFlashStart = pucFlashArea + ulOffsetStart;
 
-					// progress_bar_init(ulLength);
+						/* Set the flash to read mode. */
+						internal_flash_select_read_mode_and_clear_caches(ptAttr);
 
-					SHA1_Update(ptSha1Context, pucFlashStart, ulLength);
+						// progress_bar_init(ulLength);
 
-					// progress_bar_set_position(ulLength);
-					// progress_bar_finalize();
+						SHA1_Update(ptSha1Context, pucFlashStart, ulLength);
+
+						// progress_bar_set_position(ulLength);
+						// progress_bar_finalize();
+					}
 				}
 			}
 		}
@@ -1786,30 +1882,34 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_verify(CMD_PARAMETER_VERIFY_T *pt
 		ptAttr = &(ptParameter->ptDeviceDescription->uInfo.tInternalFlashInfo.uAttributes.tMazV0);
 
 		tFlashArea = ptAttr->tArea;
-		if( tFlashArea==INTERNAL_FLASH_AREA_Flash1_InfoS || tFlashArea==INTERNAL_FLASH_AREA_Flash2_InfoS )
+		tResult = check_info_write_protection(tFlashArea, 0);
+		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
-			/* This command needs an internal working buffer. Place it at the end of the data buffer. */
-			pucInternalWorkingBuffer = flasher_version.pucBuffer_End - IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
-
-			tResult = infoS_prepareReadData(ptAttr, ulOffsetStart, ulLength, pucInternalWorkingBuffer);
-
-			pucFlashStart = pucInternalWorkingBuffer;
-		}
-		else
-		{
-			tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
-			if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+			if( tFlashArea==INTERNAL_FLASH_AREA_Flash1_InfoS || tFlashArea==INTERNAL_FLASH_AREA_Flash2_InfoS )
 			{
-				/* Get the pointer to the controller and the offset in the memory map. */
-				tResult = iflash_get_controller(ptAttr, ulOffsetStart, &tFlashBlock);
+				/* This command needs an internal working buffer. Place it at the end of the data buffer. */
+				pucInternalWorkingBuffer = flasher_version.pucBuffer_End - IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
+
+				tResult = infoS_prepareReadData(ptAttr, ulOffsetStart, ulLength, pucInternalWorkingBuffer);
+
+				pucFlashStart = pucInternalWorkingBuffer;
+			}
+			else
+			{
+				tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
 				if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 				{
-					/* Get the start of the data area. */
-					pucFlashStart  = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
-					pucFlashStart += ulOffsetStart;
+					/* Get the pointer to the controller and the offset in the memory map. */
+					tResult = iflash_get_controller(ptAttr, ulOffsetStart, &tFlashBlock);
+					if( tResult==NETX_CONSOLEAPP_RESULT_OK )
+					{
+						/* Get the start of the data area. */
+						pucFlashStart  = (const unsigned char*)(HOSTADDR(intflash0) + tFlashBlock.ulUnitOffsetInBytes);
+						pucFlashStart += ulOffsetStart;
 
-					/* Set the flash to read mode. */
-					internal_flash_select_read_mode_and_clear_caches(ptAttr);
+						/* Set the flash to read mode. */
+						internal_flash_select_read_mode_and_clear_caches(ptAttr);
+					}
 				}
 			}
 		}
@@ -1881,29 +1981,33 @@ NETX_CONSOLEAPP_RESULT_T internal_flash_maz_v0_is_erased(CMD_PARAMETER_ISERASED_
 		ptAttr = &(ptParameter->ptDeviceDescription->uInfo.tInternalFlashInfo.uAttributes.tMazV0);
 
 		tFlashArea = ptAttr->tArea;
-		if( tFlashArea==INTERNAL_FLASH_AREA_Flash1_InfoS || tFlashArea==INTERNAL_FLASH_AREA_Flash2_InfoS )
+		tResult = check_info_write_protection(tFlashArea, 0);
+		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
-			/* The special "S" secure info pages can only be flashed as a complete page. */
-			if( ulOffsetStart!=0 )
+			if( tFlashArea==INTERNAL_FLASH_AREA_Flash1_InfoS || tFlashArea==INTERNAL_FLASH_AREA_Flash2_InfoS )
 			{
-				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-				uprintf("! The info S pages can only be checked at offset 0.\n");
-			}
-			else if( ulLength!=IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES )
-			{
-				tResult = NETX_CONSOLEAPP_RESULT_ERROR;
-				uprintf("! The info S pages can only be checked with 4096 bytes.\n");
+				/* The special "S" secure info pages can only be flashed as a complete page. */
+				if( ulOffsetStart!=0 )
+				{
+					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					uprintf("! The info S pages can only be checked at offset 0.\n");
+				}
+				else if( ulLength!=IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES )
+				{
+					tResult = NETX_CONSOLEAPP_RESULT_ERROR;
+					uprintf("! The info S pages can only be checked with 4096 bytes.\n");
+				}
+				else
+				{
+					/* Check both SIP pages. */
+					ulLength = 2U * IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
+					tResult = NETX_CONSOLEAPP_RESULT_OK;
+				}
 			}
 			else
 			{
-				/* Check both SIP pages. */
-				ulLength = 2U * IFLASH_MAZ_V0_ERASE_BLOCK_SIZE_IN_BYTES;
-				tResult = NETX_CONSOLEAPP_RESULT_OK;
+				tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
 			}
-		}
-		else
-		{
-			tResult = check_command_area(ptAttr, ulOffsetStart, ulOffsetEnd);
 		}
 		if( tResult==NETX_CONSOLEAPP_RESULT_OK )
 		{
