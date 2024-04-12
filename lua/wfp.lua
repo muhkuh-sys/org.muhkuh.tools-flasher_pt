@@ -68,7 +68,10 @@ tParserCommandFlash:option('-c --condition')
   :count('*')
   :target('astrConditions')
 tParserCommandFlash:option('-v --verbose')
-  :description(string.format('Set the verbosity level to LEVEL. Possible values for LEVEL are %s.', table.concat(atLogLevels, ', ')))
+  :description(string.format(
+    'Set the verbosity level to LEVEL. Possible values for LEVEL are %s.',
+    table.concat(atLogLevels, ', ')
+  ))
   :argname('<LEVEL>')
   :default('debug')
   :target('strLogLevel')
@@ -79,7 +82,10 @@ local tParserCommandList = tParser:command('list l', 'List the contents of the W
 tParserCommandList:argument('archive', 'The WFP file to process.')
   :target('strWfpArchiveFile')
 tParserCommandList:option('-v --verbose')
-  :description(string.format('Set the verbosity level to LEVEL. Possible values for LEVEL are %s.', table.concat(atLogLevels, ', ')))
+  :description(string.format(
+    'Set the verbosity level to LEVEL. Possible values for LEVEL are %s.',
+    table.concat(atLogLevels, ', ')
+  ))
   :argname('<LEVEL>')
   :default('debug')
   :target('strLogLevel')
@@ -100,7 +106,10 @@ tParserCommandPack:flag('-s --simple')
   :default(false)
   :target('fBuildSWFP')
 tParserCommandPack:option('-v --verbose')
-  :description(string.format('Set the verbosity level to LEVEL. Possible values for LEVEL are %s.', table.concat(atLogLevels, ', ')))
+  :description(string.format(
+    'Set the verbosity level to LEVEL. Possible values for LEVEL are %s.',
+    table.concat(atLogLevels, ', ')
+  ))
   :argname('<LEVEL>')
   :default('debug')
   :target('strLogLevel')
@@ -374,7 +383,10 @@ elseif tArgs.fCommandPackSelected==true then
   local strWfpArchiveFile = tArgs.strWfpArchiveFile
   if pl.path.exists(strWfpArchiveFile)==strWfpArchiveFile then
     if tArgs.fOverwrite~=true then
-      tLog.error('The output archive "%s" already exists. Use "--overwrite" to force overwriting it.', strWfpArchiveFile)
+      tLog.error(
+        'The output archive "%s" already exists. Use "--overwrite" to force overwriting it.',
+        strWfpArchiveFile
+      )
       fOk = false
     else
       local tFsResult, strError = pl.file.delete(strWfpArchiveFile)

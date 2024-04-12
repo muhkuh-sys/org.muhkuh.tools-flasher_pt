@@ -198,7 +198,11 @@ function WfpControl.__parseCfg_StartElement(tParser, strName, atAttributes)
       end
       if strTest~='none' and strTest~='list' and strTest~='re' then
         aLxpAttr.tResult = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: invalid attribute "test", must be "none", "list" or "re".', iPosLine, iPosColumn)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: invalid attribute "test", must be "none", "list" or "re".',
+          iPosLine,
+          iPosColumn
+        )
       else
         aLxpAttr.tCondition = { name=strName, default=strDefault, test=strTest }
       end
@@ -233,7 +237,12 @@ function WfpControl.__parseCfg_StartElement(tParser, strName, atAttributes)
       ulUnit = tonumber(strUnit)
       if ulUnit==nil then
         aLxpAttr.tResult = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: attribute "unit" is no number: "%s".', iPosLine, iPosColumn, strUnit)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: attribute "unit" is no number: "%s".',
+          iPosLine,
+          iPosColumn,
+          strUnit
+        )
       end
     end
 
@@ -246,7 +255,12 @@ function WfpControl.__parseCfg_StartElement(tParser, strName, atAttributes)
       ulChipSelect = tonumber(strChipSelect)
       if ulChipSelect==nil then
         aLxpAttr.tResult = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: attribute "chip_select" is no number: "%s".', iPosLine, iPosColumn, strChipSelect)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: attribute "chip_select" is no number: "%s".',
+          iPosLine,
+          iPosColumn,
+          strChipSelect
+        )
       end
     end
 
@@ -271,7 +285,12 @@ function WfpControl.__parseCfg_StartElement(tParser, strName, atAttributes)
         local ulMinimumSize = tonumber(strMinimumSize)
         if ulMinimumSize==nil then
           aLxpAttr.tResult = nil
-          aLxpAttr.tLog.error('Error in line %d, col %d: attribute "minimum_size" is no number: "%s".', iPosLine, iPosColumn, strMinimumSize)
+          aLxpAttr.tLog.error(
+            'Error in line %d, col %d: attribute "minimum_size" is no number: "%s".',
+            iPosLine,
+            iPosColumn,
+            strMinimumSize
+          )
         end
       end
 
@@ -282,7 +301,12 @@ function WfpControl.__parseCfg_StartElement(tParser, strName, atAttributes)
         local ulBlockSize = tonumber(strBlockSize)
         if ulBlockSize==nil then
           aLxpAttr.tResult = nil
-          aLxpAttr.tLog.error('Error in line %d, col %d: attribute "block_size" is no number: "%s".', iPosLine, iPosColumn, strBlockSize)
+          aLxpAttr.tLog.error(
+            'Error in line %d, col %d: attribute "block_size" is no number: "%s".',
+            iPosLine,
+            iPosColumn,
+            strBlockSize
+          )
         end
       end
 
@@ -307,7 +331,12 @@ function WfpControl.__parseCfg_StartElement(tParser, strName, atAttributes)
       local ulOffset = tonumber(strOffset)
       if ulOffset==nil then
         aLxpAttr.tResult = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: attribute "offset" is no number: "%s".', iPosLine, iPosColumn, strOffset)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: attribute "offset" is no number: "%s".',
+          iPosLine,
+          iPosColumn,
+          strOffset
+        )
       end
 
       local strCondition = atAttributes['condition']
@@ -333,7 +362,12 @@ function WfpControl.__parseCfg_StartElement(tParser, strName, atAttributes)
       local ulOffset = tonumber(strOffset)
       if ulOffset==nil then
         aLxpAttr.tResult = nil
-        aLxpAttr.tLog.error('Error in line %d, col %d: attribute "offset" is no number: "%s".', iPosLine, iPosColumn, strOffset)
+        aLxpAttr.tLog.error(
+          'Error in line %d, col %d: attribute "offset" is no number: "%s".',
+          iPosLine,
+          iPosColumn,
+          strOffset
+        )
       else
         local strSize = atAttributes['size']
         if strSize==nil or strSize=='' then
@@ -344,7 +378,12 @@ function WfpControl.__parseCfg_StartElement(tParser, strName, atAttributes)
           local ulSize = tonumber(strSize)
           if ulSize==nil then
             aLxpAttr.tResult = nil
-            aLxpAttr.tLog.error('Error in line %d, col %d: attribute "size" is no number: "%s".', iPosLine, iPosColumn, strSize)
+            aLxpAttr.tLog.error(
+              'Error in line %d, col %d: attribute "size" is no number: "%s".',
+              iPosLine,
+              iPosColumn,
+              strSize
+            )
           else
             local strCondition = atAttributes['condition']
             if strCondition==nil then
@@ -468,7 +507,13 @@ function WfpControl:__parse_configuration(strConfiguration)
   end
 
   if tParseResult==nil then
-    self.tLog.error('Failed to parse the configuration: %s in line %d, column %d, position %d.', strMsg, uiLine, uiCol, uiPos)
+    self.tLog.error(
+      'Failed to parse the configuration: %s in line %d, column %d, position %d.',
+      strMsg,
+      uiLine,
+      uiCol,
+      uiPos
+    )
   elseif aLxpAttr.tResult~=true then
     self.tLog.error('Failed to parse the configuration.')
   else
