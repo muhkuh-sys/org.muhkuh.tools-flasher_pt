@@ -19,10 +19,10 @@ function WfpControl:_init(tLogWriter)
   self.lxp = require 'lxp'
 
   -- Get the logger object from the system configuration.
-  local tLogWriter = require 'log.writer.prefix'.new('[WfpControl] ', tLogWriter)
+  local tLogWriterLocal = require 'log.writer.prefix'.new('[WfpControl] ', tLogWriter)
   self.tLog = require 'log'.new(
     'trace',
-    tLogWriter,
+    tLogWriterLocal,
     require 'log.formatter.format'.new()
   )
 
@@ -157,12 +157,12 @@ end
 -- This function is part of the callbacks for the expat parser.
 -- It is called when a new element is opened.
 -- @param tParser The parser object.
--- @param strName The name of the new element.
-function WfpControl.__parseCfg_StartElement(tParser, strName, atAttributes)
+-- @param strElementName The name of the new element.
+function WfpControl.__parseCfg_StartElement(tParser, strElementName, atAttributes)
   local aLxpAttr = tParser:getcallbacks().userdata
   local iPosLine, iPosColumn = tParser:pos()
 
-  table.insert(aLxpAttr.atCurrentPath, strName)
+  table.insert(aLxpAttr.atCurrentPath, strElementName)
   local strCurrentPath = table.concat(aLxpAttr.atCurrentPath, "/")
   aLxpAttr.strCurrentPath = strCurrentPath
 

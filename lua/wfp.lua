@@ -21,13 +21,13 @@ local function __getNetxPath()
   local strPathNetx
 
   -- Split the Lua module path.
-  local astrPaths = pl.stringx.split(package.path, ';')
-  for _, strPath in ipairs(astrPaths) do
+  local astrPackagePaths = pl.stringx.split(package.path, ';')
+  for _, strPackagePath in ipairs(astrPackagePaths) do
     -- Only process search paths which end in "?.lua".
-    if string.sub(strPath, -5)=='?.lua' then
+    if string.sub(strPackagePath, -5)=='?.lua' then
       -- Cut off the "?.lua" part.
       -- Expect the "netx" folder one below the module folder.
-      local strPath = pl.path.join(pl.path.dirname(pl.path.dirname(pl.path.abspath(strPath))), 'netx')
+      local strPath = pl.path.join(pl.path.dirname(pl.path.dirname(pl.path.abspath(strPackagePath))), 'netx')
       if pl.path.exists(strPath)~=nil and pl.path.isdir(strPath)==true then
         -- Append a directory separator at the end of the path.
         -- Otherwise the flasher will not be happy.
@@ -496,9 +496,9 @@ elseif tArgs.fCommandPackSelected==true then
               tArchive:finish_entry()
 
               for _, tAttr in ipairs(atSortedFiles) do
-                local tEntry = archive.ArchiveEntry()
+                tEntry = archive.ArchiveEntry()
                 tEntry:set_pathname(pl.path.basename(tAttr.strFilename))
-                local strData = pl.utils.readfile(tAttr.strFilename, true)
+                strData = pl.utils.readfile(tAttr.strFilename, true)
                 tEntry:set_size(string.len(strData))
                 tEntry:set_filetype(archive.AE_IFREG)
                 tEntry:set_perm(420)
