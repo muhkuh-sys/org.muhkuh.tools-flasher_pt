@@ -128,7 +128,7 @@ end
 
 
 
-function WfpControl:__get_file_contents(tEntry)
+function WfpControl:__get_file_contents()
   local tFileData = {}
   for strData in self.tArchive:iter_data(16384) do
     table.insert(tFileData, strData)
@@ -145,7 +145,7 @@ function WfpControl:getData(strFile)
   if tData==nil then
     tLog.error('Data file "%s" not found in the WFP archive "%s"!', strFile, self.strWfpArchiveFile)
   else
-    strData = self:__get_file_contents(tData)
+    strData = self:__get_file_contents()
   end
 
   return strData
@@ -160,7 +160,7 @@ end
 -- @param strName The name of the new element.
 function WfpControl.__parseCfg_StartElement(tParser, strName, atAttributes)
   local aLxpAttr = tParser:getcallbacks().userdata
-  local iPosLine, iPosColumn, iPosAbs = tParser:pos()
+  local iPosLine, iPosColumn = tParser:pos()
 
   table.insert(aLxpAttr.atCurrentPath, strName)
   local strCurrentPath = table.concat(aLxpAttr.atCurrentPath, "/")
@@ -410,9 +410,8 @@ end
 -- It is called when an element is closed.
 -- @param tParser The parser object.
 -- @param strName The name of the closed element.
-function WfpControl.__parseCfg_EndElement(tParser, strName)
+function WfpControl.__parseCfg_EndElement(tParser)
   local aLxpAttr = tParser:getcallbacks().userdata
-  local iPosLine, iPosColumn, iPosAbs = tParser:pos()
 
   local strCurrentPath = aLxpAttr.strCurrentPath
   if strCurrentPath=='/FlasherPackage/Conditions/Condition' then
@@ -609,7 +608,6 @@ end
 
 function WfpControl:__runInSandbox(atValues, strExpression)
   local tResult
-  local tLog = self.tLog
   local pl = self.pl
 
   -- Create a sandbox.
@@ -628,7 +626,6 @@ function WfpControl:__runInSandbox(atValues, strExpression)
     ['table']=table
   }
   for strKey, tValue in pairs(atValues) do
-    local strValue
     local strType = type(tValue)
     if strType~='number' and strType~='boolean' and strType~='string' then
       error(string.format('Invalid value type for key %s: %s', strKey, strType))

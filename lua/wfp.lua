@@ -1,6 +1,5 @@
 require 'muhkuh_cli_init'
 
-local archive = require 'archive'
 local argparse = require 'argparse'
 local pl = require 'pl.import_into'()
 local wfp_control = require 'wfp_control'
@@ -478,8 +477,6 @@ elseif tArgs.fCommandPackSelected==true then
               end
             end
 
-            local tTimeNow = os.time()
-            local strWfpArchiveFile = tArgs.strWfpArchiveFile
             tArcResult = tArchive:open_filename(strWfpArchiveFile)
             if tArcResult~=0 then
               tLog.error('Failed to open the archive "%s": %s', strWfpArchiveFile, tArchive:error_string())
