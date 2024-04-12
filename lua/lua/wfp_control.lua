@@ -576,7 +576,7 @@ function WfpControl:openXml(strWfpControlFile)
     tLog.debug('Reading control file "%s".', strWfpControlFile)
     local strData, strError = self.pl.utils.readfile(strWfpControlFile, false)
     if strData==nil then
-      tLog.error('Faied to read the control file "%s" not found: %s', strWfpControlFile, strError)
+      tLog.error('Failed to read the control file "%s" not found: %s', strWfpControlFile, strError)
     else
       -- Parse the XML file.
       tResult = self:__parse_configuration(strData)
