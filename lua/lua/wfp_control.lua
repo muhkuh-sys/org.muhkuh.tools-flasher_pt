@@ -279,11 +279,11 @@ function WfpControl.__parseCfg_StartElement(tParser, strElementName, atAttribute
       aLxpAttr.tResult = nil
       aLxpAttr.tLog.error('Error in line %d, col %d: more than one "Requirements" node found. Only one is allowed.')
     else
+      local ulMinimumSize
+      local ulBlockSize
       local strMinimumSize = atAttributes['minimum_size']
-      if strMinimumSize==nil or strMinimumSize=='' then
-        -- No minimum size specified.
-      else
-        local ulMinimumSize = tonumber(strMinimumSize)
+      if strMinimumSize~=nil and strMinimumSize~='' then
+        ulMinimumSize = tonumber(strMinimumSize)
         if ulMinimumSize==nil then
           aLxpAttr.tResult = nil
           aLxpAttr.tLog.error(
@@ -296,10 +296,8 @@ function WfpControl.__parseCfg_StartElement(tParser, strElementName, atAttribute
       end
 
       local strBlockSize = atAttributes['block_size']
-      if strBlockSize==nil or strBlockSize=='' then
-        -- No block size specified.
-      else
-        local ulBlockSize = tonumber(strBlockSize)
+      if strBlockSize~=nil and strBlockSize~='' then
+        ulBlockSize = tonumber(strBlockSize)
         if ulBlockSize==nil then
           aLxpAttr.tResult = nil
           aLxpAttr.tLog.error(
