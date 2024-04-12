@@ -392,7 +392,7 @@ elseif tArgs.fCommandPackSelected==true then
     else
       local tFsResult, strError = pl.file.delete(strWfpArchiveFile)
       if tFsResult==nil then
-        self.tLog.error('Failed to delete the old archive "%s": %s', strArchivePath, strError)
+        tLog.error('Failed to delete the old archive "%s": %s', strWfpArchiveFile, strError)
         fOk = false
       end
     end

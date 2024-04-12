@@ -638,7 +638,7 @@ function WfpControl:__runInSandbox(atValues, strExpression)
   end
   local fRun, tFnResult = pcall(tFn)
   if fRun==false then
-    error(string.format('Failed to run the expression "%s": %s', strExpression, tostring(tResult)))
+    error(string.format('Failed to run the expression "%s": %s', strExpression, tostring(tFnResult)))
   end
   local strType = type(tFnResult)
   if strType~='boolean' then
