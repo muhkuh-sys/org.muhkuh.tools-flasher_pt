@@ -44,6 +44,7 @@ function WfpControl:_init(tLogWriter)
   self.atConditions = nil
 
   -- Map chip type to the name.
+  local romloader = require 'romloader'
   self.atChiptyp2name = {
     [romloader.ROMLOADER_CHIPTYP_NETX500]          = "NETX500",
     [romloader.ROMLOADER_CHIPTYP_NETX100]          = "NETX500",

@@ -253,6 +253,7 @@ if tArgs.fCommandFlashSelected==true then
                     if tArgs.fDryRun==true then
                       tLog.warning('Not touching the flash as dry run is selected.')
                     else
+                      local strMsg
                       fOk, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulOffset, ulSize)
                       if fOk~=true then
                         tLog.error('Failed to erase the area: %s', strMsg)
@@ -282,6 +283,7 @@ if tArgs.fCommandFlashSelected==true then
                       else
                         tLog.debug('Flashing %d bytes...', sizData)
 
+                        local strMsg
                         fOk, strMsg = tFlasher:eraseArea(tPlugin, aAttr, ulOffset, sizData)
                         if fOk~=true then
                           tLog.error('Failed to erase the area: %s', strMsg)
@@ -462,7 +464,7 @@ elseif tArgs.fCommandPackSelected==true then
           -- Create a new archive.
           local tArchive = archive.ArchiveWrite()
           local tFormat = archive.ARCHIVE_FORMAT_TAR_GNUTAR
-          tArcResult = tArchive:set_format(tFormat)
+          local tArcResult = tArchive:set_format(tFormat)
           if tArcResult~=0 then
             tLog.error('Failed to set the archive format to ID %d: %s', tFormat, tArchive:error_string())
             fOk = false
