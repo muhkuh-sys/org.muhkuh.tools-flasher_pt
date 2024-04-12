@@ -1113,9 +1113,6 @@ NETX_CONSOLEAPP_RESULT_T netx_consoleapp_main(NETX_CONSOLEAPP_PARAMETER_T *ptTes
 
 		if (tOpMode == OPERATION_MODE_Detect || tOpMode == OPERATION_MODE_GetBoardInfo) {
 		/* say hi if mode is Detect or GetBoardInfo*/
-
-			uprintf("                                                        \n");
-
 			uprintf(
 			"\f\n\n\n\nFlasher v" FLASHER_VERSION_ALL " " FLASHER_VERSION_VCS "\n\n"
 			"Copyright (C) 2005-2019 C.Thelen (cthelen@hilscher.com)\n"
