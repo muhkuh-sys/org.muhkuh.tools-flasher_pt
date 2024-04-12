@@ -219,18 +219,18 @@ static NETX_CONSOLEAPP_RESULT_T iflash_get_controller(const INTERNAL_FLASH_ATTRI
 
 
 
-static void internal_flash_select_page(HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea, int iMain0_Info1_InfoK2)
+static void internal_flash_select_page(HOSTADEF(IFLASH_CFG) *ptIFlashCfgArea, int iMain0_Info1_InfoK2_InfoS3)
 {
 	unsigned long ulValue;
 
 
 	/* Select the main memory or info page. */
 	ulValue = 0;
-	if( iMain0_Info1_InfoK2==1 || iMain0_Info1_InfoK2==3 )
+	if( iMain0_Info1_InfoK2_InfoS3==1 || iMain0_Info1_InfoK2_InfoS3==3 )
 	{
 		ulValue = HOSTMSK(iflash_ifren_cfg_ifren);
 	}
-	else if( iMain0_Info1_InfoK2==2 )
+	else if( iMain0_Info1_InfoK2_InfoS3==2 )
 	{
 		ulValue = HOSTMSK(iflash_ifren_cfg_ifren1);
 	}
