@@ -13,18 +13,18 @@
 		<dependency group="com.github.openresty" module="lua-cjson" artifact="lua5.4-lua-cjson" version="2.1.0.9.2"/>
 		<dependency group="com.github.sqmedeiros" module="lpeglabel" artifact="lua5.4-lpeglabel" version="1.6.2.1"/>
 		<dependency group="com.github.tieske" module="date" artifact="date" version="2.2.1"/>
-		<dependency group="com.github.tieske" module="lua-resty-ljsonschema" artifact="lua-resty-ljsonschema" version="1.1.4.1"/>
+		<dependency group="com.github.tieske" module="lua-resty-ljsonschema" artifact="lua-resty-ljsonschema" version="1.1.6.1"/>
 		<dependency group="de.dkolf" module="dkjson" artifact="dkjson" version="2.6.1"/>
 		<dependency group="org.lua" module="lua" artifact="lua" version="5.4.6.2"/>
 		<dependency group="org.luajit" module="bitop" artifact="lua5.4-bitop" version="1.0.3"/>
 		<dependency group="org.muhkuh.lua" module="archive" artifact="lua5.4-archive" version="0.0.3.1"/>
-		<dependency group="org.muhkuh.lua" module="data_provider_pt" artifact="data_provider_pt" version="1.0.0"/>
+		<dependency group="org.muhkuh.lua" module="data_provider_pt" artifact="data_provider_pt" version="1.2.0"/>
 		<dependency group="org.muhkuh.lua" module="mhash" artifact="lua5.4-mhash" version="0.9.9.9.9"/>
-		<dependency group="org.muhkuh.lua" module="romloader_pt" artifact="lua5.4-romloader" version="2.5.4"/>
+		<dependency group="org.muhkuh.lua" module="romloader_pt" artifact="lua5.4-romloader" version="2.6.0"/>
 		<dependency group="org.muhkuh.tools" module="flasher_pt" artifact="flasher" version="1.8.0"/>
 		<dependency group="org.muhkuh.tools" module="flasher_pt" artifact="flasher_cli" version="1.8.0"/>
-		<dependency group="org.muhkuh.tools" module="muhkuh_base_cli" artifact="lua5.4-muhkuh_base_cli" version="2.6.0"/>
-		<dependency group="org.openocd" module="openocd_pt" artifact="openocd" version="0.11.0.5"/>
+		<dependency group="org.muhkuh.tools" module="muhkuh_base_cli" artifact="lua5.4-muhkuh_base_cli" version="2.7.0"/>
+		<dependency group="org.openocd" module="openocd_pt" artifact="openocd" version="0.12.0.1"/>
 	</dependencies>
 	<build-dependencies>
 	</build-dependencies>
