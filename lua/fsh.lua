@@ -11,7 +11,7 @@
 -- Create the Shell class.
 local class = require "pl.class"
 
-local strVersion = "1.7.1"
+local strVersion = "1.8.0"
 
 ---
 -- @type Shell
