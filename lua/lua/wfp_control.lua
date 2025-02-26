@@ -20,11 +20,12 @@ function WfpControl:_init(tLogWriter)
 
   -- Get the logger object from the system configuration.
   local tLogWriterLocal = require 'log.writer.prefix'.new('[WfpControl] ', tLogWriter)
-  self.tLog = require 'log'.new(
+  local tLog = require 'log'.new(
     'trace',
     tLogWriterLocal,
     require 'log.formatter.format'.new()
   )
+  self.tLog = tLog
 
   -- Save the complete source to be able to reproduce the file.
   self.strSource = nil
@@ -60,6 +61,14 @@ function WfpControl:_init(tLogWriter)
     [romloader.ROMLOADER_CHIPTYP_NETX90B]          = "NETX90",
     [romloader.ROMLOADER_CHIPTYP_NETIOLA]          = "NETIOL",
     [romloader.ROMLOADER_CHIPTYP_NETIOLB]          = "NETIOL"
+  }
+
+  local tFlasher = require 'flasher'(tLog)
+  self.atName2Bus = {
+    ['Parflash'] = tFlasher.BUS_Parflash,
+    ['Spi']      = tFlasher.BUS_Spi,
+    ['IFlash']   = tFlasher.BUS_IFlash,
+    ['SDIO']     = tFlasher.BUS_SDIO
   }
 end
 
@@ -688,24 +697,28 @@ end
 
 function WfpControl:openXml(strWfpControlFile)
   local tResult
-  local tLog = self.tLog
+  local strError
 
   -- Does the control file exist?
-  if self.pl.path.exists(strWfpControlFile)~=strWfpControlFile then
-    tLog.error('The WFP control file "%s" does not exist.', strWfpControlFile)
+  local path = require 'pl.path'
+  if path.exists(strWfpControlFile)~=strWfpControlFile then
+    strError = 'The WFP control file "' .. strWfpControlFile .. '" does not exist.'
+
   else
     -- Read the control file from the WFP archive.
-    tLog.debug('Reading control file "%s".', strWfpControlFile)
-    local strData, strError = self.pl.utils.readfile(strWfpControlFile, false)
+    local utils = require 'pl.utils'
+    local strData, strReadError = utils.readfile(strWfpControlFile, false)
     if strData==nil then
-      tLog.error('Failed to read the control file "%s" not found: %s', strWfpControlFile, strError)
+      strError = 'Failed to read the control file "' .. strWfpControlFile .. '": ' .. tostring(strReadError)
+
     else
       -- Parse the XML file.
       tResult = self:__parse_configuration(strData)
+
     end
   end
 
-  return tResult
+  return tResult, strError
 end
 
 
@@ -843,6 +856,146 @@ function WfpControl:validateCondition(strKey, strValue)
   end
 
   return tResult, strError
+end
+
+
+
+function WfpControl:getFileReferences(strWorkingPath)
+  local atFiles = {}
+  local atSortedFiles = {}
+  local strError
+  local path = require 'pl.path'
+  for _, tTarget in pairs(self.atConfigurationTargets) do
+    for _, tTargetFlash in ipairs(tTarget.atFlashes) do
+      local strBusName = tTargetFlash.strBus
+      local tBus = self.atName2Bus[strBusName]
+      if tBus==nil then
+        atSortedFiles = nil
+        strError = string.format('Unknown bus "%s" found in WFP control file.', strBusName)
+        break
+      else
+        for _, tData in ipairs(tTargetFlash.atData) do
+          local strFile = tData.strFile
+          -- Skip erase entries.
+          if strFile~=nil then
+            local strFileAbs = strFile
+            if path.isabs(strFileAbs)~=true then
+              strFileAbs = path.join(strWorkingPath, strFileAbs)
+            end
+            local strFileBase = path.basename(strFile)
+            if atFiles[strFileBase]==nil then
+              if path.exists(strFileAbs)~=strFileAbs then
+                atSortedFiles = nil
+                strError = string.format('The path "%s" does not exist.', strFileAbs)
+
+              elseif path.isfile(strFileAbs)~=true then
+                atSortedFiles = nil
+                strError = string.format('The path "%s" does not point to a file.', strFileAbs)
+
+              else
+                atFiles[strFileBase] = strFileAbs
+                local tAttr = {
+                  ucBus = tBus,
+                  ucUnit = tTargetFlash.ulUnit,
+                  ucChipSelect = tTargetFlash.ulChipSelect,
+                  ulOffset = tData.ulOffset,
+                  strFilename = strFileAbs
+                }
+                table.insert(atSortedFiles, tAttr)
+              end
+            elseif atFiles[strFileBase]~=strFileAbs then
+              atSortedFiles = nil
+              strError = string.format('Multiple files with the base name "%s" found.', strFileBase)
+            end
+          end
+        end
+      end
+    end
+  end
+
+  return atSortedFiles, strError
+end
+
+
+
+function WfpControl:packWfp(strWfpArchiveFile, strWfpControlFile, atSortedFiles)
+  local fResult = true
+  local strError
+
+  -- Create a new archive.
+  local archive = require 'archive'
+  local tArchive = archive.ArchiveWrite()
+  local tFormat = archive.ARCHIVE_FORMAT_TAR_GNUTAR
+  local tArcResult = tArchive:set_format(tFormat)
+  if tArcResult~=0 then
+    fResult = false
+    strError = string.format(
+      'Failed to set the archive format to ID %d: %s',
+      tFormat,
+      tArchive:error_string()
+    )
+
+  else
+    local atFilter = { archive.ARCHIVE_FILTER_XZ }
+    for _, tFilter in ipairs(atFilter) do
+      tArcResult = tArchive:add_filter(tFilter)
+      if tArcResult~=0 then
+        fResult = false
+        strError = string.format(
+          'Failed to add filter with ID %d: %s',
+          tFilter,
+          tArchive:error_string()
+        )
+        break
+      end
+    end
+
+    if fResult then
+      tArcResult = tArchive:open_filename(strWfpArchiveFile)
+      if tArcResult~=0 then
+        fResult = false
+        strError = string.format(
+          'Failed to open the archive "%s": %s',
+          strWfpArchiveFile,
+          tArchive:error_string()
+        )
+
+      else
+        -- Add the control file.
+        local tEntry = archive.ArchiveEntry()
+        tEntry:set_pathname('wfp.xml')
+        local utils = require 'pl.utils'
+        local strData = utils.readfile(strWfpControlFile, true)
+        tEntry:set_size(string.len(strData))
+        tEntry:set_filetype(archive.AE_IFREG)
+        tEntry:set_perm(420)
+        tEntry:set_gname('wfp')
+--        tEntry:set_uname('wfp')
+        tArchive:write_header(tEntry)
+        tArchive:write_data(strData)
+        tArchive:finish_entry()
+
+        local path = require 'pl.path'
+        for _, tAttr in ipairs(atSortedFiles) do
+          tEntry = archive.ArchiveEntry()
+          tEntry:set_pathname(path.basename(tAttr.strFilename))
+          strData = utils.readfile(tAttr.strFilename, true)
+          tEntry:set_size(string.len(strData))
+          tEntry:set_filetype(archive.AE_IFREG)
+          tEntry:set_perm(420)
+          tEntry:set_gname('wfp')
+--          tEntry:set_uname('wfp')
+          tArchive:write_header(tEntry)
+          tArchive:write_data(strData)
+          tArchive:finish_entry()
+        end
+      end
+
+      tArchive:close()
+    end
+  end
+
+  return fResult, strError
 end
 
 

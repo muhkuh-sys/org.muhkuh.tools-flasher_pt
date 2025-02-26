@@ -378,8 +378,6 @@ elseif tArgs.fCommandListSelected==true then
     end
   end
 elseif tArgs.fCommandPackSelected==true then
-  local archive = require 'archive'
-
   -- Does the archive already exist?
   local strWfpArchiveFile = tArgs.strWfpArchiveFile
   if pl.path.exists(strWfpArchiveFile)==strWfpArchiveFile then
@@ -399,120 +397,29 @@ elseif tArgs.fCommandPackSelected==true then
   end
 
   if fOk==true then
-    local tResult = tWfpControl:openXml(tArgs.strWfpControlFile)
+    local tResult, strOpenXmlError = tWfpControl:openXml(tArgs.strWfpControlFile)
     if tResult==nil then
-      tLog.error('Failed to read the control file "%s"!', tArgs.strWfpControlFile)
+      tLog.error('Failed to read the control file "%s": %s', tArgs.strWfpControlFile, strOpenXmlError)
       fOk = false
     else
       -- Get the absolute directory of the control file.
       local strWorkingPath = pl.path.dirname(pl.path.abspath(tArgs.strWfpControlFile))
 
       -- Collect all file references from the control file.
-      local atFiles = {}
-      local atSortedFiles = {}
-      for _, tTarget in pairs(tWfpControl.atConfigurationTargets) do
-        for _, tTargetFlash in ipairs(tTarget.atFlashes) do
-          local strBusName = tTargetFlash.strBus
-          local tBus = atName2Bus[strBusName]
-          if tBus==nil then
-            tLog.error('Unknown bus "%s" found in WFP control file.', strBusName)
-            fOk = false
-            break
-          else
-            for _, tData in ipairs(tTargetFlash.atData) do
-              local strFile = tData.strFile
-              -- Skip erase entries.
-              if strFile~=nil then
-                local strFileAbs = strFile
-                if pl.path.isabs(strFileAbs)~=true then
-                  strFileAbs = pl.path.join(strWorkingPath, strFileAbs)
-                  tLog.debug('Extending the relative path "%s" to "%s".', strFile, strFileAbs)
-                end
-                local strFileBase = pl.path.basename(strFile)
-                if atFiles[strFileBase]==nil then
-                  if pl.path.exists(strFileAbs)~=strFileAbs then
-                    tLog.error('The path "%s" does not exist.', strFileAbs)
-                    fOk = false
-                  elseif pl.path.isfile(strFileAbs)~=true then
-                    tLog.error('The path "%s" does not point to a file.', strFileAbs)
-                    fOk = false
-                  else
-                    tLog.debug('Adding file "%s" to the list.', strFileAbs)
-                    atFiles[strFileBase] = strFileAbs
-                    local tAttr = {
-                      ucBus = tBus,
-                      ucUnit = tTargetFlash.ulUnit,
-                      ucChipSelect = tTargetFlash.ulChipSelect,
-                      ulOffset = tData.ulOffset,
-                      strFilename = strFileAbs
-                    }
-                    table.insert(atSortedFiles, tAttr)
-                  end
-                elseif atFiles[strFileBase]~=strFileAbs then
-                  tLog.error('Multiple files with the base name "%s" found.', strFileBase)
-                  fOk = false
-                end
-              end
-            end
-          end
-        end
-      end
-      if fOk~=true then
-        tLog.error('Not all files are OK. Stopping here.')
+      local atSortedFiles, strGetFilesError = tWfpControl:getFileReferences(strWorkingPath)
+      if atSortedFiles==nil then
+        fOk = false
+        tLog.error('Not all files are OK: ' .. tostring(strGetFilesError))
       else
         if tArgs.fBuildSWFP==false then
-          -- Create a new archive.
-          local tArchive = archive.ArchiveWrite()
-          local tFormat = archive.ARCHIVE_FORMAT_TAR_GNUTAR
-          local tArcResult = tArchive:set_format(tFormat)
-          if tArcResult~=0 then
-            tLog.error('Failed to set the archive format to ID %d: %s', tFormat, tArchive:error_string())
+          local fPackResult, strPackError = tWfpControl:packWfp(
+            strWfpArchiveFile,
+            tArgs.strWfpControlFile,
+            atSortedFiles
+          )
+          if fPackResult~=true then
             fOk = false
-          else
-            local atFilter = { archive.ARCHIVE_FILTER_XZ }
-            for _, tFilter in ipairs(atFilter) do
-              tArcResult = tArchive:add_filter(tFilter)
-              if tArcResult~=0 then
-                tLog.error('Failed to add filter with ID %d: %s', tFilter, tArchive:error_string())
-                fOk = false
-                break
-              end
-            end
-
-            tArcResult = tArchive:open_filename(strWfpArchiveFile)
-            if tArcResult~=0 then
-              tLog.error('Failed to open the archive "%s": %s', strWfpArchiveFile, tArchive:error_string())
-              fOk = false
-            else
-              -- Add the control file.
-              local tEntry = archive.ArchiveEntry()
-              tEntry:set_pathname('wfp.xml')
-              local strData = pl.utils.readfile(tArgs.strWfpControlFile, true)
-              tEntry:set_size(string.len(strData))
-              tEntry:set_filetype(archive.AE_IFREG)
-              tEntry:set_perm(420)
-              tEntry:set_gname('wfp')
---              tEntry:set_uname('wfp')
-              tArchive:write_header(tEntry)
-              tArchive:write_data(strData)
-              tArchive:finish_entry()
-
-              for _, tAttr in ipairs(atSortedFiles) do
-                tEntry = archive.ArchiveEntry()
-                tEntry:set_pathname(pl.path.basename(tAttr.strFilename))
-                strData = pl.utils.readfile(tAttr.strFilename, true)
-                tEntry:set_size(string.len(strData))
-                tEntry:set_filetype(archive.AE_IFREG)
-                tEntry:set_perm(420)
-                tEntry:set_gname('wfp')
---                tEntry:set_uname('wfp')
-                tArchive:write_header(tEntry)
-                tArchive:write_data(strData)
-                tArchive:finish_entry()
-              end
-            end
-
-            tArchive:close()
+            tLog.error('Failed to pack the WFP: ' .. tostring(strPackError))
           end
         else
           -- Build a SWFP.
